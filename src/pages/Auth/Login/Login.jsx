@@ -5,6 +5,7 @@ import welcomeImg from "../../../assets/login/welcome.svg";
 import successIcon from "../../../assets/login/Success.svg";
 import failureIcon from "../../../assets/login/Failure.svg";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { loginUser } from "../../../api/auth/auth"; // ensure correct path
 
 function Login() {
   const navigate = useNavigate();
@@ -14,19 +15,9 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
-
-  // Auto-hide success toast after a short delay
-  useEffect(() => {
-    if (status.type === "success" && status.message) {
-      const timer = setTimeout(
-        () => setStatus({ type: "", message: "" }),
-        3000
-      );
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load saved email on page load
   useEffect(() => {
     const savedEmail = localStorage.getItem("savedEmail");
     if (savedEmail) {
@@ -35,13 +26,29 @@ function Login() {
     }
   }, []);
 
+
+
+  // Input change
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // if email cleared → remove saved email
+    if (name === "email" && !value) {
+      localStorage.removeItem("savedEmail");
+      setRememberMe(false);
+    }
   };
 
+  // Remember me toggle
   const handleRememberChange = (event) => {
-    setRememberMe(event.target.checked);
+    const checked = event.target.checked;
+    setRememberMe(checked);
+
+    if (!checked) {
+      localStorage.removeItem("savedEmail");
+    }
   };
 
   const validateForm = () => {
@@ -61,21 +68,19 @@ function Login() {
     }
 
     setErrors(newErrors);
-
     return !newErrors.email && !newErrors.password;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setStatus({ type: "", message: "" });
-    setErrors({ email: "", password: "" });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    // Weekend access restriction
+    // Weekend check
     const today = new Date().getDay();
     if (today === 0 || today === 6) {
       navigate("/account-disabled", {
         state: {
-          message: "Your account is temporarily deactivated...",
+          message:
+            "Your account is temporarily deactivated on weekends for routine system checks. Please try again on Monday.",
         },
       });
       return;
@@ -83,109 +88,59 @@ function Login() {
 
     if (!validateForm()) return;
 
-    // Temporary hardcoded password check (will be replaced by API)
-    if (formData.password !== "Password_1") {
-      setErrors((prev) => ({
-        ...prev,
-        password: "Incorrect password. Please try again.",
-      }));
-      return;
-    }
-
     setIsSubmitting(true);
+
     try {
-      // Placeholder for future API integration
-      if (rememberMe) {
-        localStorage.setItem("savedEmail", formData.email.trim());
-      } else {
-        localStorage.removeItem("savedEmail");
+      const res = await loginUser(formData.email, formData.password);
+
+      console.log("LOGIN RESPONSE:", res);
+
+      // FIRST TIME USER → GO TO RESET PASSWORD
+      if (res.status === "FORCE_PASSWORD_CHANGE") {
+        localStorage.setItem("pendingEmail", formData.email);
+        localStorage.setItem("oldPassword", formData.password);
+        handleRememberLogic();
+        navigate("/reset-password");
+        return;
       }
 
-      setStatus({
-        type: "success",
-        message: "Signed in successfully.",
-      });
+      // OTP SENT
+      if (res.message === "OTP sent to registered email address.") {
+        localStorage.setItem("pendingEmail", formData.email);
+        handleRememberLogic();
+        navigate("/verify-login");
+        return;
+      }
 
-      // Redirect user to Reset Password page after successful login
-      navigate("/reset-password");
-    } finally {
-      setIsSubmitting(false);
+      // SUCCESS → STILL OTP REQUIRED
+      if (res.status === "SUCCESS") {
+        localStorage.setItem("pendingEmail", formData.email);
+        handleRememberLogic();
+        navigate("/verify-login");
+        return;
+      }
+    } catch (error) {
+      const backendMsg =
+        error?.data?.error || error?.data?.message || error?.message;
+
+
+      setStatus({
+        type: "error",
+        message: "Incorrect password. Please try again.",
+      });
     }
+
+    setIsSubmitting(false);
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setStatus({ type: "", message: "" });
-  //   setErrors({ email: "", password: "" });
-  //   setIsSubmitting(true);
-
-  //   // Frontend validation
-  //   const newErrors = { email: "", password: "" };
-  //   if (!email.trim()) newErrors.email = "Email address is required.";
-  //   else if (!/\S+@\S+\.\S+/.test(email.trim()))
-  //     newErrors.email = "Please enter a valid email address.";
-
-  //   if (!password) newErrors.password = "Password cannot be empty.";
-
-  //   if (newErrors.email || newErrors.password) {
-  //     setErrors(newErrors);
-  //     setIsSubmitting(false);
-  //     return;
-  //   }
-
-  //   // Weekend access restriction
-  //   const today = new Date().getDay(); // 0 = Sunday, 6 = Saturday
-  //   if (today === 0 || today === 6) {
-  //     navigate("/account-disabled", {
-  //       state: {
-  //         message:
-  //           "Your account is temporarily deactivated on weekends for routine system checks. Please try again on Monday.",
-  //       },
-  //     });
-  //     setIsSubmitting(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await loginUser(email.trim(), password);
-
-  //     // Force password reset
-  //     if (res.status === "FORCE_PASSWORD_CHANGE") {
-  //       localStorage.setItem("pendingEmail", email.trim());
-  //       localStorage.setItem("oldPassword", password);
-  //       setStatus({ type: "success", message: "Please reset your password." });
-  //       navigate("/reset-password");
-  //       return;
-  //     }
-
-  //     // OTP login flow
-  //     if (res.message === "OTP sent to registered email address.") {
-  //       localStorage.setItem("pendingEmail", email.trim());
-  //       setStatus({ type: "success", message: "OTP sent to your email." });
-  //       navigate("/verify-login");
-  //       return;
-  //     }
-
-  //     // Normal success login
-  //     setStatus({ type: "success", message: "Logged in successfully." });
-
-  //     // Remember me
-  //     if (rememberMe) localStorage.setItem("savedEmail", email.trim());
-  //     else localStorage.removeItem("savedEmail");
-
-  //     // Redirect to dashboard or homepage (adjust as needed)
-  //     navigate("/dashboard");
-  //   } catch (error) {
-  //     const backendMsg =
-  //       error?.data?.error || error?.data?.message || error?.message;
-
-
-
-  //     setErrors((prev) => ({ ...prev, password: "Incorrect password. Please try again." }));
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+  // Remember Me save/remove logic
+  const handleRememberLogic = () => {
+    if (rememberMe) {
+      localStorage.setItem("savedEmail", formData.email);
+    } else {
+      localStorage.removeItem("savedEmail");
+    }
+  };
 
   const statusStyles = {
     container: {
@@ -202,7 +157,6 @@ function Login() {
     },
   };
 
-
   const inputClass = (hasError, value) =>
     `
     w-full
@@ -215,34 +169,12 @@ function Login() {
     outline-none
     border ${hasError ? "border-red-400" : "border-[#E7E7E7]"}
     ${value ? "bg-transparent" : "bg-[#16191C]"}
-    
   `;
 
-
   return (
-    <div className="flex min-h-screen  bg-[#050814] text-white">
+    <div className="flex min-h-screen bg-[#050814] text-white">
 
-      {/* Toast at top-right */}
-      {status.message && status.type === "success" && (
-        <div
-          className="fixed z-50 flex items-center"
-          style={{
-            position: "fixed",
-            ...statusStyles.container,
-          }}
-        >
-          <img
-            src={status.type === "success" ? successIcon : failureIcon}
-            alt={status.type === "success" ? "Success" : "Error"}
-            className="h-6 w-6 mr-4"
-          />
-          <span className="text-sm font-medium text-white">
-            {status.message}
-          </span>
-        </div>
-      )}
-
-      {/* LEFT IMAGE SECTION */}
+      {/* LEFT IMAGE */}
       <div className="relative flex-1 min-h-[260px]">
         <img
           src={rightSide}
@@ -251,17 +183,17 @@ function Login() {
         />
       </div>
 
-      {/* RIGHT FORM SECTION */}
+      {/* RIGHT FORM */}
       <div className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="w-full max-w-[548px] bg-[#050814]">
 
           <img
             src={welcomeImg}
-            alt="Usoft Logo"
+            alt="Logo"
             className="mx-auto mb-15 mt-4 w-[188px] h-[58px]"
           />
 
-          {/* FORM START */}
+          {/* FORM */}
           <form onSubmit={handleSubmit} noValidate>
             <div
               className="flex flex-col mx-auto"
@@ -315,7 +247,7 @@ function Login() {
                 )}
               </div>
 
-              {/* Remember me + Forgot */}
+              {/* Remember me */}
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 text-[#B5B5B5] cursor-pointer">
                   <div className="relative">
@@ -340,19 +272,11 @@ function Login() {
                   Remember me
                 </label>
 
-
-
-
+                {/* Forgot Password */}
                 <button
                   type="button"
-                  className="font-semibold text-[#155DFC] cursor-pointer "
-                  onClick={() => {
-                    if (!email) {
-                      setErrorMessage("Email field cannot be empty.");
-                      return;
-                    }
-                    navigate("/forgot-password");
-                  }}
+                  className="font-semibold text-[#155DFC] cursor-pointer"
+                  onClick={() => navigate("/forgot-password")}
                 >
                   Forgot password?
                 </button>
@@ -370,17 +294,17 @@ function Login() {
                   text-sm
                   font-medium
                   transition
-
-                  ${formData.email ? "bg-[#155DFC]" : "bg-[#818089]"}
-                  hover:bg-[#123A93]
+                  ${formData.email ? "bg-[#155DFC]   hover:bg-[#123A93]" : "bg-[#818089]  "}
+                
                 `}
-                disabled={isSubmitting}
+                disabled={!formData.email || isSubmitting}
+
               >
                 {isSubmitting ? "Logging in..." : "Login"}
               </button>
+
             </div>
           </form>
-          {/* FORM END */}
 
         </div>
       </div>

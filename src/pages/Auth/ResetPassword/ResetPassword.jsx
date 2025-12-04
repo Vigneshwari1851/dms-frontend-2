@@ -172,8 +172,8 @@ const ResetPassword = () => {
                                     <li key={index} className="flex items-center gap-2">
                                         <span
                                             className={`h-3.5 w-3.5 flex items-center justify-center bg-transparent rounded-full border p-0.5 ${rule.check
-                                                    ? "bg-[#155DFC] border-[#155DFC] border"
-                                                    : "border-[#4B5563] border"
+                                                ? "bg-[#155DFC] border-[#155DFC] border"
+                                                : "border-[#4B5563] border"
                                                 }`}
                                         >
                                             {rule.check && <CheckIcon className="h-4 w-4 text-[#155DFC] " />}
@@ -198,8 +198,9 @@ const ResetPassword = () => {
 
                                 <button
                                     type="submit"
-                                    className={`h-11 flex-1 rounded-xl text-sm font-semibold text-white hover:bg-[#123A93] disabled:opacity-60  ${password ? "bg-[#155DFC]" : "bg-[#818089]"}`}
-                                    disabled={loading}
+                                    className={`h-11 flex-1 rounded-xl text-sm font-semibold text-white ] disabled:opacity-60  ${password ? "bg-[#155DFC] hover:bg-[#123A93]" : "bg-[#818089]"}`}
+                                    disabled={!password || loading}
+                                    
                                 >
                                     {loading ? "Processing..." : "Login"}
                                 </button>
