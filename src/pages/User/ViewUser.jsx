@@ -9,12 +9,15 @@ export default function ViewUser() {
     const [editMode, setEditMode] = useState(initialEdit);
     const [isActive, setIsActive] = useState(true);
 
-    const [formData, setFormData] = useState({
+    const originalData = {
         full_name: "Vishnu VK",
         email: "email@example.com",
         phone: "+255 xxx xxx xxx",
         role: "Maker",
-    });
+    };
+
+    const [formData, setFormData] = useState(originalData);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,6 +25,7 @@ export default function ViewUser() {
     };
 
     const handleCancel = () => {
+        setFormData(originalData); 
         setEditMode(false);
     };
 
