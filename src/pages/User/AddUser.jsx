@@ -1,10 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import add from "../../assets/user/add_person.svg";
 import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg"; 
 
 export default function AddUser() {
     const [role, setRole] = useState("");
+    const navigate = useNavigate();
+
+    const handleCancel = () => {
+        navigate("/users");
+    };
+
+    const handleAddUser = () => {
+        navigate("/users");
+    };
+
     return (
         <>
 
@@ -58,8 +69,9 @@ export default function AddUser() {
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-3 mt-8">
-                    <button className="px-6 py-2 border border-gray-500 rounded-lg">Cancel</button>
+                    <button onClick={handleCancel} className="px-6 py-2 border border-gray-500 rounded-lg">Cancel</button>
                     <button
+                        onClick={handleAddUser}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
                         <img src={add} alt="add" className="w-5 h-5" />
                         Add User
