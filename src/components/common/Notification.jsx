@@ -30,12 +30,12 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
             <div className="w-[470px] h-[408px] bg-[#1E2328] rounded-lg shadow-xl p-8 text-center relative">
 
                 <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mt-5">
                         <img src={iconToShow} alt="icon" className="max-w-[150px] max-h-[200px] object-contain" />
                     </div>
                 </div>
 
-                <h2 className="text-xl font-semibold text-white mt-12">
+                <h2 className="text-xl font-semibold text-white mt-7">
                     {title}
                 </h2>
 
