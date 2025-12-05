@@ -1,6 +1,7 @@
 import { useState } from "react";
 import add from "../../assets/user/add_person.svg";
 import Dropdown from "../../components/common/Dropdown";
+import authLogo from "../../assets/verify/authlogo.svg"; 
 
 export default function AddUser() {
     const [role, setRole] = useState("");
@@ -45,6 +46,14 @@ export default function AddUser() {
                         onChange={setRole}
                         className="w-[580px]" 
                     />
+                </div>
+
+                <div>
+
+                    <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
+                        <img src={authLogo} alt="auth logo" className="w-5 h-5" />
+                        Default password will be sent to the user's email address. User will be required to change password on first login.
+                    </p>
                 </div>
 
                 {/* Buttons */}
