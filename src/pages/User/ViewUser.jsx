@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
+import NotificationCard from "../../components/common/Notification";
 
 export default function ViewUser() {
     const location = useLocation();
@@ -8,6 +9,12 @@ export default function ViewUser() {
     const initialEdit = location.state?.edit || false;
     const [editMode, setEditMode] = useState(initialEdit);
     const [isActive, setIsActive] = useState(true);
+    const [confirmModal, setConfirmModal] = useState({
+        open: false,
+        actionType: "",
+        title: "",
+        message: "",
+    });
 
     const originalData = {
         full_name: "Vishnu VK",
@@ -168,9 +175,20 @@ export default function ViewUser() {
                         <input
                             type="checkbox"
                             checked={isActive}
-                            onChange={() => editMode && setIsActive(!isActive)}
+                           onChange={() => {
+                                if (!editMode) return;
+                                setConfirmModal({
+                                    open: true,
+                                    actionType: "deactivate",
+                                    title: isActive ? "Are you sure you want to deactivate this user account?" : "Activate Account",
+                                    message: isActive
+                                        ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
+                                        : "You are about to activate this user account. The user will be able to log in or perform any actions until deactivated. Do you wish to continue?",
+                                });
+                            }}
                             disabled={!editMode}
                             className="sr-only peer"
+                            
                         />
 
                         <div
@@ -205,6 +223,14 @@ export default function ViewUser() {
                                     hover:bg-[#1D4CB5]
                                     hover:text-white
                                 "
+                                onClick={() =>
+                                    setConfirmModal({
+                                        open: true,
+                                        actionType: "resetPassword",
+                                        title: "Are you sure you want to send a password reset link?",
+                                        message: "You want to send a password reset link to this user’s registered email address? The user will be able to create a new password from their email.",
+                                    })
+                                }
                             >
                                 Reset Password
                             </button>
@@ -219,6 +245,14 @@ export default function ViewUser() {
                                     hover:bg-[#B51D1D]
                                     hover:text-white
                                 "
+                                onClick={() =>
+                                setConfirmModal({
+                                    open: true,
+                                    actionType: "delete",
+                                    title: "Are you sure you want to delete this account?",
+                                    message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
+                                })
+                            }
                             >
                                 Delete Account
                             </button>
@@ -240,6 +274,28 @@ export default function ViewUser() {
                         </button>
                     </div>
                 )}
+                <NotificationCard
+                    confirmModal={confirmModal}
+                    onCancel={() =>
+                        setConfirmModal((prev) => ({ ...prev, open: false }))
+                    }
+                    onConfirm={() => {
+                        switch (confirmModal.actionType) {
+                            case "delete":
+                                console.log("User deleted");
+                                break;
+                            case "resetPassword":
+                                console.log("Password reset");
+                                break;
+                            case "deactivate":
+                                setIsActive((prev) => !prev);
+                                break;
+                            default:
+                                break;
+                        }
+                        setConfirmModal((prev) => ({ ...prev, open: false }));
+                    }}
+                />
             </div>
         </>
     );
