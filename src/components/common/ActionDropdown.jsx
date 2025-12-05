@@ -75,7 +75,7 @@ function ActionDropdown({ options = [] }) {
             {options.map((opt, idx) => (
               <button
                 key={idx}
-                className="block w-full text-left px-4 py-2 text-[#FFFFFF] hover:bg-[#151517] whitespace-nowrap"
+                className="block w-full text-left text-xs px-4 py-2 text-[#FFFFFF] hover:bg-[#151517] whitespace-nowrap"
                 onClick={() => {
                   opt.onClick();
                   setOpen(false);
