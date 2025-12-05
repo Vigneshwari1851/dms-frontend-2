@@ -9,7 +9,7 @@ export default function Dropdown({ label, options, selected, onChange, className
         <div className={`relative ${className}`}>
             {/* Button */}
             <button
-                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#E3E3E3] font-medium flex items-center justify-between"
+                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between"
                 onClick={() => setOpen(!open)}
             >
                 {selected || label}
