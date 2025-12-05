@@ -12,6 +12,7 @@ import CreateDeal from "../pages/Deal/CreateDeal";
 
 import AppLayout from "../components/layout/AppLayout";
 import ListUser from "../pages/User/ListUser";
+import AddUser from "../pages/User/AddUser";
 
 export default function AppRoutes() {
   return (
@@ -30,6 +31,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="create-deal" element={<CreateDeal />} />
         <Route path="users" element={<ListUser />} />
+        <Route path="users/add-user" element={<AddUser />} />  
       </Route>
     </Routes>
   );
