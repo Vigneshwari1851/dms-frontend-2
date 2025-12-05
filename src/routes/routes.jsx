@@ -11,6 +11,7 @@ import ForgotPassword from "../pages/Auth/ForgetPassword/ForgotPassword";
 import CreateDeal from "../pages/Deal/CreateDeal";
 
 import AppLayout from "../components/layout/AppLayout";
+import ListUser from "../pages/User/ListUser";
 
 export default function AppRoutes() {
   return (
@@ -28,6 +29,7 @@ export default function AppRoutes() {
         <Route index element={<Dashboard />} />    {/* default */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="create-deal" element={<CreateDeal />} />
+        <Route path="users" element={<ListUser />} />
       </Route>
     </Routes>
   );
