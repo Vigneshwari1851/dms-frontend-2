@@ -1,10 +1,9 @@
 import { useState } from "react";
 import add from "../../assets/user/add_person.svg";
+import Dropdown from "../../components/common/Dropdown";
 
-export default function CreateDeal() {
-    const [denominationReceived, setDenominationReceived] = useState([{ denom: 0, quantity: 0 }]);
-    const [denominationPaid, setDenominationPaid] = useState([{ denom: 0, quantity: 0 }]);
-
+export default function AddUser() {
+    const [role, setRole] = useState("");
     return (
         <>
 
@@ -20,18 +19,32 @@ export default function CreateDeal() {
             <div className="mt-4 bg-[#1A1F24] p-5 rounded-xl ">
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
-                    <input className="w-full bg-[#1b1e21] border border-[#2A2F33] rounded-lg px-3 py-2" />
+                    <input className="w-full bg-[#16191C] rounded-lg px-3 py-2" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
-                        <input className="w-full bg-[#1b1e21] border border-[#2A2F33] rounded-lg px-3 py-2" />
+                        <input className="w-full bg-[#16191C] rounded-lg px-3 py-2" />
                     </div>
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Phone <span className="text-red-500">*</span></label>
-                        <input className="w-full bg-[#1b1e21] border border-[#2A2F33] rounded-lg px-3 py-2" />
+                        <input className="w-full bg-[#16191C] rounded-lg px-3 py-2" />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block font-normal text-sm text-[#ABABAB] mt-6">
+                        Role <span className="text-red-500">*</span>
+                    </label>
+
+                    <Dropdown
+                        label="Select Role"
+                        options={["Maker", "Checker"]}
+                        selected={role}
+                        onChange={setRole}
+                        className="w-[580px]" 
+                    />
                 </div>
 
                 {/* Buttons */}
