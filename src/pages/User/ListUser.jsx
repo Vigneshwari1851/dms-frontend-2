@@ -30,6 +30,78 @@ export default function ListUser() {
       status: "Active",
       created_at: "2024-09-04",
     },
+    {
+      id: 4,
+      full_name: "John Doe",
+      email: "john@example.com",
+      role: "Maker",
+      status: "Active",
+      created_at: "2024-11-12",
+    },
+    {
+      id: 5,
+      full_name: "Sarah Smith",
+      email: "sarah@example.com",
+      role: "Checker",
+      status: "Inactive",
+      created_at: "2024-10-08",
+    },
+    {
+      id: 6,
+      full_name: "Michael Johnson",
+      email: "michael@example.com",
+      role: "Checker",
+      status: "Active",
+      created_at: "2024-09-04",
+    },
+    {
+      id: 7,
+      full_name: "John Doe",
+      email: "john@example.com",
+      role: "Maker",
+      status: "Active",
+      created_at: "2024-11-12",
+    },
+    {
+      id: 8,
+      full_name: "Sarah Smith",
+      email: "sarah@example.com",
+      role: "Checker",
+      status: "Inactive",
+      created_at: "2024-10-08",
+    },
+    {
+      id: 9,
+      full_name: "Michael Johnson",
+      email: "michael@example.com",
+      role: "Checker",
+      status: "Active",
+      created_at: "2024-09-04",
+    },
+    {
+      id: 10,
+      full_name: "John Doe",
+      email: "john@example.com",
+      role: "Maker",
+      status: "Active",
+      created_at: "2024-11-12",
+    },
+    {
+      id: 11,
+      full_name: "Sarah Smith",
+      email: "sarah@example.com",
+      role: "Checker",
+      status: "Inactive",
+      created_at: "2024-10-08",
+    },
+    {
+      id: 12,
+      full_name: "Michael Johnson",
+      email: "michael@example.com",
+      role: "Checker",
+      status: "Active",
+      created_at: "2024-09-04",
+    },
   ];
 
   const columns = [
@@ -74,6 +146,7 @@ export default function ListUser() {
           data={rowsWithActions}   
           title="Users List"
           subtitle="Review and manage customer accounts"
+          sortableKeys={["email", "status"]}
         />
       </div>
     </>

@@ -15,9 +15,11 @@ export default function Pagination({ currentPage, totalPages, onPrev, onNext }) 
         >
           <img src={leftArrow} className="w-3 h-3" alt="prev" />
         </button>
-
+        
         <span className="text-sm text-[#8F8F8F]">
-          <span className="text-white">{currentPage}</span> of {totalPages}
+          <span className="text-white mr-1">{currentPage}</span>
+          <span className="mx-1">of</span>
+          <span className="text-white ml-1">{totalPages}</span>
         </span>
 
         <button

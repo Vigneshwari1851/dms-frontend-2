@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Pagination from "../common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
+import SortableHeader from "../common/SortableHeader";
 
 export default function Table({
   columns = [],
@@ -9,16 +10,12 @@ export default function Table({
   title = "Table Title",
   subtitle = "", 
   onSearch,
+  sortableKeys = [], 
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: null, asc: true });
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
   const roleColors = { 
     Maker: "text-[#33BAA6] bg-[#22998824] border-[#33BAA6] border",
     Checker: "text-[#B47AF4] bg-[#9C4DF424] border-[#B47AF4] border",
@@ -29,7 +26,15 @@ export default function Table({
     Inactive: "text-[#F7626E] bg-[#BD404A24] border-[#F7626E] border",
   };
 
-  const renderCell = (col, value, row) => {
+  const handleSort = (key) => {
+    if (sortConfig.key === key) {
+      setSortConfig({ key, asc: !sortConfig.asc });
+    } else {
+      setSortConfig({ key, asc: true });
+    }
+  };
+
+  const renderCell = (col, value) => {
     if (col.key === "role") {
       return (
         <span
@@ -54,6 +59,31 @@ export default function Table({
 
     return value;
   };
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) =>
+      Object.values(row).some((val) =>
+        val?.toString().toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }, [data, search]);
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return filteredData;
+    return [...filteredData].sort((a, b) => {
+      const valA = a[sortConfig.key]?.toString().toLowerCase() || "";
+      const valB = b[sortConfig.key]?.toString().toLowerCase() || "";
+      if (valA < valB) return sortConfig.asc ? -1 : 1;
+      if (valA > valB) return sortConfig.asc ? 1 : -1;
+      return 0;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const paginatedData = sortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="mt-6 w-full">
@@ -90,11 +120,22 @@ export default function Table({
         <table className="w-full text-left text-[#8F8F8F] font-normal text-[13px]">
           <thead>
             <tr className="text-[#FFFFFF] text-[12px] font-normal">
-              {columns.map((col, index) => (
-                <th key={index} className="py-3 text-left">
-                  {col.label}
-                </th>
-              ))}
+              {columns.map((col, index) =>
+                sortableKeys.includes(col.key) ? (
+                  <SortableHeader
+                    key={index}
+                    label={col.label}
+                    columnKey={col.key}
+                    sortBy={sortConfig.key}
+                    sortAsc={sortConfig.asc}
+                    onSort={handleSort}
+                  />
+                ) : (
+                  <th key={index} className="py-3 text-left">
+                    {col.label}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
 
@@ -106,9 +147,7 @@ export default function Table({
               >
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className="py-3 text-left">
-                    {col.key === "role" || col.key === "status"
-                      ? renderCell(col, row[col.key], row)
-                      : row[col.key]}
+                    {renderCell(col, row[col.key])}
                   </td>
                 ))}
               </tr>
