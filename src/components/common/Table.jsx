@@ -19,6 +19,41 @@ export default function Table({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const roleColors = { 
+    Maker: "text-[#33BAA6] bg-[#22998824] border-[#33BAA6] border",
+    Checker: "text-[#B47AF4] bg-[#9C4DF424] border-[#B47AF4] border",
+  };
+
+  const statusColors = {
+    Active: "text-[#82E890] bg-[#10B93524] border-[#82E890] border",
+    Inactive: "text-[#F7626E] bg-[#BD404A24] border-[#F7626E] border",
+  };
+
+  const renderCell = (col, value, row) => {
+    if (col.key === "role") {
+      return (
+        <span
+          className={`px-3 py-1 text-sm font-medium ${roleColors[value] || ""}`}
+          style={{ borderRadius: "18px" }}
+        >
+          {value}
+        </span>
+      );
+    }
+
+    if (col.key === "status") {
+      return (
+        <span
+          className={`px-3 py-1 text-sm font-medium ${statusColors[value] || ""}`}
+          style={{ borderRadius: "18px" }}
+        >
+          {value}
+        </span>
+      );
+    }
+
+    return value;
+  };
 
   return (
     <div className="mt-6 w-full">
@@ -71,7 +106,9 @@ export default function Table({
               >
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className="py-3 text-left">
-                    {row[col.key]}
+                    {col.key === "role" || col.key === "status"
+                      ? renderCell(col, row[col.key], row)
+                      : row[col.key]}
                   </td>
                 ))}
               </tr>

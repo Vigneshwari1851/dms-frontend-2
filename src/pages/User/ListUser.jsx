@@ -26,7 +26,7 @@ export default function ListUser() {
       id: 3,
       full_name: "Michael Johnson",
       email: "michael@example.com",
-      role: "Admin",
+      role: "Checker",
       status: "Active",
       created_at: "2024-09-04",
     },
@@ -34,8 +34,8 @@ export default function ListUser() {
 
   const columns = [
     { label: "Name", key: "full_name" },
-    { label: "Email", key: "email" },
     { label: "Role", key: "role" },
+    { label: "Email", key: "email" },
     { label: "Status", key: "status" },
     { label: "Created At", key: "created_at" },
     { label: "Actions", key: "actions" },
