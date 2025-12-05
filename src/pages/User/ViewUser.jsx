@@ -48,7 +48,7 @@ export default function ViewUser() {
                     {!editMode && (
                         <button
                             onClick={() => setEditMode(true)}
-                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-7 w-[55px] text-white px-4 py-2 rounded-md text-sm font-medium"
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-7 w-[55px] text-white px-4 py-2 rounded-md text-sm font-medium"
                         >
                             Edit
                         </button>
@@ -151,7 +151,7 @@ export default function ViewUser() {
                     Account Status
                 </h3>
 
-                <div className="bg-[#111317] px-5 py-4 rounded-xl flex items-center justify-between">
+                <div className="bg-[#16191C] px-5 py-4 rounded-xl flex items-center justify-between">
                     <div>
                         <p className="text-white text-[14px] mb-1">Account Active</p>
                         <p className="text-[#9EA3A7] text-[12px]">
@@ -230,12 +230,12 @@ export default function ViewUser() {
                     <div className="flex justify-end gap-3 mt-8">
                         <button
                             onClick={handleCancel}
-                            className="px-6 py-2 border border-gray-500 text-white rounded-lg"
+                            className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
                         >
                             Cancel
                         </button>
 
-                        <button className="bg-[#1D4CB5] px-6 py-2 rounded-lg text-white">
+                        <button className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white">
                             Save Changes
                         </button>
                     </div>

@@ -139,7 +139,7 @@ export default function ListUser() {
         <h1 className="text-white text-2xl font-semibold">Users</h1>
         <button    
         onClick={handleAddUser}
-        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
           <img src={add} alt="add" className="w-5 h-5" />
           Add User
         </button>
