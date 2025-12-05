@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../../components/common/Table"; 
 import add from "../../assets/user/add_person.svg";
-import ActionDropdown from "../../components/common/ActionDropdown"; // adjust path
+import ActionDropdown from "../../components/common/ActionDropdown";
+import NotificationCard from "../../components/common/Notification"; 
 
 export default function ListUser() {
   const navigate = useNavigate();
+  const [confirmModal, setConfirmModal] = useState({ open: false });
+
 
   const handleAddUser = () => {
     navigate("/users/add-user");
@@ -123,11 +127,40 @@ export default function ListUser() {
     actions: (
       <ActionDropdown
         options={[
-          { label: "View User Details", onClick: () => navigate(`/users/details/${user.id}`), },
-          { label: "Edit User Details", onClick: () => navigate(`/users/details/${user.id}`, {state: { edit: true }}), },
-          { label: "Delete User", onClick: () => alert(`Delete ${user.full_name}`) },
-          { label: "Deactivate User", onClick: () => alert(`Deactivate ${user.full_name}`) },
-          { label: "Reset Password", onClick: () => alert(`Reset password for ${user.full_name}`) },
+          { label: "View User Details", onClick: () => 
+            navigate(`/users/details/${user.id}`), 
+          },
+          { label: "Edit User Details", onClick: () => 
+            navigate(`/users/details/${user.id}`, {state: { edit: true }}), 
+          },
+          { label: "Delete User", onClick: () =>
+              setConfirmModal({
+                open: true,
+                actionType: "delete",
+                title: "Are you sure you want to delete this account?",
+                message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
+              }), 
+            },
+          { label: "Deactivate User", onClick: () =>
+              setConfirmModal({
+                open: true,
+                actionType: "deactivate",
+                title: user.status === "Active" 
+                  ? "Are you sure you want to deactivate this user account?" 
+                  : "Activate Account",
+                message: user.status === "Active"
+                  ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
+                  : "You are about to activate this user account. The user will be able to log in or perform any actions until deactivated. Do you wish to continue?",
+              }),
+            },
+          { label: "Reset Password", onClick: () =>
+              setConfirmModal({
+                open: true,
+                actionType: "resetPassword",
+                title: "Are you sure you want to send a password reset link?",
+                message: "You want to send a password reset link to this user’s registered email address? The user will be able to create a new password from their email.",
+              }),
+            },
         ]}
       />
     ),
@@ -156,6 +189,13 @@ export default function ListUser() {
           sortableKeys={["email", "status"]}
         />
       </div>
+       <NotificationCard 
+        confirmModal={confirmModal}
+        onConfirm={() => {
+          setConfirmModal({ open: false });
+        }}
+        onCancel={() => setConfirmModal({ open: false })}
+      />
     </>
   );
 }
