@@ -1,5 +1,6 @@
 import Table from "../../components/common/Table"; 
 import add from "../../assets/user/add_person.svg";
+import ActionDropdown from "../../components/common/ActionDropdown"; // adjust path
 
 export default function ListUser() {
 
@@ -37,7 +38,23 @@ export default function ListUser() {
     { label: "Role", key: "role" },
     { label: "Status", key: "status" },
     { label: "Created At", key: "created_at" },
+    { label: "Actions", key: "actions" },
   ];
+
+  const rowsWithActions = dummyUsers.map((user) => ({
+    ...user,
+    actions: (
+      <ActionDropdown
+        options={[
+          { label: "View User Details", onClick: () => alert(`View ${user.full_name}`) },
+          { label: "Edit User Details", onClick: () => alert(`Edit ${user.full_name}`) },
+          { label: "Delete User", onClick: () => alert(`Delete ${user.full_name}`) },
+          { label: "Deactivate User", onClick: () => alert(`Deactivate ${user.full_name}`) },
+          { label: "Reset Password", onClick: () => alert(`Reset password for ${user.full_name}`) },
+        ]}
+      />
+    ),
+  }));
 
   return (
     <>
@@ -53,11 +70,11 @@ export default function ListUser() {
 
       <div className="mt-8">
         <Table 
-            columns={columns} 
-            data={dummyUsers}   
-            title="Users List"
+          columns={columns} 
+          data={rowsWithActions}   
+          title="Users List"
           subtitle="Review and manage customer accounts"
-          />
+        />
       </div>
     </>
   );
