@@ -123,8 +123,8 @@ export default function ListUser() {
     actions: (
       <ActionDropdown
         options={[
-          { label: "View User Details", onClick: () => alert(`View ${user.full_name}`) },
-          { label: "Edit User Details", onClick: () => alert(`Edit ${user.full_name}`) },
+          { label: "View User Details", onClick: () => navigate(`/users/details/${user.id}`), },
+          { label: "Edit User Details", onClick: () => navigate(`/users/details/${user.id}`, {state: { edit: true }}), },
           { label: "Delete User", onClick: () => alert(`Delete ${user.full_name}`) },
           { label: "Deactivate User", onClick: () => alert(`Deactivate ${user.full_name}`) },
           { label: "Reset Password", onClick: () => alert(`Reset password for ${user.full_name}`) },

@@ -1,0 +1,217 @@
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+
+export default function ViewUser() {
+    const location = useLocation();
+
+    const initialEdit = location.state?.edit || false;
+    const [editMode, setEditMode] = useState(initialEdit);
+    const [isActive, setIsActive] = useState(true);
+
+    const [formData, setFormData] = useState({
+        full_name: "Vishnu VK",
+        email: "email@example.com",
+        phone: "+255 xxx xxx xxx",
+        role: "Maker",
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCancel = () => {
+        setEditMode(false);
+    };
+
+    return (
+        <>
+            {/* PAGE HEADER */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-[16px] font-medium text-white">User Details</h2>
+                    <p className="text-gray-400 text-[12px]">View and manage user information</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {/* ACTIVE BADGE */}
+                    <span className="px-4 py-1 bg-[#10B93524] text-[#82E890] rounded-full text-[12px]">
+                        Active
+                    </span>
+
+                    {/* EDIT BUTTON (Hidden in edit mode) */}
+                    {!editMode && (
+                        <button
+                            onClick={() => setEditMode(true)}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-7 w-[55px] text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Edit
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* MAIN FORM CONTAINER */}
+            <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
+                {/* FULL NAME */}
+                <div>
+                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                        Full Name
+                    </label>
+                    <input
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleChange}
+                        readOnly={!editMode}
+                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
+                            !editMode ? "cursor-not-allowed opacity-80" : ""
+                        }`}
+                    />
+                </div>
+
+                {/* EMAIL + PHONE */}
+                <div className="grid grid-cols-2 gap-6 mt-6">
+                    <div>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                            Email
+                        </label>
+                        <input
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            readOnly={!editMode}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
+                                !editMode ? "cursor-not-allowed opacity-80" : ""
+                            }`}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                            Phone
+                        </label>
+                        <input
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            readOnly={!editMode}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
+                                !editMode ? "cursor-not-allowed opacity-80" : ""
+                            }`}
+                        />
+                    </div>
+                </div>
+
+                {/* ROLE */}
+                <div className="mt-6">
+                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                        Role
+                    </label>
+                    <input
+                        value={formData.role}
+                        readOnly
+                        className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80"
+                    />
+                </div>
+
+                {/* DIVIDER */}
+                <div className="border-b border-[#2A2F33] my-6"></div>
+
+                {/* ACCOUNT STATUS */}
+                <h3 className="text-white font-semibold text-[14px] mb-3">
+                    Account Status
+                </h3>
+
+                <div className="bg-[#111317] px-5 py-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p className="text-white text-[14px] mb-1">Account Active</p>
+                        <p className="text-[#9EA3A7] text-[12px]">
+                            User can login and access the system
+                        </p>
+                    </div>
+
+                    {/* SWITCH */}
+                    <label
+                        className={`relative inline-flex items-center ${
+                            !editMode ? "cursor-not-allowed" : "cursor-pointer"
+                        }`}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={() => editMode && setIsActive(!isActive)}
+                            disabled={!editMode}
+                            className="sr-only peer"
+                        />
+
+                        <div
+                            className={`w-10 h-5 rounded-full transition ${
+                                isActive ? "bg-blue-600" : "bg-gray-600"
+                            } ${!editMode ? "opacity-60" : ""}`}
+                        ></div>
+
+                        <div
+                            className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${
+                                isActive ? "translate-x-5" : ""
+                            } ${!editMode ? "opacity-60" : ""}`}
+                        ></div>
+                    </label>
+                </div>
+
+                {/* SECURITY ACTIONS - ONLY IN EDIT MODE */}
+                {editMode && (
+                    <>
+                        <h3 className="text-white font-semibold text-[14px] mt-6 mb-3">
+                            Security Actions
+                        </h3>
+                        <div className="flex gap-3">
+                            <button
+                                className="
+                                    px-4 py-2 
+                                    border border-[#1D4CB5] 
+                                    text-white 
+                                    rounded-md 
+                                    text-sm 
+                                    transition 
+                                    hover:bg-[#1D4CB5]
+                                    hover:text-white
+                                "
+                            >
+                                Reset Password
+                            </button>
+                            <button
+                                className="
+                                    px-4 py-2 
+                                    border border-[#B51D1D] 
+                                    text-[#FF6B6B] 
+                                    rounded-md 
+                                    text-sm 
+                                    transition
+                                    hover:bg-[#B51D1D]
+                                    hover:text-white
+                                "
+                            >
+                                Delete Account
+                            </button>
+                        </div>
+
+                    </>
+                )}
+                {editMode && (
+                    <div className="flex justify-end gap-3 mt-8">
+                        <button
+                            onClick={handleCancel}
+                            className="px-6 py-2 border border-gray-500 text-white rounded-lg"
+                        >
+                            Cancel
+                        </button>
+
+                        <button className="bg-[#1D4CB5] px-6 py-2 rounded-lg text-white">
+                            Save Changes
+                        </button>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
