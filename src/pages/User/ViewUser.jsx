@@ -118,8 +118,13 @@ export default function ViewUser() {
                     <input
                         value={formData.role}
                         readOnly
-                        className="w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80 border border-transparent"
-                    />
+                        className={`w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white
+                            ${!editMode 
+                                ? "border border-transparent hover:border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
+                                : "border border-[#2A2F33] focus:border-blue-500"
+                            }
+                        `}
+                        />
                 )}
                 {editMode && (
                     <Dropdown
@@ -129,7 +134,7 @@ export default function ViewUser() {
                         onChange={(value) =>
                             setFormData((prev) => ({ ...prev, role: value }))
                         }
-                        className="w-[580px]"
+                        className="w-[566px]"
                     />
                 )}
             </div>
