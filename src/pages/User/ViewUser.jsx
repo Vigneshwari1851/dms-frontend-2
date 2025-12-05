@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import Dropdown from "../../components/common/Dropdown";
 
 export default function ViewUser() {
     const location = useLocation();
@@ -110,15 +111,28 @@ export default function ViewUser() {
 
                 {/* ROLE */}
                 <div className="mt-6">
-                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
-                        Role
-                    </label>
+                <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                    Role
+                </label>
+                {!editMode && (
                     <input
                         value={formData.role}
                         readOnly
-                        className="w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80"
+                        className="w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80 border border-transparent"
                     />
-                </div>
+                )}
+                {editMode && (
+                    <Dropdown
+                        label="Select Role"
+                        options={["Maker", "Checker"]}
+                        selected={formData.role}
+                        onChange={(value) =>
+                            setFormData((prev) => ({ ...prev, role: value }))
+                        }
+                        className="w-[580px]"
+                    />
+                )}
+            </div>
 
                 {/* DIVIDER */}
                 <div className="border-b border-[#2A2F33] my-6"></div>
