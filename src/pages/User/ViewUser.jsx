@@ -63,9 +63,11 @@ export default function ViewUser() {
                         value={formData.full_name}
                         onChange={handleChange}
                         readOnly={!editMode}
-                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
-                            !editMode ? "cursor-not-allowed opacity-80" : ""
-                        }`}
+                        className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
+                            ${!editMode 
+                                ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                                : "border border-[#2A2F33] focus:border-blue-500"}
+                            `}
                     />
                 </div>
 
@@ -80,9 +82,11 @@ export default function ViewUser() {
                             value={formData.email}
                             onChange={handleChange}
                             readOnly={!editMode}
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
-                                !editMode ? "cursor-not-allowed opacity-80" : ""
-                            }`}
+                            className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
+                                ${!editMode 
+                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                                    : "border border-[#2A2F33] focus:border-blue-500"}
+                            `}
                         />
                     </div>
 
@@ -95,9 +99,11 @@ export default function ViewUser() {
                             value={formData.phone}
                             onChange={handleChange}
                             readOnly={!editMode}
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white ${
-                                !editMode ? "cursor-not-allowed opacity-80" : ""
-                            }`}
+                            className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
+                                ${!editMode 
+                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                                    : "border border-[#2A2F33] focus:border-blue-500"}
+                            `}
                         />
                     </div>
                 </div>
@@ -110,7 +116,7 @@ export default function ViewUser() {
                     <input
                         value={formData.role}
                         readOnly
-                        className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80"
+                        className="w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-80"
                     />
                 </div>
 
