@@ -34,7 +34,7 @@ export default function AddUser() {
                 </div>
 
                 <div>
-                    <label className="block font-normal text-sm text-[#ABABAB] mt-6">
+                    <label className="block font-normal text-sm text-[#ABABAB] mt-6 mb-1">
                         Role <span className="text-red-500">*</span>
                     </label>
 
