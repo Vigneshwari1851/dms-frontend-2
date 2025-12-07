@@ -9,8 +9,11 @@ import IpBlocked from "../pages/Error/IpBlocked";
 import AccountDisabled from "../pages/Error/AccountDeactivated";
 import ForgotPassword from "../pages/Auth/ForgetPassword/ForgotPassword";
 import CreateDeal from "../pages/Deal/CreateDeal";
-
+import DealsList from "../pages/Deal/DealsList";
+import DealReview from "../components/deal/DealReviewPage"
 import AppLayout from "../components/layout/AppLayout";
+import ViewSlip from "../pages/Deal/ViewSlip";
+import EditDeal from "../pages/Deal/EditDeal";
 
 export default function AppRoutes() {
   return (
@@ -27,7 +30,11 @@ export default function AppRoutes() {
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Dashboard />} />    {/* default */}
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="deals" element={<DealsList />} />
         <Route path="create-deal" element={<CreateDeal />} />
+        <Route path="deal-review" element={<DealReview />} />
+        <Route path="view-slip" element={<ViewSlip />} />
+        <Route path="edit-deal" element={<EditDeal />} />
       </Route>
     </Routes>
   );
