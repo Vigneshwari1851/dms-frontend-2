@@ -7,6 +7,8 @@ import Dropdown from "../common/Dropdown";
 import leftArrow from "../../assets/Common/left.svg";
 import rightArrow from "../../assets/Common/right.svg";
 import Pagination from "../common/Pagination";
+import pdf from "../../assets/common/pdf.svg";
+import excel from "../../assets/common/excel.svg";
 
 export default function DealsTable() {
   const data = [
