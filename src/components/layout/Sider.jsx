@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
-    { name: "Deals", icon: deals, path: "/create-deal" },
+    { name: "Deals", icon: deals, path: "/deals" },
     { name: "User Management", icon: usermanagement, path: "/users" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reporting", icon: reporting, path: "/reporting" },

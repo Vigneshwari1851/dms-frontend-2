@@ -7,6 +7,8 @@ import Dropdown from "../common/Dropdown";
 import leftArrow from "../../assets/Common/left.svg";
 import rightArrow from "../../assets/Common/right.svg";
 import Pagination from "../common/Pagination";
+import pdf from "../../assets/common/pdf.svg";
+import excel from "../../assets/common/excel.svg";
 
 export default function DealsTable() {
   const data = [
@@ -118,7 +120,7 @@ export default function DealsTable() {
       currency1: "EUR",
       status: "Completed",
     },
-     {
+    {
       id: "D001",
       date: "2025/01/26",
       type: "Buy",
@@ -130,7 +132,7 @@ export default function DealsTable() {
       currency1: "EUR",
       status: "Pending",
     },
-     {
+    {
       id: "D001",
       date: "2025/01/26",
       type: "Buy",
@@ -142,7 +144,7 @@ export default function DealsTable() {
       currency1: "EUR",
       status: "Pending",
     },
-     {
+    {
       id: "D001",
       date: "2025/01/26",
       type: "Buy",
@@ -204,7 +206,7 @@ export default function DealsTable() {
   // -------- Pagination Logic --------
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
-
+   const [exportOpen, setExportOpen] = useState(false);
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
 
   const paginatedData = filteredAndSortedData.slice(
@@ -238,10 +240,27 @@ export default function DealsTable() {
             onChange={(value) => setCurrencyFilter(value)}
           />
 
-          <button className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2">
-            <img src={download} alt="download" className="w-6 h-6" />
-            Export
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setExportOpen(!exportOpen)}
+              className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+            >
+              <img src={download} alt="download" className="w-6 h-6" /> Export
+            </button>
+
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
+                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] ">
+                  <img src={pdf} alt="pdf" className="w-4 h-4" />
+                  PDF
+                </button>
+                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]">
+                  <img src={excel} alt="excel" className="w-4 h-4" />
+                  Excel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -270,7 +289,7 @@ export default function DealsTable() {
                 <span className="flex flex-col ">
                   <img
                     src={uparrowIcon}
-                    className={`w-3 h-3 -mt-[5px] ${!sortAsc  ? "opacity-100" : "opacity-30"
+                    className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
                       }`}
                   />
                   <img
