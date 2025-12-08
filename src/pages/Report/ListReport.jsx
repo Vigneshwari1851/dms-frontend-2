@@ -7,6 +7,7 @@ import Dropdown from "../../components/common/Dropdown";
 import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
+import CalendarMini from "../../components/common/CalendarMini";
 
 export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
@@ -23,6 +24,10 @@ export default function ListReport() {
 
   const [sortBy, setSortBy] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
+
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
   const formats = [
@@ -123,7 +128,14 @@ export default function ListReport() {
         <div className="grid grid-cols-3 gap-6">
           <div className="flex flex-col">
             <label className="text-gray-300 mb-2 text-sm">Date Range</label>
-            <Dropdown label={tempDateRange} options={dateRanges} onChange={setTempDateRange} />
+            <Dropdown
+              label={tempDateRange}
+              options={dateRanges}
+              onChange={(value) => {
+                setTempDateRange(value);
+                if (value === "Custom") setShowCustomModal(true);
+              }}
+            />
           </div>
 
           <div className="flex flex-col">
@@ -151,6 +163,59 @@ export default function ListReport() {
           </div>
         </div>
       </div>
+
+      {/* CUSTOM DATE MODAL */}
+      {showCustomModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1A1D23] p-6 rounded-xl w-[650px] border border-[#2A2D33] shadow-lg">
+            <h2 className="text-white text-lg font-semibold mb-4">
+              Select Date Range
+            </h2>
+
+            <div className="flex justify-between gap-6">
+              <div className="flex-1">
+                <label className="text-gray-300 mb-2 text-sm">From:</label>
+                <CalendarMini
+                  selectedDate={customFrom}
+                  onDateSelect={(date) => setCustomFrom(date)}
+                />
+              </div>
+
+              <div className="flex-1">
+                <label className="text-gray-300 mb-2 text-sm">To:</label>
+                <CalendarMini
+                  selectedDate={customTo}
+                  onDateSelect={(date) => setCustomTo(date)}
+                  disabled={!customFrom}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="px-4 py-2 bg-gray-600 text-white rounded-md"
+                onClick={() => {
+                  setShowCustomModal(false);
+                  setTempDateRange("Today");
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md disabled:opacity-40"
+                disabled={!customFrom || !customTo}
+                onClick={() => {
+                  setShowCustomModal(false);
+                  setTempDateRange("Custom");
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
