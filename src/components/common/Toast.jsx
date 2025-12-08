@@ -1,72 +1,56 @@
-import React from "react"; 
+import React from "react";
+import successIcon from "../../assets/toast/success.svg";
+import failIcon from "../../assets/toast/fail.svg";
+import pendingIcon from "../../assets/toast/pending.svg";
 
-function Toast({ show, message, type }) {
+export default function Toast({ show, message, type }) {
+    const getGradient = () => {
+        switch (type) {
+            case "success":
+                return "bg-[radial-gradient(circle_at_top_left,_#00ED51,_#00ED7B00),_#2E3439]";
+            case "error":
+                return "bg-[radial-gradient(circle_at_top_left,_#EB1D2E,_#EB1D2E00),_#2E3439]";
+            case "pending":
+                return "bg-[radial-gradient(circle_at_top_left,_#FFCC00,_#D8AD0000),_#2E3439]";
+            default:
+                return "bg-[#2E3439]";
+        }
+    };
+
+    const getIcon = () => {
+        if (type === "success") return successIcon;
+        if (type === "error") return failIcon;
+        return pendingIcon;
+    };
+
     return (
         <>
             {show && (
-                <>
-                    {/* Full-screen background */}
-                    <div
-                        className="fixed inset-0 z-9998"
-                        style={{ backgroundColor: "#000000D6" }}
-                    ></div>
-
-                    {/* Toast */}
-                    <div
-                        className={`
-                            fixed top-5 right-5 z-9999
-                            flex items-center gap-3
-                            px-5 py-3
-                            rounded-xl shadow-lg
-                            transition-all duration-300
-                            w-[400px]
-                            ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"}
-                            ${type === "success"
-                                ? "bg-linear-to-r from-green-100 to-white/10"
-                                : "bg-linear-to-r from-red-100 to-white/10"}
-                        `}
-                        style={{ boxShadow: "0px 4px 20px rgba(0,0,0,0.15)" }}
-                    >
-                        <div className="relative flex items-center justify-center w-7 h-6">
-                            <div className="absolute inset-0 rounded-full border-6 border-gray-300/60 pointer-events-none"></div>
-                            <div
-                                className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center
-                                ${type === "success" ? "bg-green-500" : "bg-red-500"}`}
-                            >
-                                {type === "success" ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="white"
-                                        className="w-4 h-4"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="white"
-                                        className="w-4 h-4"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                )}
-                            </div>
-                        </div>
-
-                        <span className="text-[16px] font-medium">
-                            {message}
-                        </span>
-                    </div>
-                </>
+                <div
+                    className={`
+                        fixed top-8 left-[1050px] z-9999
+                        flex items-center gap-4
+                        w-[459px] h-14
+                        px-4 py-3
+                        
+                        rounded-lg
+                        text-white text-[16px] font-medium
+                        
+                        shadow-[0px_8px_10px_0px_#00000033,
+                                0px_6px_30px_0px_#0000001F,
+                                0px_16px_24px_0px_#00000024]
+                        
+                        backdrop-blur-xl
+                        transition-all duration-300
+                        
+                        ${getGradient()}
+                        ${show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
+                    `}
+                >
+                    <img src={getIcon()} alt="icon" className="w-6 h-6" />
+                    <span className="whitespace-nowrap leading-none">{message}</span>
+                </div>
             )}
         </>
     );
 }
-
-export default Toast;

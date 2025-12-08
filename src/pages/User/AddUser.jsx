@@ -9,11 +9,25 @@ export default function AddUser() {
     const navigate = useNavigate();
 
     const handleCancel = () => {
-        navigate("/users");
+        navigate("/users", {
+            state: {
+                toast: {
+                    message: "User failed to add",
+                    type: "error"
+                }
+            }
+        });
     };
 
     const handleAddUser = () => {
-        navigate("/users");
+        navigate("/users", {
+            state: {
+                toast: {
+                    message: "User added successfully",
+                    type: "success"
+                }
+            }
+        });
     };
 
     return (

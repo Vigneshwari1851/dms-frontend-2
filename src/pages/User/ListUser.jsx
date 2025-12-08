@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState,useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import Toast from "../../components/common/Toast";
 import Table from "../../components/common/Table"; 
 import add from "../../assets/user/add_person.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
@@ -8,7 +10,21 @@ import NotificationCard from "../../components/common/Notification";
 export default function ListUser() {
   const navigate = useNavigate();
   const [confirmModal, setConfirmModal] = useState({ open: false });
+  const location = useLocation();
 
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("");
+
+
+  useEffect(() => {
+      if (location.state?.toast) {
+          setToastMessage(location.state.toast.message);
+          setToastType(location.state.toast.type);
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2500);
+      }
+  }, [location.state]);
 
   const handleAddUser = () => {
     navigate("/users/add-user");
@@ -189,6 +205,7 @@ export default function ListUser() {
           sortableKeys={["email", "status"]}
         />
       </div>
+       <Toast show={showToast} message={toastMessage} type={toastType} />
        <NotificationCard 
         confirmModal={confirmModal}
         onConfirm={() => {
