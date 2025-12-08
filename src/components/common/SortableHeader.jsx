@@ -13,10 +13,10 @@ export default function SortableHeader({
 
   return (
     <th
-      className="py-3 text-left cursor-pointer select-none"
+      className="py-3 text-center cursor-pointer select-none"
       onClick={() => onSort(columnKey)}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-center gap-1 w-full">
         {label}
         <span className="flex flex-col ml-1">
           <img
@@ -31,7 +31,8 @@ export default function SortableHeader({
             src={downarrowIcon}
             className="w-3 h-3 -mt-3 ml-1.5"
             style={{
-              filter: isActive && !sortAsc ? "brightness(1.5)" : "brightness(1)",
+              filter:
+                isActive && !sortAsc ? "brightness(1.5)" : "brightness(1)",
             }}
             alt="desc"
           />

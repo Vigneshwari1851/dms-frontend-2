@@ -141,45 +141,41 @@ export default function ListUser() {
   const rowsWithActions = dummyUsers.map((user) => ({
     ...user,
     actions: (
-      <ActionDropdown
-        options={[
-          { label: "View User Details", onClick: () => 
-            navigate(`/users/details/${user.id}`), 
-          },
-          { label: "Edit User Details", onClick: () => 
-            navigate(`/users/details/${user.id}`, {state: { edit: true }}), 
-          },
-          { label: "Delete User", onClick: () =>
-              setConfirmModal({
-                open: true,
-                actionType: "delete",
-                title: "Are you sure you want to delete this account?",
-                message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
-              }), 
-            },
-          { label: "Deactivate User", onClick: () =>
-              setConfirmModal({
-                open: true,
-                actionType: "deactivate",
-                title: user.status === "Active" 
-                  ? "Are you sure you want to deactivate this user account?" 
-                  : "Activate Account",
-                message: user.status === "Active"
-                  ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
-                  : "You are about to activate this user account. The user will be able to log in or perform any actions until deactivated. Do you wish to continue?",
-              }),
-            },
-          { label: "Reset Password", onClick: () =>
-              setConfirmModal({
-                open: true,
-                actionType: "resetPassword",
-                title: "Are you sure you want to send a password reset link?",
-                message: "You want to send a password reset link to this user’s registered email address? The user will be able to create a new password from their email.",
-              }),
-            },
-        ]}
-      />
-    ),
+  <div className="flex justify-center w-full">
+    <ActionDropdown
+      options={[
+        { label: "View User Details", onClick: () => navigate(`/users/details/${user.id}`) },
+        { label: "Edit User Details", onClick: () => navigate(`/users/details/${user.id}`, { state: { edit: true }}) },
+        { label: "Delete User", onClick: () => setConfirmModal({
+            open: true,
+            actionType: "delete",
+            title: "Are you sure you want to delete this account?",
+            message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
+          })
+        },
+        { label: "Deactivate User", onClick: () => setConfirmModal({
+            open: true,
+            actionType: "deactivate",
+            title: user.status === "Active" 
+              ? "Are you sure you want to deactivate this user account?" 
+              : "Activate Account",
+            message: user.status === "Active"
+              ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
+              : "You are about to activate this user account. Do you wish to continue?",
+          })
+        },
+        { label: "Reset Password", onClick: () => setConfirmModal({
+            open: true,
+            actionType: "resetPassword",
+            title: "Are you sure you want to send a password reset link?",
+            message: "You want to send a password reset link to this user’s email.",
+          })
+        },
+      ]}
+    />
+  </div>
+)
+
   }));
 
   return (
@@ -203,6 +199,7 @@ export default function ListUser() {
           title="Users List"
           subtitle="Review and manage customer accounts"
           sortableKeys={["email", "status"]}
+           showRightSection={false}
         />
       </div>
        <Toast show={showToast} message={toastMessage} type={toastType} />
