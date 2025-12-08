@@ -209,6 +209,35 @@ export default function ListUser() {
        <NotificationCard 
         confirmModal={confirmModal}
         onConfirm={() => {
+          let msg = "";
+          let type = "";
+
+          switch (confirmModal.actionType) {
+            case "resetPassword":
+              msg = "Password reset email sent to user.";
+              type = "success";
+              break;
+
+            case "deactivate":
+              msg = "User Deactivated!";
+              type = "error";
+              break;
+
+            case "delete":
+              msg = "Account Deleted!";
+              type = "error";
+              break;
+
+            default:
+              break;
+          }
+
+          setToastMessage(msg);
+          setToastType(type);
+          setShowToast(true);
+
+          setTimeout(() => setShowToast(false), 2500);
+
           setConfirmModal({ open: false });
         }}
         onCancel={() => setConfirmModal({ open: false })}
