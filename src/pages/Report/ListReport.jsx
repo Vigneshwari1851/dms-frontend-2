@@ -1,0 +1,301 @@
+import { useState } from "react";
+import bgIcon from "../../assets/report/bgimage.svg";
+import downloadIcon from "../../assets/dashboard/download.svg";
+import pdf from "../../assets/common/pdf.svg";
+import excel from "../../assets/common/excel.svg";
+import Dropdown from "../../components/common/Dropdown";
+import Pagination from "../../components/common/Pagination";
+import uparrowIcon from "../../assets/up_arrow.svg";
+import downarrowIcon from "../../assets/down_arrow.svg";
+
+export default function ListReport() {
+  const [tempDateRange, setTempDateRange] = useState("Today");
+  const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
+  const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
+
+  const [dateRange, setDateRange] = useState("Today");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
+
+  const [format, setFormat] = useState("PDF report");
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [sortBy, setSortBy] = useState("");
+  const [sortAsc, setSortAsc] = useState(true);
+
+  const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
+  const formats = [
+    { label: "PDF report", icon: pdf },
+    { label: "Excel report", icon: excel },
+  ];
+
+  const dummyData = {
+    Today: [],
+    "Last 7 days": [
+      { deal_id: "W001", date: "2025-12-01", type: "Buy", customer: "Alice", buy_amount: 1000, buy_currency: "USD", rate: 82, sell_amount: 82000, sell_currency: "INR", status: "Pending" },
+      { deal_id: "W002", date: "2025-12-03", type: "Sell", customer: "Bob", buy_amount: 500, buy_currency: "EUR", rate: 90, sell_amount: 45000, sell_currency: "INR", status: "Completed" },
+    ],
+    "Last 30 days": [
+      { deal_id: "M001", date: "2025-12-05", type: "Buy", customer: "Charlie", buy_amount: 1200, buy_currency: "USD", rate: 84, sell_amount: 100800, sell_currency: "INR", status: "Completed" },
+      { deal_id: "M002", date: "2025-12-07", type: "Sell", customer: "Dave", buy_amount: 700, buy_currency: "EUR", rate: 91, sell_amount: 63700, sell_currency: "INR", status: "Pending" },
+    ],
+    "Last 90 days": [
+      { deal_id: "M001", date: "2025-12-05", type: "Buy", customer: "Charlie", buy_amount: 1200, buy_currency: "USD", rate: 84, sell_amount: 100800, sell_currency: "INR", status: "Completed" },
+      { deal_id: "M002", date: "2025-12-07", type: "Sell", customer: "Dave", buy_amount: 700, buy_currency: "EUR", rate: 91, sell_amount: 63700, sell_currency: "INR", status: "Pending" },
+    ],
+    Custom: [
+      { deal_id: "C001", date: "2025-11-28", type: "Buy", customer: "Eve", buy_amount: 3000, buy_currency: "GBP", rate: 92, sell_amount: 276000, sell_currency: "INR", status: "Completed" },
+    ],
+  };
+
+  const handleApplyFilters = () => {
+    setDateRange(tempDateRange);
+    setStatusFilter(tempStatusFilter);
+    setCurrencyFilter(tempCurrencyFilter);
+    setCurrentPage(1);
+  };
+
+  const reportRows = dummyData[dateRange] || [];
+
+  const filteredData = reportRows.filter(
+    (item) =>
+      (statusFilter === "All Status" || item.status === statusFilter) &&
+      (currencyFilter === "All Currencies" || item.buy_currency === currencyFilter) &&
+      (item.deal_id?.toLowerCase().includes(search.toLowerCase()) ||
+        item.customer?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (!sortBy) return 0;
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+
+    if (typeof valA === "string") valA = valA.toLowerCase();
+    if (typeof valB === "string") valB = valB.toLowerCase();
+
+    if (valA < valB) return sortAsc ? -1 : 1;
+    if (valA > valB) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const paginatedData = sortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const statusColors = {
+    Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+    Completed: "bg-[#1D4CB53D] text-[#88ACFC] border border-[#88ACFC]",
+  };
+  const typeColors = {
+    Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+    Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+  };
+
+  const handleSort = (columnKey) => {
+    if (sortBy === columnKey) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortBy(columnKey);
+      setSortAsc(true);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <h1 className="text-white text-2xl font-semibold">Reports & Analytics</h1>
+        <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+          <img src={downloadIcon} alt="export" className="w-5 h-5" />
+          Export
+        </button>
+      </div>
+
+      <p className="text-gray-400 mb-6">
+        Generate insights and export business data
+      </p>
+
+      {/* Filters */}
+      <div className="bg-[#1A1D23] p-5 rounded-xl mt-4">
+        <div className="grid grid-cols-3 gap-6">
+          <div className="flex flex-col">
+            <label className="text-gray-300 mb-2 text-sm">Date Range</label>
+            <Dropdown label={tempDateRange} options={dateRanges} onChange={setTempDateRange} />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-300 mb-2 text-sm">Format</label>
+            <Dropdown
+              label={format}
+              options={formats}
+              onChange={(value) => setFormat(value.label)}
+              renderOption={(option) => (
+                <div className="flex items-center gap-2">
+                  <img src={option.icon} alt={option.label} className="w-4 h-4" />
+                  <span>{option.label}</span>
+                </div>
+              )}
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button
+              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-5 h-10 rounded-md text-sm font-medium"
+              onClick={handleApplyFilters}
+            >
+              Apply filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+        {reportRows.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-white text-[16px] font-semibold">  
+                {dateRange === "Today" && "Today's Report"}
+                {dateRange === "Last 7 days" && "This Week's Report"}
+                {dateRange === "Last 30 days" && "This Month's Report"}
+                {dateRange === "Last 90 days" && "Three Month's Report"}
+                {dateRange === "Custom" && "Custom's Report"}
+              </h2>
+            </div>
+
+            <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px]">
+              <thead>
+                <tr className="text-[#FFFFFF] text-[12px] font-normal">
+                  <th className="py-3">Deal ID</th>
+                  <th>Date</th>
+
+                  {/* TYPE SORT */}
+                  <th
+                    className="py-3 cursor-pointer select-none"
+                    onClick={() => handleSort("type")}
+                  >
+                    <div className="flex items-center gap-1 justify-center">
+                      Type
+                      <span className="flex flex-col">
+                        <img
+                          src={uparrowIcon}
+                          className={`w-3 h-3 -mt-[5px] ${sortBy === "type" && !sortAsc
+                              ? "opacity-100"
+                              : "opacity-30"
+                            }`}
+                        />
+                        <img
+                          src={downarrowIcon}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "type" && sortAsc
+                              ? "opacity-100"
+                              : "opacity-30"
+                            }`}
+                        />
+                      </span>
+                    </div>
+                  </th>
+
+                  <th>Customer</th>
+                  <th>Buy Amount</th>
+
+                  {/* CURRENCY SORT */}
+                  <th
+                    className="py-3 cursor-pointer select-none"
+                    onClick={() => handleSort("buy_currency")}
+                  >
+                    <div className="flex items-center gap-1 justify-center">
+                      Currency
+                      <span className="flex flex-col">
+                        <img
+                          src={uparrowIcon}
+                          className={`w-3 h-3 -mt-[5px] ${sortBy === "buy_currency" && !sortAsc
+                              ? "opacity-100"
+                              : "opacity-30"
+                            }`}
+                        />
+                        <img
+                          src={downarrowIcon}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "buy_currency" && sortAsc
+                              ? "opacity-100"
+                              : "opacity-30"
+                            }`}
+                        />
+                      </span>
+                    </div>
+                  </th>
+
+                  <th>Rate</th>
+                  <th>Sell Amount</th>
+                  <th>Currency</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {paginatedData.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="rounded-2xl hover:bg-[#151517] transition-colors"
+                  >
+                    <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
+                      {item.deal_id}
+                    </td>
+
+                    <td>{item.date}</td>
+
+                    {/* TYPE PILL */}
+                    <td>
+                      <div className="flex justify-center items-center">
+                        <span
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
+                        >
+                          {item.type}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>{item.customer}</td>
+                    <td>{item.buy_amount}</td>
+
+                    <td>{item.buy_currency}</td>
+
+                    <td>{item.rate}</td>
+                    <td>{item.sell_amount}</td>
+
+                    <td>{item.sell_currency}</td>
+
+                    {/* STATUS */}
+                    <td>
+                      <div className="flex justify-center items-center">
+                        <span
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            />
+          </>
+        )}
+      </div>
+
+    </>
+  );
+}
