@@ -141,7 +141,7 @@ export default function ListReport() {
             />
           </div>
 
-          <div className="flex items-end">
+          <div className="flex justify-end mt-6">
             <button
               className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-5 h-10 rounded-md text-sm font-medium"
               onClick={handleApplyFilters}
