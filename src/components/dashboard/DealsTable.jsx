@@ -226,11 +226,12 @@ export default function DealsTable() {
         </h2>
 
         <div className="flex items-center gap-3">
-          <Dropdown
+        <Dropdown
             label="All Status"
             options={statuses}
             selected={statusFilter}
             onChange={(value) => setStatusFilter(value)}
+            className="w-[150px]"
           />
 
           <Dropdown
@@ -238,7 +239,8 @@ export default function DealsTable() {
             options={currencies}
             selected={currencyFilter}
             onChange={(value) => setCurrencyFilter(value)}
-          />
+            className="w-[180px]"
+          />
 
           <div className="relative">
             <button

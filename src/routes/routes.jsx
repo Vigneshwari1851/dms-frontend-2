@@ -31,7 +31,7 @@ export default function AppRoutes() {
 
       {/* Protected Routes (with layout) */}
       <Route path="/" element={<AppLayout />}>
-        <Route index element={<Dashboard />} />    {/* default */}
+        <Route index element={<Dashboard />} />    
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="deals" element={<DealsList />} />
         <Route path="create-deal" element={<CreateDeal />} />

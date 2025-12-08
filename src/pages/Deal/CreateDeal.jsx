@@ -3,6 +3,7 @@ import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import plus from "../../assets/common/Hplus.svg";
 import Denomination from "../../components/deal/Denomination";
+import Toast from "../../components/common/Toast";
 
 export default function CreateDeal() {
   const [denominationReceived, setDenominationReceived] = useState([
@@ -12,6 +13,20 @@ export default function CreateDeal() {
   const [denominationPaid, setDenominationPaid] = useState([
     { denom: 0, quantity: 0 },
   ]);
+
+   const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+
+   const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+
+    setTimeout(() => {
+      setToast({ show: false, message: "", type });
+    }, 2500);
+  };
 
   // Dropdown States
   const [txnType, setTxnType] = useState("");
@@ -23,6 +38,24 @@ export default function CreateDeal() {
 
    const [currency, setCurrency] = useState("USD - US Dollar");
   const [currencyOpen, setCurrencyOpen] = useState(false);
+
+
+    const handleConfirm = () => {
+    if (actionType === "reject") {
+      setConfirmModal({ open: false });
+      setReasonModalOpen(true); // open reason modal
+      return;
+    }
+
+    if (actionType === "approve") {
+      onApprove ? onApprove(dealData) : console.log("Deal approved", dealData);
+      showToast("Deal Approved Successfully!", "success");
+    }
+
+    
+
+    setConfirmModal({ open: false });
+  };
 
   
   return (
@@ -222,7 +255,7 @@ export default function CreateDeal() {
             Cancel
           </button>
 
-          <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+          <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium" onClick={handleConfirm}> 
             <img src={plus} className="w-5 h-5" />
             Create Deal
           </button>
