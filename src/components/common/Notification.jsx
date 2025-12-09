@@ -5,6 +5,7 @@ import deactivateIcon from "../../assets/notification/deactivate.svg";
 import deleteIcon from "../../assets/notification/cancel.svg";
 import resetIcon from "../../assets/notification/link.svg";
 import confirmIcon from "../../assets/notification/save.svg";
+import activateIcon from "../../assets/notification/activate.svg";
 
 function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     if (!confirmModal.open) return null;
@@ -29,6 +30,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         rejectDeal: deleteIcon,
         cancelApproveDeal: deactivateIcon,
         cancelRejectDeal: deactivateIcon,
+        activate: activateIcon,
     };
 
     const iconToShow = iconMap[actionType] || confirmIcon;
@@ -40,11 +42,12 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         approveDeal: "Approve",
         rejectDeal: "Reject",
         resetPassword: "Send Link",
-        deactivate: "Deactivate",
+        deactivate: "Deactivate Account",
         delete: "Delete",
         cancelApproveDeal: "Cancel Approve",
         cancelRejectDeal: "Cancel Reject",
         confirm: "Confirm",
+        activate: "Activate Account",
     };
 
     const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
@@ -53,13 +56,14 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     // AUTO BUTTON COLORS
     // -------------------------------
     const colorMap = {
-        approveDeal: "#1E902D",        // Green
-        rejectDeal: "#BD404A",         // Red
+        approveDeal: "#1E902D",        
+        rejectDeal: "#BD404A", 
         deactivate: "#BD404A",
         delete: "#BD404A",
         cancelApproveDeal: "#BD404A",
         cancelRejectDeal: "#BD404A",
-        resetPassword: "#1D4CB5",      // Blue
+        resetPassword: "#1D4CB5",
+        activate: "#1E902D",
     };
 
     const confirmBtnColor = colorMap[actionType] || "#1E902D";

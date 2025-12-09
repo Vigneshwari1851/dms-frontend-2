@@ -248,11 +248,13 @@ export default function ViewUser() {
                                 if (!editMode) return;
                                 setConfirmModal({
                                     open: true,
-                                    actionType: "deactivate",
-                                    title: isActive ? "Are you sure you want to deactivate this user account?" : "Activate Account",
+                                    actionType: isActive ? "deactivate" : "activate",
+                                    title: isActive
+                                        ? "Are you sure you want to deactivate this user account?"
+                                        : "Are you sure you want to activate this user account?",
                                     message: isActive
-                                        ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
-                                        : "You are about to activate this user account. The user will be able to log in or perform any actions until deactivated. Do you wish to continue?",
+                                        ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
+                                        : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
                                 });
                             }}
                             disabled={!editMode}
@@ -359,7 +361,10 @@ export default function ViewUser() {
                                 console.log("Password reset");
                                 break;
                             case "deactivate":
-                                setIsActive((prev) => !prev);
+                                setIsActive(false);
+                                break;
+                            case "activate":
+                                setIsActive(true);
                                 break;
                             default:
                                 break;
