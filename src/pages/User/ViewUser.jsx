@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchUserById, updateUser, updateUserStatus } from "../../api/user/user.jsx"; 
+import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -20,6 +20,8 @@ export default function ViewUser() {
         role: "",
     });
 
+    const [initialData, setInitialData] = useState(null);
+    const [pendingDelete, setPendingDelete] = useState(false);
     const [confirmModal, setConfirmModal] = useState({
         open: false,
         actionType: "",
@@ -30,17 +32,9 @@ export default function ViewUser() {
     useEffect(() => {
         const loadUser = async () => {
             const res = await fetchUserById(id);
-            if (res.success) {
-                const user = res.data.user;
-                setFormData({
-                    full_name: user.full_name,
-                    email: user.email,
-                    phone: user.phone_number,
-                    role: user.role,
-                });
-                setIsActive(user.is_active);
-            } else {
-                navigate("/users", {
+
+            if (!res.success) {
+                return navigate("/users", {
                     state: {
                         toast: {
                             message: "Failed to load user data",
@@ -49,6 +43,25 @@ export default function ViewUser() {
                     },
                 });
             }
+
+            const user = res.data.user;
+
+            setFormData({
+                full_name: user.full_name,
+                email: user.email,
+                phone: user.phone_number,
+                role: user.role,
+            });
+
+            setIsActive(user.is_active);
+
+            setInitialData({
+                full_name: user.full_name,
+                email: user.email,
+                phone: user.phone_number,
+                role: user.role,
+                is_active: user.is_active,
+            });
         };
 
         loadUser();
@@ -64,47 +77,52 @@ export default function ViewUser() {
     };
 
     const handleSave = async () => {
-        const payload = {
-            full_name: formData.full_name,
-            email: formData.email,
-            phone_number: formData.phone,
-            role: formData.role,
-        };
+        try {
+            if (pendingDelete) {
+                const delRes = await deleteUser(id);
+                if (!delRes.success) throw new Error("Delete failed");
+            }
+            const payload = {
+                full_name: formData.full_name,
+                email: formData.email,
+                phone_number: formData.phone,
+                role: formData.role,
+            };
 
-        const res = await updateUser(id, payload);
-
-        if (!res.success) {
-            return navigate("/users", {
+            const res = await updateUser(id, payload);
+            if (!res.success) throw new Error("Update failed");
+            const statusRes = await updateUserStatus(id, isActive);
+            if (!statusRes.success) throw new Error("Status update failed");
+            navigate("/users", {
                 state: {
                     toast: {
-                        message: "Failed to update user",
+                        message: "Changes saved successfully",
+                        type: "success",
+                    },
+                },
+            });
+        } catch (err) {
+            console.error(err);
+            if (initialData) {
+                setFormData({
+                    full_name: initialData.full_name,
+                    email: initialData.email,
+                    phone: initialData.phone,
+                    role: initialData.role,
+                });
+                setIsActive(initialData.is_active);
+                setPendingDelete(false);
+            }
+
+            navigate("/users", {
+                state: {
+                    toast: {
+                        message: "Changes not updated",
                         type: "error",
                     },
                 },
             });
         }
-
-        const statusRes = await updateUserStatus(id, isActive);
-
-        if (!statusRes.success) {
-            return navigate("/users", {
-                state: {
-                    toast: {
-                        message: "Failed to update status",
-                        type: "error",
-                    },
-                },
-            });
-        }
-
-        navigate("/users", {
-            state: {
-                toast: {
-                    message: "Changes saved successfully",
-                    type: "success",
-                },
-            },
-        });
     };
 
     return (
@@ -355,7 +373,7 @@ export default function ViewUser() {
                     onConfirm={() => {
                         switch (confirmModal.actionType) {
                             case "delete":
-                                console.log("User deleted");
+                                setPendingDelete(true);
                                 break;
                             case "resetPassword":
                                 console.log("Password reset");
