@@ -366,7 +366,7 @@ export default function ViewReconciliation() {
                                 <input
                                     value={editableData.totalTransactions}
                                     onChange={(e) => handleFieldChange("totalTransactions", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[80px] text-right"
+                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-20 text-right"
                                 />
                             ) : (
                                 <p className="text-white text-[13px]">{editableData.totalTransactions}</p>
@@ -398,7 +398,7 @@ export default function ViewReconciliation() {
                                 <input
                                     value={editableData.varianceValue}
                                     onChange={(e) => handleFieldChange("varianceValue", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[80px] text-right"
+                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-20 text-right"
                                     style={{ color: varianceColor }}
                                 />
                             ) : (
@@ -432,13 +432,12 @@ export default function ViewReconciliation() {
                                 disabled={!isEditing}
                                 placeholder="Add reconciliation notes..."
                                 className="
-                  w-[438px] h-[220px]
-                  bg-[#16191C] text-white text-[14px]
-                  p-2 rounded-[4px]
-                  outline-none resize-none
-                  placeholder:text-[#4D5567]
-                  disabled:opacity-60
-                "
+                                    w-[438px] h-[220px]
+                                    bg-[#16191C] text-white text-[14px]
+                                    p-2 rounded-sm
+                                    outline-none resize-none
+                                    placeholder:text-[#4D5567]
+                                    disabled:opacity-60"
                             />
                         </div>
                     </div>

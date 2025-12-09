@@ -243,7 +243,7 @@ export default function OpeningVaultBalance() {
 
 
                 {/* FINAL TOTAL BAR */}
-                <div className="bg-[#152F1F] w-full rounded-b-xl h-[40px]
+                <div className="bg-[#152F1F] w-full rounded-b-xl h-10
          flex items-center justify-between px-4 text-white font-normal text-[14px] mt-4"
                 >
                     <p>Total Opening Balance</p>
