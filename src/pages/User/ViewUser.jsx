@@ -1,15 +1,23 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
+import { fetchUserById } from "../../api/user/user.jsx"; 
 
 export default function ViewUser() {
-    const location = useLocation();
+    const { id } = useParams();
     const navigate = useNavigate();
 
     const initialEdit = location.state?.edit || false;
     const [editMode, setEditMode] = useState(initialEdit);
     const [isActive, setIsActive] = useState(true);
+    const [formData, setFormData] = useState({
+        full_name: "",
+        email: "",
+        phone: "",
+        role: "",
+    });
+
     const [confirmModal, setConfirmModal] = useState({
         open: false,
         actionType: "",
@@ -17,15 +25,32 @@ export default function ViewUser() {
         message: "",
     });
 
-    const originalData = {
-        full_name: "Vishnu VK",
-        email: "email@example.com",
-        phone: "+255 xxx xxx xxx",
-        role: "Maker",
-    };
+    useEffect(() => {
+        const loadUser = async () => {
+            const res = await fetchUserById(id);
+            if (res.success) {
+                const user = res.data.user;
+                setFormData({
+                    full_name: user.full_name,
+                    email: user.email,
+                    phone: user.phone_number,
+                    role: user.role,
+                });
+                setIsActive(user.is_active);
+            } else {
+                navigate("/users", {
+                    state: {
+                        toast: {
+                            message: "Failed to load user data",
+                            type: "error",
+                        },
+                    },
+                });
+            }
+        };
 
-    const [formData, setFormData] = useState(originalData);
-
+        loadUser();
+    }, [id, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -33,7 +58,6 @@ export default function ViewUser() {
     };
 
     const handleCancel = () => {
-        setFormData(originalData); 
         setEditMode(false);
     };
 
@@ -47,12 +71,10 @@ export default function ViewUser() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* ACTIVE BADGE */}
                     <span className="px-4 py-1 bg-[#10B93524] text-[#82E890] rounded-full text-[12px]">
-                        Active
+                        {isActive ? "Active" : "Inactive"}
                     </span>
 
-                    {/* EDIT BUTTON (Hidden in edit mode) */}
                     {!editMode && (
                         <button
                             onClick={() => setEditMode(true)}
@@ -127,9 +149,9 @@ export default function ViewUser() {
                     Role
                 </label>
                 {!editMode && (
-                    <input
-                        value={formData.role}
-                        readOnly
+                        <input
+                            value={formData.role}
+                            readOnly
                         className={`w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white
                             ${!editMode 
                                 ? "border border-transparent hover:border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
@@ -139,17 +161,17 @@ export default function ViewUser() {
                         />
                 )}
                 {editMode && (
-                    <Dropdown
-                        label="Select Role"
-                        options={["Maker", "Checker"]}
-                        selected={formData.role}
+                        <Dropdown
+                            label="Select Role"
+                            options={["Maker", "Checker"]}
+                            selected={formData.role}
                         onChange={(value) =>
                             setFormData((prev) => ({ ...prev, role: value }))
                         }
-                        className="w-[566px]"
-                    />
-                )}
-            </div>
+                            className="w-[566px]"
+                        />
+                    )}
+                </div>
 
                 {/* DIVIDER */}
                 <div className="border-b border-[#2A2F33] my-6"></div>
@@ -176,7 +198,7 @@ export default function ViewUser() {
                         <input
                             type="checkbox"
                             checked={isActive}
-                           onChange={() => {
+                            onChange={() => {
                                 if (!editMode) return;
                                 setConfirmModal({
                                     open: true,
@@ -191,18 +213,8 @@ export default function ViewUser() {
                             className="sr-only peer"
                             
                         />
-
-                        <div
-                            className={`w-10 h-5 rounded-full transition ${
-                                isActive ? "bg-blue-600" : "bg-gray-600"
-                            } ${!editMode ? "opacity-60" : ""}`}
-                        ></div>
-
-                        <div
-                            className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${
-                                isActive ? "translate-x-5" : ""
-                            } ${!editMode ? "opacity-60" : ""}`}
-                        ></div>
+                        <div className={`w-10 h-5 rounded-full transition ${isActive ? "bg-blue-600" : "bg-gray-600"} ${!editMode ? "opacity-60" : ""}`}></div>
+                        <div className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${isActive ? "translate-x-5" : ""} ${!editMode ? "opacity-60" : ""}`}></div>
                     </label>
                 </div>
 
