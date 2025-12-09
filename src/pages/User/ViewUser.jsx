@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUserById, updateUser } from "../../api/user/user.jsx"; 
@@ -7,6 +7,8 @@ import { fetchUserById, updateUser } from "../../api/user/user.jsx";
 export default function ViewUser() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
 
     const initialEdit = location.state?.edit || false;
     const [editMode, setEditMode] = useState(initialEdit);
