@@ -243,7 +243,11 @@ export default function Table({
                     key={colIndex}
                     className={`py-3 px-4 text-${col.align || "center"}`}
                   >
-                    {renderCell(col, row[col.key])}
+                    {col.key === "full_name" ? (
+                      <span className="text-white">{row[col.key]}</span>
+                    ) : (
+                      renderCell(col, row[col.key])
+                    )}
                   </td>
                 ))}
               </tr>
