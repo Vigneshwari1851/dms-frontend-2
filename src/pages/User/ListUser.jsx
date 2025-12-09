@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState,useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import Toast from "../../components/common/Toast";
 import Table from "../../components/common/Table"; 
 import add from "../../assets/user/add_person.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
@@ -8,7 +10,21 @@ import NotificationCard from "../../components/common/Notification";
 export default function ListUser() {
   const navigate = useNavigate();
   const [confirmModal, setConfirmModal] = useState({ open: false });
+  const location = useLocation();
 
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("");
+
+
+  useEffect(() => {
+      if (location.state?.toast) {
+          setToastMessage(location.state.toast.message);
+          setToastType(location.state.toast.type);
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2500);
+      }
+  }, [location.state]);
 
   const handleAddUser = () => {
     navigate("/users/add-user");
@@ -114,12 +130,12 @@ export default function ListUser() {
   ];
 
   const columns = [
-    { label: "Name", key: "full_name" },
-    { label: "Role", key: "role" },
-    { label: "Email", key: "email" },
-    { label: "Status", key: "status" },
-    { label: "Created At", key: "created_at" },
-    { label: "Actions", key: "actions" },
+    { label: "Name", key: "full_name", align: "left" },
+    { label: "Role", key: "role", align: "center" },
+    { label: "Email", key: "email", align: "center" },
+    { label: "User Status", key: "status", align: "center" },
+    { label: "Created At", key: "created_at", align: "left" },
+    { label: "Actions", key: "actions", align: "center" },
   ];
 
   const rowsWithActions = dummyUsers.map((user) => ({
@@ -186,9 +202,39 @@ export default function ListUser() {
            showRightSection={false}
         />
       </div>
+       <Toast show={showToast} message={toastMessage} type={toastType} />
        <NotificationCard 
         confirmModal={confirmModal}
         onConfirm={() => {
+          let msg = "";
+          let type = "";
+
+          switch (confirmModal.actionType) {
+            case "resetPassword":
+              msg = "Password reset email sent to user.";
+              type = "success";
+              break;
+
+            case "deactivate":
+              msg = "User Deactivated!";
+              type = "error";
+              break;
+
+            case "delete":
+              msg = "Account Deleted!";
+              type = "error";
+              break;
+
+            default:
+              break;
+          }
+
+          setToastMessage(msg);
+          setToastType(type);
+          setShowToast(true);
+
+          setTimeout(() => setShowToast(false), 2500);
+
           setConfirmModal({ open: false });
         }}
         onCancel={() => setConfirmModal({ open: false })}

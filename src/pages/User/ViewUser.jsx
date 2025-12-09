@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 
 export default function ViewUser() {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const initialEdit = location.state?.edit || false;
     const [editMode, setEditMode] = useState(initialEdit);
@@ -263,13 +264,35 @@ export default function ViewUser() {
                 {editMode && (
                     <div className="flex justify-end gap-3 mt-8">
                         <button
-                            onClick={handleCancel}
+                            onClick={() => {
+                                navigate("/users", {
+                                    state: {
+                                        toast: {
+                                            show: true,
+                                            message: "Changes reverted",
+                                            type: "error",
+                                        },
+                                    },
+                                });
+                            }}
                             className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
                         >
                             Cancel
                         </button>
-
-                        <button className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white">
+                        <button
+                            onClick={() => {
+                                navigate("/users", {
+                                    state: {
+                                        toast: {
+                                            show: true,
+                                            message: "Changes saved successfully",
+                                            type: "success",
+                                        },
+                                    },
+                                });
+                            }}
+                            className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
+                        >
                             Save Changes
                         </button>
                     </div>

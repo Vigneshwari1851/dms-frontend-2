@@ -16,7 +16,7 @@ export default function Sidebar() {
     { name: "Deals", icon: deals, path: "/deals" },
     { name: "User Management", icon: usermanagement, path: "/users" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
-    { name: "Reporting", icon: reporting, path: "/reporting" },
+    { name: "Reporting", icon: reporting, path: "/reports" },
   ];
 
   return (

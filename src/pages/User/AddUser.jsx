@@ -7,13 +7,28 @@ import authLogo from "../../assets/verify/authlogo.svg";
 export default function AddUser() {
     const [role, setRole] = useState("");
     const navigate = useNavigate();
+    const [phone, setPhone] = useState("");
 
     const handleCancel = () => {
-        navigate("/users");
+        navigate("/users", {
+            state: {
+                toast: {
+                    message: "User failed to add",
+                    type: "error"
+                }
+            }
+        });
     };
 
     const handleAddUser = () => {
-        navigate("/users");
+        navigate("/users", {
+            state: {
+                toast: {
+                    message: "User added successfully",
+                    type: "success"
+                }
+            }
+        });
     };
 
     return (
@@ -40,8 +55,37 @@ export default function AddUser() {
                         <input className="w-full bg-[#16191C] rounded-lg px-3 py-2" />
                     </div>
                     <div>
-                        <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Phone <span className="text-red-500">*</span></label>
-                        <input className="w-full bg-[#16191C] rounded-lg px-3 py-2" />
+                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                        Phone <span className="text-red-500">*</span>
+                    </label>
+
+                    <input
+                        className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
+                        value={phone}
+                        onChange={(e) => {
+                        let value = e.target.value;
+                        const digits = value.replace(/\D/g, "");
+                        if (digits.length > 15) return;
+                        setPhone(value);
+                        }}
+                        onKeyDown={(e) => {
+                        const allowedControlKeys = [
+                            "Backspace",
+                            "Delete",
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "Tab",
+                        ];
+                        if (allowedControlKeys.includes(e.key)) return;
+                        if (["+", " ", "-", "(", ")"].includes(e.key)) return;
+                        if (/^[0-9]$/.test(e.key)) {
+                            const currentDigits = phone.replace(/\D/g, "");
+                            if (currentDigits.length >= 15) e.preventDefault();
+                            return;
+                        }
+                        e.preventDefault();
+                        }}
+                    />
                     </div>
                 </div>
 
