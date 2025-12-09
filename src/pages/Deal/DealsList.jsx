@@ -402,7 +402,7 @@ export default function DealsList() {
             {paginatedData.map((item, index) => (
               <tr
                 key={index}
-                className="rounded-2xl border-b border-gray-800 hover:bg-[#151517] transition-colors"
+                className="rounded-2xl  hover:bg-[#151517] transition-colors"
               >
                 <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
                   {item.id}
@@ -490,12 +490,14 @@ export default function DealsList() {
         </table>
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-        />
+        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          />
+        </div>
       </div>
     </>
   );

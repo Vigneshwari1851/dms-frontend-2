@@ -206,7 +206,7 @@ export default function DealsTable() {
   // -------- Pagination Logic --------
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
-   const [exportOpen, setExportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
 
   const paginatedData = filteredAndSortedData.slice(
@@ -226,7 +226,7 @@ export default function DealsTable() {
         </h2>
 
         <div className="flex items-center gap-3">
-        <Dropdown
+          <Dropdown
             label="All Status"
             options={statuses}
             selected={statusFilter}
@@ -240,7 +240,7 @@ export default function DealsTable() {
             selected={currencyFilter}
             onChange={(value) => setCurrencyFilter(value)}
             className="w-[180px]"
-          />
+          />
 
           <div className="relative">
             <button
@@ -344,7 +344,7 @@ export default function DealsTable() {
 
         <tbody>
           {paginatedData.map((item, index) => (
-            <tr key={index} className="rounded-2xl border-b border-gray-800 hover:bg-[#151517] transition-colors">
+            <tr key={index} className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors">
               <td className="py-3 text-[#92B4FF] font-bold text-[14px]">{item.id}</td>
               <td>{item.date}</td>
 
@@ -376,12 +376,15 @@ export default function DealsTable() {
       </table>
 
       {/* ------------ Pagination (Right-Aligned) ------------ */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-        onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-      />
+      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        />
+      </div>
+
       {/* ------------------------------------------------------ */}
     </div>
   );

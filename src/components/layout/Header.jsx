@@ -1,11 +1,28 @@
-import { FiSearch } from "react-icons/fi";
+import { useState, useRef, useEffect } from "react";
+import { FiSearch } from "react-icons/fi"; 
 import { IoNotificationsOutline } from "react-icons/io5";
 import logo from "../../assets/Common/logo.svg";
-import person from "../../assets/Common/person.svg"
+import person from "../../assets/Common/person.svg";
+import profile from "../../assets/Common/profile.svg";
+import logout from "../../assets/Common/logout.svg";
 
 export default function Header() {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   return (
-    <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10">
+    <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative">
 
       {/* Left Logo */}
       <img src={logo} alt="logo" /> 
@@ -13,11 +30,9 @@ export default function Header() {
       {/* Right Section */}
       <div className="flex items-center gap-6">
 
-        {/* Search bar with icon */}
+        {/* Search Bar */}
         <div className="bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px] flex items-center gap-3">
-          {/* <FiSearch className="text-[#ABABAB] text-xl " /> */}
           <FiSearch className="text-[#ABABAB] text-lg" strokeWidth={2.5} />
-
           <input
             type="text"
             placeholder="Search"
@@ -25,19 +40,43 @@ export default function Header() {
           />
         </div>
 
-        {/* Notification bell */}
+        {/* Notification Bell */}
         <button className="relative">
           <IoNotificationsOutline className="text-2xl text-[#565656] cursor-pointer" />
-          <span className="absolute top-0 right-0 w-2 h-2 rounded-full"></span>
         </button>
 
-        {/* User Avatar */}
-        <img
-          className="w-10 h-10 rounded-full border border-[#0F1113]"
-          src={person}
-          alt="profile"
-        />
-        
+        {/* Avatar + Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <img
+            className="w-10 h-10 rounded-full border border-[#0F1113] cursor-pointer"
+            src={person}
+            alt="profile"
+
+            onClick={() => setOpen(!open)}
+          />
+
+          {/* Dropdown */}
+          {open && (
+            <div className="
+              absolute right-0 mt-3 w-64 
+              bg-[#1E2328] 
+              rounded-xl shadow-lg p-4 
+              animate-fadeIn z-50
+            ">
+              <p className="text-white text-lg font-semibold">Vishnu VS</p>
+              <p className="text-gray-400 text-sm mb-4">Admin</p>
+
+              <button className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
+                <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
+              </button>
+
+              <button className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
+               <img src={logout} alt="logout"  className="w-5 h-5" /> Logout
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
     </header>
   );
