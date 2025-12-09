@@ -5,6 +5,7 @@ import saveIcon from "../../assets/common/save.svg";
 import expandRight from "../../assets/common/expandRight.svg";
 import edit from "../../assets/Common/edit.svg";
 import save from "../../assets/common/save.svg";
+import { useNavigate } from "react-router-dom";
 
 // Helper: get numeric value from strings like "$100", "€50", "100"
 const parseNumber = (str) => {
@@ -37,6 +38,8 @@ const getCurrencySymbolFromAmount = (amountStr, currencyCode) => {
 // VaultRow component - receives handlers to update parent state
 function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
     const [open, setOpen] = useState(false);
+
+    
 
     // local change handler for breakdown items
     const handleItemChange = (itemIndex, field, value) => {
@@ -202,6 +205,7 @@ export default function ViewReconciliation() {
     const [originalData, setOriginalData] = useState(original);
     const [editableData, setEditableData] = useState(original);
     const [isEditing, setIsEditing] = useState(false);
+    const navigate = useNavigate();
 
     // compute variance color/icon based on status and sign
     const isPositive = String(editableData.varianceValue).startsWith("+");
@@ -275,14 +279,30 @@ export default function ViewReconciliation() {
         <>
             {/* HEADER */}
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-[16px] font-medium text-white">
-                        Reconciliation - {editableData.date}
-                    </h2>
-                    <p className="text-gray-400 text-[12px] mb-0">
-                        Summary of today’s vault reconciliation
-                    </p>
+
+                <div className="flex items-center gap-3">
+
+                    {/* BACK ARROW */}
+                    <div
+                        className="cursor-pointer select-none text-white text-2xl"
+                        onClick={() => navigate("/reconciliation")}
+                    >
+                        &lt;
+                    </div>
+
+                    {/* TITLE + SUBTITLE */}
+                    <div className="flex flex-col leading-tight">
+                        <h2 className="text-[16px] font-medium text-white">
+                            Reconciliation - {editableData.date}
+                        </h2>
+
+                        <p className="text-gray-400 text-[12px] mb-0">
+                            Summary of today’s vault reconciliation
+                        </p>
+                    </div>
+
                 </div>
+
 
                 <div className="flex items-center gap-3">
                     {/* Cancel/Save shown during edit mode */}
@@ -392,24 +412,12 @@ export default function ViewReconciliation() {
                         <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
                             <p className="text-white font-semibold text-[15px]">Status</p>
 
-                            {isEditing ? (
-                                <select
-                                    value={editableData.status}
-                                    onChange={(e) => handleFieldChange("status", e.target.value)}
-                                    className={`w-[90px] h-6 bg-[#16191C] rounded-2xl text-[12px] px-2 ${statusStyle[editableData.status]}`}
-                                >
-                                    <option value="Tallied">Tallied</option>
-                                    <option value="Excess">Excess</option>
-                                    <option value="Short">Short</option>
-                                    <option value="Balance">Balance</option>
-                                </select>
-                            ) : (
-                                <span
-                                    className={`w-[70px] h-6 inline-flex items-center justify-center border rounded-2xl text-[12px] ${statusStyle[editableData.status]}`}
-                                >
-                                    {editableData.status}
-                                </span>
-                            )}
+                            <span
+                                className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status]}`}
+                            >
+                                {editableData.status}
+                            </span>
+
                         </div>
                     </div>
 

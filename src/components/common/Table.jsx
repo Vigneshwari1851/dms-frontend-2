@@ -17,10 +17,11 @@ export default function Table({
   onSearch,
   sortableKeys = [],
   showRightSection = true,
+  onRowClick,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status", "Tallied", "Excess", "Short"];
- 
+
 
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,15 +76,15 @@ export default function Table({
       const sign = value?.trim().startsWith("+")
         ? "+"
         : value?.trim().startsWith("-")
-        ? "-"
-        : "0";
+          ? "-"
+          : "0";
 
       const color =
         sign === "+"
           ? "text-[#D8AD00] mr-2"
           : sign === "-"
-          ? "text-[#F93535] mr-2"
-          : "text-[#8F8F8F]";
+            ? "text-[#F93535] mr-2"
+            : "text-[#8F8F8F]";
 
       return <span className={`font-medium ${color}`}>{value}</span>;
     }
@@ -241,8 +242,10 @@ export default function Table({
             {paginatedData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
-                className="rounded-2xl hover:bg-[#151517] transition-colors"
+                onClick={() => onRowClick && onRowClick(row)}   // <-- ADD THIS
+                className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
               >
+
                 {columns.map((col, colIndex) => (
                   <td
                     key={colIndex}

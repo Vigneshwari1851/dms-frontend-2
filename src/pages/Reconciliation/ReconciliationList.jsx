@@ -189,6 +189,7 @@ export default function ReconciliationList() {
           data={rowsWithActions}   
           title="Reconciliation List"
           showRightSection={true}
+           onRowClick={(row) => navigate(`/reconciliation/details/${row.id}`)} 
           
           
         //   subtitle=""
