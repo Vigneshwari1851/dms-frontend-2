@@ -97,7 +97,7 @@ function VerifyOtp() {
                   Multi-Factor Authentication
                 </p>
                 <p className="text-[13px] text-[#BABABA]">
-                  Enter 4-digit OTP sent to {email}
+                  Enter 4-digit OTP sent to your email
                 </p>
               </div>
             </div>
