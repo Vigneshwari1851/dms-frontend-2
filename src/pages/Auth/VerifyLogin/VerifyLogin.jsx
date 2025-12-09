@@ -58,14 +58,32 @@ function VerifyOtp() {
   // VERIFY OTP
   // -------------------------------
   const handleVerify = async () => {
-    try {
-      await verifyOtp(email, otp);
+    setError("");
 
-      startTimer(); // restart timer
-      navigate("/dashboard");
+    try {
+      const res = await verifyOtp(email, otp); 
+      if (res?.data) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            user_id: res.data.user_id,
+            full_name: res.data.full_name,
+            email: res.data.email,
+            role: res.data.role,
+          })
+        );
+
+        localStorage.removeItem("pendingEmail");
+        localStorage.removeItem("otpSentTime");
+        localStorage.removeItem("otpExpireTime");
+
+        navigate("/dashboard");
+        return;
+      }
+
     } catch (err) {
       setError("Incorrect OTP.");
-      startTimer();
     }
   };
 
