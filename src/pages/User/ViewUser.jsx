@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
+import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -22,6 +23,8 @@ export default function ViewUser() {
 
     const [initialData, setInitialData] = useState(null);
     const [pendingDelete, setPendingDelete] = useState(false);
+    const [pendingReset, setPendingReset] = useState(false);
+
     const [confirmModal, setConfirmModal] = useState({
         open: false,
         actionType: "",
@@ -82,6 +85,10 @@ export default function ViewUser() {
                 const delRes = await deleteUser(id);
                 if (!delRes.success) throw new Error("Delete failed");
             }
+            if (pendingReset) {
+                const resetRes = await sendResetPasswordEmail(formData.email);
+                if (!resetRes) throw new Error("Reset password email failed");
+            }
             const payload = {
                 full_name: formData.full_name,
                 email: formData.email,
@@ -112,6 +119,7 @@ export default function ViewUser() {
                 });
                 setIsActive(initialData.is_active);
                 setPendingDelete(false);
+                setPendingReset(false);
             }
 
             navigate("/users", {
@@ -384,7 +392,7 @@ export default function ViewUser() {
                                 setPendingDelete(true);
                                 break;
                             case "resetPassword":
-                                console.log("Password reset");
+                                setPendingReset(true);
                                 break;
                             case "deactivate":
                                 setIsActive(false);
