@@ -206,7 +206,7 @@ export default function Table({
 
       {/* TABLE BODY */}
       <div className="bg-[#1A1F24] mt-[1.5px] py-4">
-        <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px]">
+        <table className="w-full text-[#8F8F8F] font-normal text-[13px]">
           <thead>
             <tr className="text-[#FFFFFF] text-[12px] font-normal">
               {columns.map((col, index) =>
@@ -218,9 +218,13 @@ export default function Table({
                     sortBy={sortConfig.key}
                     sortAsc={sortConfig.asc}
                     onSort={handleSort}
+                    className={`py-3 px-4 text-${col.align || "center"}`}
                   />
                 ) : (
-                  <th key={index} className="py-3 text-center">
+                  <th
+                    key={index}
+                    className={`py-3 px-4 text-${col.align || "center"}`}
+                  >
                     {col.label}
                   </th>
                 )
@@ -235,7 +239,10 @@ export default function Table({
                 className="rounded-2xl hover:bg-[#151517] transition-colors"
               >
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex} className="py-3 text-center">
+                  <td
+                    key={colIndex}
+                    className={`py-3 px-4 text-${col.align || "center"}`}
+                  >
                     {renderCell(col, row[col.key])}
                   </td>
                 ))}

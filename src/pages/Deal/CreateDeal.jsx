@@ -10,6 +10,7 @@ export default function CreateDeal() {
     { denom: 0, quantity: 0 },
   ]);
 
+  const [phone, setPhone] = useState("");
   const [denominationPaid, setDenominationPaid] = useState([
     { denom: 0, quantity: 0 },
   ]);
@@ -89,7 +90,35 @@ export default function CreateDeal() {
             </label>
 
             <input
-              className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white"
+                className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
+                value={phone}
+                onChange={(e) => {
+                let value = e.target.value;
+                const digits = value.replace(/\D/g, "");
+                if (digits.length > 15) return;
+
+                setPhone(value);
+                }}
+                onKeyDown={(e) => {
+                const allowedControlKeys = [
+                    "Backspace",
+                    "Delete",
+                    "ArrowLeft",
+                    "ArrowRight",
+                    "Tab",
+                ];
+
+                if (allowedControlKeys.includes(e.key)) return;
+
+                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
+
+                if (/^[0-9]$/.test(e.key)) {
+                    const currentDigits = phone.replace(/\D/g, "");
+                    if (currentDigits.length >= 15) e.preventDefault();
+                    return;
+                }
+                e.preventDefault();
+                }}
             />
           </div>
         </div>

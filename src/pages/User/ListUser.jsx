@@ -130,12 +130,12 @@ export default function ListUser() {
   ];
 
   const columns = [
-    { label: "Name", key: "full_name" },
-    { label: "Role", key: "role" },
-    { label: "Email", key: "email" },
-    { label: "Status", key: "status" },
-    { label: "Created At", key: "created_at" },
-    { label: "Actions", key: "actions" },
+    { label: "Name", key: "full_name", align: "left" },
+    { label: "Role", key: "role", align: "center" },
+    { label: "Email", key: "email", align: "center" },
+    { label: "User Status", key: "status", align: "center" },
+    { label: "Created At", key: "created_at", align: "left" },
+    { label: "Actions", key: "actions", align: "center" },
   ];
 
   const rowsWithActions = dummyUsers.map((user) => ({
