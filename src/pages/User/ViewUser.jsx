@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchUserById } from "../../api/user/user.jsx"; 
+import { fetchUserById, updateUser } from "../../api/user/user.jsx"; 
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -59,6 +59,38 @@ export default function ViewUser() {
 
     const handleCancel = () => {
         setEditMode(false);
+    };
+
+    const handleSave = async () => {
+        const payload = {
+            full_name: formData.full_name,
+            email: formData.email,
+            phone_number: formData.phone,
+            role: formData.role,
+            is_active: isActive,
+        };
+
+        const res = await updateUser(id, payload);
+
+        if (res.success) {
+            navigate("/users", {
+                state: {
+                    toast: {
+                        message: "Changes saved successfully",
+                        type: "success",
+                    },
+                },
+            });
+        } else {
+            navigate("/users", {
+                state: {
+                    toast: {
+                        message: "Failed to update user",
+                        type: "error",
+                    },
+                },
+            });
+        }
     };
 
     return (
@@ -292,17 +324,7 @@ export default function ViewUser() {
                             Cancel
                         </button>
                         <button
-                            onClick={() => {
-                                navigate("/users", {
-                                    state: {
-                                        toast: {
-                                            show: true,
-                                            message: "Changes saved successfully",
-                                            type: "success",
-                                        },
-                                    },
-                                });
-                            }}
+                            onClick={handleSave}
                             className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
                         >
                             Save Changes
