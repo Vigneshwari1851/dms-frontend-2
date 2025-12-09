@@ -135,9 +135,17 @@ export default function ViewUser() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <span className="px-4 py-1 bg-[#10B93524] text-[#82E890] rounded-full text-[12px]">
-                        {isActive ? "Active" : "Inactive"}
-                    </span>
+                <span
+                    className={`
+                        px-4 py-1 rounded-full text-[12px]
+                        ${isActive 
+                            ? "bg-[#10B93524] text-[#82E890]"
+                            : "bg-[#BD404A24] text-[#FF8A8A]"
+                        }
+                    `}
+                >
+                    {isActive ? "Active" : "Inactive"}
+                </span>
 
                     {!editMode && (
                         <button
