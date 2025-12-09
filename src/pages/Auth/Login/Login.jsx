@@ -5,7 +5,7 @@ import welcomeImg from "../../../assets/login/welcome.svg";
 import successIcon from "../../../assets/login/Success.svg";
 import failureIcon from "../../../assets/login/Failure.svg";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { loginUser } from "../../../api/auth/auth"; // ensure correct path
+import { loginUser } from "../../../api/auth/auth"; 
 
 function Login() {
   const navigate = useNavigate();
@@ -105,7 +105,7 @@ function Login() {
       }
 
       // OTP SENT
-      if (res.message === "OTP sent to registered email address.") {
+      if (res.message === "OTP sent to your registered email address.") {
         localStorage.setItem("pendingEmail", formData.email);
         handleRememberLogic();
         navigate("/verify-login");

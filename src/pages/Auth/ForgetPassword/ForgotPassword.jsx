@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { sendResetPasswordEmail } from "../../../api/auth/auth.jsx";
 import rightSide from "../../../assets/login/rightSide.svg";
 import mail from "../../../assets/forgotpassword/mail.svg";
 
 function ForgotPassword() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("pendingEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
 
   const handleContinue = async (e) => {
     e.preventDefault();
@@ -19,15 +26,16 @@ function ForgotPassword() {
       return;
     }
 
-    setSubmitted(true);
-    return;
-
-    // try {
-    //   await sendResetPasswordEmail(email);
-    //   setSubmitted(true);
-    // } catch (err) {
-    //   setErrorMessage(err.message || "Failed to send reset email");
-    // }
+    try {
+      await sendResetPasswordEmail(email);
+      setSubmitted(true);
+    } catch (err) {
+      setErrorMessage(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to send reset email"
+      );
+    }
   };
 
   return (
