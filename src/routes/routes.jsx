@@ -18,6 +18,8 @@ import ViewUser from "../pages/User/ViewUser";
 import ViewSlip from "../pages/Deal/ViewSlip";
 import EditDeal from "../pages/Deal/EditDeal";
 import ReconciliationList from "../pages/Reconciliation/ReconciliationList";
+import AddReconciliation from "../pages/Reconciliation/AddReconciliation";
+import ViewReconciliation from "../pages/Reconciliation/ViewReconciliation";
 
 export default function AppRoutes() {
   return (
@@ -42,7 +44,9 @@ export default function AppRoutes() {
         <Route path="deal-review" element={<DealReview />} />
         <Route path="view-slip" element={<ViewSlip />} />
         <Route path="edit-deal" element={<EditDeal />} />
-         <Route path="reconciliation" element={<ReconciliationList />} />
+        <Route path="reconciliation" element={<ReconciliationList />} />
+        <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
+        <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
       </Route>
     </Routes>
   );

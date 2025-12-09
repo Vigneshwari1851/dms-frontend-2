@@ -279,6 +279,7 @@ export default function DealsList() {
               options={statuses}
               selected={statusFilter}
               onChange={(value) => setStatusFilter(value)}
+              className="w-[150px]"
             />
 
             <Dropdown
@@ -286,6 +287,7 @@ export default function DealsList() {
               options={currencies}
               selected={currencyFilter}
               onChange={(value) => setCurrencyFilter(value)}
+              className="w-[180px]"
             />
 
             <div className="relative">

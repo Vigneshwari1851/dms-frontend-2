@@ -19,7 +19,10 @@ export default function Table({
   showRightSection = true,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const statuses = ["All Status", "Pending", "Completed"];
+  const statuses = ["All Status", "Tallied", "Excess", "Short"];
+ 
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, asc: true });
@@ -153,6 +156,8 @@ export default function Table({
                 options={statuses}
                 selected={statusFilter}
                 onChange={(value) => setStatusFilter(value)}
+                className="w-[130px]"
+
               />
 
               {/* Export */}

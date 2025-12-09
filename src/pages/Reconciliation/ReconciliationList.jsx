@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../../components/common/Table"; 
-import add from "../../assets/user/add_person.svg";
+import add from "../../assets/dashboard/add.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification"; 
 
@@ -11,7 +11,7 @@ export default function ReconciliationList() {
 
 
   const handleAddUser = () => {
-    navigate("/users/add-user");
+    navigate("/reconciliation/add-reconciliation");
   };
   // Dummy User Data
   const dummyUsers = [
@@ -189,6 +189,8 @@ export default function ReconciliationList() {
           data={rowsWithActions}   
           title="Reconciliation List"
           showRightSection={true}
+          
+          
         //   subtitle=""
         //   sortableKeys={["email", "status"]}
         />
