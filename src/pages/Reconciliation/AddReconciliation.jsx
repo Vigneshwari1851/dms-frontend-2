@@ -3,11 +3,35 @@ import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg"; 
 import save from "../../assets/common/save.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
+import CurrencyForm from "../../components/common/CurrencyForm";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
+    const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-    
+    const [currencyData, setCurrencyData] = useState({
+        currencyName: "",
+        isoCode: "",
+        symbol: "",
+    });
+
+    const handleCurrencyChange = (field, value) => {
+        setCurrencyData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSaveCurrency = () => {
+        console.log("Saving currency:", currencyData);
+
+        // Clear after save
+        setCurrencyData({
+            currencyName: "",
+            isoCode: "",
+            symbol: "",
+        });
+
+        setShowCurrencyModal(false);
+    };
+
     const varianceValue = "+5.00";   // or "-10.00"
     const status = "Excess";         // "Tallied", "Excess", "Short"
 
@@ -43,11 +67,21 @@ export default function AddReconciliation() {
     return (
         <>
             {/* HEADER */}
-            <div>
-                <h2 className="text-[16px] font-medium text-white">Daily Reconciliation</h2>
-                <p className="text-gray-400 text-[12px] mb-6">
-                    Manually data entry for daily vault reconciliation
-                </p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h2 className="text-[16px] font-medium text-white">Daily Reconciliation</h2>
+                    <p className="text-gray-400 text-[12px] mb-6">
+                        Manually data entry for daily vault reconciliation
+                    </p>
+                </div>
+                {(activeTab === "opening" || activeTab === "closing") && (
+                    <button
+                        onClick={() => setShowCurrencyModal(true)}
+                        className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] h-9"
+                    >
+                        + Add Currency
+                    </button>
+                )}
             </div>
 
             <div className="mt-4 bg-[#16191C] rounded-xl">
@@ -141,7 +175,7 @@ export default function AddReconciliation() {
                                     className="
                                         w-[438px] h-[220px]
                                         bg-[#16191C] text-white text-[14px]
-                                        p-2 rounded-[4px]
+                                        p-2 rounded-sm
                                         outline-none resize-none
                                         placeholder:text-[#4D5567]
                                     "
@@ -166,6 +200,18 @@ export default function AddReconciliation() {
                     <OpeningVaultBalance />
                 )}
 
+                {showCurrencyModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-9999">
+                        <CurrencyForm
+                            currencyName={currencyData.currencyName}
+                            isoCode={currencyData.isoCode}
+                            symbol={currencyData.symbol}
+                            onChange={handleCurrencyChange}
+                            onCancel={() => setShowCurrencyModal(false)}
+                            onSubmit={handleSaveCurrency}
+                        />
+                    </div>
+                )}
 
             </div>
         </>
