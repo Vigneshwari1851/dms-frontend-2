@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchUserById, updateUser } from "../../api/user/user.jsx"; 
+import { fetchUserById, updateUser, updateUserStatus } from "../../api/user/user.jsx"; 
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -69,22 +69,12 @@ export default function ViewUser() {
             email: formData.email,
             phone_number: formData.phone,
             role: formData.role,
-            is_active: isActive,
         };
 
         const res = await updateUser(id, payload);
 
-        if (res.success) {
-            navigate("/users", {
-                state: {
-                    toast: {
-                        message: "Changes saved successfully",
-                        type: "success",
-                    },
-                },
-            });
-        } else {
-            navigate("/users", {
+        if (!res.success) {
+            return navigate("/users", {
                 state: {
                     toast: {
                         message: "Failed to update user",
@@ -93,6 +83,28 @@ export default function ViewUser() {
                 },
             });
         }
+
+        const statusRes = await updateUserStatus(id, isActive);
+
+        if (!statusRes.success) {
+            return navigate("/users", {
+                state: {
+                    toast: {
+                        message: "Failed to update status",
+                        type: "error",
+                    },
+                },
+            });
+        }
+
+        navigate("/users", {
+            state: {
+                toast: {
+                    message: "Changes saved successfully",
+                    type: "success",
+                },
+            },
+        });
     };
 
     return (
