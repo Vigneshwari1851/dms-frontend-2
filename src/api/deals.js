@@ -1,7 +1,7 @@
 const API_URL = "http://localhost:3000";
 
 function getAuthHeaders() {
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InZpZ25lc2h3YXJpMTg1MUBnbWFpbC5jb20iLCJyb2xlIjoiTWFrZXIiLCJpYXQiOjE3NjUzNDEwNjgsImV4cCI6MTc2NTQyNzQ2OH0.leckKxMYIHENaaabltcb40GLSs5KxBc-JrmYLMHeWJ4"
+  const token = localStorage.getItem("token");
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,

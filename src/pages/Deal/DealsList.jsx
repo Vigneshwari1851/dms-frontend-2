@@ -27,30 +27,16 @@ export default function DealsList() {
         
         // Transform API response to match table structure
         const transformedData = response.data.map((deal) => {
-          const receivedItems = deal.received_items || [];
-          const paidItems = deal.paid_items || [];
-          
-          const buyAmount = receivedItems.reduce(
-            (sum, item) => sum + Number(item.total || 0),
-            0
-          );
-          const sellAmount = paidItems.reduce(
-            (sum, item) => sum + Number(item.total || 0),
-            0
-          );
-          const receivedCurrency = receivedItems[0]?.currency?.code || "---";
-          const paidCurrency = paidItems[0]?.currency?.code || "---";
-
           return {
             id: deal.deal_number,
             date: new Date(deal.created_at).toLocaleDateString("en-IN"),
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
             customer: deal.customer_name,
-            buyAmt: deal.deal_type === "buy" ? buyAmount.toLocaleString() : "--------",
-            currency: receivedCurrency,
+            buyAmt: deal.deal_type === "buy" ? deal.buyAmount.toLocaleString() : "--------",
+            currency: deal.buyCurrency,
             rate: deal.rate,
-            sellAmt: deal.deal_type === "sell" ? sellAmount.toLocaleString() : "--------",
-            currency1: paidCurrency,
+            sellAmt: deal.deal_type === "sell" ? deal.sellAmount.toLocaleString() : "--------",
+            currency1: deal.sellCurrency,
             status: deal.status,
             dealId: deal.id,
           };
