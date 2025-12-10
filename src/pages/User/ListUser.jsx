@@ -6,7 +6,8 @@ import Table from "../../components/common/Table";
 import add from "../../assets/user/add_person.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification"; 
-import { fetchUsers } from "../../api/user/user.jsx"; 
+import { fetchUsers, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
+import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 
 export default function ListUser() {
   const navigate = useNavigate();
@@ -81,6 +82,7 @@ export default function ListUser() {
                 setConfirmModal({
                   open: true,
                   actionType: "delete",
+                  id: user.id,
                   title: "Are you sure you want to delete this account?",
                   message:
                   "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
@@ -92,6 +94,7 @@ export default function ListUser() {
                 setConfirmModal({
                     open: true,
                     actionType: user.is_active ? "deactivate" : "activate",
+                    id: user.id,
                     title: user.is_active
                         ? "Are you sure you want to deactivate this user account?"
                         : "Are you sure you want to activate this user account?",
@@ -106,6 +109,8 @@ export default function ListUser() {
                 setConfirmModal({
                   open: true,
                   actionType: "resetPassword",
+                  id: user.id,
+                  email: user.email,
                   title: "Are you sure you want to send a password reset link?",
                   message: "You want to send a password reset link to this user’s email.",
                 })
@@ -143,40 +148,41 @@ export default function ListUser() {
        <Toast show={showToast} message={toastMessage} type={toastType} />
        <NotificationCard 
         confirmModal={confirmModal}
-        onConfirm={() => {
-          let msg = "";
-          let type = "";
+        onConfirm={async () => {
+          const { actionType, id, email } = confirmModal;
 
-          switch (confirmModal.actionType) {
-            case "resetPassword":
-              msg = "Password reset email sent to user.";
-              type = "success";
-              break;
+          try {
+            if (actionType === "resetPassword") {
+              await sendResetPasswordEmail(email);
+              setToastMessage("Password reset email sent to user.");
+              setToastType("success");
+            }
 
-            case "deactivate":
-              msg = "User Deactivated!";
-              type = "error";
-              break;
-            
-            case "activate":
-              msg = "User Activated!";
-              type = "success";
-              break;
+            if (actionType === "activate" || actionType === "deactivate") {
+              const isActive = actionType === "activate";
+              await updateUserStatus(id, isActive);
 
-            case "delete":
-              msg = "Account Deleted!";
-              type = "error";
-              break;
+              setToastMessage(isActive ? "User Activated!" : "User Deactivated!");
+              setToastType(isActive ? "success" : "error");
+            }
 
-            default:
-              break;
+            if (actionType === "delete") {
+              await deleteUser(id);
+              setToastMessage("Account Deleted!");
+              setToastType("error");
+            }
+
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2500);
+
+            loadUsers(); // refresh table
+
+          } catch (error) {
+            setToastMessage("Action failed. Try again.");
+            setToastType("error");
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2500);
           }
-
-          setToastMessage(msg);
-          setToastType(type);
-          setShowToast(true);
-
-          setTimeout(() => setShowToast(false), 2500);
 
           setConfirmModal({ open: false });
         }}
