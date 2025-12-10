@@ -8,6 +8,7 @@ import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
+import { fetchDeals } from "../../api/deals";
 
 export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
@@ -26,8 +27,10 @@ export default function ListReport() {
   const [sortAsc, setSortAsc] = useState(true);
 
   const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
+
+  const [reportRows, setReportRows] = useState([]);
 
   const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
   const formats = [
@@ -35,40 +38,59 @@ export default function ListReport() {
     { label: "Excel report", icon: excel },
   ];
 
-  const dummyData = {
-    Today: [],
-    "Last 7 days": [
-      { deal_id: "W001", date: "2025-12-01", type: "Buy", customer: "Alice", buy_amount: 1000, buy_currency: "USD", rate: 82, sell_amount: 82000, sell_currency: "INR", status: "Pending" },
-      { deal_id: "W002", date: "2025-12-03", type: "Sell", customer: "Bob", buy_amount: 500, buy_currency: "EUR", rate: 90, sell_amount: 45000, sell_currency: "INR", status: "Completed" },
-    ],
-    "Last 30 days": [
-      { deal_id: "M001", date: "2025-12-05", type: "Buy", customer: "Charlie", buy_amount: 1200, buy_currency: "USD", rate: 84, sell_amount: 100800, sell_currency: "INR", status: "Completed" },
-      { deal_id: "M002", date: "2025-12-07", type: "Sell", customer: "Dave", buy_amount: 700, buy_currency: "EUR", rate: 91, sell_amount: 63700, sell_currency: "INR", status: "Pending" },
-    ],
-    "Last 90 days": [
-      { deal_id: "M001", date: "2025-12-05", type: "Buy", customer: "Charlie", buy_amount: 1200, buy_currency: "USD", rate: 84, sell_amount: 100800, sell_currency: "INR", status: "Completed" },
-      { deal_id: "M002", date: "2025-12-07", type: "Sell", customer: "Dave", buy_amount: 700, buy_currency: "EUR", rate: 91, sell_amount: 63700, sell_currency: "INR", status: "Pending" },
-    ],
-    Custom: [
-      { deal_id: "C001", date: "2025-11-28", type: "Buy", customer: "Eve", buy_amount: 3000, buy_currency: "GBP", rate: 92, sell_amount: 276000, sell_currency: "INR", status: "Completed" },
-    ],
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
-  const handleApplyFilters = () => {
+  const handleApplyFilters = async () => {
+    let apiDateFilter = "";
+    let finalStart = "";
+    let finalEnd = "";
+
+    const today = formatDate(new Date());
+
+    if (tempDateRange === "Today") {
+      apiDateFilter = "custom";
+      finalStart = today;
+      finalEnd = today;
+
+      setCustomFrom(today);
+      setCustomTo(today);
+    }
+
+    else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
+    else if (tempDateRange === "Last 30 days") apiDateFilter = "last30";
+    else if (tempDateRange === "Last 90 days") apiDateFilter = "last90";
+
+    else if (tempDateRange === "Custom") {
+      apiDateFilter = "custom";
+      finalStart = customFrom;
+      finalEnd = customTo;
+    }
+
     setDateRange(tempDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
     setCurrentPage(1);
-  };
 
-  const reportRows = dummyData[dateRange] || [];
+    const { data } = await fetchDeals({
+      dateFilter: apiDateFilter,
+      ...(apiDateFilter === "custom" && {
+        startDate: finalStart,
+        endDate: finalEnd,
+      }),
+    });
+
+    setReportRows(data || []);
+  };
 
   const filteredData = reportRows.filter(
     (item) =>
       (statusFilter === "All Status" || item.status === statusFilter) &&
-      (currencyFilter === "All Currencies" || item.buy_currency === currencyFilter) &&
-      (item.deal_id?.toLowerCase().includes(search.toLowerCase()) ||
-        item.customer?.toLowerCase().includes(search.toLowerCase()))
+      (currencyFilter === "All Currencies" || item.buyCurrency === currencyFilter) &&
+      (item.deal_number?.toLowerCase().includes(search.toLowerCase()) ||
+        item.customer_name?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const sortedData = [...filteredData].sort((a, b) => {
@@ -96,8 +118,8 @@ export default function ListReport() {
     Completed: "bg-[#1D4CB53D] text-[#88ACFC] border border-[#88ACFC]",
   };
   const typeColors = {
-    Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
-    Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+    buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+    sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
   };
 
   const handleSort = (columnKey) => {
@@ -177,16 +199,20 @@ export default function ListReport() {
                 <label className="text-gray-300 mb-2 text-sm">From:</label>
                 <CalendarMini
                   selectedDate={customFrom}
-                  onDateSelect={(date) => setCustomFrom(date)}
-                />
+                  onDateSelect={(date) => {
+                    console.log("fromdate", date);               // log the raw date
+                    setCustomFrom(formatDate(date)); // save formatted date
+                  }}/>
               </div>
 
               <div className="flex-1">
                 <label className="text-gray-300 mb-2 text-sm">To:</label>
                 <CalendarMini
                   selectedDate={customTo}
-                  onDateSelect={(date) => setCustomTo(date)}
-                  disabled={!customFrom}
+                  onDateSelect={(date) => {
+                                        console.log("todate", date);            
+                                        setCustomTo(formatDate(date))}}
+  disabled={customFrom === null} // disabled only if from is not selected
                 />
               </div>
             </div>
@@ -204,7 +230,6 @@ export default function ListReport() {
 
               <button
                 className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md disabled:opacity-40"
-                disabled={!customFrom || !customTo}
                 onClick={() => {
                   setShowCustomModal(false);
                   setTempDateRange("Custom");
@@ -226,12 +251,12 @@ export default function ListReport() {
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white text-[16px] font-semibold">  
+              <h2 className="text-white text-[16px] font-semibold">
                 {dateRange === "Today" && "Today's Report"}
                 {dateRange === "Last 7 days" && "This Week's Report"}
                 {dateRange === "Last 30 days" && "This Month's Report"}
                 {dateRange === "Last 90 days" && "Three Month's Report"}
-                {dateRange === "Custom" && "Custom's Report"}
+                {dateRange === "Custom" && "Custom Report"}
               </h2>
             </div>
 
@@ -244,24 +269,22 @@ export default function ListReport() {
                   {/* TYPE SORT */}
                   <th
                     className="py-3 cursor-pointer select-none"
-                    onClick={() => handleSort("type")}
+                    onClick={() => handleSort("deal_type")}
                   >
                     <div className="flex items-center gap-1 justify-center">
                       Type
                       <span className="flex flex-col">
                         <img
                           src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${sortBy === "type" && !sortAsc
-                              ? "opacity-100"
-                              : "opacity-30"
-                            }`}
+                          className={`w-3 h-3 -mt-[5px] ${
+                            sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
                         />
                         <img
                           src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "type" && sortAsc
-                              ? "opacity-100"
-                              : "opacity-30"
-                            }`}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${
+                            sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
                         />
                       </span>
                     </div>
@@ -273,24 +296,22 @@ export default function ListReport() {
                   {/* CURRENCY SORT */}
                   <th
                     className="py-3 cursor-pointer select-none"
-                    onClick={() => handleSort("buy_currency")}
+                    onClick={() => handleSort("buyCurrency")}
                   >
                     <div className="flex items-center gap-1 justify-center">
                       Currency
                       <span className="flex flex-col">
                         <img
                           src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${sortBy === "buy_currency" && !sortAsc
-                              ? "opacity-100"
-                              : "opacity-30"
-                            }`}
+                          className={`w-3 h-3 -mt-[5px] ${
+                            sortBy === "buyCurrency" && !sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
                         />
                         <img
                           src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "buy_currency" && sortAsc
-                              ? "opacity-100"
-                              : "opacity-30"
-                            }`}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${
+                            sortBy === "buyCurrency" && sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
                         />
                       </span>
                     </div>
@@ -310,37 +331,41 @@ export default function ListReport() {
                     className="rounded-2xl hover:bg-[#151517] transition-colors"
                   >
                     <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
-                      {item.deal_id}
+                      {item.deal_number}
                     </td>
 
-                    <td>{item.date}</td>
+                    <td>{new Date(item.created_at).toLocaleDateString()}</td>
 
                     {/* TYPE PILL */}
                     <td>
                       <div className="flex justify-center items-center">
                         <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${
+                            typeColors[item.deal_type]
+                          }`}
                         >
-                          {item.type}
+                          {item.deal_type.toUpperCase()}
                         </span>
                       </div>
                     </td>
 
-                    <td>{item.customer}</td>
-                    <td>{item.buy_amount}</td>
+                    <td>{item.customer_name}</td>
 
-                    <td>{item.buy_currency}</td>
+                    <td>{item.buyAmount}</td>
+                    <td>{item.buyCurrency}</td>
 
                     <td>{item.rate}</td>
-                    <td>{item.sell_amount}</td>
 
-                    <td>{item.sell_currency}</td>
+                    <td>{item.sellAmount}</td>
+                    <td>{item.sellCurrency}</td>
 
                     {/* STATUS */}
                     <td>
                       <div className="flex justify-center items-center">
                         <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${
+                            statusColors[item.status]
+                          }`}
                         >
                           {item.status}
                         </span>
