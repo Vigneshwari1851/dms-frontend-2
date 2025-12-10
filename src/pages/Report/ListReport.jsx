@@ -27,8 +27,8 @@ export default function ListReport() {
   const [sortAsc, setSortAsc] = useState(true);
 
   const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
 
   const [reportRows, setReportRows] = useState([]);
 
@@ -38,8 +38,10 @@ export default function ListReport() {
     { label: "Excel report", icon: excel },
   ];
 
-  const formatDate = (date) =>
-    date ? new Date(date).toISOString().split("T")[0] : "";
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+  };
 
   const handleApplyFilters = async () => {
     let apiDateFilter = "";
@@ -197,16 +199,20 @@ export default function ListReport() {
                 <label className="text-gray-300 mb-2 text-sm">From:</label>
                 <CalendarMini
                   selectedDate={customFrom}
-                  onDateSelect={(date) => setCustomFrom(formatDate(date))}
-                />
+                  onDateSelect={(date) => {
+                    console.log("fromdate", date);               // log the raw date
+                    setCustomFrom(formatDate(date)); // save formatted date
+                  }}/>
               </div>
 
               <div className="flex-1">
                 <label className="text-gray-300 mb-2 text-sm">To:</label>
                 <CalendarMini
                   selectedDate={customTo}
-                  onDateSelect={(date) => setCustomTo(formatDate(date))}
-                  disabled={!customFrom}
+                  onDateSelect={(date) => {
+                                        console.log("todate", date);            
+                                        setCustomTo(formatDate(date))}}
+  disabled={customFrom === null} // disabled only if from is not selected
                 />
               </div>
             </div>
@@ -224,7 +230,6 @@ export default function ListReport() {
 
               <button
                 className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md disabled:opacity-40"
-                disabled={!customFrom || !customTo}
                 onClick={() => {
                   setShowCustomModal(false);
                   setTempDateRange("Custom");
