@@ -8,11 +8,16 @@ function getAuthHeaders() {
   };
 }
 
-export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter } = {}) {
+export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate} = {}) {
   try {
     const params = { page, limit };
     if (currency) params.currency = currency;
     if (dateFilter) params.dateFilter = dateFilter;
+
+    if (dateFilter === "custom" && startDate && endDate) {
+      params.startDate = startDate;
+      params.endDate = endDate;
+    }
 
     const queryString = new URLSearchParams(params).toString();
 
