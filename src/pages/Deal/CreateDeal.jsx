@@ -1,27 +1,42 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import plus from "../../assets/common/Hplus.svg";
 import Denomination from "../../components/deal/Denomination";
 import Toast from "../../components/common/Toast";
+import { createDeal } from "../../api/deals";
 
 export default function CreateDeal() {
-  const [denominationReceived, setDenominationReceived] = useState([
-    { denom: 0, quantity: 0 },
-  ]);
-
+  const navigate = useNavigate();
+  
+  // Form State
+  const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
+  const [txnType, setTxnType] = useState("");
+  const [txnTypeOpen, setTxnTypeOpen] = useState(false);
+  const [txnMode, setTxnMode] = useState("");
+  const [txnModeOpen, setTxnModeOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [rate, setRate] = useState("");
+  const [remarks, setRemarks] = useState("");
+  
+  const [denominationReceived, setDenominationReceived] = useState([
+    { price: 0, quantity: 0, currency_id: 1 },
+  ]);
   const [denominationPaid, setDenominationPaid] = useState([
-    { denom: 0, quantity: 0 },
+    { price: 0, quantity: 0, total: 0, currency_id: 1 },
   ]);
 
-   const [toast, setToast] = useState({
+  const [toast, setToast] = useState({
     show: false,
     message: "",
     type: "success",
   });
 
-   const showToast = (message, type = "success") => {
+  const [loading, setLoading] = useState(false);
+
+  const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
 
     setTimeout(() => {
@@ -29,33 +44,78 @@ export default function CreateDeal() {
     }, 2500);
   };
 
-  // Dropdown States
-  const [txnType, setTxnType] = useState("");
-  const [txnTypeOpen, setTxnTypeOpen] = useState(false);
-
-  const [txnMode, setTxnMode] = useState("");
-  const [txnModeOpen, setTxnModeOpen] = useState(false);
-
-
-   const [currency, setCurrency] = useState("USD - US Dollar");
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-
-
-    const handleConfirm = () => {
-    if (actionType === "reject") {
-      setConfirmModal({ open: false });
-      setReasonModalOpen(true); // open reason modal
-      return;
+  const validateForm = () => {
+    if (!customerName.trim()) {
+      showToast("Customer name is required", "error");
+      return false;
     }
-
-    if (actionType === "approve") {
-      onApprove ? onApprove(dealData) : console.log("Deal approved", dealData);
-      showToast("Deal Approved Successfully!", "success");
+    if (!phone.trim()) {
+      showToast("Phone number is required", "error");
+      return false;
     }
+    if (!txnType) {
+      showToast("Transaction type is required", "error");
+      return false;
+    }
+    if (!txnMode) {
+      showToast("Transaction mode is required", "error");
+      return false;
+    }
+    if (!amount || amount <= 0) {
+      showToast("Valid amount is required", "error");
+      return false;
+    }
+    if (!rate || rate <= 0) {
+      showToast("Valid rate is required", "error");
+      return false;
+    }
+    return true;
+  };
 
-    
+  const handleCreateDeal = async () => {
+    if (!validateForm()) return;
 
-    setConfirmModal({ open: false });
+    try {
+      setLoading(true);
+
+      const dealData = {
+        customer_name: customerName,
+        phone_number: phone,
+        deal_type: txnType.toLowerCase(),
+        transaction_mode: txnMode.toLowerCase(),
+        amount: Number(amount),
+        rate: Number(rate),
+        remarks: remarks,
+        status: "Pending",
+        received_items: denominationReceived.map((item) => ({
+          price: String(item.price),
+          quantity: String(item.quantity),
+          currency_id: item.currency_id,
+        })),
+        paid_items: denominationPaid.map((item) => ({
+          price: String(item.price),
+          quantity: String(item.quantity),
+          total: String(item.total),
+          currency_id: item.currency_id,
+        })),
+      };
+
+      const result = await createDeal(dealData);
+
+      if (result.success) {
+        showToast("Deal created successfully!", "success");
+        setTimeout(() => {
+          navigate("/deals");
+        }, 2000);
+      } else {
+        showToast(result.error?.message || "Failed to create deal", "error");
+      }
+    } catch (err) {
+      console.error("Error creating deal:", err);
+      showToast("Error creating deal", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   
@@ -81,6 +141,9 @@ export default function CreateDeal() {
 
             <input
               className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Enter customer name"
             />
           </div>
 
@@ -90,7 +153,7 @@ export default function CreateDeal() {
             </label>
 
             <input
-                className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
+                className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
                 value={phone}
                 onChange={(e) => {
                 let value = e.target.value;
@@ -245,7 +308,13 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Amount <span className="text-red-500">*</span>
             </label>
-            <input className="w-full bg-[#16191C] rounded-lg p-2 text-white" placeholder="0.00"/>
+            <input 
+              className="w-full bg-[#16191C] rounded-lg p-2 text-white focus:outline-none" 
+              placeholder="0.00"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
           </div>
 
           {/* Rate */}
@@ -253,7 +322,13 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Rate <span className="text-red-500">*</span>
             </label>
-            <input className="w-full bg-[#16191C] rounded-lg p-2 text-white" placeholder="0.00" />
+            <input 
+              className="w-full bg-[#16191C] rounded-lg p-2 text-white focus:outline-none" 
+              placeholder="0.00"
+              type="number"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+            />
           </div>
         </div>
 
@@ -273,24 +348,43 @@ export default function CreateDeal() {
               p-3 h-24 text-white
               placeholder:text-[#ABABAB]
               font-poppins
+              focus:outline-none
             "
             placeholder="Add any additional notes..."
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
           />
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end gap-3 mt-8">
-          <button className="w-[95px] h-10 border border-gray-500 rounded-lg text-white">
+          <button 
+            className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-[#2A2F34]"
+            onClick={() => navigate("/deals")}
+            disabled={loading}
+          >
             Cancel
           </button>
 
-          <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium" onClick={handleConfirm}> 
+          <button 
+            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            onClick={handleCreateDeal}
+            disabled={loading}
+          > 
             <img src={plus} className="w-5 h-5" />
-            Create Deal
+            {loading ? "Creating..." : "Create Deal"}
           </button>
         </div>
 
       </div>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </>
   );
 }

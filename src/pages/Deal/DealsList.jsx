@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
@@ -10,12 +10,67 @@ import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import Pagination from "../../components/common/Pagination";
 import { FiSearch } from "react-icons/fi";
+import { fetchDeals } from "../../api/deals";
 
 export default function DealsList() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(null);
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const data = [
+  useEffect(() => {
+    const loadDeals = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchDeals({});
+        
+        // Transform API response to match table structure
+        const transformedData = response.data.map((deal) => {
+          const receivedItems = deal.received_items || [];
+          const paidItems = deal.paid_items || [];
+          
+          const buyAmount = receivedItems.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+          );
+          const sellAmount = paidItems.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+          );
+          const receivedCurrency = receivedItems[0]?.currency?.code || "---";
+          const paidCurrency = paidItems[0]?.currency?.code || "---";
+
+          return {
+            id: deal.deal_number,
+            date: new Date(deal.created_at).toLocaleDateString("en-IN"),
+            type: deal.deal_type === "buy" ? "Buy" : "Sell",
+            customer: deal.customer_name,
+            buyAmt: deal.deal_type === "buy" ? buyAmount.toLocaleString() : "--------",
+            currency: receivedCurrency,
+            rate: deal.rate,
+            sellAmt: deal.deal_type === "sell" ? sellAmount.toLocaleString() : "--------",
+            currency1: paidCurrency,
+            status: deal.status,
+            dealId: deal.id,
+          };
+        });
+
+        setDeals(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error("Error loading deals:", err);
+        setError("Failed to load deals");
+        setDeals([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDeals();
+  }, []);
+
+  const mockData = [
     {
       id: "D001",
       date: "2025/01/26",
@@ -157,7 +212,7 @@ export default function DealsList() {
   const statuses = ["All Status", "Pending", "Completed"];
   const currencies = ["All Currencies", "USD", "EUR", "GBP"];
   const [search, setSearch] = useState("");
-  const filteredData = data.filter(
+  const filteredData = deals.filter(
     (item) =>
       (statusFilter === "All Status" || item.status === statusFilter) &&
       (currencyFilter === "All Currencies" || item.currency === currencyFilter) &&
@@ -223,8 +278,47 @@ export default function DealsList() {
     setOpenMenu(null);
   };
 
+  if (loading) {
+    return (
+      <>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-white text-2xl font-semibold">Deals Overview</h1>
+            <p className="text-gray-400 text-sm mt-1">Manage and review all deals</p>
+          </div>
+          <button
+            onClick={() => navigate("/create-deal")}
+            className="px-5 py-2 bg-[#1D4CB5] hover:bg-blue-600 rounded-lg text-white font-medium flex items-center gap-2"
+          >
+            <img src={add} alt="add" className="w-5 h-5" />
+            Create New Deal
+          </button>
+        </div>
+        <div className="text-center text-gray-400 py-10">Loading deals...</div>
+      </>
+    );
+  }
 
-
+  if (error) {
+    return (
+      <>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-white text-2xl font-semibold">Deals Overview</h1>
+            <p className="text-gray-400 text-sm mt-1">Manage and review all deals</p>
+          </div>
+          <button
+            onClick={() => navigate("/create-deal")}
+            className="px-5 py-2 bg-[#1D4CB5] hover:bg-blue-600 rounded-lg text-white font-medium flex items-center gap-2"
+          >
+            <img src={add} alt="add" className="w-5 h-5" />
+            Create New Deal
+          </button>
+        </div>
+        <div className="text-center text-red-400 py-10">{error}</div>
+      </>
+    );
+  }
 
   return (
     <>
