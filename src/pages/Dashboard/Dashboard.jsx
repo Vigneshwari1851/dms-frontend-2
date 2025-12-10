@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AppLayout from "../../components/layout/AppLayout";
 import StatCard from "../../components/dashboard/StatCard";
 import DealsTable from "../../components/dashboard/DealsTable";
@@ -7,9 +8,57 @@ import sellamount from "../../assets/dashboard/sellamount.svg"
 import profit from "../../assets/dashboard/profit.svg"
 import add from "../../assets/dashboard/add.svg"
 import { useNavigate } from "react-router-dom";
+import { fetchDeals } from "../../api/deals";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    today: {
+      dealCount: 0,
+      buyAmount: 0,
+      sellAmount: 0,
+      profit: 0,
+    },
+    yesterdayPercentage: {
+      dealCount: 0,
+      buyAmount: 0,
+      sellAmount: 0,
+      profit: 0,
+    },
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboardStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchDeals({ dateFilter: "today" });
+        if (response.stats) {
+          setStats(response.stats);
+        }
+      } catch (err) {
+        console.error("Error loading dashboard stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardStats();
+  }, []);
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const getChangeText = (percentage) => {
+    if (percentage === 0) return "No change from yesterday";
+    return `${percentage >= 0 ? "+" : ""}${percentage}% from yesterday`;
+  };
+
   return (
     <>
       <div className="flex items-center justify-between mb-2">
@@ -25,29 +74,29 @@ export default function Dashboard() {
       <div className="grid grid-cols-4 gap-5">
         <StatCard
           title="Total Deals Today"
-          value="24"
-          change="+12% from yesterday"
+          value={stats.today?.dealCount || 0}
+          change={getChangeText(stats.yesterdayPercentage?.dealCount)}
           icon={dealstoday}
         />
 
         <StatCard
           title="Total Buy Amount"
-          value="$482,500"
-          change="+8.4 from yesterday"
+          value={formatCurrency(stats.today?.buyAmount || 0)}
+          change={getChangeText(stats.yesterdayPercentage?.buyAmount)}
           icon={buyamount}
         />
 
         <StatCard
           title="Total Sell Amount"
-          value="$482,500"
-          change="-1.2% from yesterday"
+          value={formatCurrency(stats.today?.sellAmount || 0)}
+          change={getChangeText(stats.yesterdayPercentage?.sellAmount)}
           icon={sellamount}
         />
 
         <StatCard
           title="Total Profit (TZS)"
-          value="12,458,000"
-          change="+15.2 from yesterday"
+          value={Number(stats.today?.profit || 0).toLocaleString()}
+          change={getChangeText(stats.yesterdayPercentage?.profit)}
           icon={profit}
         />
       </div>

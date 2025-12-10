@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
 import uparrowIcon from "../../assets/up_arrow.svg";
@@ -9,9 +9,65 @@ import rightArrow from "../../assets/Common/right.svg";
 import Pagination from "../common/Pagination";
 import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
+import { fetchDeals } from "../../api/deals";
 
 export default function DealsTable() {
-  const data = [
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadDeals = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchDeals({ dateFilter: "today" });
+        
+        // Transform API response to match table structure
+        const transformedData = response.data.map((deal) => {
+          const receivedItems = deal.received_items || [];
+          const paidItems = deal.paid_items || [];
+          
+          const buyAmount = receivedItems.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+          );
+          const sellAmount = paidItems.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+          );
+          const receivedCurrency = receivedItems[0]?.currency?.code || "---";
+          const paidCurrency = paidItems[0]?.currency?.code || "---";
+
+          return {
+            id: deal.deal_number,
+            date: new Date(deal.created_at).toLocaleDateString("en-IN"),
+            type: deal.deal_type === "buy" ? "Buy" : "Sell",
+            customer: deal.customer_name,
+            buyAmt: deal.deal_type === "buy" ? buyAmount.toLocaleString() : "--------",
+            currency: receivedCurrency,
+            rate: deal.rate,
+            sellAmt: deal.deal_type === "sell" ? sellAmount.toLocaleString() : "--------",
+            currency1: paidCurrency,
+            status: deal.status,
+            dealId: deal.id,
+          };
+        });
+
+        setDeals(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error("Error loading deals:", err);
+        setError("Failed to load deals");
+        setDeals([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDeals();
+  }, []);
+
+  const mockData = [
     {
       id: "D001",
       date: "2025/01/26",
@@ -177,7 +233,7 @@ export default function DealsTable() {
   const statuses = ["All Status", "Pending", "Completed"];
   const currencies = ["All Currencies", "USD", "EUR", "GBP"];
 
-  const filteredData = data.filter(
+  const filteredData = deals.filter(
     (item) =>
       (statusFilter === "All Status" || item.status === statusFilter) &&
       (currencyFilter === "All Currencies" ||
@@ -216,6 +272,22 @@ export default function DealsTable() {
 
 
   // -----------------------------------
+
+  if (loading) {
+    return (
+      <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
+        <div className="text-center text-gray-400 py-10">Loading deals...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
+        <div className="text-center text-red-400 py-10">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
