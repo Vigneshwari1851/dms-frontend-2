@@ -90,15 +90,15 @@ export default function ListUser() {
               label: user.is_active ? "Deactivate User" : "Activate User",
               onClick: () =>
                 setConfirmModal({
-                  open: true,
-                  actionType: "deactivate",
-                  title: user.is_active
-                    ? "Are you sure you want to deactivate this user account?"
-                    : "Activate Account",
-                  message: user.is_active
-                    ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
-                    : "You are about to activate this user account. Do you wish to continue?",
-                }),
+                    open: true,
+                    actionType: user.is_active ? "deactivate" : "activate",
+                    title: user.is_active
+                        ? "Are you sure you want to deactivate this user account?"
+                        : "Are you sure you want to activate this user account?",
+                    message: user.is_active
+                        ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
+                        : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
+                })
             },
             {
               label: "Reset Password",
@@ -156,6 +156,11 @@ export default function ListUser() {
             case "deactivate":
               msg = "User Deactivated!";
               type = "error";
+              break;
+            
+            case "activate":
+              msg = "User Activated!";
+              type = "success";
               break;
 
             case "delete":
