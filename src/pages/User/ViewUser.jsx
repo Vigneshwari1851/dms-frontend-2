@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchUserById, updateUser } from "../../api/user/user.jsx"; 
+import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
+import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -20,6 +21,10 @@ export default function ViewUser() {
         role: "",
     });
 
+    const [initialData, setInitialData] = useState(null);
+    const [pendingDelete, setPendingDelete] = useState(false);
+    const [pendingReset, setPendingReset] = useState(false);
+
     const [confirmModal, setConfirmModal] = useState({
         open: false,
         actionType: "",
@@ -30,17 +35,9 @@ export default function ViewUser() {
     useEffect(() => {
         const loadUser = async () => {
             const res = await fetchUserById(id);
-            if (res.success) {
-                const user = res.data.user;
-                setFormData({
-                    full_name: user.full_name,
-                    email: user.email,
-                    phone: user.phone_number,
-                    role: user.role,
-                });
-                setIsActive(user.is_active);
-            } else {
-                navigate("/users", {
+
+            if (!res.success) {
+                return navigate("/users", {
                     state: {
                         toast: {
                             message: "Failed to load user data",
@@ -49,6 +46,25 @@ export default function ViewUser() {
                     },
                 });
             }
+
+            const user = res.data.user;
+
+            setFormData({
+                full_name: user.full_name,
+                email: user.email,
+                phone: user.phone_number,
+                role: user.role,
+            });
+
+            setIsActive(user.is_active);
+
+            setInitialData({
+                full_name: user.full_name,
+                email: user.email,
+                phone: user.phone_number,
+                role: user.role,
+                is_active: user.is_active,
+            });
         };
 
         loadUser();
@@ -64,17 +80,26 @@ export default function ViewUser() {
     };
 
     const handleSave = async () => {
-        const payload = {
-            full_name: formData.full_name,
-            email: formData.email,
-            phone_number: formData.phone,
-            role: formData.role,
-            is_active: isActive,
-        };
+        try {
+            if (pendingDelete) {
+                const delRes = await deleteUser(id);
+                if (!delRes.success) throw new Error("Delete failed");
+            }
+            if (pendingReset) {
+                const resetRes = await sendResetPasswordEmail(formData.email);
+                if (!resetRes) throw new Error("Reset password email failed");
+            }
+            const payload = {
+                full_name: formData.full_name,
+                email: formData.email,
+                phone_number: formData.phone,
+                role: formData.role,
+            };
 
-        const res = await updateUser(id, payload);
-
-        if (res.success) {
+            const res = await updateUser(id, payload);
+            if (!res.success) throw new Error("Update failed");
+            const statusRes = await updateUserStatus(id, isActive);
+            if (!statusRes.success) throw new Error("Status update failed");
             navigate("/users", {
                 state: {
                     toast: {
@@ -83,11 +108,24 @@ export default function ViewUser() {
                     },
                 },
             });
-        } else {
+        } catch (err) {
+            console.error(err);
+            if (initialData) {
+                setFormData({
+                    full_name: initialData.full_name,
+                    email: initialData.email,
+                    phone: initialData.phone,
+                    role: initialData.role,
+                });
+                setIsActive(initialData.is_active);
+                setPendingDelete(false);
+                setPendingReset(false);
+            }
+
             navigate("/users", {
                 state: {
                     toast: {
-                        message: "Failed to update user",
+                        message: "Changes not updated",
                         type: "error",
                     },
                 },
@@ -105,9 +143,17 @@ export default function ViewUser() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <span className="px-4 py-1 bg-[#10B93524] text-[#82E890] rounded-full text-[12px]">
-                        {isActive ? "Active" : "Inactive"}
-                    </span>
+                <span
+                    className={`
+                        px-4 py-1 rounded-full text-[12px]
+                        ${isActive 
+                            ? "bg-[#10B93524] text-[#82E890]"
+                            : "bg-[#BD404A24] text-[#FF8A8A]"
+                        }
+                    `}
+                >
+                    {isActive ? "Active" : "Inactive"}
+                </span>
 
                     {!editMode && (
                         <button
@@ -236,11 +282,13 @@ export default function ViewUser() {
                                 if (!editMode) return;
                                 setConfirmModal({
                                     open: true,
-                                    actionType: "deactivate",
-                                    title: isActive ? "Are you sure you want to deactivate this user account?" : "Activate Account",
+                                    actionType: isActive ? "deactivate" : "activate",
+                                    title: isActive
+                                        ? "Are you sure you want to deactivate this user account?"
+                                        : "Are you sure you want to activate this user account?",
                                     message: isActive
-                                        ? "You are about to deactivate this user account. The user will be unable to log in or perform any actions until reactivated. Do you wish to continue?"
-                                        : "You are about to activate this user account. The user will be able to log in or perform any actions until deactivated. Do you wish to continue?",
+                                        ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
+                                        : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
                                 });
                             }}
                             disabled={!editMode}
@@ -341,13 +389,16 @@ export default function ViewUser() {
                     onConfirm={() => {
                         switch (confirmModal.actionType) {
                             case "delete":
-                                console.log("User deleted");
+                                setPendingDelete(true);
                                 break;
                             case "resetPassword":
-                                console.log("Password reset");
+                                setPendingReset(true);
                                 break;
                             case "deactivate":
-                                setIsActive((prev) => !prev);
+                                setIsActive(false);
+                                break;
+                            case "activate":
+                                setIsActive(true);
                                 break;
                             default:
                                 break;
