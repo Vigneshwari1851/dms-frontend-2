@@ -86,15 +86,7 @@ export default function ListReport() {
     setReportRows(data || []);
   };
 
-  const filteredData = reportRows.filter(
-    (item) =>
-      (statusFilter === "All Status" || item.status === statusFilter) &&
-      (currencyFilter === "All Currencies" || item.buyCurrency === currencyFilter) &&
-      (item.deal_number?.toLowerCase().includes(search.toLowerCase()) ||
-        item.customer_name?.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const sortedData = [...filteredData].sort((a, b) => {
+  const sortedData = [...reportRows].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
     let valB = b[sortBy];
@@ -356,7 +348,7 @@ export default function ListReport() {
                       </div>
                     </td>
 
-                    <td>{item.customer_name}</td>
+                    <td>{item.customer?.name}</td>
 
                     <td>{item.buyAmount}</td>
                     <td>{item.buyCurrency}</td>
