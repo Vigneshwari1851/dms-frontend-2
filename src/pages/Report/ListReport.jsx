@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
-import { fetchDeals } from "../../api/deals";
+import { fetchDeals } from "../../api/deals.jsx";
 
 export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
@@ -51,12 +51,7 @@ export default function ListReport() {
     const today = formatDate(new Date());
 
     if (tempDateRange === "Today") {
-      apiDateFilter = "custom";
-      finalStart = today;
-      finalEnd = today;
-
-      setCustomFrom(today);
-      setCustomTo(today);
+      apiDateFilter = "today";   // ✔️ ONLY "today"
     }
 
     else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
