@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchCustomerById, updateCustomer } from "../../api/customers";
 import saveIcon from "../../assets/common/save.svg";
+import edit from "../../assets/Common/edit.svg";
 
 export default function ViewCustomer() {
     const { id } = useParams();
@@ -103,8 +104,44 @@ export default function ViewCustomer() {
 
     return (
         <div className="mt-4 bg-[#1A1F24] p-5 rounded-xl">
-            <h2 className="text-[16px] font-medium text-white mb-2">Customer Details</h2>
-            <p className="text-gray-400 text-[12px] mb-6">View or edit customer information</p>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-[16px] font-medium text-white">Customer Details</h2>
+                    <p className="text-gray-400 text-[12px]">View or edit customer information</p>
+                </div>
+
+                <div className="flex gap-2">
+                    {!editMode && (
+                        <button
+                            onClick={() => setEditMode(true)}
+                            className=" bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md"
+                        >
+                            <img
+                                src={edit}
+                                alt="edit"
+                                className="w-8 h-8 cursor-pointer"
+                            />
+                        </button>
+                    )}
+                    {editMode && (
+                        <>
+                            <button
+                                onClick={handleCancel}
+                                className="px-4 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white"
+                            >
+                                <img src={saveIcon} alt="save" className="w-4 h-4" />
+                                Save
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
 
             <div className="mb-4">
                 <label className="block text-sm text-[#ABABAB] mb-1">Full Name</label>
@@ -128,7 +165,7 @@ export default function ViewCustomer() {
                         onChange={handleChange}
                         readOnly={!editMode}
                         className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white
-                            ${editMode ? "border border-[#2A2F33] focus:border-blue-500" : "border border-transparent cursor-not-allowed opacity-80"}`}
+            ${editMode ? "border border-[#2A2F33] focus:border-blue-500" : "border border-transparent cursor-not-allowed opacity-80"}`}
                     />
                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
@@ -144,35 +181,6 @@ export default function ViewCustomer() {
                     />
                     {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
                 </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-                {!editMode && (
-                    <button
-                        onClick={() => setEditMode(true)}
-                        className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md"
-                    >
-                        Edit
-                    </button>
-                )}
-
-                {editMode && (
-                    <>
-                        <button
-                            onClick={handleCancel}
-                            className="px-4 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white"
-                        >
-                            <img src={saveIcon} alt="save" className="w-4 h-4" />
-                            Save
-                        </button>
-                    </>
-                )}
             </div>
         </div>
     );
