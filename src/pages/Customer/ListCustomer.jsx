@@ -1,15 +1,35 @@
 import bgIcon from "../../assets/customer/bgimage.svg";
 import searchIcon from "../../assets/Common/search.svg";
 import add from "../../assets/user/add_person.svg";
-import { useState, useRef } from "react";
+import { useState,useEffect , useRef } from "react";
 import { searchCustomers } from "../../api/customers";
+import { useNavigate, useLocation } from "react-router-dom";
+import Toast from "../../components/common/Toast";
 
 export default function ListCustomer() {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [search, setSearch] = useState("");
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(false);
     const searchTimeoutRef = useRef(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("");
 
+    const handleAddcustomer = () => {
+        navigate("/customer-info/add-customer");
+    };
+
+    useEffect(() => {
+        if (location.state?.toast) {
+            setToastMessage(location.state.toast.message);
+            setToastType(location.state.toast.type);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2500);
+        }
+    }, [location.state]);
+    
     const handleSearch = (value) => {
         setSearch(value);
 
@@ -44,7 +64,7 @@ export default function ListCustomer() {
             <div className="flex items-center justify-between">
                 <h1 className="text-white text-2xl font-semibold">Customer Management</h1>
 
-                <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+                <button onClick={handleAddcustomer} className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
                     <img src={add} alt="add" className="w-5 h-5" />
                     Add Customer
                 </button>
@@ -116,7 +136,7 @@ export default function ListCustomer() {
                             return (
                                 <div
                                     key={customer.id || name}
-                                    className="grid grid-cols-3 gap-4 py-2 border-b border-[#2A2F33] last:border-b-0 text-sm text-gray-400"
+                                    className="grid grid-cols-3 gap-4 py-2 text-sm text-gray-400"
                                 >
                                     <span>{name}</span>
                                     <span className="text-center">{email}</span>
@@ -127,6 +147,7 @@ export default function ListCustomer() {
                     </div>
                 )}
             </div>
+            <Toast show={showToast} message={toastMessage} type={toastType} />
         </>
     );
 }

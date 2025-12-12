@@ -37,3 +37,24 @@ export async function searchCustomers(searchTerm = "") {
   }
 }
 
+export async function addCustomer(customer) {
+  try {
+    const response = await fetch(`${API_URL}/customer`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(customer),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to add customer:", result);
+      return { success: false, error: result };
+    }
+
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error("Error adding customer:", error);
+    return { success: false, error };
+  }
+}

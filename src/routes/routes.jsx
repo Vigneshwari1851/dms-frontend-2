@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Router } from "react-router-dom";
 
 import Login from "../pages/Auth/Login/Login";
 import VerifyOtp from "../pages/Auth/VerifyLogin/VerifyLogin";
@@ -22,6 +22,7 @@ import ListReport from "../pages/Report/ListReport";
 import AddReconciliation from "../pages/Reconciliation/AddReconciliation";
 import ViewReconciliation from "../pages/Reconciliation/ViewReconciliation";
 import ListCustomer from "../pages/Customer/ListCustomer";
+import AddCustomer from "../pages/Customer/AddCustomer";
 
 export default function AppRoutes() {
   return (
@@ -52,6 +53,7 @@ export default function AppRoutes() {
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
         <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
         <Route path="customer-info" element={<ListCustomer />} />
+        <Route path="customer-info/add-customer" element={<AddCustomer/>} />  
       </Route>
     </Routes>
   );
