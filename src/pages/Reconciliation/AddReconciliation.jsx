@@ -4,6 +4,7 @@ import high from "../../assets/reconciliation/high.svg";
 import save from "../../assets/common/save.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
+import { createCurrency } from "../../api/currency/currency";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
@@ -19,17 +20,22 @@ export default function AddReconciliation() {
         setCurrencyData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSaveCurrency = () => {
-        console.log("Saving currency:", currencyData);
+    const handleSaveCurrency = async () => {
+        try {
+            console.log("Saving currency:", currencyData);
+            const result = await createCurrency({
+                code: currencyData.isoCode,
+                name: currencyData.currencyName,
+                symbol: currencyData.symbol,
+            });
 
-        // Clear after save
-        setCurrencyData({
-            currencyName: "",
-            isoCode: "",
-            symbol: "",
-        });
-
-        setShowCurrencyModal(false);
+            if (result) {
+                setCurrencyData({ currencyName: "", isoCode: "", symbol: "" });
+                setShowCurrencyModal(false);
+            } 
+        } catch (error) {
+            console.error("Error saving currency:", error);
+        }
     };
 
     const varianceValue = "+5.00";   // or "-10.00"

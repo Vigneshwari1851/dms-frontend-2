@@ -34,3 +34,25 @@ export async function fetchCurrencies({ page = 1, limit = 10, search } = {}) {
     return [];
   }
 }
+
+export async function createCurrency({ code, name, symbol }) {
+  try {
+    const response = await fetch(`${API_URL}/currency`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ code, name, symbol }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Failed to create currency:", response.status, text);
+      return null;
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error creating currency:", error);
+    return null;
+  }
+}
