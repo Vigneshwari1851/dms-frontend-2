@@ -163,15 +163,15 @@ export default function EditDeal() {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h2 className="text-[16px] font-medium text-white">
-                        Deal No- {deal?.deal_number || id || "Loading..."}
+                        Deal ID - {deal?.deal_number || id || "Loading..."}
                     </h2>
-                    <p className="text-gray-400 text-[12px]">
+                    {/* <p className="text-gray-400 text-[12px]">
                         {isPending
                             ? editMode
                                 ? "Editing enabled. Update fields and save."
                                 : "View details. Click edit to modify pending deal."
                             : "View details. Editing is allowed only while status is Pending."}
-                    </p>
+                    </p> */}
                 </div>
 
                 {/* <div className="flex items-center gap-3">

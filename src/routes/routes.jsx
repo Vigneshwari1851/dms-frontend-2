@@ -35,21 +35,23 @@ export default function AppRoutes() {
 
       {/* Protected Routes (with layout) */}
       <Route path="/" element={<AppLayout />}>
-        <Route index element={<Dashboard />} />    
+        <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="deals" element={<DealsList />} />
         <Route path="create-deal" element={<CreateDeal />} />
         <Route path="users" element={<ListUser />} />
-        <Route path="users/add-user" element={<AddUser />} />  
-        <Route path="users/details/:id" element={<ViewUser />} /> 
+        <Route path="users/add-user" element={<AddUser />} />
+        <Route path="users/details/:id" element={<ViewUser />} />
         <Route path="deal-review" element={<DealReview />} />
         <Route path="view-slip" element={<ViewSlip />} />
         <Route path="edit-deal/:id" element={<EditDeal />} />
-         <Route path="reconciliation" element={<ReconciliationList />} />
+        <Route path="reconciliation" element={<ReconciliationList />} />
         <Route path="reports" element={<ListReport />} />
         <Route path="reconciliation" element={<ReconciliationList />} />
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
         <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
+
+        <Route path="/reconciliation/edit/:id" element={<ViewReconciliation />} />
       </Route>
     </Routes>
   );

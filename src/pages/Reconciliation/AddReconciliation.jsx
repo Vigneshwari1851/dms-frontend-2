@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
-import high from "../../assets/reconciliation/high.svg"; 
+import high from "../../assets/reconciliation/high.svg";
 import save from "../../assets/common/save.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";
+import { createReconciliation } from "../../api/reconcoliation"; // Import the API function
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+    const [notes, setNotes] = useState("");
 
     const [currencyData, setCurrencyData] = useState({
         currencyName: "",
@@ -16,30 +18,34 @@ export default function AddReconciliation() {
         symbol: "",
     });
 
-    const handleCurrencyChange = (field, value) => {
-        setCurrencyData((prev) => ({ ...prev, [field]: value }));
-    };
+    // In AddReconciliation component, update the state initialization
+    const [openingData, setOpeningData] = useState({
+        rows: [{ denom: "", qty: "", total: 0, open: false }], // Start with one row
+        selectedCurrency: "",
+        currencyId: null,
+        total: 0
+    });
 
-    const handleSaveCurrency = async () => {
-        try {
-            console.log("Saving currency:", currencyData);
-            const result = await createCurrency({
-                code: currencyData.isoCode,
-                name: currencyData.currencyName,
-                symbol: currencyData.symbol,
-            });
+    const [closingData, setClosingData] = useState({
+        rows: [{ denom: "", qty: "", total: 0, open: false }], // Start with one row
+        selectedCurrency: "",
+        currencyId: null,
+        total: 0
+    });
+    // Calculate totals for summary
+    const openingTotal = openingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
+    const closingTotal = closingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
+    const totalTransactions = openingTotal + closingTotal; // You might want to calculate this from actual transactions
+    const difference = closingTotal - openingTotal;
 
-            if (result) {
-                setCurrencyData({ currencyName: "", isoCode: "", symbol: "" });
-                setShowCurrencyModal(false);
-            } 
-        } catch (error) {
-            console.error("Error saving currency:", error);
-        }
-    };
 
-    const varianceValue = "+5.00";   // or "-10.00"
-    const status = "Excess";         // "Tallied", "Excess", "Short"
+    // Format variance value
+    const varianceValue = difference >= 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`;
+
+    // Determine status based on difference
+    let status = "Tallied";
+    if (difference > 0) status = "Excess";
+    if (difference < 0) status = "Short";
 
     // ⭐ VARIANCE LOGIC
     const isPositive = varianceValue.startsWith("+");
@@ -68,6 +74,73 @@ export default function AddReconciliation() {
         Balance: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
+    };
+
+    const handleCurrencyChange = (field, value) => {
+        setCurrencyData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSaveCurrency = async () => {
+        try {
+            console.log("Saving currency:", currencyData);
+            const result = await createCurrency({
+                code: currencyData.isoCode,
+                name: currencyData.currencyName,
+                symbol: currencyData.symbol,
+            });
+
+            if (result) {
+                setCurrencyData({ currencyName: "", isoCode: "", symbol: "" });
+                setShowCurrencyModal(false);
+            }
+        } catch (error) {
+            console.error("Error saving currency:", error);
+        }
+    };
+
+    // Function to handle saving reconciliation
+    const handleSaveReconciliation = async () => {
+        try {
+            // Prepare opening entries
+            const openingEntries = openingData.rows.map(row => ({
+                denomination: parseFloat(row.denom || 0),
+                quantity: parseInt(row.qty || 0),
+                amount: parseFloat(row.total || 0),
+                currency_id: openingData.currencyId
+            }));
+
+            // Prepare closing entries
+            const closingEntries = closingData.rows.map(row => ({
+                denomination: parseFloat(row.denom || 0),
+                quantity: parseInt(row.qty || 0),
+                amount: parseFloat(row.total || 0),
+                currency_id: closingData.currencyId
+            }));
+
+            // Prepare reconciliation data
+            const reconciliationData = {
+                openingEntries,
+                closingEntries,
+                notes: notes ? [notes] : [] // Wrap notes in array as per API response
+            };
+
+            console.log("Saving reconciliation:", reconciliationData);
+
+            // Call the API
+            const result = await createReconciliation(reconciliationData);
+
+            if (result.success) {
+                console.log("Reconciliation saved successfully:", result.data);
+                // You might want to show a success message or redirect
+                alert("Reconciliation saved successfully!");
+            } else {
+                console.error("Failed to save reconciliation:", result.error);
+                alert(`Failed to save: ${result.error?.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("Error saving reconciliation:", error);
+            alert("Error saving reconciliation. Please try again.");
+        }
     };
 
     return (
@@ -126,23 +199,23 @@ export default function AddReconciliation() {
                             {/* Rows */}
                             <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                                 <p className="text-[#E3E3E3] text-[14px]">Opening Vault Total</p>
-                                <p className="text-white text-[13px]">0.00</p>
+                                <p className="text-white text-[13px]">{openingTotal.toFixed(2)}</p>
                             </div>
 
                             <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                                 <p className="text-[#E3E3E3] text-[14px]">Total Transactions</p>
-                                <p className="text-white text-[13px]">0</p>
+                                <p className="text-white text-[13px]">{totalTransactions}</p>
                             </div>
 
                             <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                                 <p className="text-[#E3E3E3] text-[14px]">Closing Vault Total</p>
-                                <p className="text-white text-[13px]">0.00</p>
+                                <p className="text-white text-[13px]">{closingTotal.toFixed(2)}</p>
                             </div>
 
                             {/* ⭐ DIFFERENCE / VARIANCE */}
                             <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                                 <div className="flex items-center gap-2">
-                                    <img src={varianceIcon} className="w-5 h-5" />
+                                    <img src={varianceIcon} className="w-5 h-5" alt="variance icon" />
                                     <p className="text-[#E3E3E3] text-[14px]">Difference / Variance</p>
                                 </div>
 
@@ -178,6 +251,8 @@ export default function AddReconciliation() {
 
                                 <textarea
                                     placeholder="Add reconciliation notes..."
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
                                     className="
                                         w-[438px] h-[220px]
                                         bg-[#16191C] text-white text-[14px]
@@ -189,7 +264,10 @@ export default function AddReconciliation() {
                             </div>
 
                             <div className="flex justify-end">
-                                <button className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2">
+                                <button
+                                    onClick={handleSaveReconciliation}
+                                    className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2"
+                                >
                                     <img src={save} alt="save" /> Save Reconciliation
                                 </button>
                             </div>
@@ -199,11 +277,19 @@ export default function AddReconciliation() {
 
                 {/* OPENING TAB CONTENT */}
                 {activeTab === "opening" && (
-                    <OpeningVaultBalance />
+                    <OpeningVaultBalance
+                        data={openingData}
+                        setData={setOpeningData}
+                        type="opening"
+                    />
                 )}
 
                 {activeTab === "closing" && (
-                    <OpeningVaultBalance />
+                    <OpeningVaultBalance
+                        data={closingData}
+                        setData={setClosingData}
+                        type="closing"
+                    />
                 )}
 
                 {showCurrencyModal && (

@@ -6,6 +6,7 @@ import expandRight from "../../assets/common/expandRight.svg";
 import edit from "../../assets/Common/edit.svg";
 import save from "../../assets/common/save.svg";
 import { useNavigate } from "react-router-dom";
+import DealsTable from "../../components/dashboard/DealsTable";
 
 // Helper: get numeric value from strings like "$100", "€50", "100"
 const parseNumber = (str) => {
@@ -154,6 +155,8 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
                     </div>
                 </div>
             )}
+
+          
         </div>
     );
 }
@@ -296,7 +299,7 @@ export default function ViewReconciliation() {
                             Reconciliation - {editableData.date}
                         </h2>
 
-                        <p className="text-gray-400 text-[12px] mb-0">
+                        <p className="text-gray-400 text-[12px] mt-1">
                             Summary of today’s vault reconciliation
                         </p>
                     </div>
@@ -328,7 +331,7 @@ export default function ViewReconciliation() {
                             <img
                                 src={edit}
                                 alt="edit"
-                                className="w-8 h-8 cursor-pointer"
+                                className="w-10 h-10 cursor-pointer"
                                 onClick={handleEdit}
                             />
                         )
@@ -341,7 +344,7 @@ export default function ViewReconciliation() {
             <div className="mt-4 bg-[#16191C] rounded-xl p-4">
                 <div className="flex gap-6">
                     {/* LEFT CARD */}
-                    <div className="w-[55%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
+                    <div className="w-[65%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
                         <h3 className="text-white text-[15px] font-medium mb-1">Reconciliation Summary</h3>
 
                         {/* Rows: Opening Vault Total */}
@@ -366,7 +369,7 @@ export default function ViewReconciliation() {
                                 <input
                                     value={editableData.totalTransactions}
                                     onChange={(e) => handleFieldChange("totalTransactions", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-20 text-right"
+                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
                                 />
                             ) : (
                                 <p className="text-white text-[13px]">{editableData.totalTransactions}</p>
@@ -398,7 +401,7 @@ export default function ViewReconciliation() {
                                 <input
                                     value={editableData.varianceValue}
                                     onChange={(e) => handleFieldChange("varianceValue", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-20 text-right"
+                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
                                     style={{ color: varianceColor }}
                                 />
                             ) : (
@@ -422,7 +425,7 @@ export default function ViewReconciliation() {
                     </div>
 
                     {/* RIGHT SIDE NOTES */}
-                    <div className="w-[470px] h-[296px] flex flex-col justify-between">
+                    <div className="w-[460px] h-[296px] flex flex-col justify-between">
                         <div className="bg-[#1E2328] border border-[#1F2429] rounded-xl p-5">
                             <p className="text-white text-[16px] font-medium mb-2">Notes</p>
 
@@ -432,7 +435,7 @@ export default function ViewReconciliation() {
                                 disabled={!isEditing}
                                 placeholder="Add reconciliation notes..."
                                 className="
-                                    w-[438px] h-[220px]
+                                    w-[408px] h-[220px]
                                     bg-[#16191C] text-white text-[14px]
                                     p-2 rounded-sm
                                     outline-none resize-none
@@ -490,6 +493,7 @@ export default function ViewReconciliation() {
                     </div>
                 </div>
             </div>
+              <DealsTable />
         </>
     );
 }
