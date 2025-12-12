@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
+import { fetchCurrencies } from "../../api/currency/currency"; 
 
 export default function Denomination({
   denominationReceived: propReceived,
@@ -17,32 +18,36 @@ export default function Denomination({
     ? [propPaid, setPropPaid]
     : useState([{ price: 0, quantity: 0, currency_id: 1 }]);
 
-  // Maintain currency per section to avoid leaking selection between tables
-  const [receivedCurrency, setReceivedCurrency] = useState("USD - US Dollar");
-  const [paidCurrency, setPaidCurrency] = useState("USD - US Dollar");
+  const [receivedCurrency, setReceivedCurrency] = useState("");
+  const [paidCurrency, setPaidCurrency] = useState("");
   const [receivedCurrencyOpen, setReceivedCurrencyOpen] = useState(false);
   const [paidCurrencyOpen, setPaidCurrencyOpen] = useState(false);
 
-  // ----------------- SYMBOL MAP -----------------
-  const currencyMap = {
-    "USD - US Dollar": 1,
-    "EUR - Euro": 2,
-    "GBP - British Pound": 3,
-    "ZAR - South African Rand": 4,
-    "TZS - Tanzania Shilling": 5,
-    "KES - Kenyan Shilling": 6,
-  };
+  const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [currencyMap, setCurrencyMap] = useState({});
+  const [currencySymbols, setCurrencySymbols] = useState({});
 
-  const currencySymbols = {
-    "USD - US Dollar": "$",
-    "EUR - Euro": "€",
-    "GBP - British Pound": "£",
-    "ZAR - South African Rand": "R",
-    "TZS - Tanzania Shilling": "TSh",
-    "KES - Kenyan Shilling": "KSh",
-  };
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      const data = await fetchCurrencies({ page: 1, limit: 100 });
+      if (data && data.length > 0) {
+        const map = {};
+        const symbols = {};
+        data.forEach((c) => {
+          map[c.name] = c.id;
+          symbols[c.name] = c.symbol || "";
+        });
 
-  const currencies = Object.keys(currencySymbols);
+        setCurrencyOptions(data.map((c) => c.name));
+        setCurrencyMap(map);
+        setCurrencySymbols(symbols);
+        if (!receivedCurrency) setReceivedCurrency(data[0].name);
+        if (!paidCurrency) setPaidCurrency(data[0].name);
+      }
+    };
+
+    loadCurrencies();
+  }, []);
 
   const handleChange = (list, setList, index, field, value) => {
     const updated = [...list];
@@ -111,7 +116,7 @@ export default function Denomination({
                 rounded-lg z-10
               "
             >
-              {currencies.map((item) => (
+              {currencyOptions.map((item) => (
                 <li
                   key={item}
                   onClick={() => {
@@ -173,7 +178,7 @@ export default function Denomination({
                       "
                     >
                       <span>
-                        {row.price
+                          {row.price
                           ? currencySymbols[currency] + row.price
                           : currencySymbols[currency] + "0.00"}
                       </span>

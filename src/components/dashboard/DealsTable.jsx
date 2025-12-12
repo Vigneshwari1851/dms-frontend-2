@@ -11,12 +11,14 @@ import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { useNavigate } from "react-router-dom";
+import { fetchCurrencies } from "../../api/currency/currency";
 
 export default function DealsTable() {
   const navigate = useNavigate();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currencyList, setCurrencyList] = useState(["All Currencies"]);
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -55,6 +57,21 @@ export default function DealsTable() {
       }
     };
 
+    const loadCurrencies = async () => {
+      try {
+        const res = await fetchCurrencies();
+
+        const currencies = Array.isArray(res) ? res : [];
+        const list = ["All Currencies", ...currencies.map(c => c.code)];
+
+        setCurrencyList(list);
+      } catch (err) {
+        console.error("Failed to load currencies", err);
+        setCurrencyList(["All Currencies"]);
+      }
+    };
+
+    loadCurrencies();
     loadDeals();
   }, []);
 
@@ -322,7 +339,7 @@ export default function DealsTable() {
   }
 
   return (
-    <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
+    <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl">
       {/* Header Row */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-white text-[16px] font-semibold">
@@ -340,7 +357,7 @@ export default function DealsTable() {
 
           <Dropdown
             label="All Currencies"
-            options={currencies}
+            options={currencyList}
             selected={currencyFilter}
             onChange={(value) => setCurrencyFilter(value)}
             className="w-[180px]"
@@ -378,7 +395,7 @@ export default function DealsTable() {
         </div>
       </div>
 
-      <div className="w-[1156px] border-b-[3px] border-[#16191C] m-2"></div>
+      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
 
       {/* Table */}
       <div className="-mx-5">

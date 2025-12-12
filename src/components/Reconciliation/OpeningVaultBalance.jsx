@@ -1,27 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
+import { fetchCurrencies } from "../../api/currency/currency"; 
 
 export default function OpeningVaultBalance() {
     const [rows, setRows] = useState([
         { denom: "", qty: "", total: 0, open: false },
     ]);
 
-    const [currency, setCurrency] = useState("USD - US Dollar");
-    const [currencyOpen, setCurrencyOpen] = useState(false);
+    const [currency, setCurrency] = useState("");          // <-- selected currency
+    const [currencyOpen, setCurrencyOpen] = useState(false); // <-- dropdown toggle
 
-    // ----------------- SYMBOL MAP -----------------
-    const currencySymbols = {
-        "USD - US Dollar": "$",
-        "EUR - Euro": "€",
-        "GBP - British Pound": "£",
-        "ZAR - South African Rand": "R",
-        "TZS - Tanzania Shilling": "TSh",
-        "KES - Kenyan Shilling": "KSh",
-    };
+    const [currencyOptions, setCurrencyOptions] = useState([]); 
+    const [currencyMap, setCurrencyMap] = useState({});
+    const [currencySymbols, setCurrencySymbols] = useState({});
 
-    const currencies = Object.keys(currencySymbols);
+    useEffect(() => {
+        const loadCurrencies = async () => {
+            const data = await fetchCurrencies({ page: 1, limit: 100 });
+
+            if (data && data.length > 0) {
+                const map = {};
+                const symbols = {};
+
+                data.forEach((c) => {
+                    map[c.name] = c.id;
+                    symbols[c.name] = c.symbol || "";
+                });
+
+                setCurrencyOptions(data.map((c) => c.name));  
+                setCurrencyMap(map);
+                setCurrencySymbols(symbols);
+
+                // Set first currency by default
+                if (!currency) {
+                    setCurrency(data[0].name);
+                }
+            }
+        };
+
+        loadCurrencies();
+    }, []);
 
     const handleChange = (index, field, value) => {
         const updated = [...rows];
@@ -45,16 +65,16 @@ export default function OpeningVaultBalance() {
 
     const addRepeatedRow = () => {
     const lastRow = rows[rows.length - 1]; // get last row
-    setRows([
-        ...rows,
-        { 
-            denom: lastRow.denom, 
-            qty: lastRow.qty, 
-            total: lastRow.total, 
-            open: false 
-        },
-    ]);
-};
+        setRows([
+            ...rows,
+            {
+                denom: lastRow.denom,
+                qty: lastRow.qty,
+                total: lastRow.total,
+                open: false
+            },
+        ]);
+    };
 
 
     const deleteRow = (index) => {
@@ -90,8 +110,8 @@ export default function OpeningVaultBalance() {
 
                             {currencyOpen && (
                                 <ul className="absolute right-0 mt-2 w-[258px] 
-                bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
-                                    {currencies.map((item) => (
+                                bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
+                                    {currencyOptions.map((item) => (
                                         <li
                                             key={item}
                                             onClick={() => {
@@ -99,7 +119,7 @@ export default function OpeningVaultBalance() {
                                                 setCurrencyOpen(false);
                                             }}
                                             className="px-4 py-2 flex items-center justify-between 
-                      hover:bg-[#1E2328] cursor-pointer text-white"
+                                            hover:bg-[#1E2328] cursor-pointer text-white"
                                         >
                                             <span>{item}</span>
                                             {currency === item && (
@@ -144,7 +164,7 @@ export default function OpeningVaultBalance() {
 
                                 {row.open && (
                                     <ul className="absolute w-full mt-2 bg-[#2E3439] 
-                  border border-[#2A2F33] rounded-lg z-30">
+                                    border border-[#2A2F33] rounded-lg z-30">
                                         {["100", "50", "20", "10", "5", "2", "1"].map((item) => (
                                             <li
                                                 key={item}
@@ -171,7 +191,7 @@ export default function OpeningVaultBalance() {
 
                             {/* QUANTITY */}
                             <div className="flex items-center bg-[#1E2328] 
-              rounded-lg px-2 py-1">
+                            rounded-lg px-2 py-1">
                                 <input
                                     type="number"
                                     value={row.qty}
@@ -210,7 +230,7 @@ export default function OpeningVaultBalance() {
                         <button
                             onClick={addRow}
                             className="mt-2 border border-[#ABABAB] text-[#ABABAB] 
-              px-2 py-1 rounded-lg"
+                            px-2 py-1 rounded-lg"
                         >
                             + Add
                         </button>
@@ -224,7 +244,7 @@ export default function OpeningVaultBalance() {
                             readOnly
                             value={calculateTotal()}
                             className="w-[200px] bg-[#1B1E21] border border-[#2A2F33] 
-              rounded-lg px-3 py-1 text-[#2ACC80] text-right"
+                            rounded-lg px-3 py-1 text-[#2ACC80] text-right"
                         />
                     </div>
                 </div>

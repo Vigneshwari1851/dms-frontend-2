@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
-import { fetchDeals } from "../../api/deals";
+import { fetchDeals } from "../../api/deals.jsx";
 
 export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
@@ -43,6 +43,12 @@ export default function ListReport() {
     return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
+  const convertDMYtoYMD = (dmy) => {
+    if (!dmy) return "";
+    const [day, month, year] = dmy.split("-");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleApplyFilters = async () => {
     let apiDateFilter = "";
     let finalStart = "";
@@ -51,12 +57,7 @@ export default function ListReport() {
     const today = formatDate(new Date());
 
     if (tempDateRange === "Today") {
-      apiDateFilter = "custom";
-      finalStart = today;
-      finalEnd = today;
-
-      setCustomFrom(today);
-      setCustomTo(today);
+      apiDateFilter = "today";
     }
 
     else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
@@ -85,15 +86,7 @@ export default function ListReport() {
     setReportRows(data || []);
   };
 
-  const filteredData = reportRows.filter(
-    (item) =>
-      (statusFilter === "All Status" || item.status === statusFilter) &&
-      (currencyFilter === "All Currencies" || item.buyCurrency === currencyFilter) &&
-      (item.deal_number?.toLowerCase().includes(search.toLowerCase()) ||
-        item.customer_name?.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const sortedData = [...filteredData].sort((a, b) => {
+  const sortedData = [...reportRows].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
     let valB = b[sortBy];
@@ -197,12 +190,15 @@ export default function ListReport() {
             <div className="flex justify-between gap-6">
               <div className="flex-1">
                 <label className="text-gray-300 mb-2 text-sm">From:</label>
-                <CalendarMini
+               <CalendarMini
                   selectedDate={customFrom}
                   onDateSelect={(date) => {
-                    console.log("fromdate", date);               // log the raw date
-                    setCustomFrom(formatDate(date)); // save formatted date
-                  }}/>
+                    console.log("fromdate:", date);
+                    const formatted = convertDMYtoYMD(date);
+                    console.log("formattedFrom:", formatted);
+                    setCustomFrom(formatted);
+                  }}
+                />
               </div>
 
               <div className="flex-1">
@@ -210,9 +206,12 @@ export default function ListReport() {
                 <CalendarMini
                   selectedDate={customTo}
                   onDateSelect={(date) => {
-                                        console.log("todate", date);            
-                                        setCustomTo(formatDate(date))}}
-  disabled={customFrom === null} // disabled only if from is not selected
+                    console.log("todate:", date);
+                    const formatted = convertDMYtoYMD(date);
+                    console.log("formattedTo:", formatted);
+                    setCustomTo(formatted);
+                  }}
+                  disabled={!customFrom}
                 />
               </div>
             </div>
@@ -349,7 +348,7 @@ export default function ListReport() {
                       </div>
                     </td>
 
-                    <td>{item.customer_name}</td>
+                    <td>{item.customer?.name}</td>
 
                     <td>{item.buyAmount}</td>
                     <td>{item.buyCurrency}</td>
