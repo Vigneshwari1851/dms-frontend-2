@@ -72,26 +72,22 @@ export default function AddCustomer() {
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
-                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
-                            errors.fullName ? "border border-red-500" : ""
-                        }`}
+                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2`}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                     />
-                    {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
+                    {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
                         <input
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
-                                errors.email ? "border border-red-500" : ""
-                            }`}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 `}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                        {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB] mb-1">
@@ -99,9 +95,7 @@ export default function AddCustomer() {
                         </label>
 
                         <input
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
-                                errors.phone ? "border border-red-500" : ""
-                            }`}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2`}
                             value={phone}
                             onChange={(e) => {
                                 let value = e.target.value;
@@ -127,7 +121,7 @@ export default function AddCustomer() {
                                 e.preventDefault();
                             }}
                         />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                        {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-8">
