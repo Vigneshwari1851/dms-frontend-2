@@ -137,6 +137,7 @@ export default function ListCustomer() {
                                 <div
                                     key={customer.id || name}
                                     className="grid grid-cols-3 gap-4 py-2 text-sm text-gray-400"
+                                    onClick={() => navigate(`/customer-info/view/${customer.id}`, { state: { customer } })}
                                 >
                                     <span>{name}</span>
                                     <span className="text-center">{email}</span>
