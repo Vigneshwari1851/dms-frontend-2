@@ -4,6 +4,7 @@ import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
+import edit from "../../assets/Common/edit.svg";
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -158,9 +159,13 @@ export default function ViewUser() {
                     {!editMode && (
                         <button
                             onClick={() => setEditMode(true)}
-                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-7 w-[55px] text-white px-4 py-2 rounded-md text-sm font-medium"
+                            className=" bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md"
                         >
-                            Edit
+                            <img
+                                src={edit}
+                                alt="edit"
+                                className="w-8 h-8 cursor-pointer"
+                            />
                         </button>
                     )}
                 </div>
