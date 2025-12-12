@@ -11,6 +11,7 @@ import excel from "../../assets/common/excel.svg";
 import Pagination from "../../components/common/Pagination";
 import { FiSearch } from "react-icons/fi";
 import { fetchDeals, exportDeals } from "../../api/deals";
+import { fetchCurrencies } from "../../api/currency/currency";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function DealsList() {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currencyList, setCurrencyList] = useState(["All Currencies"]);
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -56,6 +58,21 @@ export default function DealsList() {
       }
     };
 
+    const loadCurrencies = async () => {
+      try {
+        const res = await fetchCurrencies();
+
+        const currencies = Array.isArray(res) ? res : [];
+        const list = ["All Currencies", ...currencies.map(c => c.code)];
+
+        setCurrencyList(list);
+      } catch (err) {
+        console.error("Failed to load currencies", err);
+        setCurrencyList(["All Currencies"]);
+      }
+    };
+
+    loadCurrencies();
     loadDeals();
   }, []);
 
@@ -356,7 +373,7 @@ export default function DealsList() {
 
             <Dropdown
               label="All Currencies"
-              options={currencies}
+              options={currencyList}
               selected={currencyFilter}
               onChange={(value) => setCurrencyFilter(value)}
               className="w-[180px]"

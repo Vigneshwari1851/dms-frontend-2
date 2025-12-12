@@ -11,12 +11,14 @@ import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { useNavigate } from "react-router-dom";
+import { fetchCurrencies } from "../../api/currency/currency";
 
 export default function DealsTable() {
   const navigate = useNavigate();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currencyList, setCurrencyList] = useState(["All Currencies"]);
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -55,6 +57,21 @@ export default function DealsTable() {
       }
     };
 
+    const loadCurrencies = async () => {
+      try {
+        const res = await fetchCurrencies();
+
+        const currencies = Array.isArray(res) ? res : [];
+        const list = ["All Currencies", ...currencies.map(c => c.code)];
+
+        setCurrencyList(list);
+      } catch (err) {
+        console.error("Failed to load currencies", err);
+        setCurrencyList(["All Currencies"]);
+      }
+    };
+
+    loadCurrencies();
     loadDeals();
   }, []);
 
@@ -318,7 +335,7 @@ export default function DealsTable() {
 
           <Dropdown
             label="All Currencies"
-            options={currencies}
+            options={currencyList}
             selected={currencyFilter}
             onChange={(value) => setCurrencyFilter(value)}
             className="w-[180px]"
