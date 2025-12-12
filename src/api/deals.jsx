@@ -8,7 +8,7 @@ function getAuthHeaders() {
   };
 }
 
-export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate} = {}) {
+export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate } = {}) {
   try {
     const params = { page, limit };
     if (currency) params.currency = currency;
@@ -32,7 +32,7 @@ export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, s
     }
 
     const result = await response.json();
-    
+
     return {
       data: result.data || [],
       pagination: result.pagination || { totalPages: 1 },
@@ -47,76 +47,57 @@ export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, s
 
 /**
  * Download deals as PDF or Excel.
- * The backend responds with JSON containing a downloadUrl, so we:
- * 1) call /deal?format=... to get the temp file url
- * 2) fetch that url as a blob and trigger a download
+ 
  */
-export async function exportDeals(format, params = {}) {
-  const downloadBlob = (blob, fallbackName) => {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fallbackName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  };
+// export async function exportDeals(format) {
+//   try {
+//     const response = await fetch(`${API_URL}/deal?format=${format}`, {
+//       method: "GET",
+//       headers: {
+//         Authorization: `Bearer ${localStorage.getItem("token")}`,
+//       },
+//     });
 
+//     if (!response.ok) {
+//       throw new Error("Failed to export deal");
+//     }
+
+//     const blob = await response.blob(); // MUST be blob
+//     return blob;
+
+//   } catch (error) {
+//     console.error("Export error:", error);
+//     return null;
+//   }
+// }
+
+export async function exportDeals(format, dateFilter) {
   try {
-    const query = new URLSearchParams({ ...(params || {}), format }).toString();
-    const response = await fetch(`${API_URL}/deal?${query}`, {
+    // Build query parameters
+    const params = new URLSearchParams({ format });
+    if (dateFilter) params.append("dateFilter", dateFilter);
+
+    const response = await fetch(`${API_URL}/deal?${params.toString()}`, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
 
-    const contentType = response.headers.get("content-type") || "";
-
-    // If server directly streams file
-    if (response.ok && !contentType.includes("application/json")) {
-      const blob = await response.blob();
-      const disposition = response.headers.get("Content-Disposition") || "";
-      const match = disposition.match(/filename="?([^"]+)"?/);
-      const filename = match ? match[1] : `deals.${format === "pdf" ? "pdf" : "xlsx"}`;
-      downloadBlob(blob, filename);
-      return { success: true };
-    }
-
-    // Otherwise expect JSON with downloadUrl
-    const json = await response.json();
     if (!response.ok) {
-      console.error("Failed to export deals:", json);
-      return { success: false, error: json };
+      throw new Error("Failed to export deal");
     }
 
-    const downloadUrl = json.downloadUrl;
-    if (!downloadUrl) {
-      console.error("Export response missing downloadUrl");
-      return { success: false };
-    }
+    const blob = await response.blob(); // MUST be blob
+    return blob;
 
-    const fileResponse = await fetch(`${API_URL}${downloadUrl}`, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
-
-    if (!fileResponse.ok) {
-      console.error("Failed to fetch exported file");
-      return { success: false };
-    }
-
-    const blob = await fileResponse.blob();
-    const disposition = fileResponse.headers.get("Content-Disposition") || "";
-    const match = disposition.match(/filename="?([^"]+)"?/);
-    const filename = match ? match[1] : `deals.${format === "pdf" ? "pdf" : "xlsx"}`;
-    downloadBlob(blob, filename);
-
-    return { success: true };
   } catch (error) {
-    console.error("Error exporting deals:", error);
-    return { success: false, error };
+    console.error("Export error:", error);
+    return null;
   }
 }
+
+
 
 export async function fetchDealById(id) {
   try {

@@ -174,7 +174,7 @@ export default function EditDeal() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                     {editMode && (
                         <button
                             className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-gray-900"
@@ -203,7 +203,41 @@ export default function EditDeal() {
 
 
                     )}
+                </div> */}
+                <div className="flex items-center gap-3">
+                    {/* Cancel + Save buttons (edit mode) */}
+                    {editMode && (
+                        <>
+                            {/* Cancel Button */}
+                            <button
+                                className="w-[95px] h-[40px] rounded-[8px] border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
+                                onClick={handleCancelEdit}
+                            >
+                                Cancel
+                            </button>
+
+                            {/* Save Button */}
+                            <button
+                                onClick={handleSave}
+                                className="flex items-center justify-center gap-2 w-[91px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
+                            >
+                                <img src={save} className="w-[20px] h-[20px]" alt="Save" />
+                                Save
+                            </button>
+                        </>
+                    )}
+
+                    {/* Edit Button (not in edit mode) */}
+                    {!editMode && isPending && (
+                        <button
+                            onClick={handleStartEdit}
+                            className="flex items-center justify-center w-[41px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
+                        >
+                            <img src={editIcon} className="w-[41px] h-[40px]" alt="Edit" />
+                        </button>
+                    )}
                 </div>
+
             </div>
 
             {/* Loading State */}
@@ -277,7 +311,7 @@ export default function EditDeal() {
                   flex items-center justify-between
                   px-4
                 "
-                disabled
+                                    disabled
                                 >
                                     <span>{txnType}</span>
                                     <img src={down} alt="down" className="w-3" />
@@ -323,8 +357,8 @@ export default function EditDeal() {
 
                             <div className="relative">
                                 <button
-                                    onClick={() => isEditable && setTxnModeOpen(!txnModeOpen)}  
-                                    
+                                    onClick={() => isEditable && setTxnModeOpen(!txnModeOpen)}
+
                                     className="
                   w-full
                   h-10
@@ -339,7 +373,7 @@ export default function EditDeal() {
                                 >
                                     <span>{txnMode}</span>
                                     <img src={down} alt="down" className="w-3" />
-                                    
+
                                 </button>
 
                                 {txnModeOpen && isEditable && (

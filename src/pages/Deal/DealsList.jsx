@@ -269,17 +269,27 @@ export default function DealsList() {
     setOpenMenu(null);
   };
 
-  const handleExport = async (format) => {
+    const handleExport = async (format) => {
     try {
       setExporting(true);
       setExportOpen(false);
-      await exportDeals(format);
+
+        // Pass "today" as a string
+    const blob = await exportDeals(format);
+
+    if (!blob) return;
+
+   
+
     } catch (e) {
       console.error("Export failed", e);
     } finally {
       setExporting(false);
     }
   };
+
+
+
 
   const handleDelete = (dealId) => {
     console.log("Delete deal", dealId);
@@ -401,174 +411,174 @@ export default function DealsList() {
           <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
             <thead>
               <tr className="text-[#FFFFFF] text-[12px] font-normal">
-              <th className="py-3 text-left pl-5">Deal ID</th>
-              <th>Date</th>
+                <th className="py-3 text-left pl-5">Deal ID</th>
+                <th>Date</th>
 
-              {/* TYPE SORT */}
-              <th
-                className="py-3 cursor-pointer select-none"
-                onClick={() => {
-                  if (sortBy === "type") setSortAsc(!sortAsc);
-                  else {
-                    setSortBy("type");
-                    setSortAsc(true);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-1 ml-2 justify-center">
-                  Type
-                  <span className="flex flex-col">
-                    <img
-                      src={uparrowIcon}
-                      className={`w-3 h-3 -mt-[5px] ${sortBy === "type" && !sortAsc
-                        ? "opacity-100"
-                        : "opacity-30"
-                        }`}
-                    />
-                    <img
-                      src={downarrowIcon}
-                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "type" && sortAsc
-                        ? "opacity-100"
-                        : "opacity-30"
-                        }`}
-                    />
-                  </span>
-                </div>
-              </th>
-
-              <th>Customer Name</th>
-              <th>Buy Amount</th>
-
-              {/* CURRENCY SORT */}
-              <th
-                className="py-3 cursor-pointer select-none"
-                onClick={() => {
-                  if (sortBy === "currency") setSortAsc(!sortAsc);
-                  else {
-                    setSortBy("currency");
-                    setSortAsc(true);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-1 ml-2 justify-center">
-                  Currency
-                  <span className="flex flex-col">
-                    <img
-                      src={uparrowIcon}
-                      className={`w-3 h-3 -mt-[5px] ${sortBy === "currency" && !sortAsc
-                        ? "opacity-100"
-                        : "opacity-30"
-                        }`}
-                    />
-                    <img
-                      src={downarrowIcon}
-                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "currency" && sortAsc
-                        ? "opacity-100"
-                        : "opacity-30"
-                        }`}
-                    />
-                  </span>
-                </div>
-              </th>
-
-              <th>Rate</th>
-              <th>Sell Amount</th>
-              <th>Currency</th>
-              <th>Status</th>
-              <th className="pr-5">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {paginatedData.map((item, index) => (
-              <tr
-                key={index}
-                className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
-                onClick={() => handleRowClick(item)}
-              >
-              <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
-                {item.id}
-              </td>
-              <td>{item.date}</td>
-
-              <td>
-                <div className="flex justify-center items-center">
-                  <span
-                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
-                  >
-                    {item.type}
-                  </span>
-                </div>
-              </td>
-
-              <td>{item.customer}</td>
-              <td>{item.buyAmt}</td>
-              <td>{item.currency}</td>
-              <td>{item.rate}</td>
-              <td>{item.sellAmt}</td>
-              <td>{item.currency1}</td>
-
-              <td>
-                <div className="flex justify-center items-center">
-                  <span
-                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-              </td>
-
-              <td className="relative pr-5">
-                <button
-                  onClick={(e) => handleActionClick(item.id, e)}
-                  className="p-2 hover:bg-[#2A2F34] rounded-lg transition-colors"
+                {/* TYPE SORT */}
+                <th
+                  className="py-3 cursor-pointer select-none"
+                  onClick={() => {
+                    if (sortBy === "type") setSortAsc(!sortAsc);
+                    else {
+                      setSortBy("type");
+                      setSortAsc(true);
+                    }
+                  }}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle cx="8" cy="4" r="1.5" fill="#8F8F8F" />
-                    <circle cx="8" cy="8" r="1.5" fill="#8F8F8F" />
-                    <circle cx="8" cy="12" r="1.5" fill="#8F8F8F" />
-                  </svg>
-                </button>
+                  <div className="flex items-center gap-1 ml-2 justify-center">
+                    Type
+                    <span className="flex flex-col">
+                      <img
+                        src={uparrowIcon}
+                        className={`w-3 h-3 -mt-[5px] ${sortBy === "type" && !sortAsc
+                          ? "opacity-100"
+                          : "opacity-30"
+                          }`}
+                      />
+                      <img
+                        src={downarrowIcon}
+                        className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "type" && sortAsc
+                          ? "opacity-100"
+                          : "opacity-30"
+                          }`}
+                      />
+                    </span>
+                  </div>
+                </th>
 
-                {openMenu === item.id && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setOpenMenu(null)}
-                    ></div>
-                    <div className="absolute right-10 mt-1 w-30 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                      <button
-                        onClick={() => handleRowClick(item.id)}
-                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
+                <th>Customer Name</th>
+                <th>Buy Amount</th>
+
+                {/* CURRENCY SORT */}
+                <th
+                  className="py-3 cursor-pointer select-none"
+                  onClick={() => {
+                    if (sortBy === "currency") setSortAsc(!sortAsc);
+                    else {
+                      setSortBy("currency");
+                      setSortAsc(true);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-1 ml-5 justify-center">
+                    Currency
+                    <span className="flex flex-col">
+                      <img
+                        src={uparrowIcon}
+                        className={`w-3 h-3 -mt-[5px] ${sortBy === "currency" && !sortAsc
+                          ? "opacity-100"
+                          : "opacity-30"
+                          }`}
+                      />
+                      <img
+                        src={downarrowIcon}
+                        className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "currency" && sortAsc
+                          ? "opacity-100"
+                          : "opacity-30"
+                          }`}
+                      />
+                    </span>
+                  </div>
+                </th>
+
+                <th>Rate</th>
+                <th>Sell Amount</th>
+                <th>Currency</th>
+                <th>Status</th>
+                <th className="pr-5">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginatedData.map((item, index) => (
+                <tr
+                  key={index}
+                  className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                  onClick={() => handleRowClick(item)}
+                >
+                  <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                    {item.id}
+                  </td>
+                  <td>{item.date}</td>
+
+                  <td>
+                    <div className="flex justify-center items-center">
+                      <span
+                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
                       >
-                        Review Deal
-                      </button>
-                      {/* <button
+                        {item.type}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>{item.customer}</td>
+                  <td>{item.buyAmt}</td>
+                  <td>{item.currency}</td>
+                  <td>{item.rate}</td>
+                  <td>{item.sellAmt}</td>
+                  <td>{item.currency1}</td>
+
+                  <td>
+                    <div className="flex justify-center items-center">
+                      <span
+                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="relative pr-5">
+                    <button
+                      onClick={(e) => handleActionClick(item.id, e)}
+                      className="p-2 hover:bg-[#2A2F34] rounded-lg transition-colors"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle cx="8" cy="4" r="1.5" fill="#8F8F8F" />
+                        <circle cx="8" cy="8" r="1.5" fill="#8F8F8F" />
+                        <circle cx="8" cy="12" r="1.5" fill="#8F8F8F" />
+                      </svg>
+                    </button>
+
+                    {openMenu === item.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setOpenMenu(null)}
+                        ></div>
+                        <div className="absolute right-10 mt-1 w-30 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                          <button
+                            onClick={() => handleRowClick(item.id)}
+                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
+                          >
+                            Review Deal
+                          </button>
+                          {/* <button
                         onClick={() => handleViewSlip(item.id)}
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
                       >
                         View Deal Slip
                       </button> */}
 
-                      <button
-                        onClick={() => handleEdit(item.dealId)}
-                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] last:rounded-b-lg"
-                      >
-                        Edit Deal
-                      </button>
-                    </div>
-                  </>
-                )}
-              </td>
-              </tr>
-            ))}
-          </tbody>
+                          <button
+                            onClick={() => handleEdit(item.dealId)}
+                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] last:rounded-b-lg"
+                          >
+                            Edit Deal
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
 

@@ -23,7 +23,7 @@ export default function DealsTable() {
       try {
         setLoading(true);
         const response = await fetchDeals({ dateFilter: "today" });
-        
+
         // Transform API response to match table structure (use backend-provided amounts)
         const transformedData = response.data.map((deal) => {
           const buyAmtValue = Number(deal.buyAmount);
@@ -268,17 +268,39 @@ export default function DealsTable() {
     }
   };
 
+  // const handleExport = async (format) => {
+  //   try {
+  //     setExporting(true);
+  //     setExportOpen(false);
+
+  //     await exportDeals(format, { dateFilter: "today" });
+
+  //   } catch (e) {
+  //     console.error("Export failed", e);
+  //   } finally {
+  //     setExporting(false);
+  //   }
+  // };
+
   const handleExport = async (format) => {
-    try {
-      setExporting(true);
-      setExportOpen(false);
-      await exportDeals(format, { dateFilter: "today" });
-    } catch (e) {
-      console.error("Export failed", e);
-    } finally {
-      setExporting(false);
-    }
-  };
+  try {
+    setExporting(true);
+    setExportOpen(false);
+
+    // Pass "today" as a string
+    const blob = await exportDeals(format, "today");
+
+    if (!blob) return;
+
+   
+
+  } catch (e) {
+    console.error("Export failed", e);
+  } finally {
+    setExporting(false);
+  }
+};
+
 
 
   // -----------------------------------
@@ -363,111 +385,111 @@ export default function DealsTable() {
         <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
           <thead>
             <tr className="text-[#FFFFFF] text-[12px] font-normal">
-             <th className="py-3 text-left pl-5">Deal ID</th>
-            <th>Date</th>
+              <th className="py-3 text-left pl-5">Deal ID</th>
+              <th>Date</th>
 
-            {/* TYPE SORT */}
-            <th
-              className="py-3  cursor-pointer select-none "
-              onClick={() => {
-                if (sortBy === "type") setSortAsc(!sortAsc);
-                else {
-                  setSortBy("type");
-                  setSortAsc(true);
-                }
-              }}
-            >
-              <div className="flex items-center gap-1 ml-2 justify-center ">
-                Type
-                <span className="flex flex-col ">
-                  <img
-                    src={uparrowIcon}
-                    className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
-                      }`}
-                  />
-                  <img
-                    src={downarrowIcon}
-                    className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
-                      }`}
-                  />
-                </span>
-              </div>
-            </th>
+              {/* TYPE SORT */}
+              <th
+                className="py-3  cursor-pointer select-none "
+                onClick={() => {
+                  if (sortBy === "type") setSortAsc(!sortAsc);
+                  else {
+                    setSortBy("type");
+                    setSortAsc(true);
+                  }
+                }}
+              >
+                <div className="flex items-center gap-1 ml-2 justify-center ">
+                  Type
+                  <span className="flex flex-col ">
+                    <img
+                      src={uparrowIcon}
+                      className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
+                        }`}
+                    />
+                    <img
+                      src={downarrowIcon}
+                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
+                        }`}
+                    />
+                  </span>
+                </div>
+              </th>
 
-            <th>Customer Name</th>
-            <th>Buy Amount</th>
+              <th>Customer Name</th>
+              <th>Buy Amount</th>
 
-            {/* CURRENCY SORT */}
-            <th
-              className="py-3 cursor-pointer select-none"
-              onClick={() => {
-                if (sortBy === "currency") setSortAsc(!sortAsc);
-                else {
-                  setSortBy("currency");
-                  setSortAsc(true);
-                }
-              }}
+              {/* CURRENCY SORT */}
+              <th
+                className="py-3 cursor-pointer select-none"
+                onClick={() => {
+                  if (sortBy === "currency") setSortAsc(!sortAsc);
+                  else {
+                    setSortBy("currency");
+                    setSortAsc(true);
+                  }
+                }}
 
-            >
-              <div className="flex items-center gap-1 ml-4 justify-center">
-                Currency
-                <span className="flex flex-col">
-                  <img
-                    src={uparrowIcon}
-                    className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
-                      }`}
-                  />
-                  <img
-                    src={downarrowIcon}
-                    className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
-                      }`}
-                  />
-                </span>
-              </div>
-            </th>
+              >
+                <div className="flex items-center gap-1 ml-5 justify-center">
+                  Currency
+                  <span className="flex flex-col">
+                    <img
+                      src={uparrowIcon}
+                      className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
+                        }`}
+                    />
+                    <img
+                      src={downarrowIcon}
+                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
+                        }`}
+                    />
+                  </span>
+                </div>
+              </th>
 
-            <th>Rate</th>
-            <th>Sell Amount</th>
-            <th >Currency</th>
-            <th className="pr-5">Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {paginatedData.map((item, index) => (
-            <tr
-              key={index}
-              className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
-              onClick={() => handleRowClick(item)}
-            >
-            <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">{item.id}</td>
-            <td>{item.date}</td>
-
-            <td>
-              <div className="flex justify-center items-center">
-                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>
-                  {item.type}
-                </span>
-              </div>
-            </td>
-
-            <td>{item.customer}</td>
-            <td>{item.buyAmt}</td>
-            <td>{item.currency}</td>
-            <td>{item.rate}</td>
-            <td>{item.sellAmt}</td>
-            <td className="pr-5">{item.currency1}</td>
-
-            <td>
-              <div className="flex justify-center items-center">
-                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>
-                  {item.status}
-                </span>
-              </div>
-            </td>
+              <th>Rate</th>
+              <th>Sell Amount</th>
+              <th >Currency</th>
+              <th className="pr-5">Status</th>
             </tr>
-          ))}
-        </tbody>
+          </thead>
+
+          <tbody>
+            {paginatedData.map((item, index) => (
+              <tr
+                key={index}
+                className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
+                onClick={() => handleRowClick(item)}
+              >
+                <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">{item.id}</td>
+                <td>{item.date}</td>
+
+                <td>
+                  <div className="flex justify-center items-center">
+                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>
+                      {item.type}
+                    </span>
+                  </div>
+                </td>
+
+                <td>{item.customer}</td>
+                <td>{item.buyAmt}</td>
+                <td>{item.currency}</td>
+                <td>{item.rate}</td>
+                <td>{item.sellAmt}</td>
+                <td >{item.currency1}</td>
+
+                <td>
+                  <div className="flex justify-center items-center">
+                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>
+                      {item.status}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
 
