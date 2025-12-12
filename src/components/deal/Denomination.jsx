@@ -41,6 +41,8 @@ export default function Denomination({
         setCurrencyOptions(data.map((c) => c.name));
         setCurrencyMap(map);
         setCurrencySymbols(symbols);
+        if (!receivedCurrency) setReceivedCurrency(data[0].name);
+        if (!paidCurrency) setPaidCurrency(data[0].name);
       }
     };
 
