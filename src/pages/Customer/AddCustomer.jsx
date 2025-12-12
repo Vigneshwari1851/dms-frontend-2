@@ -7,10 +7,26 @@ export default function AddCustomer() {
     
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
-    const navigate = useNavigate();
     const [phone, setPhone] = useState("");
+    const [errors, setErrors] = useState({});
+    const navigate = useNavigate();
+
+    const validate = () => {
+        const newErrors = {};
+        if (!fullName.trim()) newErrors.fullName = "Full Name is required";
+        if (!email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+            newErrors.email = "Enter a valid email";
+        }
+        if (!phone.trim()) newErrors.phone = "Phone number is required";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleAddCustomer = async () => {
+        if (!validate()) return;
+
         const payload = {
             name: fullName,
             email: email,
@@ -56,20 +72,26 @@ export default function AddCustomer() {
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
-                        className="w-full bg-[#16191C] rounded-lg px-3 py-2"
+                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
+                            errors.fullName ? "border border-red-500" : ""
+                        }`}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                     />
+                    {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
                         <input
-                            className="w-full bg-[#16191C] rounded-lg px-3 py-2"
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
+                                errors.email ? "border border-red-500" : ""
+                            }`}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB] mb-1">
@@ -77,7 +99,9 @@ export default function AddCustomer() {
                         </label>
 
                         <input
-                            className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${
+                                errors.phone ? "border border-red-500" : ""
+                            }`}
                             value={phone}
                             onChange={(e) => {
                                 let value = e.target.value;
@@ -103,6 +127,7 @@ export default function AddCustomer() {
                                 e.preventDefault();
                             }}
                         />
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-8">
