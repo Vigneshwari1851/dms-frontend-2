@@ -321,7 +321,7 @@ export default function DealsList() {
       </div>
 
       {/* Table Container */}
-      <div className="bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
+      <div className="bg-[#1A1F24] p-5 rounded-xl">
         {/* Filters Row */}
         {/* Filters Row */}
         <div className="flex justify-between items-center mb-4">
@@ -394,7 +394,7 @@ export default function DealsList() {
           </div>
         </div>
 
-        <div className="w-full border-b-[3px] border-[#16191C] mb-4"></div>
+        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
 
         {/* Table */}
         <div className="-mx-5">

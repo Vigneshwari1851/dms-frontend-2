@@ -300,7 +300,7 @@ export default function DealsTable() {
   }
 
   return (
-    <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl border border-[#2A2F33]">
+    <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl">
       {/* Header Row */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-white text-[16px] font-semibold">
@@ -356,7 +356,7 @@ export default function DealsTable() {
         </div>
       </div>
 
-      <div className="w-[1156px] border-b-[3px] border-[#16191C] m-2"></div>
+      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
 
       {/* Table */}
       <div className="-mx-5">
