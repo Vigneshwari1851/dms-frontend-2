@@ -43,6 +43,12 @@ export default function ListReport() {
     return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
+  const convertDMYtoYMD = (dmy) => {
+    if (!dmy) return "";
+    const [day, month, year] = dmy.split("-");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleApplyFilters = async () => {
     let apiDateFilter = "";
     let finalStart = "";
@@ -51,7 +57,7 @@ export default function ListReport() {
     const today = formatDate(new Date());
 
     if (tempDateRange === "Today") {
-      apiDateFilter = "today";   // ✔️ ONLY "today"
+      apiDateFilter = "today";
     }
 
     else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
@@ -192,12 +198,15 @@ export default function ListReport() {
             <div className="flex justify-between gap-6">
               <div className="flex-1">
                 <label className="text-gray-300 mb-2 text-sm">From:</label>
-                <CalendarMini
+               <CalendarMini
                   selectedDate={customFrom}
                   onDateSelect={(date) => {
-                    console.log("fromdate", date);               // log the raw date
-                    setCustomFrom(formatDate(date)); // save formatted date
-                  }}/>
+                    console.log("fromdate:", date);
+                    const formatted = convertDMYtoYMD(date);
+                    console.log("formattedFrom:", formatted);
+                    setCustomFrom(formatted);
+                  }}
+                />
               </div>
 
               <div className="flex-1">
@@ -205,9 +214,12 @@ export default function ListReport() {
                 <CalendarMini
                   selectedDate={customTo}
                   onDateSelect={(date) => {
-                                        console.log("todate", date);            
-                                        setCustomTo(formatDate(date))}}
-  disabled={customFrom === null} // disabled only if from is not selected
+                    console.log("todate:", date);
+                    const formatted = convertDMYtoYMD(date);
+                    console.log("formattedTo:", formatted);
+                    setCustomTo(formatted);
+                  }}
+                  disabled={!customFrom}
                 />
               </div>
             </div>
