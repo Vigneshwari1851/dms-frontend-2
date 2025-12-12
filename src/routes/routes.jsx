@@ -21,6 +21,7 @@ import ReconciliationList from "../pages/Reconciliation/ReconciliationList";
 import ListReport from "../pages/Report/ListReport";
 import AddReconciliation from "../pages/Reconciliation/AddReconciliation";
 import ViewReconciliation from "../pages/Reconciliation/ViewReconciliation";
+import ListCustomer from "../pages/Customer/ListCustomer";
 
 export default function AppRoutes() {
   return (
@@ -50,6 +51,7 @@ export default function AppRoutes() {
         <Route path="reconciliation" element={<ReconciliationList />} />
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
         <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
+        <Route path="customer-info" element={<ListCustomer />} />
       </Route>
     </Routes>
   );
