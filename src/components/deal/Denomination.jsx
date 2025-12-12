@@ -2,19 +2,37 @@ import { useState } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 
-export default function Denomination() {
-  const [denominationReceived, setDenominationReceived] = useState([
-    { denom: "", quantity: "", total: 0, open: false },
-  ]);
+export default function Denomination({
+  denominationReceived: propReceived,
+  setDenominationReceived: setPropReceived,
+  denominationPaid: propPaid,
+  setDenominationPaid: setPropPaid,
+}) {
+  // Use props if provided, otherwise use local state
+  const [denominationReceived, setDenominationReceived] = propReceived
+    ? [propReceived, setPropReceived]
+    : useState([{ price: 0, quantity: 0, currency_id: 1 }]);
 
-  const [denominationPaid, setDenominationPaid] = useState([
-    { denom: "", quantity: "", total: 0, open: false },
-  ]);
+  const [denominationPaid, setDenominationPaid] = propPaid
+    ? [propPaid, setPropPaid]
+    : useState([{ price: 0, quantity: 0, currency_id: 1 }]);
 
-  const [currency, setCurrency] = useState("USD - US Dollar");
-  const [currencyOpen, setCurrencyOpen] = useState(false);
+  // Maintain currency per section to avoid leaking selection between tables
+  const [receivedCurrency, setReceivedCurrency] = useState("USD - US Dollar");
+  const [paidCurrency, setPaidCurrency] = useState("USD - US Dollar");
+  const [receivedCurrencyOpen, setReceivedCurrencyOpen] = useState(false);
+  const [paidCurrencyOpen, setPaidCurrencyOpen] = useState(false);
 
   // ----------------- SYMBOL MAP -----------------
+  const currencyMap = {
+    "USD - US Dollar": 1,
+    "EUR - Euro": 2,
+    "GBP - British Pound": 3,
+    "ZAR - South African Rand": 4,
+    "TZS - Tanzania Shilling": 5,
+    "KES - Kenyan Shilling": 6,
+  };
+
   const currencySymbols = {
     "USD - US Dollar": "$",
     "EUR - Euro": "€",
@@ -26,35 +44,43 @@ export default function Denomination() {
 
   const currencies = Object.keys(currencySymbols);
 
-  // ---------------------- HANDLERS ---------------------
   const handleChange = (list, setList, index, field, value) => {
     const updated = [...list];
     updated[index][field] = value;
 
-    if (field === "denom" || field === "quantity") {
-      const d = parseFloat(updated[index].denom || 0);
+    if (field === "price" || field === "quantity") {
+      const p = parseFloat(updated[index].price || 0);
       const q = parseFloat(updated[index].quantity || 0);
-      updated[index].total = d * q;
+      updated[index].total = p * q;
     }
 
     setList(updated);
   };
 
-  const handleAdd = (list, setList) => {
-    setList([...list, { denom: "", quantity: "", total: 0, open: false }]);
+  const handleAdd = (list, setList, currency) => {
+    const currencyId = currencyMap[currency];
+    setList([...list, { price: 0, quantity: 0, total: 0, currency_id: currencyId }]);
   };
 
   const calculateTotal = (list) => {
     return list.reduce((sum, item) => {
-      const denom = Number(item.denom) || 0;
+      const price = Number(item.price) || 0;
       const qty = Number(item.quantity) || 0;
-      return sum + denom * qty;
+      return sum + price * qty;
     }, 0);
   };
 
   // ------------------------------------------------------
 
-  const renderTable = (title, list, setList) => (
+  const renderTable = (
+    title,
+    list,
+    setList,
+    currency,
+    setCurrency,
+    currencyOpen,
+    setCurrencyOpen
+  ) => (
     <div className="bg-[#16191C] p-4 rounded-lg">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
@@ -91,6 +117,13 @@ export default function Denomination() {
                   onClick={() => {
                     setCurrency(item);
                     setCurrencyOpen(false);
+                    // Update currency_id for all items in this list
+                    const currencyId = currencyMap[item];
+                    const updatedList = list.map((row) => ({
+                      ...row,
+                      currency_id: currencyId,
+                    }));
+                    setList(updatedList);
                   }}
                   className="
                     px-4 py-2 flex items-center justify-between
@@ -140,8 +173,8 @@ export default function Denomination() {
                       "
                     >
                       <span>
-                        {row.denom
-                          ? currencySymbols[currency] + row.denom
+                        {row.price
+                          ? currencySymbols[currency] + row.price
                           : currencySymbols[currency] + "0.00"}
                       </span>
 
@@ -162,7 +195,7 @@ export default function Denomination() {
                             key={item}
                             onClick={() => {
                               const updated = [...list];
-                              updated[i].denom = item;
+                              updated[i].price = item;
                               updated[i].open = false;
                               updated[i].total =
                                 Number(updated[i].quantity || 0) * Number(item);
@@ -180,7 +213,7 @@ export default function Denomination() {
                               {item}
                             </span>
 
-                            {row.denom === item && (
+                            {row.price === item && (
                               <img src={tick} className="w-4 h-4" />
                             )}
                           </li>
@@ -275,7 +308,7 @@ export default function Denomination() {
         <div className="flex justify-end">
           <button
             className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]"
-            onClick={() => handleAdd(list, setList)}
+            onClick={() => handleAdd(list, setList, currency)}
           >
             + Add
           </button>
@@ -304,9 +337,21 @@ export default function Denomination() {
       {renderTable(
         "Denomination Received",
         denominationReceived,
-        setDenominationReceived
+        setDenominationReceived,
+        receivedCurrency,
+        setReceivedCurrency,
+        receivedCurrencyOpen,
+        setReceivedCurrencyOpen
       )}
-      {renderTable("Denomination Paid", denominationPaid, setDenominationPaid)}
+      {renderTable(
+        "Denomination Paid",
+        denominationPaid,
+        setDenominationPaid,
+        paidCurrency,
+        setPaidCurrency,
+        paidCurrencyOpen,
+        setPaidCurrencyOpen
+      )}
     </div>
   );
 }

@@ -9,9 +9,11 @@ import rightArrow from "../../assets/Common/right.svg";
 import Pagination from "../common/Pagination";
 import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
-import { fetchDeals } from "../../api/deals";
+import { fetchDeals, exportDeals } from "../../api/deals";
+import { useNavigate } from "react-router-dom";
 
 export default function DealsTable() {
+  const navigate = useNavigate();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,32 +24,21 @@ export default function DealsTable() {
         setLoading(true);
         const response = await fetchDeals({ dateFilter: "today" });
         
-        // Transform API response to match table structure
+        // Transform API response to match table structure (use backend-provided amounts)
         const transformedData = response.data.map((deal) => {
-          const receivedItems = deal.received_items || [];
-          const paidItems = deal.paid_items || [];
-          
-          const buyAmount = receivedItems.reduce(
-            (sum, item) => sum + Number(item.total || 0),
-            0
-          );
-          const sellAmount = paidItems.reduce(
-            (sum, item) => sum + Number(item.total || 0),
-            0
-          );
-          const receivedCurrency = receivedItems[0]?.currency?.code || "---";
-          const paidCurrency = paidItems[0]?.currency?.code || "---";
+          const buyAmtValue = Number(deal.buyAmount);
+          const sellAmtValue = Number(deal.sellAmount);
 
           return {
             id: deal.deal_number,
             date: new Date(deal.created_at).toLocaleDateString("en-IN"),
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
-            customer: deal.customer_name,
-            buyAmt: deal.deal_type === "buy" ? buyAmount.toLocaleString() : "--------",
-            currency: receivedCurrency,
+            customer: deal.customer.name,
+            buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
+            currency: deal.buyCurrency || "---",
             rate: deal.rate,
-            sellAmt: deal.deal_type === "sell" ? sellAmount.toLocaleString() : "--------",
-            currency1: paidCurrency,
+            sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
+            currency1: deal.sellCurrency || "---",
             status: deal.status,
             dealId: deal.id,
           };
@@ -226,6 +217,7 @@ export default function DealsTable() {
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
+  const [exporting, setExporting] = useState(false);
 
   const [sortBy, setSortBy] = useState(null);     // "type" | "currency"
   const [sortAsc, setSortAsc] = useState(true);   // true = asc, false = desc
@@ -269,6 +261,24 @@ export default function DealsTable() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const handleRowClick = (deal) => {
+    if (deal?.dealId) {
+      navigate(`/edit-deal/${deal.dealId}`);
+    }
+  };
+
+  const handleExport = async (format) => {
+    try {
+      setExporting(true);
+      setExportOpen(false);
+      await exportDeals(format, { dateFilter: "today" });
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setExporting(false);
+    }
+  };
 
 
   // -----------------------------------
@@ -324,11 +334,19 @@ export default function DealsTable() {
 
             {exportOpen && (
               <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
-                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] ">
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                  onClick={() => handleExport("pdf")}
+                  disabled={exporting}
+                >
                   <img src={pdf} alt="pdf" className="w-4 h-4" />
                   PDF
                 </button>
-                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]">
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                  onClick={() => handleExport("excel")}
+                  disabled={exporting}
+                >
                   <img src={excel} alt="excel" className="w-4 h-4" />
                   Excel
                 </button>
@@ -341,10 +359,11 @@ export default function DealsTable() {
       <div className="w-[1156px] border-b-[3px] border-[#16191C] m-2"></div>
 
       {/* Table */}
-      <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px]">
-        <thead>
-          <tr className="text-[#FFFFFF] text-[12px] font-normal">
-            <th className="py-3">Deal ID</th>
+      <div className="-mx-5">
+        <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+          <thead>
+            <tr className="text-[#FFFFFF] text-[12px] font-normal">
+             <th className="py-3 text-left pl-5">Deal ID</th>
             <th>Date</th>
 
             {/* TYPE SORT */}
@@ -390,7 +409,7 @@ export default function DealsTable() {
               }}
 
             >
-              <div className="flex items-center gap-1 ml-2 justify-center">
+              <div className="flex items-center gap-1 ml-4 justify-center">
                 Currency
                 <span className="flex flex-col">
                   <img
@@ -409,46 +428,51 @@ export default function DealsTable() {
 
             <th>Rate</th>
             <th>Sell Amount</th>
-            <th>Currency</th>
-            <th>Status</th>
+            <th >Currency</th>
+            <th className="pr-5">Status</th>
           </tr>
         </thead>
 
         <tbody>
           {paginatedData.map((item, index) => (
-            <tr key={index} className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors">
-              <td className="py-3 text-[#92B4FF] font-bold text-[14px]">{item.id}</td>
-              <td>{item.date}</td>
+            <tr
+              key={index}
+              className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
+              onClick={() => handleRowClick(item)}
+            >
+            <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">{item.id}</td>
+            <td>{item.date}</td>
 
-              <td>
-                <div className="flex justify-center items-center">
-                  <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>
-                    {item.type}
-                  </span>
-                </div>
-              </td>
+            <td>
+              <div className="flex justify-center items-center">
+                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>
+                  {item.type}
+                </span>
+              </div>
+            </td>
 
-              <td>{item.customer}</td>
-              <td>{item.buyAmt}</td>
-              <td>{item.currency}</td>
-              <td>{item.rate}</td>
-              <td>{item.sellAmt}</td>
-              <td>{item.currency1}</td>
+            <td>{item.customer}</td>
+            <td>{item.buyAmt}</td>
+            <td>{item.currency}</td>
+            <td>{item.rate}</td>
+            <td>{item.sellAmt}</td>
+            <td className="pr-5">{item.currency1}</td>
 
-              <td>
-                <div className="flex justify-center items-center">
-                  <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>
-                    {item.status}
-                  </span>
-                </div>
-              </td>
+            <td>
+              <div className="flex justify-center items-center">
+                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>
+                  {item.status}
+                </span>
+              </div>
+            </td>
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
 
       {/* ------------ Pagination (Right-Aligned) ------------ */}
-      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4">
+      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

@@ -44,7 +44,7 @@ export default function AppRoutes() {
         <Route path="users/details/:id" element={<ViewUser />} /> 
         <Route path="deal-review" element={<DealReview />} />
         <Route path="view-slip" element={<ViewSlip />} />
-        <Route path="edit-deal" element={<EditDeal />} />
+        <Route path="edit-deal/:id" element={<EditDeal />} />
          <Route path="reconciliation" element={<ReconciliationList />} />
         <Route path="reports" element={<ListReport />} />
         <Route path="reconciliation" element={<ReconciliationList />} />

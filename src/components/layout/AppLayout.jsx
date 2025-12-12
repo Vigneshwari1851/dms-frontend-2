@@ -16,7 +16,10 @@ export default function AppLayout({ children }) {
         <Sider />
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-8 bg-[#16191C] text-white">
+        <main
+          className="flex-1 overflow-y-scroll p-8 bg-[#16191C] text-white"
+          style={{ scrollbarGutter: "stable" }}
+        >
           <Outlet /> 
         </main>
       </div>

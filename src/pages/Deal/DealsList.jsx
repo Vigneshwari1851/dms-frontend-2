@@ -10,7 +10,7 @@ import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import Pagination from "../../components/common/Pagination";
 import { FiSearch } from "react-icons/fi";
-import { fetchDeals } from "../../api/deals";
+import { fetchDeals, exportDeals } from "../../api/deals";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -24,19 +24,22 @@ export default function DealsList() {
       try {
         setLoading(true);
         const response = await fetchDeals({});
-        
+
         // Transform API response to match table structure
         const transformedData = response.data.map((deal) => {
+          const buyAmtValue = Number(deal.buyAmount);
+          const sellAmtValue = Number(deal.sellAmount);
+
           return {
             id: deal.deal_number,
             date: new Date(deal.created_at).toLocaleDateString("en-IN"),
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
-            customer: deal.customer_name,
-            buyAmt: deal.deal_type === "buy" ? deal.buyAmount.toLocaleString() : "--------",
-            currency: deal.buyCurrency,
+            customer: deal.customer.name,
+            buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
+            currency: deal.buyCurrency || "---",
             rate: deal.rate,
-            sellAmt: deal.deal_type === "sell" ? deal.sellAmount.toLocaleString() : "--------",
-            currency1: deal.sellCurrency,
+            sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
+            currency1: deal.sellCurrency || "---",
             status: deal.status,
             dealId: deal.id,
           };
@@ -191,6 +194,7 @@ export default function DealsList() {
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
+  const [exporting, setExporting] = useState(false);
 
   const [sortBy, setSortBy] = useState(null);
   const [sortAsc, setSortAsc] = useState(true);
@@ -237,6 +241,12 @@ export default function DealsList() {
     currentPage * itemsPerPage
   );
 
+  const handleRowClick = (deal) => {
+    if (deal?.dealId) {
+      navigate(`/edit-deal/${deal.dealId}`);
+    }
+  };
+
   const handleActionClick = (dealId, event) => {
     event.stopPropagation();
     setOpenMenu(openMenu === dealId ? null : dealId);
@@ -255,8 +265,20 @@ export default function DealsList() {
 
   const handleEdit = (dealId) => {
     console.log("Edit deal", dealId);
-    navigate(`/edit-deal`);
+    navigate(`/edit-deal/${dealId}`);
     setOpenMenu(null);
+  };
+
+  const handleExport = async (format) => {
+    try {
+      setExporting(true);
+      setExportOpen(false);
+      await exportDeals(format);
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDelete = (dealId) => {
@@ -264,47 +286,7 @@ export default function DealsList() {
     setOpenMenu(null);
   };
 
-  if (loading) {
-    return (
-      <>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-white text-2xl font-semibold">Deals Overview</h1>
-            <p className="text-gray-400 text-sm mt-1">Manage and review all deals</p>
-          </div>
-          <button
-            onClick={() => navigate("/create-deal")}
-            className="px-5 py-2 bg-[#1D4CB5] hover:bg-blue-600 rounded-lg text-white font-medium flex items-center gap-2"
-          >
-            <img src={add} alt="add" className="w-5 h-5" />
-            Create New Deal
-          </button>
-        </div>
-        <div className="text-center text-gray-400 py-10">Loading deals...</div>
-      </>
-    );
-  }
 
-  if (error) {
-    return (
-      <>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-white text-2xl font-semibold">Deals Overview</h1>
-            <p className="text-gray-400 text-sm mt-1">Manage and review all deals</p>
-          </div>
-          <button
-            onClick={() => navigate("/create-deal")}
-            className="px-5 py-2 bg-[#1D4CB5] hover:bg-blue-600 rounded-lg text-white font-medium flex items-center gap-2"
-          >
-            <img src={add} alt="add" className="w-5 h-5" />
-            Create New Deal
-          </button>
-        </div>
-        <div className="text-center text-red-400 py-10">{error}</div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -319,7 +301,17 @@ export default function DealsList() {
 
           <button
             onClick={() => navigate("/create-deal")}
-            className="px-5 py-2 bg-[#1D4CB5] hover:bg-blue-600 rounded-lg text-white font-medium flex items-center gap-2"
+            className="
+    flex items-center 
+    w-[173px] h-10 
+    bg-[#1D4CB5] hover:bg-blue-600 
+    text-white font-medium text-sm
+    px-2 py-2 
+    gap-2.5
+    rounded-lg
+    cursor-pointer
+  "
+
           >
             <img src={add} alt="add" className="w-5 h-5" />
             Create New Deal
@@ -380,11 +372,19 @@ export default function DealsList() {
 
               {exportOpen && (
                 <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
-                  <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] ">
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                    onClick={() => handleExport("pdf")}
+                    disabled={exporting}
+                  >
                     <img src={pdf} alt="pdf" className="w-4 h-4" />
                     PDF
                   </button>
-                  <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]">
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                    onClick={() => handleExport("excel")}
+                    disabled={exporting}
+                  >
                     <img src={excel} alt="excel" className="w-4 h-4" />
                     Excel
                   </button>
@@ -397,10 +397,11 @@ export default function DealsList() {
         <div className="w-full border-b-[3px] border-[#16191C] mb-4"></div>
 
         {/* Table */}
-        <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px]">
-          <thead>
-            <tr className="text-[#FFFFFF] text-[12px] font-normal">
-              <th className="py-3">Deal ID</th>
+        <div className="-mx-5">
+          <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+            <thead>
+              <tr className="text-[#FFFFFF] text-[12px] font-normal">
+              <th className="py-3 text-left pl-5">Deal ID</th>
               <th>Date</th>
 
               {/* TYPE SORT */}
@@ -474,7 +475,7 @@ export default function DealsList() {
               <th>Sell Amount</th>
               <th>Currency</th>
               <th>Status</th>
-              <th>Action</th>
+              <th className="pr-5">Action</th>
             </tr>
           </thead>
 
@@ -482,95 +483,97 @@ export default function DealsList() {
             {paginatedData.map((item, index) => (
               <tr
                 key={index}
-                className="rounded-2xl  hover:bg-[#151517] transition-colors"
+                className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                onClick={() => handleRowClick(item)}
               >
-                <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
-                  {item.id}
-                </td>
-                <td>{item.date}</td>
+              <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                {item.id}
+              </td>
+              <td>{item.date}</td>
 
-                <td>
-                  <div className="flex justify-center items-center">
-                    <span
-                      className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
-                    >
-                      {item.type}
-                    </span>
-                  </div>
-                </td>
-
-                <td>{item.customer}</td>
-                <td>{item.buyAmt}</td>
-                <td>{item.currency}</td>
-                <td>{item.rate}</td>
-                <td>{item.sellAmt}</td>
-                <td>{item.currency1}</td>
-
-                <td>
-                  <div className="flex justify-center items-center">
-                    <span
-                      className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </div>
-                </td>
-
-                <td className="relative">
-                  <button
-                    onClick={(e) => handleActionClick(item.id, e)}
-                    className="p-2 hover:bg-[#2A2F34] rounded-lg transition-colors"
+              <td>
+                <div className="flex justify-center items-center">
+                  <span
+                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="8" cy="4" r="1.5" fill="#8F8F8F" />
-                      <circle cx="8" cy="8" r="1.5" fill="#8F8F8F" />
-                      <circle cx="8" cy="12" r="1.5" fill="#8F8F8F" />
-                    </svg>
-                  </button>
+                    {item.type}
+                  </span>
+                </div>
+              </td>
 
-                  {openMenu === item.id && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setOpenMenu(null)}
-                      ></div>
-                      <div className="absolute right-0 mt-1 w-37 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                        <button
-                          onClick={() => handleView(item.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
-                        >
-                          Review Deal
-                        </button>
-                        <button
-                          onClick={() => handleViewSlip(item.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                        >
-                          View Deal Slip
-                        </button>
+              <td>{item.customer}</td>
+              <td>{item.buyAmt}</td>
+              <td>{item.currency}</td>
+              <td>{item.rate}</td>
+              <td>{item.sellAmt}</td>
+              <td>{item.currency1}</td>
 
-                        <button
-                          onClick={() => handleEdit(item.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#2A2F34] last:rounded-b-lg"
-                        >
-                          Edit Deal
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </td>
+              <td>
+                <div className="flex justify-center items-center">
+                  <span
+                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+              </td>
+
+              <td className="relative pr-5">
+                <button
+                  onClick={(e) => handleActionClick(item.id, e)}
+                  className="p-2 hover:bg-[#2A2F34] rounded-lg transition-colors"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="8" cy="4" r="1.5" fill="#8F8F8F" />
+                    <circle cx="8" cy="8" r="1.5" fill="#8F8F8F" />
+                    <circle cx="8" cy="12" r="1.5" fill="#8F8F8F" />
+                  </svg>
+                </button>
+
+                {openMenu === item.id && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setOpenMenu(null)}
+                    ></div>
+                    <div className="absolute right-10 mt-1 w-30 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                      <button
+                        onClick={() => handleRowClick(item.id)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
+                      >
+                        Review Deal
+                      </button>
+                      {/* <button
+                        onClick={() => handleViewSlip(item.id)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                      >
+                        View Deal Slip
+                      </button> */}
+
+                      <button
+                        onClick={() => handleEdit(item.dealId)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] last:rounded-b-lg"
+                      >
+                        Edit Deal
+                      </button>
+                    </div>
+                  </>
+                )}
+              </td>
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
 
         {/* Pagination */}
-        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4">
+        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
