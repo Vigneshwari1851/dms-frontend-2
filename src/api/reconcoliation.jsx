@@ -97,8 +97,8 @@ export async function createReconciliation(reconciliationData) {
 
 export async function updateReconciliation(id, reconciliationData) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/${id}`, {
-      method: "PUT",
+    const response = await fetch(`${API_URL}/reconciliation/status/${id}`, {
+      method: "PATCH",
       headers: getAuthHeaders(),
       body: JSON.stringify(reconciliationData),
     });

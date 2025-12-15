@@ -5,8 +5,9 @@ import saveIcon from "../../assets/common/save.svg";
 import expandRight from "../../assets/common/expandRight.svg";
 import edit from "../../assets/Common/edit.svg";
 import save from "../../assets/common/save.svg";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import DealsTable from "../../components/dashboard/DealsTable";
+import { fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
 
 // Helper: get numeric value from strings like "$100", "€50", "100"
 const parseNumber = (str) => {
@@ -16,31 +17,155 @@ const parseNumber = (str) => {
     return Number.isFinite(n) ? n : 0;
 };
 
-// Helper: format number to 2 decimals but keep symbol if present (from denom or currency symbol)
+// Helper: format number to 2 decimals but keep symbol if present
 const formatWithSymbol = (symbol, value) => {
     const num = Number(value) || 0;
-    // keep two decimals
     const formatted = num.toFixed(2);
     return `${symbol}${formatted}`;
 };
 
-// Get currency symbol from a row's amount or currency string fallback
-const getCurrencySymbolFromAmount = (amountStr, currencyCode) => {
-    if (!amountStr && !currencyCode) return "$";
-    if (amountStr) {
-        const m = String(amountStr).match(/[^0-9.,\s]+/);
-        if (m) return m[0];
+// Get currency symbol from currency code
+const getCurrencySymbol = (currencyCode) => {
+    const map = {
+        USD: "$",
+        EUR: "€",
+        GBP: "£",
+        KES: "KSh",
+        KSH: "KSh",
+        INR: "₹"
+    };
+    return map[currencyCode?.toUpperCase()] || "$";
+};
+
+// Convert API entries to vault data format
+const convertEntriesToVaultData = (entries, type = "opening") => {
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
+        console.log(`No ${type} entries found`);
+        return [];
     }
-    // fallback by currency code
-    const map = { USD: "$", EUR: "€", GBP: "£" };
-    return map[currencyCode] || "$";
+
+    console.log(`Converting ${type} entries:`, entries);
+
+    // Group entries by currency
+    const groupedByCurrency = {};
+
+    entries.forEach(entry => {
+        const currencyId = entry.currency_id || entry.currencyId || 1;
+        const currencyCode = entry.currency?.code || entry.currency_code || "USD";
+        const currencyName = entry.currency?.name || entry.currency_name || currencyCode;
+        const currencySymbol = getCurrencySymbol(currencyCode);
+
+        if (!groupedByCurrency[currencyId]) {
+            groupedByCurrency[currencyId] = {
+                currencyId: currencyId,
+                currency: currencyName,
+                currencyCode: currencyCode,
+                currencySymbol: currencySymbol,
+                entries: [],
+                totalAmount: 0
+            };
+        }
+
+        const denom = entry.denomination || 0;
+        const qty = entry.quantity || 0;
+        const amount = entry.amount || (denom * qty);
+
+        groupedByCurrency[currencyId].entries.push({
+            id: entry.id,
+            denom: `${currencySymbol}${denom}`,
+            qty: qty,
+            total: `${currencySymbol}${amount.toFixed(2)}`
+        });
+
+        groupedByCurrency[currencyId].totalAmount += amount;
+    });
+
+    // Convert to vault data format
+    const result = Object.values(groupedByCurrency).map(currencyGroup => ({
+        currencyId: currencyGroup.currencyId,
+        currency: currencyGroup.currency,
+        amount: `${currencyGroup.currencySymbol}${currencyGroup.totalAmount.toFixed(2)}`,
+        breakdown: currencyGroup.entries
+    }));
+
+    console.log(`Converted ${type} data:`, result);
+    return result;
+};
+
+// Calculate total from vault data
+const calculateVaultTotal = (vaultData) => {
+    if (!vaultData || !Array.isArray(vaultData) || vaultData.length === 0) {
+        return "$0.00";
+    }
+
+    let total = 0;
+    vaultData.forEach(currency => {
+        const amountStr = currency.amount || "";
+        const numericValue = parseFloat(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
+        total += numericValue;
+    });
+
+    const symbol = vaultData[0]?.amount?.match(/[^0-9.,\s]+/)?.[0] || "$";
+    return `${symbol}${total.toFixed(2)}`;
+};
+
+// Calculate numeric total from vault data
+const calculateVaultNumericTotal = (vaultData) => {
+    if (!vaultData || !Array.isArray(vaultData)) return 0;
+
+    let total = 0;
+    vaultData.forEach(currency => {
+        const amountStr = currency.amount || "";
+        const numericValue = parseFloat(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
+        total += numericValue;
+    });
+
+    return total;
+};
+
+// Calculate variance between opening and closing
+const calculateVariance = (openingData, closingData) => {
+    const openingNum = calculateVaultNumericTotal(openingData);
+    const closingNum = calculateVaultNumericTotal(closingData);
+
+    const difference = closingNum - openingNum;
+
+    const symbol = closingData[0]?.amount?.match(/[^0-9.,\s]+/)?.[0] ||
+        openingData[0]?.amount?.match(/[^0-9.,\s]+/)?.[0] ||
+        "$";
+
+    if (difference >= 0) {
+        return `+${symbol}${Math.abs(difference).toFixed(2)}`;
+    } else {
+        return `-${symbol}${Math.abs(difference).toFixed(2)}`;
+    }
+};
+
+// Auto-calculate status based on variance
+const calculateStatusFromVariance = (openingData, closingData) => {
+    const openingNum = calculateVaultNumericTotal(openingData);
+    const closingNum = calculateVaultNumericTotal(closingData);
+    const variance = closingNum - openingNum;
+
+    if (Math.abs(variance) < 0.01) {
+        return "Balance";
+    } else if (variance > 0) {
+        return "Excess";
+    } else {
+        return "Short";
+    }
 };
 
 // VaultRow component - receives handlers to update parent state
 function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
     const [open, setOpen] = useState(false);
 
-    
+    // Extract currency symbol from amount
+    const getSymbolFromAmount = (amountStr) => {
+        if (!amountStr) return "$";
+        const m = String(amountStr).match(/[^0-9.,\s]+/);
+        return m ? m[0] : "$";
+    };
 
     // local change handler for breakdown items
     const handleItemChange = (itemIndex, field, value) => {
@@ -50,17 +175,20 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
 
         // If denom or qty changed -> recompute total
         const item = newBreakdown[itemIndex];
-        const denomNum = parseNumber(item.denom);
-        const qtyNum = Number(item.qty) || 0;
-        const currencySymbol = getCurrencySymbolFromAmount(amount, currency);
-        item.total = formatWithSymbol(currencySymbol, denomNum * qtyNum);
+        if (field === "denom" || field === "qty") {
+            const currencySymbol = getSymbolFromAmount(amount);
+            const denomNum = parseNumber(item.denom);
+            const qtyNum = Number(item.qty) || 0;
+            item.total = formatWithSymbol(currencySymbol, denomNum * qtyNum);
+        }
 
         newBreakdown[itemIndex] = item;
+
         // Recompute row total amount (sum of totals numerically)
         const rowSum = newBreakdown.reduce((acc, it) => acc + parseNumber(it.total), 0);
         const updatedRow = {
             currency,
-            amount: formatWithSymbol(getCurrencySymbolFromAmount(amount, currency), rowSum),
+            amount: formatWithSymbol(getSymbolFromAmount(amount), rowSum),
             breakdown: newBreakdown,
         };
         onUpdate(idx, updatedRow);
@@ -70,11 +198,7 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
         <div className="border-b border-[#16191C]">
             {/* MAIN ROW */}
             <div
-                className="
-          flex items-center justify-between 
-          text-white text-[14px] py-3 cursor-pointer 
-          hover:bg-[#2A3036]
-        "
+                className="flex items-center justify-between text-white text-[14px] py-3 cursor-pointer hover:bg-[#2A3036]"
                 onClick={() => setOpen(!open)}
             >
                 <span>{currency}</span>
@@ -86,6 +210,7 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
                     <img
                         src={expandRight}
                         className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+                        alt="expand"
                     />
                 </div>
             </div>
@@ -134,7 +259,6 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
                             {/* Total */}
                             <div className="w-[30%] text-right">
                                 {isEditing ? (
-                                    // total is auto-calculated but allow showing it in input (readonly)
                                     <input
                                         value={item.total}
                                         readOnly
@@ -155,75 +279,212 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
                     </div>
                 </div>
             )}
-
-          
         </div>
     );
 }
 
+// UI vault → API entries
+const vaultDataToEntries = (vaultData = []) =>
+    vaultData.flatMap((row) =>
+        row.breakdown.map((b) => ({
+            denomination: parseNumber(b.denom),
+            quantity: Number(b.qty),
+            amount: parseNumber(b.total),
+            currency_id: row.currencyId,
+        }))
+    );
+
+// Build PATCH payload (partial update)
+const buildPatchPayload = (original, edited) => {
+    const payload = {};
+
+    // Notes
+    if (edited.notes !== original.notes) {
+        payload.notes = edited.notes
+            ? edited.notes.split("\n").filter(Boolean)
+            : [];
+    }
+
+    // Opening vault
+    if (
+        JSON.stringify(edited.openingVaultData) !==
+        JSON.stringify(original.openingVaultData)
+    ) {
+        payload.openingEntries = vaultDataToEntries(
+            edited.openingVaultData
+        );
+    }
+
+    // Closing vault
+    if (
+        JSON.stringify(edited.closingVaultData) !==
+        JSON.stringify(original.closingVaultData)
+    ) {
+        payload.closingEntries = vaultDataToEntries(
+            edited.closingVaultData
+        );
+    }
+
+    return payload;
+};
+
+
 export default function ViewReconciliation() {
-    // ---------- base/original data (kept for cancel) ----------
-    const original = {
-        date: "2025/11/27",
-        varianceValue: "+5.00",
-        status: "Excess", // Change to "Tallied" to hide edit icon
-        notes: "",
-        // vault rows
-        vaultData: [
-            {
-                currency: "USD",
-                amount: "$6000.00",
-                breakdown: [
-                    { denom: "$100", qty: 50, total: "$5000.00" },
-                    { denom: "$50", qty: 10, total: "$500.00" },
-                    { denom: "$20", qty: 10, total: "$200.00" },
-                    { denom: "$10", qty: 10, total: "$100.00" },
-                    { denom: "$5", qty: 40, total: "$200.00" },
-                ],
-            },
-            {
-                currency: "EUR",
-                amount: "€2000.00",
-                breakdown: [
-                    { denom: "€100", qty: 10, total: "€1000.00" },
-                    { denom: "€50", qty: 20, total: "€1000.00" },
-                ],
-            },
-            {
-                currency: "GBP",
-                amount: "£2000.00",
-                breakdown: [
-                    { denom: "£100", qty: 10, total: "£1000.00" },
-                    { denom: "£50", qty: 20, total: "£1000.00" },
-                ],
-            },
-        ],
-        // summary values (editable)
-        openingVaultTotal: "0.00",
-        totalTransactions: "0",
-        closingVaultTotal: "0.00",
-    };
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // ---------- state: originalData (source of truth) and editable copy ----------
-    const [originalData, setOriginalData] = useState(original);
-    const [editableData, setEditableData] = useState(original);
+    const [originalData, setOriginalData] = useState(null);
+    const [editableData, setEditableData] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const navigate = useNavigate();
+
+    // Fetch reconciliation data by ID
+    useEffect(() => {
+        const fetchReconciliationData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                console.log(`Fetching reconciliation with ID: ${id}`);
+                const result = await fetchReconciliationById(id);
+
+                console.log('Full API Response:', result);
+
+                if (!result) {
+                    throw new Error("No response from server");
+                }
+
+                if (!result.success && !result.data) {
+                    throw new Error(result.error?.message || result.error || "Failed to fetch reconciliation");
+                }
+
+                // Handle different API response structures
+                const data = result.data?.data || result.data || result;
+
+                if (!data) {
+                    throw new Error("No reconciliation data found");
+                }
+
+                console.log('Reconciliation Data:', data);
+
+                // Format date
+                const formatDate = (dateString) => {
+                    if (!dateString) return "N/A";
+                    try {
+                        const date = new Date(dateString);
+                        if (isNaN(date.getTime())) return dateString;
+                        return date.toISOString().split('T')[0].replace(/-/g, '/');
+                    } catch {
+                        return dateString;
+                    }
+                };
+
+                // Extract data from API response
+                const openingEntries = data.openingEntries || data.opening_entries || [];
+                const closingEntries = data.closingEntries || data.closing_entries || [];
+                const deals = data.deals || [];
+                const notes = data.notes || [];
+                const status = data.status || "Tallied";
+                const createdBy = data.createdBy || data.created_by || data.user || null;
+                const createdAt = data.created_at || data.createdAt || data.date;
+
+                console.log('Opening entries:', openingEntries);
+                console.log('Closing entries:', closingEntries);
+                console.log('Deals:', deals);
+                console.log('Notes:', notes);
+
+                // Convert API data to vault format
+                const openingVaultData = convertEntriesToVaultData(openingEntries, "opening");
+                const closingVaultData = convertEntriesToVaultData(closingEntries, "closing");
+
+                // Calculate values
+                const openingTotal = calculateVaultTotal(openingVaultData);
+                const closingTotal = calculateVaultTotal(closingVaultData);
+                const varianceValue = calculateVariance(openingVaultData, closingVaultData);
+                const autoStatus = calculateStatusFromVariance(openingVaultData, closingVaultData);
+
+                // Combine notes
+                let notesText = "";
+                if (notes && Array.isArray(notes)) {
+                    notesText = notes
+                        .map(note => typeof note === 'object' ? note.note || note.text || note.content : note)
+                        .filter(note => note && note.trim() !== '')
+                        .join("\n");
+                } else if (typeof notes === 'string') {
+                    notesText = notes;
+                }
+
+                const formattedData = {
+                    id: data.id || id,
+                    date: formatDate(createdAt),
+                    varianceValue: varianceValue,
+                    status: status || autoStatus,
+                    notes: notesText,
+                    openingVaultTotal: openingTotal,
+                    totalTransactions: deals.length || 0,
+                    closingVaultTotal: closingTotal,
+                    openingVaultData: openingVaultData,
+                    closingVaultData: closingVaultData,
+                    deals: deals,
+                    createdBy: createdBy,
+                    rawData: data // Store raw data for reference
+                };
+
+                console.log('Formatted Data for UI:', formattedData);
+
+                setOriginalData(formattedData);
+                setEditableData(formattedData);
+            } catch (err) {
+                console.error('Error in fetchReconciliationData:', err);
+                setError(err.message || "An error occurred while fetching data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchReconciliationData();
+        } else {
+            setError("No reconciliation ID provided");
+            setLoading(false);
+        }
+    }, [id]);
+
+    // Auto-update status when vault data changes during editing
+    useEffect(() => {
+        if (isEditing && editableData) {
+            const newStatus = calculateStatusFromVariance(
+                editableData.openingVaultData,
+                editableData.closingVaultData
+            );
+
+            if (newStatus !== editableData.status && editableData.status !== "Tallied") {
+                handleFieldChange("status", newStatus);
+            }
+        }
+    }, [editableData?.openingVaultData, editableData?.closingVaultData, isEditing]);
 
     // compute variance color/icon based on status and sign
-    const isPositive = String(editableData.varianceValue).startsWith("+");
+    const isPositive = editableData ? String(editableData.varianceValue).startsWith("+") : true;
     let varianceColor = "";
     let varianceIcon = balance;
 
-    if (editableData.status === "Tallied" || editableData.status === "Balance") {
-        varianceColor = "#82E890";
-        varianceIcon = balance;
-    } else if (editableData.status === "Excess" && isPositive) {
-        varianceColor = "#D8AD00";
-        varianceIcon = high;
-    } else if (editableData.status === "Short" && !isPositive) {
-        varianceColor = "#FF6B6B";
-        varianceIcon = balance;
+    if (editableData) {
+        if (editableData.status === "Tallied" || editableData.status === "Balance") {
+            varianceColor = "#82E890";
+            varianceIcon = balance;
+        } else if (editableData.status === "Excess" && isPositive) {
+            varianceColor = "#D8AD00";
+            varianceIcon = high;
+        } else if (editableData.status === "Short" && !isPositive) {
+            varianceColor = "#FF6B6B";
+            varianceIcon = balance;
+        } else {
+            varianceColor = "#82E890";
+            varianceIcon = balance;
+        }
     }
 
     const statusStyle = {
@@ -236,7 +497,8 @@ export default function ViewReconciliation() {
     // ---------- handlers ----------
     // open edit mode (make a deep copy)
     const handleEdit = () => {
-        // deep-ish copy so nested arrays are copied
+        if (!originalData) return;
+
         const copy = JSON.parse(JSON.stringify(originalData));
         setEditableData(copy);
         setIsEditing(true);
@@ -244,47 +506,137 @@ export default function ViewReconciliation() {
 
     // Cancel -> revert
     const handleCancel = () => {
-        setEditableData(JSON.parse(JSON.stringify(originalData)));
+        if (originalData) {
+            setEditableData(JSON.parse(JSON.stringify(originalData)));
+        }
         setIsEditing(false);
     };
 
-    // Save -> commit to originalData (you can add API call here)
-    const handleSave = () => {
-        // Optionally validate here
-        setOriginalData(JSON.parse(JSON.stringify(editableData)));
-        setIsEditing(false);
-        // TODO: call API to persist editableData if needed
+    // Save -> commit to originalData
+    const handleSave = async () => {
+        try {
+            if (!originalData || !editableData) return;
+
+            const payload = buildPatchPayload(originalData, editableData);
+
+            // Nothing changed
+            if (Object.keys(payload).length === 0) {
+                alert("No changes to save");
+                setIsEditing(false);
+                return;
+            }
+
+            const res = await updateReconciliation(editableData.id, payload);
+
+            if (!res.success) {
+                alert("Failed to update reconciliation");
+                return;
+            }
+
+            // Commit after PATCH success
+            setOriginalData(JSON.parse(JSON.stringify(editableData)));
+            setIsEditing(false);
+
+            alert("Reconciliation updated successfully");
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong while saving");
+        }
     };
 
-    // Update a whole vault row (used by VaultRow)
-    const updateVaultRow = (rowIndex, updatedRow) => {
+
+    // Update opening vault row
+    const updateOpeningVaultRow = (rowIndex, updatedRow) => {
         setEditableData((prev) => {
-            const newVault = prev.vaultData.map((r, i) => (i === rowIndex ? updatedRow : r));
-            return { ...prev, vaultData: newVault };
+            if (!prev) return prev;
+            const newVault = prev.openingVaultData.map((r, i) =>
+                i === rowIndex ? updatedRow : r
+            );
+            return { ...prev, openingVaultData: newVault };
         });
     };
 
-    // update simple fields like openingVaultTotal, totalTransactions, closingVaultTotal, notes, status or varianceValue
+    // Update closing vault row
+    const updateClosingVaultRow = (rowIndex, updatedRow) => {
+        setEditableData((prev) => {
+            if (!prev) return prev;
+            const newVault = prev.closingVaultData.map((r, i) =>
+                i === rowIndex ? updatedRow : r
+            );
+            return { ...prev, closingVaultData: newVault };
+        });
+    };
+
+    // update simple fields like notes, status
     const handleFieldChange = (field, value) => {
-        setEditableData((prev) => ({ ...prev, [field]: value }));
+        setEditableData((prev) => {
+            if (!prev) return prev;
+            return { ...prev, [field]: value };
+        });
     };
 
     // For the header icon visibility
-    const showEditIcon = editableData.status === "Excess" || editableData.status === "Short";
+    const showEditIcon = editableData &&
+        (editableData.status === "Excess" || editableData.status === "Short" ||
+            editableData.status === "Balance");
 
-    // whenever editableData.vaultData changes, we could optionally recalc summary totals (not required by brief)
-    useEffect(() => {
-        // Example: recalc openingVaultTotal as sum of first vault row totals if you want.
-        // left intentionally blank; implement if you want auto summary updates.
-    }, [editableData.vaultData]);
+    // Loading state
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-white">Loading reconciliation data...</div>
+            </div>
+        );
+    }
+
+    // Error state with more details
+    if (error && !editableData) {
+        return (
+            <div className="p-4">
+                <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
+                    <h3 className="text-red-400 font-medium mb-2">Error Loading Reconciliation</h3>
+                    <p className="text-red-300 text-sm mb-3">{error}</p>
+                    <p className="text-gray-400 text-xs mb-4">
+                        Reconciliation ID: {id}
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => navigate("/reconciliation")}
+                            className="px-4 py-2 bg-[#1D4CB5] text-white rounded-md text-sm"
+                        >
+                            Back to List
+                        </button>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-gray-700 text-white rounded-md text-sm"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!editableData) {
+        return (
+            <div className="p-4">
+                <div className="text-white">No reconciliation data found</div>
+                <button
+                    onClick={() => navigate("/reconciliation")}
+                    className="mt-2 px-4 py-2 bg-[#1D4CB5] text-white rounded-md text-sm"
+                >
+                    Back to List
+                </button>
+            </div>
+        );
+    }
 
     return (
         <>
             {/* HEADER */}
             <div className="flex items-center justify-between">
-
                 <div className="flex items-center gap-3">
-
                     {/* BACK ARROW */}
                     <div
                         className="cursor-pointer select-none text-white text-2xl"
@@ -300,12 +652,11 @@ export default function ViewReconciliation() {
                         </h2>
 
                         <p className="text-gray-400 text-[12px] mt-1">
-                            Summary of today’s vault reconciliation
+                            Summary of vault reconciliation
                         </p>
+
                     </div>
-
                 </div>
-
 
                 <div className="flex items-center gap-3">
                     {/* Cancel/Save shown during edit mode */}
@@ -313,14 +664,14 @@ export default function ViewReconciliation() {
                         <>
                             <button
                                 onClick={handleCancel}
-                                className="w-[95px] h-10 border border-gray-500 rounded-lg text-white"
+                                className="w-[95px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
                             >
                                 Cancel
                             </button>
 
                             <button
                                 onClick={handleSave}
-                                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer">
+                                className="flex items-center justify-center gap-2 w-[91px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2">
                                 <img src={save} className="w-5 h-5" />
                                 Save
                             </button>
@@ -342,91 +693,75 @@ export default function ViewReconciliation() {
             <div className="mt-2" />
 
             <div className="mt-4 bg-[#16191C] rounded-xl p-4">
+                {error && (
+                    <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded-lg">
+                        <p className="text-red-400">{error}</p>
+                        <button
+                            onClick={() => setError(null)}
+                            className="mt-2 text-red-300 text-sm hover:text-red-100"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+
                 <div className="flex gap-6">
-                    {/* LEFT CARD */}
+                    {/* LEFT CARD - Summary (READ ONLY) */}
                     <div className="w-[65%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
                         <h3 className="text-white text-[15px] font-medium mb-1">Reconciliation Summary</h3>
 
-                        {/* Rows: Opening Vault Total */}
+                        {/* Rows: Opening Vault Total - READ ONLY */}
                         <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                             <p className="text-[#E3E3E3] text-[14px]">Opening Vault Total</p>
-
-                            {isEditing ? (
-                                <input
-                                    value={editableData.openingVaultTotal}
-                                    onChange={(e) => handleFieldChange("openingVaultTotal", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
-                                />
-                            ) : (
-                                <p className="text-white text-[13px]">{editableData.openingVaultTotal}</p>
-                            )}
+                            <p className="text-white text-[13px]">
+                                {calculateVaultTotal(editableData.openingVaultData)}
+                            </p>
                         </div>
 
-                        {/* Total Transactions */}
+                        {/* Total Transactions - READ ONLY */}
                         <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                             <p className="text-[#E3E3E3] text-[14px]">Total Transactions</p>
-                            {isEditing ? (
-                                <input
-                                    value={editableData.totalTransactions}
-                                    onChange={(e) => handleFieldChange("totalTransactions", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
-                                />
-                            ) : (
-                                <p className="text-white text-[13px]">{editableData.totalTransactions}</p>
-                            )}
+                            <p className="text-white text-[13px]">
+                                {editableData.totalTransactions}
+                            </p>
                         </div>
 
-                        {/* Closing Vault */}
+                        {/* Closing Vault - READ ONLY */}
                         <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                             <p className="text-[#E3E3E3] text-[14px]">Closing Vault Total</p>
-                            {isEditing ? (
-                                <input
-                                    value={editableData.closingVaultTotal}
-                                    onChange={(e) => handleFieldChange("closingVaultTotal", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
-                                />
-                            ) : (
-                                <p className="text-white text-[13px]">{editableData.closingVaultTotal}</p>
-                            )}
+                            <p className="text-white text-[13px]">
+                                {calculateVaultTotal(editableData.closingVaultData)}
+                            </p>
                         </div>
 
-                        {/* Variance */}
+                        {/* Variance - READ ONLY */}
                         <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
                             <div className="flex items-center gap-2">
-                                <img src={varianceIcon} className="w-5 h-5" />
+                                <img src={varianceIcon} className="w-5 h-5" alt="variance" />
                                 <p className="text-[#E3E3E3] text-[14px]">Difference / Variance</p>
                             </div>
 
-                            {isEditing ? (
-                                <input
-                                    value={editableData.varianceValue}
-                                    onChange={(e) => handleFieldChange("varianceValue", e.target.value)}
-                                    className="bg-[#16191C] text-white text-[13px] p-1 rounded w-[120px] text-right"
-                                    style={{ color: varianceColor }}
-                                />
-                            ) : (
-                                <p className="text-[13px]" style={{ color: varianceColor }}>
-                                    {editableData.varianceValue}
-                                </p>
-                            )}
+                            <p className="text-[13px]" style={{ color: varianceColor }}>
+                                {editableData.varianceValue}
+                            </p>
                         </div>
 
-                        {/* Status */}
+                        {/* Status - Editable */}
                         <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
                             <p className="text-white font-semibold text-[15px]">Status</p>
 
-                            <span
-                                className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status]}`}
-                            >
-                                {editableData.status}
-                            </span>
-
+                                <span
+                                    className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
+                                >
+                                    {editableData.status}
+                                </span>
+                        
                         </div>
                     </div>
 
                     {/* RIGHT SIDE NOTES */}
                     <div className="w-[460px] h-[296px] flex flex-col justify-between">
-                        <div className="bg-[#1E2328] border border-[#1F2429] rounded-xl p-5">
+                        <div className="bg-[#1E2328] rounded-xl p-5">
                             <p className="text-white text-[16px] font-medium mb-2">Notes</p>
 
                             <textarea
@@ -434,13 +769,7 @@ export default function ViewReconciliation() {
                                 onChange={(e) => handleFieldChange("notes", e.target.value)}
                                 disabled={!isEditing}
                                 placeholder="Add reconciliation notes..."
-                                className="
-                                    w-[408px] h-[220px]
-                                    bg-[#16191C] text-white text-[14px]
-                                    p-2 rounded-sm
-                                    outline-none resize-none
-                                    placeholder:text-[#4D5567]
-                                    disabled:opacity-60"
+                                className="w-[408px] h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60  focus:border-blue-500"
                             />
                         </div>
                     </div>
@@ -457,20 +786,26 @@ export default function ViewReconciliation() {
                             <span>Total Amount</span>
                         </div>
 
-                        {editableData.vaultData.map((row, index) => (
-                            <VaultRow
-                                key={index}
-                                idx={index}
-                                currency={row.currency}
-                                amount={row.amount}
-                                breakdown={row.breakdown}
-                                isEditing={isEditing}
-                                onUpdate={updateVaultRow}
-                            />
-                        ))}
+                        {editableData.openingVaultData && editableData.openingVaultData.length > 0 ? (
+                            editableData.openingVaultData.map((row, index) => (
+                                <VaultRow
+                                    key={`opening-${index}`}
+                                    idx={index}
+                                    currency={row.currency}
+                                    amount={row.amount}
+                                    breakdown={row.breakdown}
+                                    isEditing={isEditing}
+                                    onUpdate={updateOpeningVaultRow}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-gray-400 text-center py-4">
+                                No opening vault data available
+                            </div>
+                        )}
                     </div>
 
-                    {/* Closing Vault (we reuse same data to demo) */}
+                    {/* Closing Vault */}
                     <div className="w-[50%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
                         <h3 className="text-white text-[15px] font-medium mb-4">Closing Vault Balance</h3>
 
@@ -479,21 +814,34 @@ export default function ViewReconciliation() {
                             <span>Total Amount</span>
                         </div>
 
-                        {editableData.vaultData.map((row, index) => (
-                            <VaultRow
-                                key={`close-${index}`}
-                                idx={index}
-                                currency={row.currency}
-                                amount={row.amount}
-                                breakdown={row.breakdown}
-                                isEditing={isEditing}
-                                onUpdate={updateVaultRow}
-                            />
-                        ))}
+                        {editableData.closingVaultData && editableData.closingVaultData.length > 0 ? (
+                            editableData.closingVaultData.map((row, index) => (
+                                <VaultRow
+                                    key={`close-${index}`}
+                                    idx={index}
+                                    currency={row.currency}
+                                    amount={row.amount}
+                                    breakdown={row.breakdown}
+                                    isEditing={isEditing}
+                                    onUpdate={updateClosingVaultRow}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-gray-400 text-center py-4">
+                                No closing vault data available
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-              <DealsTable />
+
+            {/* Deals Table - Show if deals exist */}
+
+            <div className="mt-6">
+                <h3 className="text-white text-lg font-medium mb-4">Associated Deals</h3>
+                <DealsTable />
+            </div>
+
         </>
     );
 }

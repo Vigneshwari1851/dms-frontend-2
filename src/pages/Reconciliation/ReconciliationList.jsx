@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Table from "../../components/common/Table"; 
+import Table from "../../components/common/Table";
 import add from "../../assets/dashboard/add.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
-import NotificationCard from "../../components/common/Notification"; 
+import NotificationCard from "../../components/common/Notification";
 import { fetchReconcoliation } from "../../api/reconcoliation";
 
 export default function ReconciliationList() {
@@ -19,9 +19,9 @@ export default function ReconciliationList() {
     try {
       setLoading(true);
       setError(null);
-      
-      const result = await fetchReconcoliation({ 
-        page: 1, 
+
+      const result = await fetchReconcoliation({
+        page: 1,
         limit: 100 // Fetch all data for client-side filtering
       });
 
@@ -65,7 +65,7 @@ export default function ReconciliationList() {
   // Format variance with + or - sign
   const formatVariance = (difference) => {
     if (difference === null || difference === undefined) return "0.00";
-    
+
     const sign = difference >= 0 ? "+" : "";
     return `${sign}${formatCurrency(difference)}`;
   };
@@ -74,46 +74,51 @@ export default function ReconciliationList() {
   const prepareTableData = () => {
     return reconciliations.map((reconciliation) => ({
       id: reconciliation.id,
+      // ✅ RAW DATE (for filter)
+      created_at: reconciliation.created_at,
+
+      // ✅ DISPLAY DATE
       date: formatDate(reconciliation.created_at),
+
       openingVault: formatCurrency(reconciliation.opening_total),
       totalTransactions: reconciliation.total_transactions || 0,
       closingVault: formatCurrency(reconciliation.closing_total),
       variance: formatVariance(reconciliation.difference),
       status: reconciliation.status, // Your Table component will render the status badge
-      actions: (
-        <ActionDropdown
-          options={[
-            { 
-              label: "View Details", 
-              onClick: (e) => {
-                e.stopPropagation(); // Prevent row click when clicking dropdown
-                navigate(`/reconciliation/details/${reconciliation.id}`);
-              }
-            },
-            { 
-              label: "Edit", 
-              onClick: (e) => {
-                e.stopPropagation();
-                navigate(`/reconciliation/edit/${reconciliation.id}`);
-              }
-            },
-            { 
-              label: "Delete", 
-              onClick: (e) => {
-                e.stopPropagation();
-                handleDeleteClick(reconciliation.id, reconciliation.created_at);
-              }
-            },
-            { 
-              label: reconciliation.status === "Tallied" ? "Mark as Pending" : "Mark as Tallied", 
-              onClick: (e) => {
-                e.stopPropagation();
-                handleStatusToggle(reconciliation.id, reconciliation.status);
-              }
-            },
-          ]}
-        />
-      )
+      // actions: (
+      //   <ActionDropdown
+      //     options={[
+      //       { 
+      //         label: "View Details", 
+      //         onClick: (e) => {
+      //           e.stopPropagation(); // Prevent row click when clicking dropdown
+      //           navigate(`/reconciliation/details/${reconciliation.id}`);
+      //         }
+      //       },
+      //       { 
+      //         label: "Edit", 
+      //         onClick: (e) => {
+      //           e.stopPropagation();
+      //           navigate(`/reconciliation/edit/${reconciliation.id}`);
+      //         }
+      //       },
+      //       { 
+      //         label: "Delete", 
+      //         onClick: (e) => {
+      //           e.stopPropagation();
+      //           handleDeleteClick(reconciliation.id, reconciliation.created_at);
+      //         }
+      //       },
+      //       { 
+      //         label: reconciliation.status === "Tallied" ? "Mark as Pending" : "Mark as Tallied", 
+      //         onClick: (e) => {
+      //           e.stopPropagation();
+      //           handleStatusToggle(reconciliation.id, reconciliation.status);
+      //         }
+      //       },
+      //     ]}
+      //   />
+      // )
     }));
   };
 
@@ -144,7 +149,7 @@ export default function ReconciliationList() {
 
   const handleConfirm = () => {
     const { actionType, id } = confirmModal;
-    
+
     if (actionType === "delete") {
       // Call delete API here
       console.log(`Deleting reconciliation ${id}`);
@@ -156,7 +161,7 @@ export default function ReconciliationList() {
       // After successful update, refresh the list
       fetchReconciliations();
     }
-    
+
     setConfirmModal({ open: false });
   };
 
@@ -175,14 +180,14 @@ export default function ReconciliationList() {
     { label: "Closing Vault", key: "closingVault" },
     { label: "Difference / Variance", key: "variance" },
     { label: "Status", key: "status" },
-    { label: "Actions", key: "actions" }
+
   ];
 
   return (
     <>
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-white text-2xl font-semibold">Reconciliation</h1>
-        <button    
+        <button
           onClick={handleAddUser}
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium"
         >
@@ -216,15 +221,15 @@ export default function ReconciliationList() {
       {/* Table */}
       {!loading && !error && reconciliations.length > 0 && (
         <div className="mt-8">
-          <Table 
-            columns={columns} 
-            data={prepareTableData()}   
+          <Table
+            columns={columns}
+            data={prepareTableData()}
             title="Reconciliation List"
-            subtitle={`Total: ${reconciliations.length} reconciliations`}
+            // subtitle={`Total: ${reconciliations.length} reconciliations`}
             showRightSection={true}
             onRowClick={handleRowClick}
             onSearch={handleSearch}
-            sortableKeys={["date", "status", "totalTransactions"]}
+          // sortableKeys={["date", "status", "totalTransactions"]}
           />
         </div>
       )}
@@ -233,18 +238,12 @@ export default function ReconciliationList() {
       {!loading && !error && reconciliations.length === 0 && (
         <div className="text-center py-10">
           <div className="text-gray-400 text-lg mb-4">No reconciliations found</div>
-          <button
-            onClick={handleAddUser}
-            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium mx-auto"
-          >
-            <img src={add} alt="add" className="w-5 h-5" />
-            Create First Reconciliation
-          </button>
+          
         </div>
       )}
 
       {/* Confirmation Modal */}
-      <NotificationCard 
+      <NotificationCard
         confirmModal={confirmModal}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmModal({ open: false })}

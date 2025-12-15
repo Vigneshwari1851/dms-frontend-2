@@ -6,6 +6,7 @@ import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBal
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";
 import { createReconciliation } from "../../api/reconcoliation"; // Import the API function
+import Toast from "../../components/common/Toast";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
@@ -26,6 +27,8 @@ export default function AddReconciliation() {
         total: 0
     });
 
+    
+
     const [closingData, setClosingData] = useState({
         rows: [{ denom: "", qty: "", total: 0, open: false }], // Start with one row
         selectedCurrency: "",
@@ -35,7 +38,7 @@ export default function AddReconciliation() {
     // Calculate totals for summary
     const openingTotal = openingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
     const closingTotal = closingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
-    const totalTransactions = openingTotal + closingTotal; // You might want to calculate this from actual transactions
+    const totalTransactions = 0;
     const difference = closingTotal - openingTotal;
 
 
@@ -98,10 +101,15 @@ export default function AddReconciliation() {
         }
     };
 
+    const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        type: "success", // success | error | pending
+    });
+
     // Function to handle saving reconciliation
     const handleSaveReconciliation = async () => {
         try {
-            // Prepare opening entries
             const openingEntries = openingData.rows.map(row => ({
                 denomination: parseFloat(row.denom || 0),
                 quantity: parseInt(row.qty || 0),
@@ -109,7 +117,6 @@ export default function AddReconciliation() {
                 currency_id: openingData.currencyId
             }));
 
-            // Prepare closing entries
             const closingEntries = closingData.rows.map(row => ({
                 denomination: parseFloat(row.denom || 0),
                 quantity: parseInt(row.qty || 0),
@@ -117,31 +124,53 @@ export default function AddReconciliation() {
                 currency_id: closingData.currencyId
             }));
 
-            // Prepare reconciliation data
             const reconciliationData = {
                 openingEntries,
                 closingEntries,
-                notes: notes ? [notes] : [] // Wrap notes in array as per API response
+                notes: notes ? [notes] : []
             };
 
-            console.log("Saving reconciliation:", reconciliationData);
-
-            // Call the API
             const result = await createReconciliation(reconciliationData);
 
             if (result.success) {
-                console.log("Reconciliation saved successfully:", result.data);
-                // You might want to show a success message or redirect
-                alert("Reconciliation saved successfully!");
+                // ✅ SHOW SUCCESS TOAST
+                setToast({
+                    show: true,
+                    message: "Reconciliation Saved",
+                    type: "success",
+                });
+
+                // auto hide after 3 sec
+                setTimeout(() => {
+                    setToast(prev => ({ ...prev, show: false }));
+                }, 3000);
             } else {
-                console.error("Failed to save reconciliation:", result.error);
-                alert(`Failed to save: ${result.error?.message || 'Unknown error'}`);
+                // ❌ ERROR TOAST
+                setToast({
+                    show: true,
+                    message: result.error?.message || "Failed to save reconciliation",
+                    type: "error",
+                });
+
+                setTimeout(() => {
+                    setToast(prev => ({ ...prev, show: false }));
+                }, 3000);
             }
         } catch (error) {
-            console.error("Error saving reconciliation:", error);
-            alert("Error saving reconciliation. Please try again.");
+            setToast({
+                show: true,
+                message: "Something went wrong",
+                type: "error",
+            });
+
+            setTimeout(() => {
+                setToast(prev => ({ ...prev, show: false }));
+            }, 3000);
         }
     };
+
+
+
 
     return (
         <>
@@ -306,6 +335,12 @@ export default function AddReconciliation() {
                 )}
 
             </div>
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                type={toast.type}
+            />
+
         </>
     );
 }

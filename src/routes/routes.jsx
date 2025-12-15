@@ -47,7 +47,7 @@ export default function AppRoutes() {
         <Route path="edit-deal/:id" element={<EditDeal />} />
         <Route path="reconciliation" element={<ReconciliationList />} />
         <Route path="reports" element={<ListReport />} />
-        <Route path="reconciliation" element={<ReconciliationList />} />
+        {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
         <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
 

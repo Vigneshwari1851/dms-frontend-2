@@ -107,10 +107,19 @@ export default function Table({
       // Date Filter (created_at column)
       let matchesDate = true;
       if (dateFilter.from && dateFilter.to) {
-        const rowDate = new Date(row.date);
-        matchesDate =
-          rowDate >= dateFilter.from && rowDate <= dateFilter.to;
+        const rowDate = new Date(row.created_at);
+
+        const fromDate = new Date(dateFilter.from);
+        fromDate.setHours(0, 0, 0, 0);
+
+        const toDate = new Date(dateFilter.to);
+        toDate.setHours(23, 59, 59, 999); // 🔥 IMPORTANT
+
+        matchesDate = rowDate >= fromDate && rowDate <= toDate;
+      
+
       }
+
 
       return matchesSearch && matchesStatus && matchesDate;
     });
