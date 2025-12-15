@@ -136,7 +136,7 @@ export default function CreateDeal() {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (!value || value.trim().length < 2) {
+    if (!value || value.trim().length < 1) {
       setCustomerResults([]);
       setCustomerDropdownOpen(false);
       return;

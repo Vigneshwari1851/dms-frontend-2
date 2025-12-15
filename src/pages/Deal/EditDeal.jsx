@@ -163,15 +163,15 @@ export default function EditDeal() {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h2 className="text-[16px] font-medium text-white">
-                        Deal No- {deal?.deal_number || id || "Loading..."}
+                        Deal ID - {deal?.deal_number || id || "Loading..."}
                     </h2>
-                    <p className="text-gray-400 text-[12px]">
+                    {/* <p className="text-gray-400 text-[12px]">
                         {isPending
                             ? editMode
                                 ? "Editing enabled. Update fields and save."
                                 : "View details. Click edit to modify pending deal."
                             : "View details. Editing is allowed only while status is Pending."}
-                    </p>
+                    </p> */}
                 </div>
 
                 {/* <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ export default function EditDeal() {
                         <>
                             {/* Cancel Button */}
                             <button
-                                className="w-[95px] h-[40px] rounded-[8px] border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
+                                className="w-[95px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
                                 onClick={handleCancelEdit}
                             >
                                 Cancel
@@ -221,7 +221,7 @@ export default function EditDeal() {
                                 onClick={handleSave}
                                 className="flex items-center justify-center gap-2 w-[91px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
                             >
-                                <img src={save} className="w-[20px] h-[20px]" alt="Save" />
+                                <img src={save} className="w-5 h-5" alt="Save" />
                                 Save
                             </button>
                         </>

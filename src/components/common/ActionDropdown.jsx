@@ -25,10 +25,14 @@ function ActionDropdown({ options = [] }) {
         top = 0;
       }
 
+      const DROPDOWN_WIDTH = 180;
+
       setDropdownStyle({
         position: "fixed",
+        left: rect.right,              
+        transform: "translateX(-100%)",
+        width: DROPDOWN_WIDTH,
         top,
-        left: rect.left,
         minWidth: rect.width,
         maxHeight: "300px",
         overflowY: "auto",
