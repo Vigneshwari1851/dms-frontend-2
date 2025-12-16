@@ -152,7 +152,7 @@ export default function Header() {
               }`}
             >
               {notifications.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No notifications</p>
+                  <p className="text-gray-400 text-sm text-center">No notifications</p>
                 ) : (
                   (notifications.slice(0, showAllNotifications ? notifications.length : 3)).map((n, idx) => (
                     <div
@@ -188,15 +188,16 @@ export default function Header() {
                 )}
               </div>
 
+             {notifications.length > 3 && (
               <div className="text-center mt-2">
                 <button
                   onClick={() => setShowAllNotifications(true)}
-
                   className="text-blue-500 text-sm hover:underline"
                 >
                   View All
                 </button>
               </div>
+            )}
             </div>
           )}
         </div>
