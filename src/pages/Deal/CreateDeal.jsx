@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
-import plus from "../../assets/common/Hplus.svg";
+import plus from "../../assets/common/save.svg";
 import Denomination from "../../components/deal/Denomination";
 import Toast from "../../components/common/Toast";
 import { createDeal } from "../../api/deals";
@@ -461,7 +461,7 @@ export default function CreateDeal() {
             disabled={loading}
           >
             <img src={plus} className="w-5 h-5" />
-            {loading ? "Creating..." : "Create Deal"}
+            {loading ? "Saving..." : "Save Deal"}
           </button>
         </div>
 

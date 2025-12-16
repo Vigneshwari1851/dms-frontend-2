@@ -1,6 +1,6 @@
 import bgIcon from "../../assets/customer/bgimage.svg";
 import searchIcon from "../../assets/Common/search.svg";
-import add from "../../assets/user/add_person.svg";
+import add from "../../assets/Common/Hplus.svg";
 import { useState,useEffect , useRef } from "react";
 import { searchCustomers } from "../../api/customers";
 import { useNavigate, useLocation } from "react-router-dom";
