@@ -138,7 +138,7 @@ export default function Header() {
 
             <div
               className={`${
-                showAllNotifications ? "max-h-64 overflow-y-auto scrollbar-grey" : ""
+                showAllNotifications ? "max-h-64 overflow-y-auto scrollbar-grey pr-3" : ""
               }`}
             >
               {notifications.length === 0 ? (
