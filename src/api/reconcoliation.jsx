@@ -45,11 +45,26 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
   }
 }
 
+export async function fetchReconciliationAlerts() {
+  try {
+    const response = await fetch(`${API_URL}/reconciliation/alerts`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
 
+    if (!response.ok) {
+      console.error("Failed to fetch reconciliation alerts:", response.status);
+      return [];
+    }
 
+    const result = await response.json();
 
-
-
+    return result || [];
+  } catch (error) {
+    console.error("Error fetching reconciliation alerts:", error);
+    return [];
+  }
+}
 
 export async function fetchReconciliationById(id) {
   try {

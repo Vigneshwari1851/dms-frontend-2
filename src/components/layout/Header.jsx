@@ -8,17 +8,62 @@ import logout from "../../assets/Common/logout.svg";
 import NotificationCard from "../common/Notification"; 
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
+import { fetchReconciliationAlerts } from "../../api/reconcoliation"; 
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [confirmModal, setConfirmModal] = useState({ open: false });
+
+  const notifDropdownRef = useRef(null);
+  const avatarDropdownRef = useRef(null);
   const navigate = useNavigate();
-  const [confirmModal, setConfirmModal] = useState({
-    open: false,
-  });
+
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const userName = storedUser.full_name || "User";
+  const userRole = storedUser.role || "";
+
+  const loadNotifications = async () => {
+    try {
+      const res = await fetchReconciliationAlerts();
+      
+      if (res && Array.isArray(res.alerts)) {
+        const notifArray = res.alerts.map(alert => ({
+          id: alert.id,
+          title: "Reconciliation Required",
+          message: "Some deals need reconciliation review.",
+          time: alert.created_at
+        }));
+        setNotifications(notifArray);
+      } else {
+        setNotifications([]);
+      }
+
+    } catch (err) {
+      console.error("Error fetching notifications", err);
+      setNotifications([]);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+ useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
+        setNotifDropdownOpen(false);
+      }
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(e.target)) {
+        setAvatarDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setOpen(false);
     setConfirmModal({
       open: true,
       actionType: "logout",
@@ -29,42 +74,23 @@ export default function Header() {
     });
   };
 
-  const handleConfirmLogout =  async () => {
+  const handleConfirmLogout = async () => {
     try {
-      const result = await logoutUser();
-
-      setConfirmModal({ open: false });
+      await logoutUser();
       localStorage.clear();
-      if (!result.success) {
-        console.warn("Logout API failed, forcing logout");
-      }
       navigate("/login");
     } catch (err) {
-      console.error("Logout error:", err);
+      console.error(err);
       localStorage.clear();
       navigate("/login");
+    } finally {
+      setConfirmModal({ open: false });
     }
   };
 
-  const handleCancelLogout = () => {
-    setConfirmModal({ open: false });
+  const handleMarkAllRead = () => {
+    setNotifications([]);
   };
-
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-
-  const userName = storedUser.full_name || "User";
-  const userRole = storedUser.role || "";
-
-  // Close when clicking outside
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   return (
     <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative">
@@ -86,51 +112,98 @@ export default function Header() {
         </div>
 
         {/* Notification Bell */}
-        <button className="relative">
-          <IoNotificationsOutline className="text-2xl text-[#565656] cursor-pointer" />
-        </button>
-
-        {/* Avatar + Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <img
-            className="w-10 h-10 rounded-full border border-[#0F1113] cursor-pointer"
-            src={person}
-            alt="profile"
-
-            onClick={() => setOpen(!open)}
+        <div className="relative" ref={notifDropdownRef}>
+          <IoNotificationsOutline
+            className="text-2xl text-[#565656] cursor-pointer"
+            onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
           />
 
-          {/* Dropdown */}
-          {open && (
-            <div className="
-              absolute right-0 mt-3 w-64 
-              bg-[#1E2328] 
-              rounded-xl shadow-lg p-4 
-              animate-fadeIn z-50
-            ">
-              <p className="text-white text-lg font-semibold"> {userName} </p>
-              <p className="text-gray-400 text-sm mb-4"> {userRole} </p>
+          {notifDropdownOpen && (
+            <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-white font-semibold">Notifications</span>
+                {notifications.length > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-blue-500 text-sm hover:underline"
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
 
-              <button   onClick={() => {
-                setOpen(false);
-                navigate("/my-profile");
-              }} 
-              className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
-                <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
-              </button>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No notifications</p>
+                ) : (
+                  notifications.map((n, idx) => (
+                    <div
+                      key={idx}
+                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
+                    >
+                      <div>
+                        <p className="font-semibold">{n.title}</p>
+                        <p className="text-gray-400 text-sm">{n.message}</p>
+                      </div>
+                      <span className="text-gray-400 text-xs">{n.time}</span>
+                    </div>
+                  ))
+                )}
+              </div>
 
-              <button onClick={handleLogoutClick} className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
-               <img src={logout} alt="logout"  className="w-5 h-5" /> Logout
-              </button>
+              <div className="text-center mt-2">
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("notifications-section");
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className="text-blue-500 text-sm hover:underline"
+                >
+                  View All
+                </button>
+              </div>
             </div>
           )}
         </div>
 
+        {/* Avatar + Dropdown */}
+        <div className="relative" ref={avatarDropdownRef}>
+          <img
+            className="w-10 h-10 rounded-full border border-[#0F1113] cursor-pointer"
+            src={person}
+            alt="profile"
+            onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
+          />
+
+          {avatarDropdownOpen && (
+            <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">
+              <p className="text-white text-lg font-semibold">{userName}</p>
+              <p className="text-gray-400 text-sm mb-4">{userRole}</p>
+
+              <button
+                onClick={() => navigate("/my-profile")}
+                className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
+              >
+                <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
+              </button>
+
+              <button
+                onClick={handleLogoutClick}
+                className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
+              >
+                <img src={logout} alt="logout" className="w-5 h-5" /> Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
       <NotificationCard
         confirmModal={confirmModal}
         onConfirm={handleConfirmLogout}
-        onCancel={handleCancelLogout}
+        onCancel={() => setConfirmModal({ open: false })}
       />
     </header>
   );
