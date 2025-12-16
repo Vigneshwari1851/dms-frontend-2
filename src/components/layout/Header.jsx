@@ -138,13 +138,24 @@ export default function Header() {
                   notifications.map((n, idx) => (
                     <div
                       key={idx}
+                     onClick={() => {
+                        setNotifDropdownOpen(false);
+                        navigate("/reconciliation");
+                      }}
                       className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
                     >
-                      <div>
+                    <div className="flex items-start gap-2 relative">
+                      <span 
+                        className="w-2 h-2 rounded-full bg-[#D83D00]  mt-2" 
+                      ></span>
+
+                      <div className="flex flex-col gap-[9px]">
                         <p className="font-semibold">{n.title}</p>
                         <p className="text-gray-400 text-sm">{n.message}</p>
                       </div>
-                      <span className="text-gray-400 text-xs">{n.time}</span>
+                    </div>
+
+                    <span className="text-gray-400 text-xs ml-auto">{n.time}</span>
                     </div>
                   ))
                 )}
