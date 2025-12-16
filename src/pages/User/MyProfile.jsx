@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchUserById, updateUser } from "../../api/user/user";
+import { fetchUserById } from "../../api/user/user";
 import profileIcon from "../../assets/user/profile.svg";
 
 export default function MyProfile() {
@@ -41,8 +41,9 @@ export default function MyProfile() {
       full_name: formData.full_name,
       phone_number: formData.phone,
     };
-    const res = await updateUser(userId, payload);
-    if (res.success) navigate(-1);
+    // const res = await updateUser(userId, payload);
+    // if (res.success)
+     navigate(-1);
   };
 
   return (
@@ -77,7 +78,7 @@ export default function MyProfile() {
             <input
               name="full_name"
               value={formData.full_name}
-              onChange={handleChange}
+              readOnly
               className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white"
             />
           </div>
@@ -111,7 +112,7 @@ export default function MyProfile() {
             <input
               name="phone"
               value={formData.phone}
-              onChange={handleChange}
+              readOnly
               className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white"
             />
           </div>
