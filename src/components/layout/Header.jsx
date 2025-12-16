@@ -144,7 +144,7 @@ export default function Header() {
               {notifications.length === 0 ? (
                   <p className="text-gray-400 text-sm">No notifications</p>
                 ) : (
-                  (notifications.slice(0, showAllNotifications ? notifications.length : 2)).map((n, idx) => (
+                  (notifications.slice(0, showAllNotifications ? notifications.length : 3)).map((n, idx) => (
                     <div
                       key={idx}
                      onClick={() => {
