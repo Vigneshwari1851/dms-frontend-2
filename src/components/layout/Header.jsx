@@ -150,15 +150,22 @@ export default function Header() {
                      onClick={() => {
                         setNotifDropdownOpen(false);
                         setShowAllNotifications(false);
-                        navigate("/reconciliation");
+                        if (n.alertType === "RECONCILIATION") {
+                              navigate(`/reconciliation/details/${n.id}`);
+                            } else if (n.alertType === "PENDING_DEAL") {
+                              navigate(`/edit-deal/${n.id}`);
+                            }
                       }}
                       className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
                     >
                     <div className="flex items-start gap-2 relative">
-                      <span 
-                        className="w-2 h-2 rounded-full bg-[#D83D00]  mt-2" 
-                      ></span>
-
+                     <span
+                      className={`w-2 h-2 rounded-full mt-2 ${
+                        n.alertType === "RECONCILIATION"
+                          ? "bg-[#D83D00]"
+                          : "bg-[#D8AD00]"
+                      }`}
+                    ></span>
                       <div className="flex flex-col gap-[9px]">
                         <p className="font-semibold">{n.title}</p>
                         <p className="text-gray-400 text-sm">{n.message}</p>
@@ -173,7 +180,7 @@ export default function Header() {
 
               <div className="text-center mt-2">
                 <button
-onClick={() => setShowAllNotifications(true)}
+                  onClick={() => setShowAllNotifications(true)}
 
                   className="text-blue-500 text-sm hover:underline"
                 >
