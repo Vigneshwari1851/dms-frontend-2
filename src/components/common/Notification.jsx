@@ -6,6 +6,7 @@ import deleteIcon from "../../assets/notification/cancel.svg";
 import resetIcon from "../../assets/notification/link.svg";
 import confirmIcon from "../../assets/notification/save.svg";
 import activateIcon from "../../assets/notification/activate.svg";
+import logoutIcon from "../../assets/notification/logout.svg";
 
 function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     if (!confirmModal.open) return null;
@@ -31,6 +32,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelApproveDeal: deactivateIcon,
         cancelRejectDeal: deactivateIcon,
         activate: activateIcon,
+        logout: logoutIcon,
     };
 
     const iconToShow = iconMap[actionType] || confirmIcon;
@@ -48,6 +50,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelRejectDeal: "Cancel Reject",
         confirm: "Confirm",
         activate: "Activate Account",
+        logout: "Log Out",
     };
 
     const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
@@ -64,6 +67,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelRejectDeal: "#BD404A",
         resetPassword: "#1D4CB5",
         activate: "#1E902D",
+        logout: "#BD404A",
     };
 
     const confirmBtnColor = colorMap[actionType] || "#1E902D";

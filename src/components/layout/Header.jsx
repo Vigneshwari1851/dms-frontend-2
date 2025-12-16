@@ -5,10 +5,35 @@ import logo from "../../assets/Common/logo.svg";
 import person from "../../assets/Common/person.svg";
 import profile from "../../assets/Common/profile.svg";
 import logout from "../../assets/Common/logout.svg";
+import NotificationCard from "../common/Notification"; 
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+  });
+
+  const handleLogoutClick = () => {
+    setConfirmModal({
+      open: true,
+      actionType: "logout",
+      title: "Securely Signing Out",
+      message: "Are you sure you want to securely end your session? Your data and funds will remain protected.",
+      confirmText: "Logout",
+      cancelText: "Cancel",
+    });
+  };
+
+  const handleConfirmLogout = () => {
+    setConfirmModal({ open: false });
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const handleCancelLogout = () => {
+    setConfirmModal({ open: false });
+  };
 
   // Close when clicking outside
   useEffect(() => {
@@ -70,7 +95,7 @@ export default function Header() {
                 <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
               </button>
 
-              <button className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
+              <button onClick={handleLogoutClick} className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
                <img src={logout} alt="logout"  className="w-5 h-5" /> Logout
               </button>
             </div>
@@ -78,6 +103,11 @@ export default function Header() {
         </div>
 
       </div>
+      <NotificationCard
+        confirmModal={confirmModal}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
     </header>
   );
 }
