@@ -9,6 +9,8 @@ import NotificationCard from "../common/Notification";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
 import { fetchReconciliationAlerts } from "../../api/reconcoliation"; 
+import bellIcon from "../../assets/notification/bell.svg"
+import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg"
 
 export default function Header() {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
@@ -50,6 +52,12 @@ export default function Header() {
 
   useEffect(() => {
     loadNotifications();
+
+    const intervalId = setInterval(() => {
+      loadNotifications();
+    }, 2000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
  useEffect(() => {
@@ -115,12 +123,14 @@ export default function Header() {
 
         {/* Notification Bell */}
         <div className="relative" ref={notifDropdownRef}>
-          <IoNotificationsOutline
-            className="text-2xl text-[#565656] cursor-pointer"
+          <img
+            src={notifications.length > 0 ? bellnotificationIcon : bellIcon}
+            alt="notifications"
+            className="w-6 h-6 cursor-pointer"
             onClick={() => {
               setNotifDropdownOpen(!notifDropdownOpen);
               setShowAllNotifications(false);
-            }}          
+            }}
           />
 
           {notifDropdownOpen && (
