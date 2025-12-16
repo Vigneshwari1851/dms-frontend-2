@@ -120,12 +120,11 @@ export default function Header() {
 
           {notifDropdownOpen && (
             <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-white font-semibold">Notifications</span>
+              <div className="flex justify-end items-center mb-3">
                 {notifications.length > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-blue-500 text-sm hover:underline"
+                    className="text-blue-500 text-sm text-center hover:underline"
                   >
                     Mark all read
                   </button>
