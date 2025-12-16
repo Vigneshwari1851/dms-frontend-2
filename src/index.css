@@ -7,12 +7,8 @@
   width: 6px;
 }
 
-.scrollbar-grey::-webkit-scrollbar-track {
-  background: #1E2328;
-}
-
 .scrollbar-grey::-webkit-scrollbar-thumb {
-  background-color: #393939; 
+  background-color: #2E3439; 
   border-radius: 8px;
 }
 
