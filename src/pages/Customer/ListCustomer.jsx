@@ -73,8 +73,11 @@ export default function ListCustomer() {
             <p className="text-gray-400 mb-6">View all customers and their deals</p>
 
             <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl" style={{ height: "515px" }}>
-                <div className="flex justify-end">
-                    <div
+                      <div className="flex items-center gap-4">
+                            <h2 className="text-white text-[16px] font-semibold">
+                            Customer List
+                            </h2>
+                        <div
                         className="flex items-center bg-[#131619] border border-[#2A2F33] rounded-lg"
                         style={{
                             width: "508px",

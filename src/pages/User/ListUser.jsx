@@ -140,7 +140,7 @@ export default function ListUser() {
           columns={columns} 
           data={rowsWithActions}   
           title="Users List"
-          subtitle="Review and manage customer accounts"
+          subtitle=""
           sortableKeys={["email", "status"]}
            showRightSection={false}
         />
