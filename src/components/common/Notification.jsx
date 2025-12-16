@@ -19,9 +19,6 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelText = "Cancel",
     } = confirmModal;
 
-    // -------------------------------
-    // ICON MAPPING
-    // -------------------------------
     const iconMap = {
         deactivate: deactivateIcon,
         delete: deleteIcon,
@@ -35,11 +32,6 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         logout: logoutIcon,
     };
 
-    const iconToShow = iconMap[actionType] || confirmIcon;
-
-    // -------------------------------
-    // AUTO BUTTON LABELS
-    // -------------------------------
     const labelMap = {
         approveDeal: "Approve",
         rejectDeal: "Reject",
@@ -53,14 +45,9 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         logout: "Log Out",
     };
 
-    const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
-
-    // -------------------------------
-    // AUTO BUTTON COLORS
-    // -------------------------------
     const colorMap = {
-        approveDeal: "#1E902D",        
-        rejectDeal: "#BD404A", 
+        approveDeal: "#1E902D",
+        rejectDeal: "#BD404A",
         deactivate: "#BD404A",
         delete: "#BD404A",
         cancelApproveDeal: "#BD404A",
@@ -70,48 +57,40 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         logout: "#BD404A",
     };
 
+    const iconToShow = iconMap[actionType] || confirmIcon;
+    const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
     const confirmBtnColor = colorMap[actionType] || "#1E902D";
-
-    // Confirm button class
-    const confirmClasses =
-        "flex-1 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-80";
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-            <div className="w-[475px] h-[408px] bg-[#1E2328] rounded-lg shadow-xl p-8 text-center relative">
+            <div className="w-[470px] min-h-[374px] bg-[#1E2328] rounded-lg shadow-xl px-10 pt-10 pb-6 flex flex-col items-center">
 
-                {/* Icon */}
-                <div className="flex justify-center">
-                    <div className="w-16 h-16 mt-5 flex items-center justify-center">
-                        <img src={iconToShow} alt="icon" className="max-w-[150px] max-h-[200px]" />
-                    </div>
+                <img
+                    src={iconToShow}
+                    alt="icon"
+                    className="w-full h-[150px]"
+                />
+                <div className="mt-4 w-full flex flex-col gap-4 text-center">
+                    <h2 className="text-xl font-semibold text-white">
+                        {title}
+                    </h2>
+
+                    <p className="text-gray-400 text-[15px] leading-relaxed">
+                        {message}
+                    </p>
                 </div>
 
-                {/* Title */}
-                <h2 className="text-xl font-semibold text-white mt-7">
-                    {title}
-                </h2>
-
-                {/* Message */}
-                <p className="text-gray-400 text-[15px] mt-3 mb-8 leading-relaxed">
-                    {message}
-                </p>
-
-                {/* Buttons */}
-                <div className="absolute left-10 top-[324px] flex gap-2 w-[390px]" style={{ height: "44px" }}>
-
-                    {/* Cancel */}
+                <div className="mt-auto w-full flex gap-2 pt-6">
                     <button
                         onClick={onCancel}
-                        className="flex-1 border border-gray-500 rounded-lg text-white font-semibold hover:bg-white hover:text-black transition-all duration-200"
+                        className="flex-1 border border-gray-500 rounded-lg text-white font-semibold hover:bg-white hover:text-black transition-all duration-200 h-11"
                     >
                         {cancelText}
                     </button>
 
-                    {/* Confirm */}
                     <button
                         onClick={onConfirm}
-                        className={confirmClasses}
+                        className="flex-1 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-80 h-11"
                         style={{ backgroundColor: confirmBtnColor }}
                     >
                         {finalConfirmLabel}
