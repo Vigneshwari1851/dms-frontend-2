@@ -6,7 +6,7 @@ import deals from "../../assets/Common/deals.svg";
 import usermanagement from "../../assets/Common/usermanagement.svg";
 import reconciliation from "../../assets/Common/reconciliation.svg";
 import reporting from "../../assets/Common/reporting.svg";
-import customermanagement from "../../assets/Common/customermanagement.svg";
+import customermanagement from "../../assets/customer/ledger.svg";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -14,9 +14,9 @@ export default function Sidebar() {
 
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
-    { name: "Deals", icon: deals, path: "/deals" },
-    { name: "Customer Info", icon: customermanagement, path: "/customer-info" },
     { name: "User Management", icon: usermanagement, path: "/users" },
+    { name: "Customer Ledger", icon: customermanagement, path: "/customer-info" },
+    { name: "Deals", icon: deals, path: "/deals" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reporting", icon: reporting, path: "/reports" },
   ];
