@@ -15,6 +15,7 @@ export default function Header() {
   const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ open: false });
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
 
   const notifDropdownRef = useRef(null);
   const avatarDropdownRef = useRef(null);
@@ -27,19 +28,20 @@ export default function Header() {
   const loadNotifications = async () => {
     try {
       const res = await fetchReconciliationAlerts();
-      
+
       if (res && Array.isArray(res.alerts)) {
         const notifArray = res.alerts.map(alert => ({
           id: alert.id,
-          title: "Reconciliation Required",
-          message: "Some deals need reconciliation review.",
-          time: alert.created_at
+          title: alert.title,          // ✅ from API
+          message: alert.message,      // ✅ from API
+          time: alert.created_at,       // "2 hours ago", "Yesterday"
+          alertType: alert.alertType,   // optional (useful later)
         }));
+
         setNotifications(notifArray);
       } else {
         setNotifications([]);
       }
-
     } catch (err) {
       console.error("Error fetching notifications", err);
       setNotifications([]);
@@ -88,9 +90,9 @@ export default function Header() {
     }
   };
 
-  const handleMarkAllRead = () => {
-    setNotifications([]);
-  };
+  // const handleMarkAllRead = () => {
+  //   setNotifications([]);
+  // };
 
   return (
     <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative">
@@ -115,12 +117,15 @@ export default function Header() {
         <div className="relative" ref={notifDropdownRef}>
           <IoNotificationsOutline
             className="text-2xl text-[#565656] cursor-pointer"
-            onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+            onClick={() => {
+              setNotifDropdownOpen(!notifDropdownOpen);
+              setShowAllNotifications(false);
+            }}          
           />
 
           {notifDropdownOpen && (
             <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
-              <div className="flex justify-end items-center mb-3">
+              {/* <div className="flex justify-end items-center mb-3">
                 {notifications.length > 0 && (
                   <button
                     onClick={handleMarkAllRead}
@@ -129,17 +134,22 @@ export default function Header() {
                     Mark all read
                   </button>
                 )}
-              </div>
+              </div> */}
 
-              <div className="max-h-64 overflow-y-auto">
-                {notifications.length === 0 ? (
+            <div
+              className={`${
+                showAllNotifications ? "max-h-64 overflow-y-auto scrollbar-grey" : ""
+              }`}
+            >
+              {notifications.length === 0 ? (
                   <p className="text-gray-400 text-sm">No notifications</p>
                 ) : (
-                  notifications.map((n, idx) => (
+                  (notifications.slice(0, showAllNotifications ? notifications.length : 2)).map((n, idx) => (
                     <div
                       key={idx}
                      onClick={() => {
                         setNotifDropdownOpen(false);
+                        setShowAllNotifications(false);
                         navigate("/reconciliation");
                       }}
                       className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
@@ -163,12 +173,8 @@ export default function Header() {
 
               <div className="text-center mt-2">
                 <button
-                  onClick={() => {
-                    const el = document.getElementById("notifications-section");
-                    if (el) {
-                      el.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
+onClick={() => setShowAllNotifications(true)}
+
                   className="text-blue-500 text-sm hover:underline"
                 >
                   View All

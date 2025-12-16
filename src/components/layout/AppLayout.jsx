@@ -17,7 +17,7 @@ export default function AppLayout({ children }) {
 
         {/* Main content */}
         <main
-          className="flex-1 overflow-y-scroll p-8 bg-[#16191C] text-white"
+          className="flex-1 overflow-y-scroll scrollbar-grey p-8 bg-[#16191C] text-white"
           style={{ scrollbarGutter: "stable" }}
         >
           <Outlet /> 
