@@ -1,12 +1,14 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import plus from "../../assets/common/Hplus.svg";
 import Denomination from "../../components/deal/Denomination";
 import Toast from "../../components/common/Toast";
+import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
+import { fetchCurrencies } from "../../api/currency/currency";
 
 export default function CreateDeal() {
   const navigate = useNavigate();
@@ -22,9 +24,20 @@ export default function CreateDeal() {
   const [txnTypeOpen, setTxnTypeOpen] = useState(false);
   const [txnMode, setTxnMode] = useState("");
   const [txnModeOpen, setTxnModeOpen] = useState(false);
+  const [buyCurrency, setBuyCurrency] = useState("");
+  const [buyCurrencyOpen, setBuyCurrencyOpen] = useState(false);
+  const [sellCurrency, setSellCurrency] = useState("");
+  const [sellCurrencyOpen, setSellCurrencyOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState("");
+  const [amountToBePaid, setAmountToBePaid] = useState(0);
   const [remarks, setRemarks] = useState("");
+
+  // Currencies list
+  const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [currencyMap, setCurrencyMap] = useState({});
+  const [currencySymbols, setCurrencySymbols] = useState({});
+  const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
   const [denominationReceived, setDenominationReceived] = useState([
     { price: 0, quantity: 0, currency_id: 1 },
@@ -41,6 +54,91 @@ export default function CreateDeal() {
 
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
+
+  // Add state for confirmation modal
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    actionType: '',
+    title: '',
+    message: '',
+    confirmText: '',
+    cancelText: 'Cancel',
+    isTallied: false // Track if deal is tallied
+  });
+
+  // Fetch currencies on component mount
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      try {
+        setLoadingCurrencies(true);
+        const data = await fetchCurrencies({ page: 1, limit: 100 });
+        if (data && data.length > 0) {
+          const map = {};
+          const symbols = {};
+          data.forEach((c) => {
+            map[c.name] = c.id;
+            symbols[c.name] = c.symbol || "";
+          });
+
+          setCurrencyOptions(data.map((c) => c.name));
+          setCurrencyMap(map);
+          setCurrencySymbols(symbols);
+
+          if (!buyCurrency) setBuyCurrency(data[0].name);
+          if (!sellCurrency) setSellCurrency(data[0].name);
+        }
+      } catch (error) {
+        console.error("Error fetching currencies:", error);
+        showToast("Failed to load currencies", "error");
+      } finally {
+        setLoadingCurrencies(false);
+      }
+    };
+
+    loadCurrencies();
+  }, []);
+
+  // Calculate amount to be paid when amount or rate changes
+  useEffect(() => {
+    if (amount && rate && amount > 0 && rate > 0) {
+      const calculatedAmount = parseFloat(amount) / parseFloat(rate);
+      setAmountToBePaid(calculatedAmount.toFixed(2));
+    } else {
+      setAmountToBePaid(0);
+    }
+  }, [amount, rate]);
+
+  // Calculate total received denominations
+  const calculateTotalReceived = () => {
+    return denominationReceived.reduce((total, item) => {
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseFloat(item.quantity) || 0;
+      return total + (price * quantity);
+    }, 0);
+  };
+
+  // Calculate total paid denominations
+  const calculateTotalPaid = () => {
+    return denominationPaid.reduce((total, item) => {
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseFloat(item.quantity) || 0;
+      return total + (price * quantity);
+    }, 0);
+  };
+
+  // Check if denomination totals match
+  const checkDenominationTally = () => {
+    const totalReceived = calculateTotalReceived();
+    const totalPaid = calculateTotalPaid();
+    const expectedAmount = parseFloat(amount) || 0;
+    const expectedPaidAmount = parseFloat(amountToBePaid) || 0;
+    const tolerance = 0.01;
+
+    const receivedMatches = Math.abs(totalReceived - expectedAmount) <= tolerance;
+    const paidMatches = Math.abs(totalPaid - expectedPaidAmount) <= tolerance;
+
+    return receivedMatches && paidMatches;
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
@@ -63,6 +161,14 @@ export default function CreateDeal() {
       showToast("Transaction mode is required", "error");
       return false;
     }
+    if (!buyCurrency) {
+      showToast("Buy currency type is required", "error");
+      return false;
+    }
+    if (!sellCurrency) {
+      showToast("Sell currency type is required", "error");
+      return false;
+    }
     if (!amount || amount <= 0) {
       showToast("Valid amount is required", "error");
       return false;
@@ -77,42 +183,123 @@ export default function CreateDeal() {
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
 
+    // Check if denomination totals tally
+    const isTallied = checkDenominationTally();
+
+    if (isTallied) {
+      // Show success modal - tallied successfully
+      setConfirmModal({
+        open: true,
+        actionType: 'confirm',
+        title: 'Deal Tallied Successfully',
+        message: 'The deal has been tallied. Do you want to proceed?',
+        confirmText: 'Confirm',
+        cancelText: 'No',
+        isTallied: true
+      });
+    } else {
+      // Show error modal - not tallied
+      setConfirmModal({
+        open: true,
+        actionType: 'delete',
+        title: 'Deal Not Tallied',
+        message: 'The deal is not tallied. Please review before proceeding.',
+        confirmText: 'Review',
+        cancelText: 'No',
+        isTallied: false
+      });
+    }
+  };
+
+  // Handle modal confirmation
+  const handleModalConfirm = async () => {
+    const isTallied = confirmModal.isTallied;
+
+    if (isTallied) {
+      // For "Deal Tallied Successfully" -> "Confirm" button was clicked
+      // Create deal with "Completed" status
+      setConfirmModal({ ...confirmModal, open: false });
+      await createDealTransaction('Completed');
+    } else {
+      // For "Deal Not Tallied" -> "Review" button was clicked
+      // Just close the modal, user stays on form to review
+      setConfirmModal({ ...confirmModal, open: false });
+    }
+  };
+
+  // Handle modal cancel (NO button)
+  const handleModalCancel = async () => {
+    const isTallied = confirmModal.isTallied;
+
+    if (isTallied) {
+      // For "Deal Tallied Successfully" -> "No" button was clicked
+      // Create deal with "Completed" status
+      setConfirmModal({ ...confirmModal, open: false });
+      await createDealTransaction('Completed');
+    } else {
+      // For "Deal Not Tallied" -> "No" button was clicked
+      // Create deal with "Pending" status
+      setConfirmModal({ ...confirmModal, open: false });
+      await createDealTransaction('Pending');
+    }
+  };
+
+  // Create deal transaction with status parameter
+  const createDealTransaction = async (status = 'Pending') => {
     try {
       setLoading(true);
+
+      const receivedItemsWithTotals = denominationReceived.map(item => ({
+        ...item,
+        total: (Number(item.price) || 0) * (Number(item.quantity) || 0)
+      }));
+
+      const paidItemsWithTotals = denominationPaid.map(item => ({
+        ...item,
+        total: (Number(item.price) || 0) * (Number(item.quantity) || 0)
+      }));
 
       const dealData = {
         customer_id: selectedCustomer.id,
         deal_type: txnType.toLowerCase(),
         transaction_mode: txnMode.toLowerCase(),
+        buy_currency: buyCurrency,
+        buy_currency_id: currencyMap[buyCurrency],
+        sell_currency: sellCurrency,
+        sell_currency_id: currencyMap[sellCurrency],
         amount: Number(amount),
         rate: Number(rate),
+        amount_to_be_paid: Number(amountToBePaid),
         remarks: remarks,
-        status: "Pending",
-        received_items: denominationReceived
+        status: status, // Use the status parameter
+        received_items: receivedItemsWithTotals
           .filter((item) => item.price && item.quantity)
           .map((item) => ({
             price: String(item.price),
             quantity: String(item.quantity),
-            total: String(Number(item.price) * Number(item.quantity)), // ADD THIS
-            currency_id: item.currency_id,
+            total: String(item.total),
+            currency_id: item.currency_id || currencyMap[buyCurrency],
           })),
 
-        paid_items: denominationPaid
+        paid_items: paidItemsWithTotals
           .filter((item) => item.price && item.quantity)
           .map((item) => ({
             price: String(item.price),
             quantity: String(item.quantity),
-            total: String(item.total ?? Number(item.price) * Number(item.quantity)),
-            currency_id: item.currency_id,
+            total: String(item.total),
+            currency_id: item.currency_id || currencyMap[sellCurrency],
           })),
-
       };
 
       const result = await createDeal(dealData);
 
       if (result.success) {
-        // Show pending toast after successful creation
-        showToast("Deal is pending. Please review and complete", "pending");
+        const toastMessage = status === 'Completed'
+          ? "Deal completed successfully"
+          : "Deal is pending. Please review and complete";
+
+        showToast(toastMessage, status === 'Completed' ? 'success' : 'pending');
+
         setTimeout(() => {
           navigate("/deals");
         }, 2000);
@@ -175,6 +362,100 @@ export default function CreateDeal() {
     setCustomerDropdownOpen(false);
   };
 
+  const handleCurrencySelect = (currency, type) => {
+    if (type === 'buy') {
+      setBuyCurrency(currency);
+      setBuyCurrencyOpen(false);
+
+      // Update received denomination currency
+      const currencyId = currencyMap[currency];
+      setDenominationReceived(prev => prev.map(item => ({
+        ...item,
+        currency_id: currencyId
+      })));
+    } else {
+      setSellCurrency(currency);
+      setSellCurrencyOpen(false);
+
+      // Update paid denomination currency
+      const currencyId = currencyMap[currency];
+      setDenominationPaid(prev => prev.map(item => ({
+        ...item,
+        currency_id: currencyId
+      })));
+    }
+  };
+
+  // Custom dropdown with fixed dimensions
+  const CustomDropdown = ({
+    value,
+    setValue,
+    isOpen,
+    setIsOpen,
+    options,
+    placeholder,
+    loading = false
+  }) => (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="
+          w-[172px] h-8
+         bg-[#16191C]
+                  rounded-lg
+                  text-[14px]
+                  text-[#ABABAB]
+                  font-medium
+                  flex items-center justify-between
+                  px-4
+        "
+      >
+        <span className="truncate">{value || placeholder}</span>
+        <img src={down} alt="down" className="w-3" />
+      </button>
+
+      {isOpen && (
+        <ul className="
+         absolute left-0 right-0 mt-2 
+                  bg-[#2E3439] border border-[#2A2F33] 
+                  rounded-lg z-10
+        ">
+          {loading ? (
+            <li className="px-3 py-2 text-sm text-gray-300">
+              Loading...
+            </li>
+          ) : options.length === 0 ? (
+            <li className="px-3 py-2 text-sm text-gray-300">
+              No options
+            </li>
+          ) : (
+            options.map((option) => (
+              <li
+                key={option}
+                onClick={() => {
+                  setValue(option);
+                  setIsOpen(false);
+                }}
+                className="
+                px-4 py-2 
+                        flex items-center justify-between
+                        hover:bg-[#1E2328]
+                        cursor-pointer
+                        text-white
+                        pl-2
+                "
+              >
+                <span className="truncate">{option}</span>
+                {value === option && (
+                  <img src={tick} className="w-4 h-4" />
+                )}
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -189,7 +470,7 @@ export default function CreateDeal() {
       {/* Form Container */}
       <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
 
-        {/* Row 1 */}
+        {/* Row 1 - Full Name & Phone */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
@@ -201,7 +482,6 @@ export default function CreateDeal() {
                 className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
                 value={customerQuery}
                 onChange={(e) => handleCustomerSearch(e.target.value)}
-                // placeholder="Enter customer name"
                 onFocus={() => {
                   if (customerResults.length > 0) setCustomerDropdownOpen(true);
                 }}
@@ -263,70 +543,25 @@ export default function CreateDeal() {
             <input
               className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
               value={phone}
-              // placeholder="Auto-filled after selecting customer"
               readOnly
             />
           </div>
         </div>
 
-        {/* Row 2 */}
-        <div className="grid grid-cols-4 gap-6 mt-6">
-
+        {/* Row 2 - Transaction fields in one line (6 fields) */}
+        <div className="flex items-end gap-6 mt-6">
           {/* Transaction Type */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-
-            <div className="relative">
-              <button
-                onClick={() => setTxnTypeOpen(!txnTypeOpen)}
-                className="
-                  w-full
-                  h-10
-                  bg-[#16191C]
-                  rounded-lg
-                  text-[14px]
-                  text-[#E3E3E3]
-                  font-medium
-                  flex items-center justify-between
-                  px-4
-                "
-              >
-                <span>{txnType}</span>
-                <img src={down} alt="down" className="w-3" />
-              </button>
-
-              {txnTypeOpen && (
-                <ul className="
-                  absolute left-0 right-0 mt-2 
-                  bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10
-                ">
-                  {["Buy", "Sell"].map((item) => (
-                    <li
-                      key={item}
-                      onClick={() => {
-                        setTxnType(item);
-                        setTxnTypeOpen(false);
-                      }}
-                      className="
-                        px-4 py-2 
-                        flex items-center justify-between
-                        hover:bg-[#1E2328]
-                        cursor-pointer
-                        text-white
-                      "
-                    >
-                      <span>{item}</span>
-                      {txnType === item && (
-                        <img src={tick} className="w-4 h-4" />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <CustomDropdown
+              value={txnType}
+              setValue={setTxnType}
+              isOpen={txnTypeOpen}
+              setIsOpen={setTxnTypeOpen}
+              options={["Buy", "Sell"]}
+            />
           </div>
 
           {/* Transaction Mode */}
@@ -334,56 +569,29 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Mode <span className="text-red-500">*</span>
             </label>
+            <CustomDropdown
+              value={txnMode}
+              setValue={setTxnMode}
+              isOpen={txnModeOpen}
+              setIsOpen={setTxnModeOpen}
+              options={["Cash", "Credit"]}
+            />
+          </div>
 
-            <div className="relative">
-              <button
-                onClick={() => setTxnModeOpen(!txnModeOpen)}
-                className="
-                  w-full
-                  h-10
-                  bg-[#16191C]
-                  rounded-lg
-                  text-[14px]
-                  text-[#E3E3E3]
-                  font-medium
-                  flex items-center justify-between
-                  px-4
-                "
-              >
-                <span>{txnMode}</span>
-                <img src={down} alt="down" className="w-3" />
-              </button>
-
-              {txnModeOpen && (
-                <ul className="
-                  absolute left-0 right-0 mt-2 
-                  bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10
-                ">
-                  {["Cash", "Credit"].map((item) => (
-                    <li
-                      key={item}
-                      onClick={() => {
-                        setTxnMode(item);
-                        setTxnModeOpen(false);
-                      }}
-                      className="
-                        px-4 py-2 
-                        flex items-center justify-between
-                        hover:bg-[#1E2328]
-                        cursor-pointer
-                        text-white
-                      "
-                    >
-                      <span>{item}</span>
-                      {txnMode === item && (
-                        <img src={tick} className="w-4 h-4" />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          {/* Buy Currency Type */}
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Buy Currency Type <span className="text-red-500">*</span>
+            </label>
+            <CustomDropdown
+              value={buyCurrency}
+              setValue={(value) => handleCurrencySelect(value, 'buy')}
+              isOpen={buyCurrencyOpen}
+              setIsOpen={setBuyCurrencyOpen}
+              options={currencyOptions}
+              placeholder="Select"
+              loading={loadingCurrencies}
+            />
           </div>
 
           {/* Amount */}
@@ -392,11 +600,27 @@ export default function CreateDeal() {
               Amount <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+
+          {/* Sell Currency Type */}
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Sell Currency Type <span className="text-red-500">*</span>
+            </label>
+            <CustomDropdown
+              value={sellCurrency}
+              setValue={(value) => handleCurrencySelect(value, 'sell')}
+              isOpen={sellCurrencyOpen}
+              setIsOpen={setSellCurrencyOpen}
+              options={currencyOptions}
+              placeholder="Select"
+              loading={loadingCurrencies}
             />
           </div>
 
@@ -406,12 +630,32 @@ export default function CreateDeal() {
               Rate <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className=" w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
               type="number"
               value={rate}
               onChange={(e) => setRate(e.target.value)}
             />
+          </div>
+        </div>
+
+        {/* Row 3 - Amount to be Paid (full width) */}
+        <div className="mt-6">
+          <label className="text-[#ABABAB] text-sm mb-1 block">
+            Amount to be Paid
+          </label>
+          <div className="
+            w-full
+            h-[37px]
+            bg-[#5761D738]
+            rounded-lg
+            px-3
+            flex items-center
+            border border-transparent
+          ">
+            <span className="text-white text-[14px]">
+              {amountToBePaid || "0.00"}
+            </span>
           </div>
         </div>
 
@@ -422,7 +666,12 @@ export default function CreateDeal() {
             setDenominationReceived={setDenominationReceived}
             denominationPaid={denominationPaid}
             setDenominationPaid={setDenominationPaid}
-            
+            receivedCurrency={buyCurrency}
+            paidCurrency={sellCurrency}
+            currencySymbols={currencySymbols}
+            receivedReadOnly={false}
+
+            paidReadOnly={false}
           />
         </div>
 
@@ -474,6 +723,13 @@ export default function CreateDeal() {
           type={toast.type}
         />
       )}
+
+      {/* Notification Card for tally status */}
+      <NotificationCard
+        confirmModal={confirmModal}
+        onConfirm={handleModalConfirm}
+        onCancel={handleModalCancel}
+      />
     </>
   );
 }

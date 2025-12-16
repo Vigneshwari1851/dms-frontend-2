@@ -5,13 +5,15 @@ import save from "../../assets/common/save.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";
-import { createReconciliation } from "../../api/reconcoliation"; // Import the API function
+import { createReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
+import bgIcon from "../../assets/report/bgimage.svg";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
     const [notes, setNotes] = useState("");
+    const [skipClosing, setSkipClosing] = useState(false);
 
     const [currencyData, setCurrencyData] = useState({
         currencyName: "",
@@ -19,36 +21,45 @@ export default function AddReconciliation() {
         symbol: "",
     });
 
-    // In AddReconciliation component, update the state initialization
+    // Fixed state structure for both opening and closing
     const [openingData, setOpeningData] = useState({
-        rows: [{ denom: "", qty: "", total: 0, open: false }], // Start with one row
-        selectedCurrency: "",
-        currencyId: null,
-        total: 0
+        sections: [] // Will be initialized by OpeningVaultBalance component
     });
-
-    
 
     const [closingData, setClosingData] = useState({
-        rows: [{ denom: "", qty: "", total: 0, open: false }], // Start with one row
-        selectedCurrency: "",
-        currencyId: null,
-        total: 0
+        sections: [] // Will be initialized by OpeningVaultBalance component
     });
-    // Calculate totals for summary
-    const openingTotal = openingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
-    const closingTotal = closingData.rows.reduce((sum, row) => sum + (row.total || 0), 0);
-    const totalTransactions = 0;
-    const difference = closingTotal - openingTotal;
 
+    // Calculate totals for summary (sum across all sections)
+    const openingTotal = openingData.sections
+        ? openingData.sections.reduce((sum, section) => {
+            return sum + (section.rows || []).reduce((rowSum, row) =>
+                rowSum + (Number(row.total) || 0), 0);
+        }, 0)
+        : 0;
+
+    const closingTotal = closingData.sections && !skipClosing
+        ? closingData.sections.reduce((sum, section) => {
+            return sum + (section.rows || []).reduce((rowSum, row) =>
+                rowSum + (Number(row.total) || 0), 0);
+        }, 0)
+        : 0;
+
+    const totalTransactions = 0;
+    const difference = skipClosing ? 0 : closingTotal - openingTotal;
 
     // Format variance value
     const varianceValue = difference >= 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`;
 
     // Determine status based on difference
     let status = "Tallied";
-    if (difference > 0) status = "Excess";
-    if (difference < 0) status = "Short";
+    if (skipClosing) {
+        status = "Pending";
+    } else if (difference > 0) {
+        status = "Excess";
+    } else if (difference < 0) {
+        status = "Short";
+    }
 
     // ⭐ VARIANCE LOGIC
     const isPositive = varianceValue.startsWith("+");
@@ -56,17 +67,16 @@ export default function AddReconciliation() {
     let varianceColor = "";
     let varianceIcon = balance;
 
-    if (status === "Tallied" || status === "Balance") {
+    if (skipClosing) {
+        varianceColor = "#9CA3AF";   // gray
+        varianceIcon = balance;
+    } else if (status === "Tallied" || status === "Balance") {
         varianceColor = "#82E890";   // green
         varianceIcon = balance;
-    }
-
-    if (status === "Excess" && isPositive) {
+    } else if (status === "Excess" && isPositive) {
         varianceColor = "#D8AD00";   // yellow
         varianceIcon = high;
-    }
-
-    if (status === "Short" && !isPositive) {
+    } else if (status === "Short" && !isPositive) {
         varianceColor = "#FF6B6B";   // red
         varianceIcon = balance;
     }
@@ -77,6 +87,7 @@ export default function AddReconciliation() {
         Balance: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
+        Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
     };
 
     const handleCurrencyChange = (field, value) => {
@@ -107,28 +118,76 @@ export default function AddReconciliation() {
         type: "success", // success | error | pending
     });
 
-    // Function to handle saving reconciliation
+    // Function to format entries for API
+    const formatEntriesForApi = (data) => {
+        if (!data.sections) return [];
+
+        return data.sections.flatMap(section =>
+            (section.rows || []).map(row => ({
+                denomination: parseFloat(row.denom || 0),
+                quantity: parseInt(row.qty || 0),
+                amount: parseFloat(row.total || 0),
+                currency_id: section.currencyId
+            }))
+        );
+    };
+
+    // Function to handle saving reconciliation with optional closing balance
+    // Function to handle saving reconciliation with optional closing balance
     const handleSaveReconciliation = async () => {
         try {
-            const openingEntries = openingData.rows.map(row => ({
-                denomination: parseFloat(row.denom || 0),
-                quantity: parseInt(row.qty || 0),
-                amount: parseFloat(row.total || 0),
-                currency_id: openingData.currencyId
-            }));
+            // Prepare opening entries from all sections
+            const openingEntries = formatEntriesForApi(openingData);
 
-            const closingEntries = closingData.rows.map(row => ({
-                denomination: parseFloat(row.denom || 0),
-                quantity: parseInt(row.qty || 0),
-                amount: parseFloat(row.total || 0),
-                currency_id: closingData.currencyId
-            }));
+            // Prepare closing entries (always optional)
+            const closingEntries = formatEntriesForApi(closingData);
+
+            // Validation: Check if all opening sections have currency selected
+            const openingHasCurrency = openingData.sections &&
+                openingData.sections.every(section => section.currencyId && section.selectedCurrency);
+
+            if (!openingHasCurrency || openingData.sections.length === 0) {
+                setToast({
+                    show: true,
+                    message: "Please add at least one opening vault entry with currency selected",
+                    type: "error",
+                });
+                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+                return;
+            }
+
+            // Validation: Check for opening vault data
+            const openingHasData = openingEntries.some(entry =>
+                entry.quantity > 0 || entry.amount > 0
+            );
+
+            if (!openingHasData) {
+                setToast({
+                    show: true,
+                    message: "Please add at least one opening vault entry with amount",
+                    type: "error",
+                });
+                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+                return;
+            }
+
+            // No validation for closing - it's completely optional
+            // Users can have closing sections with or without data
+
+            // Show pending toast
+            setToast({
+                show: true,
+                message: "Saving reconciliation...",
+                type: "pending",
+            });
 
             const reconciliationData = {
                 openingEntries,
-                closingEntries,
+                closingEntries, // Can be empty array
                 notes: notes ? [notes] : []
             };
+
+            console.log('Sending reconciliation data:', reconciliationData);
 
             const result = await createReconciliation(reconciliationData);
 
@@ -136,13 +195,16 @@ export default function AddReconciliation() {
                 // ✅ SHOW SUCCESS TOAST
                 setToast({
                     show: true,
-                    message: "Reconciliation Saved",
+                    message: "Reconciliation Saved Successfully!",
                     type: "success",
                 });
 
-                // auto hide after 3 sec
+                // Reset form after successful save
                 setTimeout(() => {
                     setToast(prev => ({ ...prev, show: false }));
+                    setOpeningData({ sections: [] });
+                    setClosingData({ sections: [] });
+                    setNotes("");
                 }, 3000);
             } else {
                 // ❌ ERROR TOAST
@@ -159,7 +221,7 @@ export default function AddReconciliation() {
         } catch (error) {
             setToast({
                 show: true,
-                message: "Something went wrong",
+                message: "Network error. Please try again.",
                 type: "error",
             });
 
@@ -169,8 +231,23 @@ export default function AddReconciliation() {
         }
     };
 
+    // Function to handle currency refresh after adding new currency
+    const handleCurrencyAdded = async () => {
+        console.log("New currency added, refresh needed");
+    };
 
-
+    // Function to toggle skip closing
+    const toggleSkipClosing = () => {
+        const newSkipValue = !skipClosing;
+        if (newSkipValue) {
+            // When enabling skip, confirm
+            if (window.confirm("Skip closing vault? This will mark the reconciliation as Pending. You can add closing balance later.")) {
+                setSkipClosing(true);
+            }
+        } else {
+            setSkipClosing(false);
+        }
+    };
 
     return (
         <>
@@ -185,140 +262,136 @@ export default function AddReconciliation() {
                 {(activeTab === "opening" || activeTab === "closing") && (
                     <button
                         onClick={() => setShowCurrencyModal(true)}
-                        className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] h-9"
+                        className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] h-9 hover:bg-[#2A5BD7] transition-colors"
                     >
                         + Add Currency
                     </button>
                 )}
             </div>
 
-            <div className="mt-4 bg-[#16191C] rounded-xl">
+            <div className="mt-4 bg-[#16191C] rounded-xl p-3">
 
                 {/* TABS */}
-                <div className="flex gap-6 mb-6">
+                <div className="flex gap-6 mb-6 ">
                     {["summary", "opening", "closing"].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`pb-3 text-[14px] font-medium transition-all
+                            className={`pb-3 text-[14px] font-medium transition-all relative
                                 ${activeTab === tab
-                                    ? "text-white border-b-2 border-[#1D4CB5]"
-                                    : "text-[#4F575E]"
+                                    ? "text-white"
+                                    : "text-[#4F575E] hover:text-[#9CA3AF]"
                                 }
                             `}
                         >
                             {tab === "summary" && "Summary"}
                             {tab === "opening" && "Opening Vault Balance"}
                             {tab === "closing" && "Closing Vault Balance"}
+                            {activeTab === tab && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D4CB5]"></div>
+                            )}
                         </button>
                     ))}
                 </div>
 
                 {/* SUMMARY TAB */}
                 {activeTab === "summary" && (
-                    <div className="flex gap-6">
 
-                        {/* LEFT CARD */}
-                        <div className="w-[55%] h-[296px] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
+                    <><div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+                        <div
+                            className="bg-[#16191C] p-10 rounded-xl flex flex-col items-center justify-center h-[400px]"
+                            style={{
+                                borderWidth: "1px",
+                                borderStyle: "dashed",
+                                borderColor: "#155DFC",
+                                borderRadius: "10px",
+                            }}
+                        >
+                            <img src={bgIcon} alt="No Data" className="w-64 opacity-90" />
 
-                            <h3 className="text-white text-[15px] font-medium mb-1">
-                                Reconciliation Summary
-                            </h3>
+                          
 
-                            {/* Rows */}
-                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                                <p className="text-[#E3E3E3] text-[14px]">Opening Vault Total</p>
-                                <p className="text-white text-[13px]">{openingTotal.toFixed(2)}</p>
-                            </div>
-
-                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                                <p className="text-[#E3E3E3] text-[14px]">Total Transactions</p>
-                                <p className="text-white text-[13px]">{totalTransactions}</p>
-                            </div>
-
-                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                                <p className="text-[#E3E3E3] text-[14px]">Closing Vault Total</p>
-                                <p className="text-white text-[13px]">{closingTotal.toFixed(2)}</p>
-                            </div>
-
-                            {/* ⭐ DIFFERENCE / VARIANCE */}
-                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                                <div className="flex items-center gap-2">
-                                    <img src={varianceIcon} className="w-5 h-5" alt="variance icon" />
-                                    <p className="text-[#E3E3E3] text-[14px]">Difference / Variance</p>
-                                </div>
-
-                                <p
-                                    className="text-[13px]"
-                                    style={{ color: varianceColor }}
-                                >
-                                    {varianceValue}
-                                </p>
-                            </div>
-
-                            {/* STATUS */}
-                            <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
-                                <p className="text-white font-semibold text-[15px]">Status</p>
-
-                                <span
-                                    className={`
-                                        w-[70px] h-6 inline-flex items-center justify-center
-                                        border rounded-2xl text-[12px]
-                                        ${statusStyle[status]}
-                                    `}
-                                >
-                                    {status}
-                                </span>
-                            </div>
+                            <p className="text-[#8F8F8F] mt-10 text-sm font-medium text-center w-[60%]">
+                                The summary hasn’t been generated yet.
+                            </p>
                         </div>
 
-                        {/* RIGHT SIDE */}
-                        <div className="w-[470px] h-[296px] flex flex-col justify-between">
 
-                            <div className="bg-[#1E2328] border border-[#1F2429] rounded-xl p-5">
-                                <p className="text-white text-[16px] font-medium mb-2">Notes</p>
-
-                                <textarea
-                                    placeholder="Add reconciliation notes..."
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    className="
-                                        w-[438px] h-[220px]
-                                        bg-[#16191C] text-white text-[14px]
-                                        p-2 rounded-sm
-                                        outline-none resize-none
-                                        placeholder:text-[#4D5567]
-                                    "
-                                />
-                            </div>
-
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleSaveReconciliation}
-                                    className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2"
-                                >
-                                    <img src={save} alt="save" /> Save Reconciliation
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    </div><div className="flex justify-end">
+                            <button
+                                onClick={handleSaveReconciliation}
+                                className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
+                            >
+                                <img src={save} alt="save" />
+                                {skipClosing ? "Save Opening Balance" : "Save Reconciliation"}
+                            </button>
+                        </div></>
                 )}
 
                 {/* OPENING TAB CONTENT */}
                 {activeTab === "opening" && (
-                    <OpeningVaultBalance
-                        data={openingData}
-                        setData={setOpeningData}
-                        type="opening"
-                    />
+                    <div>
+                        {/* <div className="mb-4 flex items-center justify-between">
+                            <p className="text-[#9CA3AF] text-sm">
+                                Opening vault balance is required
+                            </p>
+                        </div> */}
+                        <OpeningVaultBalance
+                            data={openingData}
+                            setData={setOpeningData}
+                            type="opening"
+                        />
+                    </div>
                 )}
 
+                {/* CLOSING TAB CONTENT */}
                 {activeTab === "closing" && (
-                    <OpeningVaultBalance
-                        data={closingData}
-                        setData={setClosingData}
-                        type="closing"
-                    />
+                    <div>
+                        {/* <div className="mb-4 flex items-center justify-between">
+                            <p className="text-[#9CA3AF] text-sm">
+                                Closing vault balance is optional
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="skipClosingTab"
+                                    checked={skipClosing}
+                                    onChange={toggleSkipClosing}
+                                    className="w-4 h-4 rounded border border-[#2A2F33] bg-[#1E2328] text-[#1D4CB5]"
+                                />
+                                <label htmlFor="skipClosingTab" className="text-[#9CA3AF] text-sm">
+                                    Skip closing vault
+                                </label>
+                            </div>
+                        </div> */}
+
+                        {skipClosing ? (
+                            <div className="text-center py-10 bg-[#1E2328] rounded-xl border border-dashed border-[#2F343A]">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#374151] mb-4">
+                                    <svg className="w-6 h-6 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <p className="text-[#E3E3E3] text-lg mb-2">Closing Vault Skipped</p>
+                                <p className="text-[#9CA3AF] text-sm mb-4 max-w-md mx-auto">
+                                    You can skip closing vault now and add it later when available.
+                                    The reconciliation will be marked as "Pending".
+                                </p>
+                                <button
+                                    onClick={() => setSkipClosing(false)}
+                                    className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg hover:bg-[#2A5BD7] transition-colors text-sm"
+                                >
+                                    Add Closing Balance
+                                </button>
+                            </div>
+                        ) : (
+                            <OpeningVaultBalance
+                                data={closingData}
+                                setData={setClosingData}
+                                type="closing"
+                            />
+                        )}
+                    </div>
                 )}
 
                 {showCurrencyModal && (
@@ -329,7 +402,10 @@ export default function AddReconciliation() {
                             symbol={currencyData.symbol}
                             onChange={handleCurrencyChange}
                             onCancel={() => setShowCurrencyModal(false)}
-                            onSubmit={handleSaveCurrency}
+                            onSubmit={async () => {
+                                await handleSaveCurrency();
+                                await handleCurrencyAdded();
+                            }}
                         />
                     </div>
                 )}
@@ -340,7 +416,6 @@ export default function AddReconciliation() {
                 message={toast.message}
                 type={toast.type}
             />
-
         </>
     );
 }
