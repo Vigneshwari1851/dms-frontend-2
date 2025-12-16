@@ -50,6 +50,11 @@ export default function Header() {
     setConfirmModal({ open: false });
   };
 
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const userName = storedUser.full_name || "User";
+  const userRole = storedUser.role || "";
+
   // Close when clicking outside
   useEffect(() => {
     const handler = (e) => {
@@ -103,8 +108,8 @@ export default function Header() {
               rounded-xl shadow-lg p-4 
               animate-fadeIn z-50
             ">
-              <p className="text-white text-lg font-semibold">Vishnu VS</p>
-              <p className="text-gray-400 text-sm mb-4">Admin</p>
+              <p className="text-white text-lg font-semibold"> {userName} </p>
+              <p className="text-gray-400 text-sm mb-4"> {userRole} </p>
 
               <button className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal">
                 <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
