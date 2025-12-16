@@ -6,15 +6,19 @@ import person from "../../assets/Common/person.svg";
 import profile from "../../assets/Common/profile.svg";
 import logout from "../../assets/Common/logout.svg";
 import NotificationCard from "../common/Notification"; 
+import { useNavigate } from "react-router-dom";
+import { logoutUser } from "../../api/user/user";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
   const [confirmModal, setConfirmModal] = useState({
     open: false,
   });
 
   const handleLogoutClick = () => {
+    setOpen(false);
     setConfirmModal({
       open: true,
       actionType: "logout",
@@ -25,10 +29,21 @@ export default function Header() {
     });
   };
 
-  const handleConfirmLogout = () => {
-    setConfirmModal({ open: false });
-    localStorage.clear();
-    navigate("/login");
+  const handleConfirmLogout =  async () => {
+    try {
+      const result = await logoutUser();
+
+      setConfirmModal({ open: false });
+      localStorage.clear();
+      if (!result.success) {
+        console.warn("Logout API failed, forcing logout");
+      }
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      localStorage.clear();
+      navigate("/login");
+    }
   };
 
   const handleCancelLogout = () => {
