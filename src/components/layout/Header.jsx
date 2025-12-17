@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSearch } from "react-icons/fi"; 
-import { IoNotificationsOutline } from "react-icons/io5";
+import searchIcon from "../../assets/Common/search.svg";
 import logo from "../../assets/Common/logo.svg";
 import person from "../../assets/Common/person.svg";
 import profile from "../../assets/Common/profile.svg";
@@ -114,12 +114,16 @@ export default function Header() {
       <div className="flex items-center gap-6">
 
         {/* Search Bar */}
-        <div className="bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px] flex items-center gap-3">
-          <FiSearch className="text-[#ABABAB] text-lg" strokeWidth={2.5} />
+        <div className="relative bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px]">
+          <img
+            src={searchIcon}
+            alt="search"
+            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-70"
+          />
           <input
             type="text"
             placeholder="Search"
-            className="bg-transparent w-full text-gray-300 focus:outline-none"
+            className="bg-transparent w-full text-gray-300 pl-5 focus:outline-none"
           />
         </div>
 
