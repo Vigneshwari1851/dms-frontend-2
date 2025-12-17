@@ -30,22 +30,25 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                 const symbols = {};
 
                 currencies.forEach((c) => {
-                    map[c.name] = c.id;
-                    symbols[c.name] = c.symbol || "";
+                    map[c.code] = c.id;
+                    symbols[c.code] = c.symbol || "";
                 });
 
-                setCurrencyOptions(currencies.map((c) => c.name));
+                setCurrencyOptions(currencies.map((c) => c.code));
                 setCurrencyMap(map);
                 setCurrencySymbols(symbols);
 
                 // Initialize data structure if empty
+                const defaultCurrency =
+                    currencies.find(c => c.code === "USD") || currencies[0];
+
                 if (!data.sections || data.sections.length === 0) {
                     setData(prev => ({
                         ...prev,
                         sections: [{
                             id: Date.now(),
-                            selectedCurrency: currencies[0].name,
-                            currencyId: currencies[0].id,
+                            selectedCurrency: defaultCurrency.code,
+                            currencyId: defaultCurrency.id,
                             rows: [{ denom: "", qty: "", total: 0, open: false }],
                             currencyOpen: false
                         }]
@@ -276,7 +279,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             <div className="relative">
                                 <button
                                     onClick={() => toggleCurrencyDropdown(section.id)}
-                                    className="w-48 h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center justify-between px-4"
+                                    className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4"
                                 >
                                     <span className="text-[#939AF0] text-sm truncate max-w-[180px]">
                                         {section.selectedCurrency || "Select Currency"}
@@ -285,7 +288,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                 </button>
 
                                 {section.currencyOpen && (
-                                    <ul className="absolute left-0 mt-2 w-[258px] 
+                                    <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
         bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
                                         {currencyOptions.map((item) => (
                                             <li
