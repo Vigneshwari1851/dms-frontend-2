@@ -77,8 +77,8 @@ export default function MyProfile() {
         )}
       </div>
 
-      <div className="bg-[#1A1F24] rounded-xl p-8">
-        <div className="flex items-center gap-6 mb-8">
+      <div className="bg-[#1A1F24] rounded-xl p-5">
+        {/* <div className="flex items-center gap-6 mb-8">
           <div className="relative">
             <div className="w-16 h-16 rounded-full bg-[#16191C] flex items-center justify-center">
               <img src={profileIcon} alt="profile" className="w-full h-full" />
@@ -91,7 +91,7 @@ export default function MyProfile() {
             </p>
             <p className="text-[#6FA8FF] text-[14px]">{formData.role}</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-2 gap-6">
           <div>
