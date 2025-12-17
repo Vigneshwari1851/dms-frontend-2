@@ -11,7 +11,7 @@ export default function ViewUser() {
     const navigate = useNavigate();
     const location = useLocation();
 
-
+    const [errors, setErrors] = useState({});
     const initialEdit = location.state?.edit || false;
     const [editMode, setEditMode] = useState(initialEdit);
     const [isActive, setIsActive] = useState(true);
@@ -32,6 +32,27 @@ export default function ViewUser() {
         title: "",
         message: "",
     });
+
+    const validate = () => {
+        const newErrors = {};
+
+        if (!formData.full_name.trim()) newErrors.full_name = "Full Name is required";
+
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+            newErrors.email = "Enter a valid email";
+        }
+
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Phone number is required";
+        }
+
+        if (!formData.role.trim()) newErrors.role = "Role is required";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     useEffect(() => {
         const loadUser = async () => {
@@ -81,6 +102,8 @@ export default function ViewUser() {
     };
 
     const handleSave = async () => {
+        if (!validate()) return;
+
         try {
             if (pendingDelete) {
                 const delRes = await deleteUser(id);
@@ -189,6 +212,7 @@ export default function ViewUser() {
                                 : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                     />
+                    {errors.full_name && <p className="text-red-400 text-xs mt-1">{errors.full_name}</p>}
                 </div>
 
                 {/* EMAIL + PHONE */}
@@ -208,6 +232,7 @@ export default function ViewUser() {
                                     : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                         />
+                        {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                     </div>
 
                     <div>
@@ -225,6 +250,7 @@ export default function ViewUser() {
                                     : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                         />
+                        {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                     </div>
                 </div>
 
