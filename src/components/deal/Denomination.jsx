@@ -3,7 +3,7 @@ import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
-
+import NotificationCard from "../../components/common/Notification"; 
 
 export default function Denomination({
   denominationReceived: propReceived,
@@ -25,6 +25,15 @@ export default function Denomination({
   const [denominationPaid, setDenominationPaid] = propPaid
     ? [propPaid, setPropPaid]
     : useState([{ price: 0, quantity: 0, currency_id: 1 }]);
+
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    actionType: "",
+    rowIndex: null,
+    listType: null
+  });
 
   const handleChange = (list, setList, index, field, value) => {
     const updated = [...list];
@@ -65,16 +74,37 @@ export default function Denomination({
     return allOptions.filter(option => !selectedPrices.includes(option));
   };
 
-  const handleDelete = (list, setList, index, isReadOnly) => {
-    if (isReadOnly) return;
-    if (list.length === 1) return;
-    const updated = list.filter((_, i) => i !== index);
-    setList(updated);
+  // Open confirmation modal on trash click
+  const handleDeleteClick = (listType, index) => {
+    setConfirmModal({
+      open: true,
+      title: "Confirm Delete",
+      message: "Are you sure you want to delete this denomination?",
+      actionType: "remove",
+      rowIndex: index,
+      listType: listType
+    });
   };
 
+  const handleConfirmDelete = () => {
+    const { rowIndex, listType } = confirmModal;
 
+    if (listType === "received") {
+      if (denominationReceived.length > 1) {
+        setDenominationReceived(prev => prev.filter((_, i) => i !== rowIndex));
+      }
+    } else if (listType === "paid") {
+      if (denominationPaid.length > 1) {
+        setDenominationPaid(prev => prev.filter((_, i) => i !== rowIndex));
+      }
+    }
 
-  // ------------------------------------------------------
+    setConfirmModal({ open: false });
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmModal({ open: false });
+  };
 
   const renderTable = (
     title,
@@ -82,7 +112,8 @@ export default function Denomination({
     setList,
     currency,
     currencySymbol,
-    isReadOnly = false
+    isReadOnly = false,
+    listType
   ) => (
     <div className="bg-[#16191C] p-4 rounded-lg">
       {/* Header */}
@@ -161,25 +192,13 @@ export default function Denomination({
                                 const updated = [...list];
                                 updated[i].price = item;
                                 updated[i].open = false;
-                                updated[i].total =
-                                  Number(updated[i].quantity || 0) * Number(item);
-
+                                updated[i].total = Number(updated[i].quantity || 0) * Number(item);
                                 setList(updated);
                               }}
-                              className="
-                                px-4 py-2 
-                                flex items-center justify-between
-                                hover:bg-[#1E2328] cursor-pointer text-white
-                              "
+                              className="px-4 py-2 flex items-center justify-between hover:bg-[#1E2328] cursor-pointer text-white"
                             >
-                              <span>
-                                {currencySymbol}
-                                {item}
-                              </span>
-
-                              {row.price === item && (
-                                <img src={tick} className="w-4 h-4" />
-                              )}
+                              <span>{currencySymbol}{item}</span>
+                              {row.price === item && <img src={tick} className="w-4 h-4" />}
                             </li>
                           ))}
                         </ul>
@@ -262,10 +281,7 @@ export default function Denomination({
                       type="number"
                       readOnly
                       value={row.total}
-                      className="
-                        w-full bg-[#1B1E21] border border-[#2A2F33]
-                        rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed
-                      "
+                      className="w-full bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed"
                     />
                   </td>
 
@@ -273,16 +289,21 @@ export default function Denomination({
                   <td className="py-2 pl-2">
                     {!isReadOnly && (
                       <button
-                        onClick={() => handleDelete(list, setList, i, isReadOnly)}
+                        onClick={() => handleDeleteClick(listType, i)}
                         className="text-sm flex items-center gap-2"
+                        disabled={list.length === 1}
                       >
-                        <img 
-                          src={trash} 
-                          className="w-6 h-6" 
-                          alt="delete" 
-                          onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
-                          onMouseLeave={(e) => (e.currentTarget.src = trash)}
-                        />
+                        <img
+                          src={trash}
+                          className="w-6 h-6"
+                          alt="delete"
+                          {...(list.length > 1
+                          ? {
+                              onMouseEnter: (e) => (e.currentTarget.src = trashHover),
+                              onMouseLeave: (e) => (e.currentTarget.src = trash),
+                            }
+                          : {})}
+                          />
                       </button>
                     )}
                   </td>
@@ -314,10 +335,7 @@ export default function Denomination({
             type="number"
             readOnly
             value={calculateTotal(list)}
-            className="
-              w-[140px] bg-[#1B1E21] border border-[#2A2F33]
-              rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed
-            "
+            className="w-[140px] bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed"
           />
         </div>
       </div>
@@ -332,7 +350,8 @@ export default function Denomination({
         setDenominationReceived,
         receivedCurrency,
         currencySymbols[receivedCurrency] || "",
-        receivedReadOnly
+        receivedReadOnly,
+        "received"
       )}
       {renderTable(
         "Denomination Paid",
@@ -340,8 +359,15 @@ export default function Denomination({
         setDenominationPaid,
         paidCurrency,
         currencySymbols[paidCurrency] || "",
-        paidReadOnly
+        paidReadOnly,
+        "paid"
       )}
+
+      <NotificationCard
+        confirmModal={confirmModal}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }
