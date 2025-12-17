@@ -25,6 +25,7 @@ export default function Header() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const userName = storedUser.full_name || "User";
   const userRole = storedUser.role || "";
+  const userInitial = userName?.charAt(0).toUpperCase();
 
   const loadNotifications = async () => {
     try {
@@ -209,12 +210,19 @@ export default function Header() {
 
         {/* Avatar + Dropdown */}
         <div className="relative" ref={avatarDropdownRef}>
-          <img
-            className="w-10 h-10 rounded-full border border-[#0F1113] cursor-pointer"
-            src={person}
-            alt="profile"
-            onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
-          />
+          <div
+              onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
+              className="
+                w-10 h-10 rounded-full
+                bg-[#1D4CB5]
+                flex items-center justify-center
+                text-white font-semibold text-lg
+                cursor-pointer
+                select-none
+              "
+            >
+              {userInitial}
+            </div>
 
           {avatarDropdownOpen && (
             <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">
