@@ -32,10 +32,12 @@ export default function Sidebar() {
               navigate(item.path);
             }}
             className={`
-              flex items-center gap-3 px-4 py-3 rounded-lg text-sm w-full text-left
-              ${active === item.name
-                ? "bg-[#1D4CB5] text-white"
-                : "text-gray-300 hover:bg-[#2A2F34] hover:text-white"}
+              relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm w-full text-left
+              ${
+                active === item.name
+                  ? "bg-[#1D4CB5] text-white before:absolute before:-left-4 before:top-0 before:h-full before:w-6 before:bg-[#1D4CB5]"
+                  : "text-gray-300 hover:bg-[#2A2F34] hover:text-white hover:before:absolute hover:before:-left-4 hover:before:top-0 hover:before:h-full hover:before:w-6 hover:before:bg-[#2A2F34]"
+              }
             `}
           >
             <img src={item.icon} className="w-5" alt={item.name} />
