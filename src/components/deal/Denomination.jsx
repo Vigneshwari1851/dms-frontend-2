@@ -91,7 +91,7 @@ export default function Denomination({
         {/* Currency Display (Read-only) */}
         <div className="h-10">
           <span className="text-[#939AF0] text-sm">
-            {currency || ""}
+            {currencySymbol  || ""}
           </span>
         </div>
       </div>

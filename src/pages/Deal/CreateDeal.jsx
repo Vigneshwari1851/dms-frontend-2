@@ -75,17 +75,24 @@ export default function CreateDeal() {
         if (data && data.length > 0) {
           const map = {};
           const symbols = {};
+          const codes = [];
           data.forEach((c) => {
-            map[c.name] = c.id;
-            symbols[c.name] = c.symbol || "";
+            map[c.code] = c.id;
+            symbols[c.code] = c.symbol || "";
+            codes.push(c.code);
           });
 
-          setCurrencyOptions(data.map((c) => c.name));
+          setCurrencyOptions(codes);
           setCurrencyMap(map);
           setCurrencySymbols(symbols);
 
-          if (!buyCurrency) setBuyCurrency(data[0].name);
-          if (!sellCurrency) setSellCurrency(data[0].name);
+          if (!buyCurrency && map["USD"]) {
+            setBuyCurrency("USD");
+          }
+
+          if (!sellCurrency && map["TZS"]) {
+            setSellCurrency("TZS");
+          }
         }
       } catch (error) {
         console.error("Error fetching currencies:", error);
