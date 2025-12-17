@@ -54,7 +54,7 @@ export default function ViewCustomer() {
         dealId: deal.id,
         id: deal.deal_number,
         date: new Date(deal.created_at).toLocaleDateString("en-IN"),
-        type: deal.deal_type === "buy" ? "Buy" : "Sell",
+        type: deal.deal_type.charAt(0).toUpperCase() + deal.deal_type.slice(1).toLowerCase(),
         customer: customer.name,
         buyAmt: deal.buyAmount > 0 ? Number(deal.buyAmount).toLocaleString() : "--------",
         currency: deal.buyCurrency || "---",
