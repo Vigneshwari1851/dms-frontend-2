@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
-import plus from "../../assets/common/Hplus.svg";
-import editIcon from "../../assets/Common/edit.svg";
+import editIcon from "../../assets/common/edit.svg";
 import save from "../../assets/common/save.svg";
 import Denomination from "../../components/deal/Denomination";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchDealById, updateDeal } from "../../api/deals";
+import { fetchCurrencies } from "../../api/currency/currency";
 
 export default function EditDeal() {
     const navigate = useNavigate();
@@ -29,23 +29,97 @@ export default function EditDeal() {
     const [txnMode, setTxnMode] = useState("");
     const [txnModeOpen, setTxnModeOpen] = useState(false);
 
+    // New Currency Fields
+    const [buyCurrency, setBuyCurrency] = useState("");
+    const [buyCurrencyOpen, setBuyCurrencyOpen] = useState(false);
+    const [sellCurrency, setSellCurrency] = useState("");
+    const [sellCurrencyOpen, setSellCurrencyOpen] = useState(false);
+
     const [amount, setAmount] = useState("");
     const [rate, setRate] = useState("");
+    const [amountToBePaid, setAmountToBePaid] = useState("");
     const [notes, setNotes] = useState("");
 
-    const [currency, setCurrency] = useState("USD - US Dollar");
-    const [currencyOpen, setCurrencyOpen] = useState(false);
+    // Currencies data
+    const [currencyOptions, setCurrencyOptions] = useState([]);
+    const [currencyMap, setCurrencyMap] = useState({});
+    const [currencySymbols, setCurrencySymbols] = useState({});
+    const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
     const isPending = (deal?.status || "").toLowerCase() === "pending";
     const isEditable = isPending && editMode;
 
+    // Calculate amount to be paid when amount or rate changes
+    useEffect(() => {
+        if (amount && rate && amount > 0 && rate > 0) {
+            const calculatedAmount = parseFloat(amount) * parseFloat(rate);
+            setAmountToBePaid(calculatedAmount.toFixed(2));
+        } else {
+            setAmountToBePaid("");
+        }
+    }, [amount, rate]);
+
+    // Fetch currencies on component mount
+    useEffect(() => {
+        const loadCurrencies = async () => {
+            try {
+                setLoadingCurrencies(true);
+                const data = await fetchCurrencies({ page: 1, limit: 100 });
+                if (data && data.length > 0) {
+                    const map = {};
+                    const symbols = {};
+                    data.forEach((c) => {
+                        map[c.name] = c.id;
+                        symbols[c.name] = c.symbol || "";
+                    });
+
+                    setCurrencyOptions(data.map((c) => c.name));
+                    setCurrencyMap(map);
+                    setCurrencySymbols(symbols);
+                }
+            } catch (error) {
+                console.error("Error fetching currencies:", error);
+            } finally {
+                setLoadingCurrencies(false);
+            }
+        };
+
+        loadCurrencies();
+    }, []);
+
     const populateFormFromDeal = (dealData) => {
-        setCustomerName(dealData.customer.name || "");
-        setPhoneNumber(dealData.customer.phone_number || "");
+        console.log("Deal data received:", dealData); // For debugging
+
+        setCustomerName(dealData.customer?.name || "");
+        setPhoneNumber(dealData.customer?.phone_number || "");
         setTxnType(dealData.deal_type === "buy" ? "Buy" : "Sell");
         setTxnMode(dealData.transaction_mode === "cash" ? "Cash" : "Credit");
+
+        // Set buy and sell currencies from the API response
+        // Try to get from direct fields first, then from items
+        const buyCurrencyFromResponse = dealData.buy_currency ||
+            (dealData.received_items?.[0]?.currency?.name || "");
+
+        const sellCurrencyFromResponse = dealData.sell_currency ||
+            (dealData.paid_items?.[0]?.currency?.name || "");
+
+        setBuyCurrency(buyCurrencyFromResponse);
+        setSellCurrency(sellCurrencyFromResponse);
+
+        console.log("Buy currency set to:", buyCurrencyFromResponse);
+        console.log("Sell currency set to:", sellCurrencyFromResponse);
+
         setAmount(dealData.amount || "");
         setRate(dealData.rate || "");
+
+        // Calculate amount to be paid if not provided
+        if (dealData.amount && dealData.rate) {
+            const calculated = parseFloat(dealData.amount) * parseFloat(dealData.rate);
+            setAmountToBePaid(calculated.toFixed(2));
+        } else {
+            setAmountToBePaid(dealData.amount_to_be_paid || "");
+        }
+
         setNotes(dealData.remarks || "");
 
         const received = dealData.received_items || [];
@@ -53,25 +127,37 @@ export default function EditDeal() {
 
         const formattedReceived = received.length > 0
             ? received.map(item => ({
-                price: Number(item.price),
-                quantity: Number(item.quantity),
-                total: Number(item.total),
-                currency_id: item.currency_id
+                price: Number(item.price) || 0,
+                quantity: Number(item.quantity) || 0,
+                total: Number(item.total) || 0,
+                currency_id: item.currency_id,
+                currency_name: item.currency?.name || ""
             }))
             : [{ price: 0, quantity: 0, total: 0, currency_id: 1 }];
 
         const formattedPaid = paid.length > 0
             ? paid.map(item => ({
-                price: Number(item.price),
-                quantity: Number(item.quantity),
-                total: Number(item.total),
-                currency_id: item.currency_id
+                price: Number(item.price) || 0,
+                quantity: Number(item.quantity) || 0,
+                total: Number(item.total) || 0,
+                currency_id: item.currency_id,
+                currency_name: item.currency?.name || ""
             }))
             : [{ price: 0, quantity: 0, total: 0, currency_id: 1 }];
 
         setDenominationReceived(formattedReceived);
         setDenominationPaid(formattedPaid);
     };
+
+    useEffect(() => {
+        if (deal) {
+            console.log("Full deal object:", deal);
+            console.log("Buy currency field:", deal.buy_currency);
+            console.log("Sell currency field:", deal.sell_currency);
+            console.log("Received items:", deal.received_items);
+            console.log("Paid items:", deal.paid_items);
+        }
+    }, [deal]);
 
     // Fetch deal data on mount
     useEffect(() => {
@@ -89,9 +175,15 @@ export default function EditDeal() {
                 const dealData = response.data.data || response.data;
                 setDeal(dealData);
 
-                populateFormFromDeal(dealData);
-                setEditMode(false);
+                // Wait for currencies to load before populating form
+                if (currencyOptions.length > 0) {
+                    populateFormFromDeal(dealData);
+                } else {
+                    // If currencies not loaded yet, set a small delay
+                    setTimeout(() => populateFormFromDeal(dealData), 100);
+                }
 
+                setEditMode(false);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching deal:", err);
@@ -104,7 +196,7 @@ export default function EditDeal() {
         if (id) {
             loadDeal();
         }
-    }, [id]);
+    }, [id, currencyOptions]);
 
     const handleStartEdit = () => {
         if (isPending) {
@@ -121,27 +213,16 @@ export default function EditDeal() {
 
     const handleSave = async () => {
         try {
+            // Only send transaction_mode and paid_items in update
             const dealData = {
-                customer_name: customerName,
-                phone_number: phoneNumber,
-                deal_type: txnType.toLowerCase(),
+                // Only include transaction_mode and paid_items
                 transaction_mode: txnMode.toLowerCase(),
-                amount: amount,
-                rate: rate,
-                remarks: notes,
-                received_items: denominationReceived
-                    .filter((item) => item.price && item.quantity)
-                    .map((item) => ({
-                        price: String(item.price),
-                        quantity: String(item.quantity),
-                        currency_id: item.currency_id || 1,
-                    })),
                 paid_items: denominationPaid
                     .filter((item) => item.price && item.quantity)
                     .map((item) => ({
                         price: String(item.price),
                         quantity: String(item.quantity),
-                        currency_id: item.currency_id || 1,
+                        currency_id: item.currency_id || currencyMap[sellCurrency],
                     })),
             };
 
@@ -156,6 +237,114 @@ export default function EditDeal() {
         }
     };
 
+    // Custom dropdown component with fixed width like CreateDeal
+    const CustomDropdown = ({
+        value,
+        setValue,
+        isOpen,
+        setIsOpen,
+        options,
+        placeholder,
+        loading = false,
+        width = "172px",
+        editable = false // Add editable prop
+    }) => (
+        <div className="relative">
+            <button
+                onClick={() => editable && setIsOpen(!isOpen)}
+                className={`
+                   w-[${width}]
+                   h-10
+                  bg-[#16191C]
+                  rounded-lg
+                  text-[14px]
+                  text-[#E3E3E3]
+                  font-medium
+                  flex items-center justify-between
+                  px-4
+                   
+                    ${!editable ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}
+                `}
+                disabled={!editable}
+            >
+                <span className="truncate">{value || placeholder}</span>
+                <img src={down} alt="down" className="w-3" />
+            </button>
+
+            {isOpen && editable && (
+                <ul className={`
+                    absolute left-0 right-0 mt-2 
+                  bg-[#2E3439] border border-[#2A2F33] 
+                  rounded-lg z-10 w-[${width}]                    
+                `}>
+                    {loading ? (
+                        <li className="px-3 py-2 text-sm text-gray-300">
+                            Loading...
+                        </li>
+                    ) : options.length === 0 ? (
+                        <li className="px-3 py-2 text-sm text-gray-300">
+                            No options
+                        </li>
+                    ) : (
+                        options.map((option) => (
+                            <li
+                                key={option}
+                                onClick={() => {
+                                    setValue(option);
+                                    setIsOpen(false);
+                                }}
+                                className="
+                                    px-4 py-2 
+                        flex items-center justify-between
+                        hover:bg-[#1E2328]
+                        cursor-pointer
+                        text-white
+                                "
+                            >
+                                <span className="truncate">{option}</span>
+                                {value === option && (
+                                    <img src={tick} className="w-4 h-4" />
+                                )}
+                            </li>
+                        ))
+                    )}
+                </ul>
+            )}
+        </div>
+    );
+
+    // Custom input component with fixed width like CreateDeal
+    const CustomInput = ({
+        value,
+        onChange,
+        placeholder,
+        type = "text",
+        readOnly = false,
+        width = "167px"
+    }) => (
+        <input
+            className={`
+                w-[${width}]
+                h-10
+                bg-[#16191C]
+                rounded-lg
+                px-3
+                text-white
+                focus:outline-none
+                
+                text-[14px]
+                ${!isEditable ? 'cursor-not-allowed opacity-70' : ''}
+            `}
+            placeholder={placeholder}
+            type={type}
+            min="0"
+            step="0.01"
+            value={value}
+            onChange={onChange}
+            readOnly={readOnly || !isEditable}
+            disabled={readOnly || !isEditable}
+        />
+    );
 
     return (
         <>
@@ -165,50 +354,11 @@ export default function EditDeal() {
                     <h2 className="text-[16px] font-medium text-white">
                         Deal ID - {deal?.deal_number || id || "Loading..."}
                     </h2>
-                    {/* <p className="text-gray-400 text-[12px]">
-                        {isPending
-                            ? editMode
-                                ? "Editing enabled. Update fields and save."
-                                : "View details. Click edit to modify pending deal."
-                            : "View details. Editing is allowed only while status is Pending."}
-                    </p> */}
                 </div>
 
-                {/* <div className="flex items-center gap-3">
-                    {editMode && (
-                        <button
-                            className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-gray-900"
-                            onClick={handleCancelEdit}
-                        >
-                            Cancel
-                        </button>
-                    )}
-
-                    {isPending && (
-                        <button
-                            className={
-                                editMode
-                                    ? "flex items-center gap-2 h-10 px-4 rounded-md text-sm font-medium bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
-                                    : "flex items-center justify-center px-3 py-2 rounded-md bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
-                            }
-                            onClick={editMode ? handleSave : handleStartEdit}
-                        >
-                            {!editMode && (
-                                <img src={editIcon} className="w-7 h-8" />
-                            )}
-
-                            {editMode && "Save"}
-                        </button>
-
-
-
-                    )}
-                </div> */}
                 <div className="flex items-center gap-3">
-                    {/* Cancel + Save buttons (edit mode) */}
                     {editMode && (
                         <>
-                            {/* Cancel Button */}
                             <button
                                 className="w-[95px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
                                 onClick={handleCancelEdit}
@@ -216,7 +366,6 @@ export default function EditDeal() {
                                 Cancel
                             </button>
 
-                            {/* Save Button */}
                             <button
                                 onClick={handleSave}
                                 className="flex items-center justify-center gap-2 w-[91px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
@@ -227,7 +376,6 @@ export default function EditDeal() {
                         </>
                     )}
 
-                    {/* Edit Button (not in edit mode) */}
                     {!editMode && isPending && (
                         <button
                             onClick={handleStartEdit}
@@ -237,7 +385,6 @@ export default function EditDeal() {
                         </button>
                     )}
                 </div>
-
             </div>
 
             {/* Loading State */}
@@ -258,186 +405,150 @@ export default function EditDeal() {
             {!loading && (
                 <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
 
-                    {/* Row 1 */}
+                    {/* Row 1 - Customer Name & Phone */}
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Full Name <span className="text-red-500">*</span>
                             </label>
-
-
                             <input
-                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed opacity-70"
                                 value={customerName}
                                 disabled
                             />
-
                         </div>
 
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Phone Number <span className="text-red-500">*</span>
                             </label>
-
                             <input
-                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white"
+                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed opacity-70"
                                 value={phoneNumber}
                                 disabled
                             />
-
                         </div>
                     </div>
 
-                    {/* Row 2 */}
-                    <div className="grid grid-cols-4 gap-6 mt-6">
-
-                        {/* Transaction Type */}
+                    {/* Row 2 - All transaction fields in one line (like CreateDeal) */}
+                    <div className="flex items-end gap-6 mt-6">
+                        {/* Transaction Type - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Type <span className="text-red-500">*</span>
                             </label>
-
-                            <div className="relative">
-                                <button
-                                    onClick={() => isEditable && setTxnTypeOpen(!txnTypeOpen)}
-                                    className="
-                  w-full
-                  h-10
-                  bg-[#16191C]
-                  rounded-lg
-                  text-[14px]
-                  text-[#E3E3E3]
-                  font-medium
-                  flex items-center justify-between
-                  px-4
-                "
-                                    disabled
-                                >
-                                    <span>{txnType}</span>
-                                    <img src={down} alt="down" className="w-3" />
-                                </button>
-
-                                {txnTypeOpen && isEditable && (
-                                    <ul className="
-                  absolute left-0 right-0 mt-2 
-                  bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10
-                ">
-                                        {["Buy", "Sell"].map((item) => (
-                                            <li
-                                                key={item}
-                                                onClick={() => {
-                                                    setTxnType(item);
-                                                    setTxnTypeOpen(false);
-                                                }}
-                                                className="
-                        px-4 py-2 
-                        flex items-center justify-between
-                        hover:bg-[#1E2328]
-                        cursor-pointer
-                        text-white
-                      "
-                                            >
-                                                <span>{item}</span>
-                                                {txnType === item && (
-                                                    <img src={tick} className="w-4 h-4" />
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
+                            <CustomDropdown
+                                value={txnType}
+                                setValue={setTxnType}
+                                isOpen={txnTypeOpen}
+                                setIsOpen={setTxnTypeOpen}
+                                options={["Buy", "Sell"]}
+                                placeholder="Select"
+                                editable={false} // Not editable
+                            />
                         </div>
 
-                        {/* Transaction Mode */}
+                        {/* Transaction Mode - EDITABLE */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Mode <span className="text-red-500">*</span>
                             </label>
-
-                            <div className="relative">
-                                <button
-                                    onClick={() => isEditable && setTxnModeOpen(!txnModeOpen)}
-
-                                    className="
-                  w-full
-                  h-10
-                  bg-[#16191C]
-                  rounded-lg
-                  text-[14px]
-                  text-[#E3E3E3]
-                  font-medium
-                  flex items-center justify-between
-                  px-4
-                "
-                                >
-                                    <span>{txnMode}</span>
-                                    <img src={down} alt="down" className="w-3" />
-
-                                </button>
-
-                                {txnModeOpen && isEditable && (
-                                    <ul className="
-                  absolute left-0 right-0 mt-2 
-                  bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10
-                ">
-                                        {["Cash", "Credit"].map((item) => (
-                                            <li
-                                                key={item}
-                                                onClick={() => {
-                                                    setTxnMode(item);
-                                                    setTxnModeOpen(false);
-                                                }}
-                                                className="
-                        px-4 py-2 
-                        flex items-center justify-between
-                        hover:bg-[#1E2328]
-                        cursor-pointer
-                        text-white
-                      "
-                                            >
-                                                <span>{item}</span>
-                                                {txnMode === item && (
-                                                    <img src={tick} className="w-4 h-4" />
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
+                            <CustomDropdown
+                                value={txnMode}
+                                setValue={setTxnMode}
+                                isOpen={txnModeOpen}
+                                setIsOpen={setTxnModeOpen}
+                                options={["Cash", "Credit"]}
+                                placeholder="Select"
+                                editable={isEditable} // Only editable in edit mode
+                            />
                         </div>
 
-                        {/* Amount */}
+                        {/* Buy Currency Type - NOT editable */}
+                        <div>
+                            <label className="text-[#ABABAB] text-sm mb-1 block">
+                                Buy Currency Type <span className="text-red-500">*</span>
+                            </label>
+                            <CustomDropdown
+                                value={buyCurrency}
+                                setValue={setBuyCurrency}
+                                isOpen={buyCurrencyOpen}
+                                setIsOpen={setBuyCurrencyOpen}
+                                options={currencyOptions}
+                                placeholder="Select"
+                                loading={loadingCurrencies}
+                                editable={false} // Not editable
+                            />
+                        </div>
+
+                        {/* Amount - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Amount <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                className="w-full bg-[#16191C] rounded-lg p-2 text-white"
-                                placeholder="0.00"
+                            <CustomInput
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                disabled={!isEditable}
+                                placeholder="0.00"
+                                type="number"
+                                readOnly={true} // Always read-only
                             />
                         </div>
 
-                        {/* Rate */}
+                        {/* Sell Currency Type - NOT editable */}
+                        <div>
+                            <label className="text-[#ABABAB] text-sm mb-1 block">
+                                Sell Currency Type <span className="text-red-500">*</span>
+                            </label>
+                            <CustomDropdown
+                                value={sellCurrency}
+                                setValue={setSellCurrency}
+                                isOpen={sellCurrencyOpen}
+                                setIsOpen={setSellCurrencyOpen}
+                                options={currencyOptions}
+                                placeholder="Select"
+                                loading={loadingCurrencies}
+                                editable={false} // Not editable
+                            />
+                        </div>
+
+                        {/* Rate - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Rate <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                className="w-full bg-[#16191C] rounded-lg p-2 text-white"
-                                placeholder="0.00"
+                            <CustomInput
                                 value={rate}
                                 onChange={(e) => setRate(e.target.value)}
-                                disabled={!isEditable}
+                                placeholder="0.00"
+                                type="number"
+                                readOnly={true} // Always read-only
                             />
                         </div>
                     </div>
 
+                    {/* Row 3 - Amount to be Paid (full width, below the transaction fields) */}
+                    <div className="mt-6">
+                        <label className="text-[#ABABAB] text-sm mb-1 block">
+                            Amount to be Paid
+                        </label>
+                        <div className="
+                            w-full
+                            h-10
+                            bg-[#5761D738]
+                            rounded-lg
+                            px-3
+                            flex items-center
+                            border border-transparent
+                        ">
+                            <span className="text-white text-[14px]">
+                                {amountToBePaid || "0.00"}
+                            </span>
+                        </div>
+                    </div>
+
                     {/* Denomination Section */}
+                   
                     <div className="mt-8">
                         <div className={!isEditable ? "pointer-events-none opacity-70" : ""}>
                             <Denomination
@@ -445,26 +556,35 @@ export default function EditDeal() {
                                 setDenominationReceived={setDenominationReceived}
                                 denominationPaid={denominationPaid}
                                 setDenominationPaid={setDenominationPaid}
+                                receivedCurrency={buyCurrency}
+                                paidCurrency={sellCurrency}
+                                currencySymbols={currencySymbols}
+                                isEditable={isEditable}
+                                // Denomination Received is ALWAYS read-only after creation
+                                receivedReadOnly={true}
+                                // Denomination Paid is editable only in edit mode for pending deals
+                                paidReadOnly={!isEditable}
                             />
                         </div>
                     </div>
 
-                    {/* Notes */}
+                    {/* Notes - NOT editable */}
                     <div className="mt-8">
                         <label className="block text-[#ABABAB] text-[14px] mb-2">
                             Notes (Optional)
                         </label>
                         <textarea
-                            className="
-              w-full bg-[#16191C] rounded-lg 
-              p-3 h-24 text-white
-              placeholder:text-[#ABABAB]
-              font-poppins
-            "
+                            className={`
+                                w-full bg-[#16191C] rounded-lg 
+                                p-3 h-24 text-white
+                                placeholder:text-[#ABABAB]
+                                font-poppins
+                                cursor-not-allowed opacity-70
+                            `}
                             placeholder="Add any additional notes..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            disabled={!isEditable}
+                            disabled={true} // Always disabled
                         />
                     </div>
 
