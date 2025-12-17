@@ -149,29 +149,48 @@ export default function ViewCustomer() {
     </div>
   );
 
-  const DenominationTable = ({ title, items }) => (
-    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
-      {title && <h3 className="text-[#8F8F8F] text-sm">{title}</h3>}
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="text-gray-400">
-            <th className="text-left">Denomination</th>
-            <th className="text-center">Qty</th>
-            <th className="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((i, idx) => (
-            <tr key={idx} className="text-white">
-              <td>{i.denomination}</td>
-              <td className="text-center">{i.quantity}</td>
-              <td className="text-right">{i.total}</td>
+  const DenominationTable = ({ title, items }) => {
+    const totalReceived = items.reduce(
+      (sum, item) => sum + Number(item.total.replace(/,/g, "")),
+      0
+    );
+
+    return (
+      <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
+        {title && (
+          <div className="flex justify-between items-center">
+            <h3 className="text-[#8F8F8F] text-sm">{title}</h3>
+          </div>
+        )}
+
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-gray-400">
+              <th className="text-left">Denomination</th>
+              <th className="text-center">Qty</th>
+              <th className="text-right">Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+          </thead>
+          <tbody>
+            {items.map((i, idx) => (
+              <tr key={idx} className="text-white">
+                <td>{i.denomination}</td>
+                <td className="text-center">{i.quantity}</td>
+                <td className="text-right">{i.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <span className="text-sm">
+          <span className="text-[#8F8F8F]">Total Received: </span>
+          <span className="text-white">
+            {totalReceived.toLocaleString()}
+          </span>
+        </span>
+
+      </div>
+    );
+  };
 
   let filteredData = customerDeals.filter(
     (d) =>
