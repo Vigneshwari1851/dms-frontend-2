@@ -397,6 +397,13 @@ export default function CreateDeal() {
     setErrors(prev => ({ ...prev, customer: "" }));
   };
 
+  const hasTxnRowError = Boolean(
+    errors.txnType ||
+    errors.txnMode ||
+    errors.amount ||
+    errors.rate
+  );
+
   const handleCurrencySelect = (currency, type) => {
     if (type === 'buy') {
       setBuyCurrency(currency);
@@ -612,10 +619,14 @@ export default function CreateDeal() {
               setIsOpen={setTxnTypeOpen}
               options={["Buy", "Sell"]}
             />
-            {errors.txnType && (
-              <p className="text-red-400 text-[11px] mt-1">
-                {errors.txnType}
-              </p>
+            {hasTxnRowError && (
+              <div className="h-3.5 mt-1">
+                {errors.txnType && (
+                  <p className="text-red-400 text-[11px] leading-3.5">
+                    {errors.txnType}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -658,11 +669,7 @@ export default function CreateDeal() {
               placeholder="Select"
               loading={loadingCurrencies}
             />
-            {errors.buyCurrency && (
-              <p className="text-red-400 text-[11px] mt-1">
-                {errors.buyCurrency}
-              </p>
-            )}
+            {hasTxnRowError && <div className="h-3.5 mt-1" />}
           </div>
 
           {/* Amount */}
@@ -708,11 +715,7 @@ export default function CreateDeal() {
               placeholder="Select"
               loading={loadingCurrencies}
             />
-            {errors.sellCurrency && (
-              <p className="text-red-400 text-[11px] mt-1">
-                {errors.sellCurrency}
-              </p>
-            )}
+            {hasTxnRowError && <div className="h-3.5 mt-1" />}
           </div>
 
           {/* Rate */}
