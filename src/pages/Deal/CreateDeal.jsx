@@ -4,7 +4,6 @@ import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import plus from "../../assets/common/save.svg";
 import Denomination from "../../components/deal/Denomination";
-import Toast from "../../components/common/Toast";
 import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
@@ -46,12 +45,6 @@ export default function CreateDeal() {
   const [denominationPaid, setDenominationPaid] = useState([
     { price: 0, quantity: 0, total: 0, currency_id: 1 },
   ]);
-
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "success",
-  });
 
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
@@ -328,16 +321,26 @@ export default function CreateDeal() {
       const result = await createDeal(dealData);
 
       if (result.success) {
-        const toastMessage =
-          status === 'Completed'
-            ? "Deal completed successfully"
-            : "Deal is pending. Please review and complete";
-
-        showToast(toastMessage, status === 'Completed' ? 'success' : 'pending');
-
-        setTimeout(() => navigate("/deals"), 2000);
+        navigate("/deals", {
+          state: {
+            toast: {
+              message:
+                status === "Completed"
+                  ? "Deal completed successfully"
+                  : "Deal is pending. Please review and complete",
+              type: status === "Completed" ? "success" : "pending",
+            },
+          },
+        });
       } else {
-        showToast(result.error?.message || "Failed to create deal", "error");
+        navigate("/deals", {
+          state: {
+            toast: {
+              message: result.error?.message || "Failed to create deal",
+              type: "error",
+            },
+          },
+        });
       }
     } catch (err) {
       console.error("Error creating deal:", err);
@@ -831,14 +834,6 @@ export default function CreateDeal() {
         </div>
 
       </div>
-
-      {toast.show && (
-        <Toast
-          show={toast.show}
-          message={toast.message}
-          type={toast.type}
-        />
-      )}
 
       {/* Notification Card for tally status */}
       <NotificationCard

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
 import add from "../../assets/dashboard/add.svg";
@@ -12,6 +12,7 @@ import Pagination from "../../components/common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
+import Toast from "../../components/common/Toast";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -20,6 +21,13 @@ export default function DealsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
+  const location = useLocation();
+
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -76,128 +84,22 @@ export default function DealsList() {
     loadDeals();
   }, []);
 
-  const mockData = [
-    {
-      id: "D001",
-      date: "2025/01/26",
-      type: "Buy",
-      customer: "Krishna",
-      buyAmt: "50,000",
-      currency: "USD",
-      rate: "81.90",
-      sellAmt: "30,000",
-      currency1: "TZS",
-      status: "Pending",
-    },
-    {
-      id: "D002",
-      date: "2025/01/26",
-      type: "Sell",
-      customer: "XYZ",
-      buyAmt: "--------",
-      currency: "GBP",
-      rate: "92.10",
-      sellAmt: "40,000",
-      currency1: "EUR",
-      status: "Completed",
-    },
-    {
-      id: "D003",
-      date: "2025/01/26",
-      type: "Buy",
-      customer: "John",
-      buyAmt: "30,000",
-      currency: "USD",
-      rate: "81.90",
-      sellAmt: "60,000",
-      currency1: "EUR",
-      status: "Pending",
-    },
-    {
-      id: "D004",
-      date: "2025/01/27",
-      type: "Sell",
-      customer: "ABC",
-      buyAmt: "40,000",
-      currency: "GBP",
-      rate: "92.10",
-      sellAmt: "--------",
-      currency1: "EUR",
-      status: "Completed",
-    },
-    {
-      id: "D005",
-      date: "2025/01/27",
-      type: "Buy",
-      customer: "Smith",
-      buyAmt: "25,000",
-      currency: "USD",
-      rate: "81.90",
-      sellAmt: "50,000",
-      currency1: "USD",
-      status: "Pending",
-    },
-    {
-      id: "D006",
-      date: "2025/01/27",
-      type: "Sell",
-      customer: "David",
-      buyAmt: "35,000",
-      currency: "GBP",
-      rate: "92.10",
-      sellAmt: "45,000",
-      currency1: "EUR",
-      status: "Completed",
-    },
-    {
-      id: "D007",
-      date: "2025/01/28",
-      type: "Buy",
-      customer: "Emma",
-      buyAmt: "45,000",
-      currency: "USD",
-      rate: "81.90",
-      sellAmt: "70,000",
-      currency1: "EUR",
-      status: "Pending",
-    },
-    {
-      id: "D008",
-      date: "2025/01/28",
-      type: "Sell",
-      customer: "Michael",
-      buyAmt: "--------",
-      currency: "GBP",
-      rate: "92.10",
-      sellAmt: "55,000",
-      currency1: "USD",
-      status: "Completed",
-    },
-    {
-      id: "D009",
-      date: "2025/01/28",
-      type: "Buy",
-      customer: "Sarah",
-      buyAmt: "20,000",
-      currency: "USD",
-      rate: "81.90",
-      sellAmt: "40,000",
-      currency1: "EUR",
-      status: "Pending",
-    },
-    {
-      id: "D010",
-      date: "2025/01/29",
-      type: "Sell",
-      customer: "Robert",
-      buyAmt: "50,000",
-      currency: "GBP",
-      rate: "92.10",
-      sellAmt: "65,000",
-      currency1: "USD",
-      status: "Completed",
-    },
-  ];
+  useEffect(() => {
+    if (location.state?.toast) {
+      setToast({
+        show: true,
+        message: location.state.toast.message,
+        type: location.state.toast.type,
+      });
+
+      // Clear navigation state (important)
+      navigate(location.pathname, { replace: true });
+
+      setTimeout(() => {
+        setToast({ show: false, message: "", type: "success" });
+      }, 2500);
+    }
+  }, [location.state]);
 
   const statusColors = {
     Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
@@ -612,6 +514,13 @@ export default function DealsList() {
             onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           />
         </div>
+        {toast.show && (
+          <Toast
+            show={toast.show}
+            message={toast.message}
+            type={toast.type}
+          />
+        )}
       </div>
     </>
   );
