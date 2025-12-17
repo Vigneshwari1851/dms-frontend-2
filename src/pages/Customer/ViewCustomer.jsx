@@ -79,9 +79,9 @@ export default function ViewCustomer() {
 
   const validate = () => {
     const e = {};
-    if (!formData.name) e.name = "Required";
-    if (!formData.email) e.email = "Required";
-    if (!formData.phone_number) e.phone_number = "Required";
+    if (!formData.name) e.name = "Full Name is required";
+    if (!formData.email) e.email = "Email is required";
+    if (!formData.phone_number) e.phone_number = "Phone number is required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
