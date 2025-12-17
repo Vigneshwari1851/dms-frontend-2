@@ -386,6 +386,13 @@ export default function CreateDeal() {
     }
   };
 
+  const buyCurrencyOptions = currencyOptions.filter(
+    (c) => c !== sellCurrency
+  );
+
+  const sellCurrencyOptions = currencyOptions.filter(
+    (c) => c !== buyCurrency
+  );
   // Custom dropdown with fixed dimensions
   const CustomDropdown = ({
     value,
@@ -588,7 +595,7 @@ export default function CreateDeal() {
               setValue={(value) => handleCurrencySelect(value, 'buy')}
               isOpen={buyCurrencyOpen}
               setIsOpen={setBuyCurrencyOpen}
-              options={currencyOptions}
+              options={buyCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />
@@ -625,7 +632,7 @@ export default function CreateDeal() {
               setValue={(value) => handleCurrencySelect(value, 'sell')}
               isOpen={sellCurrencyOpen}
               setIsOpen={setSellCurrencyOpen}
-              options={currencyOptions}
+              options={sellCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />
