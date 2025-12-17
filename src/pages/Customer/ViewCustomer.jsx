@@ -23,7 +23,6 @@ export default function ViewCustomer() {
   const [sortBy, setSortBy] = useState(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
 
   const itemsPerPage = 10;
 
@@ -35,7 +34,8 @@ export default function ViewCustomer() {
     const loadCustomer = async () => {
       const res = await fetchCustomerById(id);
       if (!res.success) {
-        return navigate("/customer-info", { state: { toast: { message: "Failed to load customer", type: "error" } } });
+        navigate("/customer-info");
+        return;
       }
 
       const customer = res.data;
@@ -43,26 +43,28 @@ export default function ViewCustomer() {
       setFormData({
         name: customer.name,
         email: customer.email,
-        phone_number: customer.phone_number,
+        phone_number: customer.phone_number
       });
+
       setInitialData({
         name: customer.name,
         email: customer.email,
-        phone_number: customer.phone_number,
+        phone_number: customer.phone_number
       });
 
       const deals = (customer.deals || []).map((deal) => ({
+        raw: deal,
         dealId: deal.id,
         id: deal.deal_number,
         date: new Date(deal.created_at).toLocaleDateString("en-IN"),
-        type: deal.deal_type.charAt(0).toUpperCase() + deal.deal_type.slice(1).toLowerCase(),
+        type: deal.deal_type,
         customer: customer.name,
-        buyAmt: deal.buyAmount > 0 ? Number(deal.buyAmount).toLocaleString() : "--------",
+        buyAmt: Number(deal.buyAmount).toLocaleString(),
+        sellAmt: Number(deal.sellAmount).toLocaleString(),
         currency: deal.buyCurrency || "---",
-        rate: deal.rate,
-        sellAmt: deal.sellAmount > 0 ? Number(deal.sellAmount).toLocaleString() : "--------",
         currency1: deal.sellCurrency || "---",
-        status: deal.status,
+        rate: deal.rate,
+        status: deal.status
       }));
 
       setCustomerDeals(deals);
@@ -72,44 +74,109 @@ export default function ViewCustomer() {
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Enter a valid email";
-    if (!formData.phone_number.trim()) newErrors.phone_number = "Phone is required";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!formData.name) e.name = "Required";
+    if (!formData.email) e.email = "Required";
+    if (!formData.phone_number) e.phone_number = "Required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleSave = async () => {
     if (!validate()) return;
-    const payload = { ...formData };
-    const res = await updateCustomer(id, payload);
-
+    const res = await updateCustomer(id, formData);
     if (res.success) {
       setEditMode(false);
-      setInitialData(payload);
-      navigate("/customer-info", { state: { toast: { message: "Customer updated successfully", type: "success" } } });
-    } else {
-      navigate("/customer-info", { state: { toast: { message: "Failed to update customer", type: "error" } } });
+      setInitialData(formData);
     }
   };
 
   const handleCancel = () => {
-    if (initialData) setFormData(initialData);
+    setFormData(initialData);
     setEditMode(false);
   };
+
+  const handleRowClick = (item) => {
+    const deal = item.raw;
+    const isBuy = deal.deal_type === "Buy";
+
+    const receivedSource = isBuy ? deal.received_items : deal.paid_items;
+    const paidSource = isBuy ? deal.paid_items : deal.received_items;
+
+    const receivedItems = (receivedSource || []).map((i) => ({
+      denomination: `${i.currency.symbol}${i.price}`,
+      quantity: i.quantity,
+      total: Number(i.total).toLocaleString()
+    }));
+
+    const paidItems = (paidSource || []).map((i) => ({
+      denomination: `${i.currency.symbol}${i.price}`,
+      quantity: i.quantity,
+      total: Number(i.total).toLocaleString()
+    }));
+
+    setSelectedDeal({
+      type: deal.deal_type,
+      date: item.date,
+      id: item.id,
+      mode: deal.transaction_mode,
+      buyCurrency: deal.buyCurrency,
+      sellCurrency: deal.sellCurrency,
+      rate: `${deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
+      buyAmt: item.buyAmt,
+      sellAmt: item.sellAmt,
+      receivedItems,
+      paidItems,
+      notes: deal.remarks
+    });
+  };
+
+  const Row = ({ label, value }) => (
+    <div className="flex justify-between">
+      <span className="text-sm text-[#8F8F8F]">{label}</span>
+      <span className="text-white">{value}</span>
+    </div>
+  );
+
+  const Section = ({ title, children }) => (
+    <div className="space-y-2">
+      {title && <h4 className="text-[#7B8CFF] font-normal">{title}</h4>}
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+
+  const DenominationTable = ({ title, items }) => (
+    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
+      {title && <h3 className="text-[#8F8F8F] text-sm">{title}</h3>}
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-gray-400">
+            <th className="text-left">Denomination</th>
+            <th className="text-center">Qty</th>
+            <th className="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((i, idx) => (
+            <tr key={idx} className="text-white">
+              <td>{i.denomination}</td>
+              <td className="text-center">{i.quantity}</td>
+              <td className="text-right">{i.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   let filteredData = customerDeals.filter(
     (d) =>
       (statusFilter === "All Status" || d.status === statusFilter) &&
-      (currencyFilter === "All Currencies" || d.currency === currencyFilter) &&
-      (d.id.toLowerCase().includes(search.toLowerCase()) || d.customer.toLowerCase().includes(search.toLowerCase()))
+      (currencyFilter === "All Currencies" || d.currency === currencyFilter)
   );
 
   if (sortBy) {
@@ -123,20 +190,16 @@ export default function ViewCustomer() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleRowClick = (deal) => {
-    setSelectedDeal(deal);
-  };
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-        <h2 className="text-white text-[16px] font-semibold">
-          {editMode ? "Edit Customer" : formData.name}
-        </h2>
-        <p className="text-gray-400 text-[12px]">
-          {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
-        </p>
+          <h2 className="text-white text-[16px] font-semibold">
+            {editMode ? "Edit Customer" : formData.name}
+          </h2>
+          <p className="text-gray-400 text-[12px]">
+            {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
+          </p>
         </div>
         <div className="flex gap-2">
           {!editMode ? (
@@ -155,10 +218,10 @@ export default function ViewCustomer() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <div className={`${!editMode ? "flex-1" : "w-full"} bg-[#1A1F24] p-5 rounded-xl`}>
+      <div className="flex gap-6 items-start">
+        <div className="flex-1 bg-[#1A1F24] p-5 rounded-xl min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
           {editMode ? (
-            <>
+            <div>
               <div className="mb-4">
                 <label className="block text-sm text-[#ABABAB] mb-1">Full Name</label>
                 <input name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
@@ -176,31 +239,23 @@ export default function ViewCustomer() {
                   {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
                 </div>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-white text-[16px] font-semibold">Deals</h2>
-                </div>
+                <h2 className="text-white text-[16px] font-semibold">Deals</h2>
                 <div className="flex items-center gap-3">
                   <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-[150px]" />
                   <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-[180px]" />
                 </div>
               </div>
-
+              <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
               <div className="-mx-5">
                 <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
                       <th className="py-3 text-left pl-5">Date</th>
-                      <th
-                        className="py-3 cursor-pointer select-none"
-                        onClick={() => {
-                          if (sortBy === "type") setSortAsc(!sortAsc);
-                          else { setSortBy("type"); setSortAsc(true); }
-                        }}
-                      >
+                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
                         <div className="flex items-center gap-1 ml-2 justify-center">
                           Type
                           <span className="flex flex-col">
@@ -211,13 +266,7 @@ export default function ViewCustomer() {
                       </th>
                       <th>Customer Name</th>
                       <th>Buy Amount</th>
-                      <th
-                        className="py-3 cursor-pointer select-none"
-                        onClick={() => {
-                          if (sortBy === "currency") setSortAsc(!sortAsc);
-                          else { setSortBy("currency"); setSortAsc(true); }
-                        }}
-                      >
+                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "currency") setSortAsc(!sortAsc); else { setSortBy("currency"); setSortAsc(true); } }}>
                         <div className="flex items-center gap-1 ml-5 justify-center">
                           Currency
                           <span className="flex flex-col">
@@ -249,70 +298,62 @@ export default function ViewCustomer() {
                   </tbody>
                 </table>
               </div>
-            </>
+            </div>
           )}
         </div>
 
-       {!editMode && (
-          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl text-gray-400">
+        {!editMode && (
+          <div className={`w-80 bg-[#1A1F24] p-5 rounded-xl overflow-y-auto scrollbar-grey transition-all duration-300
+                          ${!selectedDeal ? "min-h-[calc(100vh-200px)] flex items-center justify-center" : "max-h-[calc(100vh-200px)]"}`}>
             {!selectedDeal ? (
-              <div className="flex items-center justify-center h-full">
-                Click a row to see details.
-              </div>
+              <span className="text-gray-400 text-center">Click a row to see details</span>
             ) : (
               <div className="space-y-4 text-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between">
                   <h3 className="text-white font-semibold">Deal Detail</h3>
-                  <span
-                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[selectedDeal.type]}`}
-                  >
+                  <span className={`px-3 py-1 rounded-2xl ${typeColors[selectedDeal.type]}`}>
                     {selectedDeal.type}
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Date</span>
-                    <span className="text-white">{selectedDeal.date}</span>
-                  </div>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Deal ID</span>
-                    <span className="text-white">{selectedDeal.id}</span>
-                  </div>
+                <Row label="Date" value={selectedDeal.date} />
+                <Row label="Deal ID" value={selectedDeal.id} />
+                <Row label="Transaction Mode" value={selectedDeal.mode} />
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Buy Amount</span>
-                    <span className="text-white">
-                      {selectedDeal.buyAmt} {selectedDeal.currency}
-                    </span>
-                  </div>
+                <Section title="Currency Information">
+                  <Row label="Buy Currency" value={selectedDeal.buyCurrency} />
+                  <Row label="Sell Currency" value={selectedDeal.sellCurrency} />
+                  <Row label="Exchange Rate" value={selectedDeal.rate} />
+                  <Row label="Amount (Buy)" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
+                </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Sell Amount</span>
-                    <span className="text-white">
-                      {selectedDeal.sellAmt} {selectedDeal.currency1}
-                    </span>
-                  </div>
+                <Section title="Denomination Details">
+                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems} />
+                </Section>
 
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Rate</span>
-                    <span className="text-white">{selectedDeal.rate}</span>
-                  </div>
+                <Section title="">
+                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems} />
+                </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
-                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
-                    <span>Status</span>
-                    <span
-                      className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[selectedDeal.status]}`}
-                    >
-                      {selectedDeal.status}
-                    </span>
-                  </div>
-                </div>
+                <Section title="Final Summary">
+                  <Row label="Total Buy Amount" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
+                  <Row label="Total Sell Amount" value={`${selectedDeal.sellAmt} ${selectedDeal.sellCurrency}`} />
+                </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
+
+                <Section title="Notes">
+                  <p className="text-white text-xs">{selectedDeal.notes || "—"}</p>
+                </Section>
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   );
