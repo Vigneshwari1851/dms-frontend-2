@@ -132,6 +132,20 @@ export default function AddReconciliation() {
         );
     };
 
+    const hasEnteredValues = (data) => {
+    if (!data.sections) return false;
+
+    return data.sections.some(section =>
+        (section.rows || []).some(row =>
+        Number(row.qty) > 0 || Number(row.total) > 0
+        )
+    );
+    };
+
+    const showSaveButton =
+    hasEnteredValues(openingData) ||
+    (!skipClosing && hasEnteredValues(closingData));
+
     // Function to handle saving reconciliation with optional closing balance
     // Function to handle saving reconciliation with optional closing balance
     const handleSaveReconciliation = async () => {
@@ -317,15 +331,19 @@ export default function AddReconciliation() {
                         </div>
 
 
-                    </div><div className="flex justify-end">
+                    </div>
+                    {showSaveButton && (
+                        <div className="flex justify-end">
                             <button
-                                onClick={handleSaveReconciliation}
-                                className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
+                            onClick={handleSaveReconciliation}
+                            className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
                             >
-                                <img src={save} alt="save" />
-                                {skipClosing ? "Save Opening Balance" : "Save Reconciliation"}
+                            <img src={save} alt="save" />
+                            {skipClosing ? "Save Opening Balance" : "Save Reconciliation"}
                             </button>
-                        </div></>
+                        </div>
+                        )}
+                        </>
                 )}
 
                 {/* OPENING TAB CONTENT */}
