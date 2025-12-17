@@ -181,7 +181,7 @@ export default function Table({
                   onSearch && onSearch(e.target.value);
                 }}
                 placeholder="Search..."
-                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-99"
+                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-99"
               />
               <img
                 src={searchIcon}
