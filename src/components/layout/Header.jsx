@@ -168,7 +168,7 @@ export default function Header() {
                               navigate(`/edit-deal/${n.id}`);
                             }
                       }}
-                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
+                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
                     >
                     <div className="flex items-start gap-2 relative">
                      <span
