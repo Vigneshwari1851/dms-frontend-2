@@ -1,6 +1,8 @@
 import { useState } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
+import trash from "../../assets/reconciliation/trash.svg";
+
 
 export default function Denomination({
   denominationReceived: propReceived,
@@ -52,15 +54,24 @@ export default function Denomination({
   // Get available denomination options excluding already selected ones
   const getAvailableOptions = (list, currentIndex) => {
     const allOptions = ["100", "50", "20", "10", "5", "2", "1"];
-    
+
     // Get all selected prices except the current row's price
     const selectedPrices = list
       .map((item, index) => index === currentIndex ? null : item.price)
       .filter(price => price && price !== "0" && price !== 0);
-    
+
     // Filter out already selected prices
     return allOptions.filter(option => !selectedPrices.includes(option));
   };
+
+  const handleDelete = (list, setList, index, isReadOnly) => {
+    if (isReadOnly) return;
+    if (list.length === 1) return;
+    const updated = list.filter((_, i) => i !== index);
+    setList(updated);
+  };
+
+
 
   // ------------------------------------------------------
 
@@ -99,7 +110,7 @@ export default function Denomination({
           <tbody>
             {list.map((row, i) => {
               const availableOptions = getAvailableOptions(list, i);
-              
+
               return (
                 <tr key={i} className="border-b border-[#1B1E21]">
                   {/* DENOMINATION DROPDOWN */}
@@ -256,10 +267,24 @@ export default function Denomination({
                       "
                     />
                   </td>
+
+                  {/* DELETE BUTTON - Only show if not read-only */}
+                  <td className="py-2 pl-2">
+                    {!isReadOnly && (
+                      <button
+                        onClick={() => handleDelete(list, setList, i, isReadOnly)}
+                        className="text-sm flex items-center gap-2"
+                      >
+                        <img src={trash} className="w-6 h-6" alt="delete" />
+                      </button>
+                    )}
+                  </td>
+
                 </tr>
               );
             })}
           </tbody>
+
         </table>
 
         {/* ADD BUTTON - Only show if not read-only */}

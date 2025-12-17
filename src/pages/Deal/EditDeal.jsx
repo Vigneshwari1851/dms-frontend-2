@@ -490,7 +490,7 @@ export default function EditDeal() {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                type="number"
+                                type="text"
                                 readOnly={true} // Always read-only
                             />
                         </div>
@@ -521,34 +521,39 @@ export default function EditDeal() {
                                 value={rate}
                                 onChange={(e) => setRate(e.target.value)}
                                 placeholder="0.00"
-                                type="number"
+                                type="text"
                                 readOnly={true} // Always read-only
                             />
                         </div>
                     </div>
 
                     {/* Row 3 - Amount to be Paid (full width, below the transaction fields) */}
-                    <div className="mt-6">
-                        <label className="text-[#ABABAB] text-sm mb-1 block">
+                    <div
+                        className="
+    w-full
+    h-[37px]
+    bg-[#5761D738]
+    rounded-lg
+    px-3
+    mt-5
+    flex
+    items-center
+    justify-between
+    border border-transparent
+  "
+                    >
+                        {/* Left side */}
+                        <span className="text-[#FEFEFE] text-sm">
                             Amount to be Paid
-                        </label>
-                        <div className="
-                            w-full
-                            h-10
-                            bg-[#5761D738]
-                            rounded-lg
-                            px-3
-                            flex items-center
-                            border border-transparent
-                        ">
-                            <span className="text-white text-[14px]">
-                                {amountToBePaid || "0.00"}
-                            </span>
-                        </div>
-                    </div>
+                        </span>
 
+                        {/* Right side */}
+                        <span className="text-white text-[14px]">
+                            {amountToBePaid || "0.00"}
+                        </span>
+                    </div>
                     {/* Denomination Section */}
-                   
+
                     <div className="mt-8">
                         <div className={!isEditable ? "pointer-events-none opacity-70" : ""}>
                             <Denomination

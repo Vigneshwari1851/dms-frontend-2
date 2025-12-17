@@ -11,6 +11,8 @@ import DateFilter from "./DateFilter";
 export default function Table({
   columns = [],
   data = [],
+  onExport,
+  showExport = true,
   itemsPerPage = 10,
   title = "Table Title",
   subtitle = "",
@@ -97,10 +99,10 @@ export default function Table({
       const isDB = typeof value === "string" && value.toUpperCase().endsWith("DB");
 
       const colorClass = isCR
-        ? "text-[#82E890]" 
+        ? "text-[#82E890]"
         : isDB
-        ? "text-[#F93535]"
-        : "text-[#8F8F8F]";
+          ? "text-[#F93535]"
+          : "text-[#8F8F8F]";
 
       return <span className={`font-medium ${colorClass}`}>{value}</span>;
     }
@@ -131,7 +133,7 @@ export default function Table({
         toDate.setHours(23, 59, 59, 999); // 🔥 IMPORTANT
 
         matchesDate = rowDate >= fromDate && rowDate <= toDate;
-      
+
 
       }
 
@@ -161,78 +163,95 @@ export default function Table({
   return (
     <div className="mt-6 w-full">
       {/* HEADER */}
-      { showHeader && (
-      <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <div>
-              <h2 className="text-white text-lg font-semibold">{title}</h2>
-              {subtitle && (
-                <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
-              )}
-            </div>
-            {showSearch && (
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  onSearch && onSearch(e.target.value);
-                }}
-                placeholder="Search..."
-                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-99"
-              />
-              <img
-                src={searchIcon}
-                alt="search"
-                className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
-              />
-            </div>
-            )}
-          </div>
-          {showRightSection && (
-            <div className="flex items-center gap-4">
-              {/* Date Filter */}
-              <DateFilter onApply={(range) => setDateFilter(range)} />
-
-              {/* Status Filter */}
-              <Dropdown
-                label="All Status"
-                options={statuses}
-                selected={statusFilter}
-                onChange={(value) => setStatusFilter(value)}
-                className="w-[130px]"
-
-              />
-
-              {/* Export */}
-              <div className="relative">
-                <button
-                  onClick={() => setExportOpen(!exportOpen)}
-                  className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
-                >
-                  <img src={download} className="w-5 h-5" />
-                  Export
-                </button>
-
-                {exportOpen && (
-                  <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
-                    <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] ">
-                      <img src={pdf} className="w-4 h-4" />
-                      PDF
-                    </button>
-                    <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]">
-                      <img src={excel} className="w-4 h-4" />
-                      Excel
-                    </button>
-                  </div>
+      {showHeader && (
+        <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-6">
+              <div>
+                <h2 className="text-white text-lg font-semibold">{title}</h2>
+                {subtitle && (
+                  <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
                 )}
               </div>
+              {showSearch && (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      onSearch && onSearch(e.target.value);
+                    }}
+                    placeholder="Search..."
+                    className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-99"
+                  />
+                  <img
+                    src={searchIcon}
+                    alt="search"
+                    className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
+                  />
+                </div>
+              )}
             </div>
-          )}
+            {showRightSection && (
+              <div className="flex items-center gap-4">
+                {/* Date Filter */}
+                <DateFilter onApply={(range) => setDateFilter(range)} />
+
+                {/* Status Filter */}
+                <Dropdown
+                  label="All Status"
+                  options={statuses}
+                  selected={statusFilter}
+                  onChange={(value) => setStatusFilter(value)}
+                  className="w-[130px]"
+
+                />
+
+                {/* Export */}
+                {/* Export */}
+                {showExport && onExport && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setExportOpen(!exportOpen)}
+                      className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"
+                    >
+                      <img src={download} className="w-5 h-5" />
+                      Export
+                    </button>
+
+                    {exportOpen && (
+                      <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                        <button
+                          onClick={() => {
+                            onExport("pdf");
+                            setExportOpen(false);   // ✅ CLOSE DROPDOWN
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                        >
+                          <img src={pdf} className="w-4 h-4" />
+                          PDF
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            onExport("excel");
+                            setExportOpen(false);  
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                        >
+                          <img src={excel} className="w-4 h-4" />
+                          Excel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* TABLE BODY */}
@@ -291,14 +310,14 @@ export default function Table({
 
       {/* PAGINATION */}
       {showPagination && (
-      <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrev={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-        />
-      </div>
+        <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrev={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          />
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import bgIcon from "../../assets/report/bgimage.svg";
-import downloadIcon from "../../assets/dashboard/download.svg";
+import download from "../../assets/dashboard/download.svg";
 import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import Dropdown from "../../components/common/Dropdown";
@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
-import { fetchDeals } from "../../api/deals.jsx";
+import { fetchDeals,exportDeals } from "../../api/deals.jsx";
 
 export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
@@ -18,7 +18,8 @@ export default function ListReport() {
   const [dateRange, setDateRange] = useState("Today");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
-
+  const [exporting, setExporting] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [format, setFormat] = useState("PDF report");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,6 +87,25 @@ export default function ListReport() {
     setReportRows(data || []);
   };
 
+    const handleExport = async (format) => {
+    try {
+      setExporting(true);
+      setExportOpen(false);
+
+        // Pass "today" as a string
+    const blob = await exportDeals(format);
+
+    if (!blob) return;
+
+   
+
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const sortedData = [...reportRows].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
@@ -128,10 +148,35 @@ export default function ListReport() {
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-white text-2xl font-semibold">Reports & Analytics</h1>
-        <button className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
-          <img src={downloadIcon} alt="export" className="w-5 h-5" />
-          Export
-        </button>
+         <div className="relative">
+                     <button
+                       onClick={() => setExportOpen(!exportOpen)}
+                       className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+                     >
+                       <img src={download} alt="download" className="w-6 h-6" /> Export
+                     </button>
+       
+                     {exportOpen && (
+                       <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
+                         <button
+                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                           onClick={() => handleExport("pdf")}
+                           disabled={exporting}
+                         >
+                           <img src={pdf} alt="pdf" className="w-4 h-4" />
+                           PDF
+                         </button>
+                         <button
+                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                           onClick={() => handleExport("excel")}
+                           disabled={exporting}
+                         >
+                           <img src={excel} alt="excel" className="w-4 h-4" />
+                           Excel
+                         </button>
+                       </div>
+                     )}
+                   </div>
       </div>
 
       <p className="text-gray-400 mb-6">

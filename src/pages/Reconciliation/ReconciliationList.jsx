@@ -4,7 +4,7 @@ import Table from "../../components/common/Table";
 import add from "../../assets/dashboard/add.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchReconcoliation } from "../../api/reconcoliation";
+import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
 
 export default function ReconciliationList() {
   const navigate = useNavigate();
@@ -13,6 +13,8 @@ export default function ReconciliationList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Fetch reconciliations
   const fetchReconciliations = async () => {
@@ -52,6 +54,8 @@ export default function ReconciliationList() {
     const date = new Date(dateString);
     return date.toISOString().split('T')[0].replace(/-/g, '/');
   };
+
+
 
   // Format currency with commas
   const formatCurrency = (amount) => {
@@ -132,6 +136,25 @@ export default function ReconciliationList() {
       id: id,
       date: formattedDate
     });
+  };
+
+  const handleExport = async (format) => {
+    try {
+      setExporting(true);
+      setExportOpen(false);
+
+      // Pass "today" as a string
+      const blob = await exportReconciliation(format);
+
+      if (!blob) return;
+
+
+
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleStatusToggle = (id, currentStatus) => {
@@ -229,6 +252,8 @@ export default function ReconciliationList() {
             showRightSection={true}
             onRowClick={handleRowClick}
             onSearch={handleSearch}
+            onExport={handleExport}   
+            showExport={true}
           // sortableKeys={["date", "status", "totalTransactions"]}
           />
         </div>
@@ -238,7 +263,7 @@ export default function ReconciliationList() {
       {!loading && !error && reconciliations.length === 0 && (
         <div className="text-center py-10">
           <div className="text-gray-400 text-lg mb-4">No reconciliations found</div>
-          
+
         </div>
       )}
 

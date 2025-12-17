@@ -45,6 +45,32 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
   }
 }
 
+export async function exportReconciliation(format, dateFilter) {
+  try {
+    // Build query parameters
+    const params = new URLSearchParams({ format });
+    if (dateFilter) params.append("dateFilter", dateFilter);
+
+    const response = await fetch(`${API_URL}/reconciliation?${params.toString()}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to export reconciliation");
+    }
+
+    const blob = await response.blob(); // MUST be blob
+    return blob;
+
+  } catch (error) {
+    console.error("Export error:", error);
+    return null;
+  }
+}
+
 export async function fetchReconciliationAlerts() {
   try {
     const response = await fetch(`${API_URL}/reconciliation/alerts`, {

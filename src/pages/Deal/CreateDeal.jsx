@@ -602,10 +602,17 @@ export default function CreateDeal() {
             <input
               className="w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setAmount(value);
+                }
+              }}
             />
+
           </div>
 
           {/* Sell Currency Type */}
@@ -630,33 +637,49 @@ export default function CreateDeal() {
               Rate <span className="text-red-500">*</span>
             </label>
             <input
-              className=" w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={rate}
-              onChange={(e) => setRate(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setRate(value);
+                }
+              }}
             />
+
           </div>
         </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
         <div className="mt-6">
-          <label className="text-[#ABABAB] text-sm mb-1 block">
-            Amount to be Paid
-          </label>
-          <div className="
-            w-full
-            h-[37px]
-            bg-[#5761D738]
-            rounded-lg
-            px-3
-            flex items-center
-            border border-transparent
-          ">
+
+          <div
+            className="
+    w-full
+    h-[37px]
+    bg-[#5761D738]
+    rounded-lg
+    px-3
+    flex
+    items-center
+    justify-between
+    border border-transparent
+  "
+          >
+            {/* Left side */}
+            <span className="text-[#FEFEFE] text-sm">
+              Amount to be Paid
+            </span>
+
+            {/* Right side */}
             <span className="text-white text-[14px]">
               {amountToBePaid || "0.00"}
             </span>
           </div>
+
         </div>
 
         {/* Denomination Section */}
