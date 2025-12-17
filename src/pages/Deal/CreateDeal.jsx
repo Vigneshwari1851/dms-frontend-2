@@ -575,7 +575,7 @@ export default function CreateDeal() {
                 </ul>
               )}
               {errors.customer && (
-                <p className="text-red-500 text-[11px] mt-1">
+                <p className="text-red-400 text-[11px] mt-1">
                   {errors.customer}
                 </p>
               )}
@@ -613,7 +613,7 @@ export default function CreateDeal() {
               options={["Buy", "Sell"]}
             />
             {errors.txnType && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.txnType}
               </p>
             )}
@@ -635,7 +635,7 @@ export default function CreateDeal() {
               options={["Cash", "Credit"]}
             />
             {errors.txnMode && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.txnMode}
               </p>
             )}
@@ -659,7 +659,7 @@ export default function CreateDeal() {
               loading={loadingCurrencies}
             />
             {errors.buyCurrency && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.buyCurrency}
               </p>
             )}
@@ -685,7 +685,7 @@ export default function CreateDeal() {
               }}
             />
             {errors.amount && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.amount}
               </p>
             )}
@@ -709,7 +709,7 @@ export default function CreateDeal() {
               loading={loadingCurrencies}
             />
             {errors.sellCurrency && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.sellCurrency}
               </p>
             )}
@@ -735,7 +735,7 @@ export default function CreateDeal() {
               }}
             />
             {errors.rate && (
-              <p className="text-red-500 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] mt-1">
                 {errors.rate}
               </p>
             )}
