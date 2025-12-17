@@ -17,7 +17,10 @@ export default function Table({
   onSearch,
   sortableKeys = [],
   showRightSection = true,
+  showSearch = true,
+  showPagination = true,
   onRowClick,
+  showHeader = true,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status", "Tallied", "Excess", "Short"];
@@ -158,6 +161,7 @@ export default function Table({
   return (
     <div className="mt-6 w-full">
       {/* HEADER */}
+      { showHeader && (
       <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-6">
@@ -167,7 +171,7 @@ export default function Table({
                 <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
               )}
             </div>
-
+            {showSearch && (
             <div className="relative">
               <input
                 type="text"
@@ -185,6 +189,7 @@ export default function Table({
                 className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
               />
             </div>
+            )}
           </div>
           {showRightSection && (
             <div className="flex items-center gap-4">
@@ -228,6 +233,7 @@ export default function Table({
           )}
         </div>
       </div>
+      )}
 
       {/* TABLE BODY */}
       <div className="bg-[#1A1F24] mt-[1.5px] py-4">
@@ -284,6 +290,7 @@ export default function Table({
       </div>
 
       {/* PAGINATION */}
+      {showPagination && (
       <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
         <Pagination
           currentPage={currentPage}
@@ -292,6 +299,7 @@ export default function Table({
           onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
         />
       </div>
+      )}
     </div>
   );
 }
