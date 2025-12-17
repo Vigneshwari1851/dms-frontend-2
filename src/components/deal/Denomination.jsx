@@ -90,9 +90,9 @@ export default function Denomination({
         <table className="w-full text-sm text-white">
           <thead>
             <tr className="text-[#ABABAB] border-b border-[#1B1E21]">
-              <th className="py-2 text-left">Denomination</th>
-              <th className="py-2 text-left">Quantity</th>
-              <th className="py-2 text-left">Total</th>
+              <th className="py-2 pr-6 text-left">Denomination</th>
+              <th className="py-2 px-4 text-left">Quantity</th>
+              <th className="py-2 pl-3 text-left">Total</th>
             </tr>
           </thead>
 
