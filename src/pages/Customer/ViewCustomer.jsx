@@ -180,10 +180,10 @@ export default function ViewCustomer() {
           </thead>
           <tbody>
             {items.map((i, idx) => (
-              <tr key={idx} className="text-white">
-                <td>{i.denomination}</td>
-                <td className="text-center">{i.quantity}</td>
-                <td className="text-right">{i.total}</td>
+              <tr key={idx} className="text-white rounded-lg">
+                <td className="py-2 px-1 rounded-l-lg">{i.denomination}</td>
+                <td className="text-center py-2">{i.quantity}</td>
+                <td className="text-right py-2 px-1 rounded-r-lg">{i.total}</td>
               </tr>
             ))}
           </tbody>
