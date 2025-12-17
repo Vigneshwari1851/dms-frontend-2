@@ -214,7 +214,7 @@ export default function Header() {
               onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
               className="
                 w-10 h-10 rounded-full
-                bg-[#1D4CB5]
+                bg-[#D76A71]
                 flex items-center justify-center
                 text-white font-semibold text-lg
                 cursor-pointer
