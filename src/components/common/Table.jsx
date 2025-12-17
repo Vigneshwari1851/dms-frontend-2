@@ -89,6 +89,18 @@ export default function Table({
       return <span className={`font-medium ${color}`}>{value}</span>;
     }
 
+    if (col.key === "balance") {
+      const isCR = typeof value === "string" && value.toUpperCase().endsWith("CR");
+      const isDB = typeof value === "string" && value.toUpperCase().endsWith("DB");
+
+      const colorClass = isCR
+        ? "text-[#82E890]" 
+        : isDB
+        ? "text-[#F93535]"
+        : "text-[#8F8F8F]";
+
+      return <span className={`font-medium ${colorClass}`}>{value}</span>;
+    }
     return value;
   };
 

@@ -66,6 +66,7 @@ export default function ListCustomer() {
     { label: "Customer Name", key: "full_name", align: "left" },
     { label: "Email", key: "email", align: "center" },
     { label: "Phone", key: "phone_number", align: "center" },
+    { label: "Amount", key: "balance", align: "left"}
   ];
 
   const tableData = customers.map((c) => ({
@@ -73,6 +74,7 @@ export default function ListCustomer() {
     full_name: c.name || c.full_name || c.customer_name || "-",
     email: c.email || "-",
     phone_number: c.phone_number || c.phone || c.mobile || "-",
+    balance: c.balance
   }));
 
   return (
