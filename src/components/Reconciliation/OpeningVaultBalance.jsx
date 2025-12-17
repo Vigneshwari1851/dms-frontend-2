@@ -4,11 +4,21 @@ import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
 import { fetchCurrencies } from "../../api/currency/currency";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
+import NotificationCard from "../../components/common/Notification";
 
 export default function OpeningVaultBalance({ data, setData, type }) {
     const [currencyOptions, setCurrencyOptions] = useState([]);
     const [currencyMap, setCurrencyMap] = useState({});
     const [currencySymbols, setCurrencySymbols] = useState({});
+    const [confirmModal, setConfirmModal] = useState({
+        open: false,
+        actionType: "remove",
+        title: "",
+        message: "",
+        sectionId: null,
+        rowIndex: null,
+    });
+
 
     // Initialize with one section if none exists
     useEffect(() => {
@@ -46,6 +56,16 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
         loadCurrencies();
     }, []);
+
+    const handleConfirmDelete = () => {
+    if (confirmModal.rowIndex !== null) {
+        deleteRow(confirmModal.sectionId, confirmModal.rowIndex);
+    } else {
+        deleteSection(confirmModal.sectionId);
+    }
+
+    setConfirmModal({ open: false });
+    };
 
     // Handle currency selection for a specific section
     const handleCurrencySelect = (sectionId, currencyName) => {
@@ -287,7 +307,16 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             {/* Delete section button (only show if more than one section) */}
                             {data.sections.length > 1 && (
                                 <button
-                                    onClick={() => deleteSection(section.id)}
+                                    onClick={() =>
+                                    setConfirmModal({
+                                        open: true,
+                                        actionType: "remove",
+                                        title: "Remove Currency",
+                                        message: "Are you sure you want to remove this currency?",
+                                        sectionId: section.id,
+                                        rowIndex: null,
+                                    })
+                                    }
                                     className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
                                 >
                                     <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)}/>
@@ -369,7 +398,16 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         {section.rows.length > 1 && (
                                             <img
                                                 src={trash}
-                                                onClick={() => deleteRow(section.id, i)}
+                                                onClick={() =>
+                                                setConfirmModal({
+                                                    open: true,
+                                                    actionType: "remove",
+                                                    title: "Delete Row",
+                                                    message: "Are you sure you want to delete this row?",
+                                                    sectionId: section.id,
+                                                    rowIndex: i,
+                                                })
+                                                }
                                                 className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7"
                                                 alt="delete"
                                                 title="Delete row"
@@ -449,6 +487,11 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     <p>{calculateGrandTotal().toFixed(2)}</p>
                 </div>
             </div>
+            <NotificationCard
+            confirmModal={confirmModal}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setConfirmModal({ open: false })}
+            />
         </div>
     );
 }
