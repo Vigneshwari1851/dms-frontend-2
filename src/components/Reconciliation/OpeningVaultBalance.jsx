@@ -3,6 +3,7 @@ import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
 import { fetchCurrencies } from "../../api/currency/currency";
+import trashHover from "../../assets/reconciliation/trash_hover.svg";
 
 export default function OpeningVaultBalance({ data, setData, type }) {
     const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -289,7 +290,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     onClick={() => deleteSection(section.id)}
                                     className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
                                 >
-                                    <img src={trash} className="w-5 h-5" alt="delete" />
+                                    <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)}/>
                                     Remove Currency
                                 </button>
                             )}
@@ -372,6 +373,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                 className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7"
                                                 alt="delete"
                                                 title="Delete row"
+                                                onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
+                                                onMouseLeave={(e) => (e.currentTarget.src = trash)}
                                             />
                                         )}
                                         {/* For the last row, show a disabled or hidden delete button */}

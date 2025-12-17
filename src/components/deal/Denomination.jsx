@@ -2,6 +2,7 @@ import { useState } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import trash from "../../assets/reconciliation/trash.svg";
+import trashHover from "../../assets/reconciliation/trash_hover.svg";
 
 
 export default function Denomination({
@@ -275,7 +276,13 @@ export default function Denomination({
                         onClick={() => handleDelete(list, setList, i, isReadOnly)}
                         className="text-sm flex items-center gap-2"
                       >
-                        <img src={trash} className="w-6 h-6" alt="delete" />
+                        <img 
+                          src={trash} 
+                          className="w-6 h-6" 
+                          alt="delete" 
+                          onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
+                          onMouseLeave={(e) => (e.currentTarget.src = trash)}
+                        />
                       </button>
                     )}
                   </td>
