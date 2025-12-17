@@ -53,9 +53,11 @@ export default function Header() {
   useEffect(() => {
     loadNotifications();
 
+    const FOUR_HOURS = 4 * 60 * 60 * 1000;
+
     const intervalId = setInterval(() => {
       loadNotifications();
-    }, 2000);
+    }, FOUR_HOURS);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -148,7 +150,7 @@ export default function Header() {
 
             <div
               className={`${
-                showAllNotifications ? "max-h-64 overflow-y-auto scrollbar-grey pr-3" : ""
+                showAllNotifications ? "max-h-70 overflow-y-auto scrollbar-grey pr-3" : ""
               }`}
             >
               {notifications.length === 0 ? (
