@@ -130,8 +130,12 @@ export default function ViewCustomer() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[16px] font-medium text-white">{editMode ? "Edit Customer" : "Customer Deals"}</h2>
-          <p className="text-gray-400 text-[12px]">{editMode ? "Edit customer info" : "View customer deals"}</p>
+        <h2 className="text-white text-[16px] font-semibold">
+          {editMode ? "Edit Customer" : formData.name}
+        </h2>
+        <p className="text-gray-400 text-[12px]">
+          {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
+        </p>
         </div>
         <div className="flex gap-2">
           {!editMode ? (
