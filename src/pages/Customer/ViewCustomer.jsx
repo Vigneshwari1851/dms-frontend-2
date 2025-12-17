@@ -145,33 +145,33 @@ export default function ViewCustomer() {
   const Section = ({ title, children }) => (
     <div className="space-y-2">
       <h4 className="text-[#7B8CFF] font-medium">{title}</h4>
-      <div className="bg-[#16191C] p-2 rounded-lg space-y-2">
+      <div className="space-y-2">
         {children}
       </div>
     </div>
   );
 
   const DenominationTable = ({ title, items }) => (
-  <div className=""> 
-    {title && <h3 className="text-white text-sm mb-2">{title}</h3>}
-    <table className="w-full text-xs">
-      <thead>
-        <tr className="text-gray-400">
-          <th className="text-left">Denomination</th>
-          <th className="text-center">Qty</th>
-          <th className="text-right">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((i, idx) => (
-          <tr key={idx} className="text-white">
-            <td>{i.denomination}</td>
-            <td className="text-center">{i.quantity}</td>
-            <td className="text-right">{i.total}</td>
+    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md"> 
+      {title && <h3 className="text-white text-sm font-semibold">{title}</h3>}
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-gray-400">
+            <th className="text-left">Denomination</th>
+            <th className="text-center">Qty</th>
+            <th className="text-right">Total</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {items.map((i, idx) => (
+            <tr key={idx} className="text-white">
+              <td>{i.denomination}</td>
+              <td className="text-center">{i.quantity}</td>
+              <td className="text-right">{i.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 
