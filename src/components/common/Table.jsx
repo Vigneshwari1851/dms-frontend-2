@@ -163,40 +163,40 @@ export default function Table({
   return (
     <div className="mt-6 w-full">
       {/* HEADER */}
-      {showHeader && (
-        <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-6">
-              <div>
-                <h2 className="text-white text-lg font-semibold">{title}</h2>
-                {subtitle && (
-                  <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
-                )}
-              </div>
-              {showSearch && (
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      onSearch && onSearch(e.target.value);
-                    }}
-                    placeholder="Search..."
-                    className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-99"
-                  />
-                  <img
-                    src={searchIcon}
-                    alt="search"
-                    className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
-                  />
-                </div>
+      { showHeader && (
+      <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-6">
+            <div>
+              <h2 className="text-white text-lg font-semibold">{title}</h2>
+              {subtitle && (
+                <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
               )}
             </div>
-            {showRightSection && (
-              <div className="flex items-center gap-4">
-                {/* Date Filter */}
-                <DateFilter onApply={(range) => setDateFilter(range)} />
+            {showSearch && (
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  onSearch && onSearch(e.target.value);
+                }}
+                placeholder="Search..."
+                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-99"
+              />
+              <img
+                src={searchIcon}
+                alt="search"
+                className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
+              />
+            </div>
+            )}
+          </div>
+          {showRightSection && (
+            <div className="flex items-center gap-4">
+              {/* Date Filter */}
+              <DateFilter onApply={(range) => setDateFilter(range)} />
 
                 {/* Status Filter */}
                 <Dropdown

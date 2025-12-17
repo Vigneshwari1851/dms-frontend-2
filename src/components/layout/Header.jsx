@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { FiSearch } from "react-icons/fi"; 
-import { IoNotificationsOutline } from "react-icons/io5";
+import searchIcon from "../../assets/Common/search.svg";
 import logo from "../../assets/Common/logo.svg";
 import person from "../../assets/Common/person.svg";
 import profile from "../../assets/Common/profile.svg";
@@ -26,6 +25,7 @@ export default function Header() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const userName = storedUser.full_name || "User";
   const userRole = storedUser.role || "";
+  const userInitial = userName?.charAt(0).toUpperCase();
 
   const loadNotifications = async () => {
     try {
@@ -114,12 +114,16 @@ export default function Header() {
       <div className="flex items-center gap-6">
 
         {/* Search Bar */}
-        <div className="bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px] flex items-center gap-3">
-          <FiSearch className="text-[#ABABAB] text-lg" strokeWidth={2.5} />
+        <div className="relative bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px]">
+          <img
+            src={searchIcon}
+            alt="search"
+            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-70"
+          />
           <input
             type="text"
             placeholder="Search"
-            className="bg-transparent w-full text-gray-300 focus:outline-none"
+            className="bg-transparent w-full text-gray-300 pl-5 focus:outline-none"
           />
         </div>
 
@@ -168,7 +172,7 @@ export default function Header() {
                               navigate(`/edit-deal/${n.id}`);
                             }
                       }}
-                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start"
+                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
                     >
                     <div className="flex items-start gap-2 relative">
                      <span
@@ -206,12 +210,19 @@ export default function Header() {
 
         {/* Avatar + Dropdown */}
         <div className="relative" ref={avatarDropdownRef}>
-          <img
-            className="w-10 h-10 rounded-full border border-[#0F1113] cursor-pointer"
-            src={person}
-            alt="profile"
-            onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
-          />
+          <div
+              onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
+              className="
+                w-10 h-10 rounded-full
+                bg-[#D76A71]
+                flex items-center justify-center
+                text-white font-semibold text-lg
+                cursor-pointer
+                select-none
+              "
+            >
+              {userInitial}
+            </div>
 
           {avatarDropdownOpen && (
             <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">

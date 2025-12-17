@@ -144,16 +144,14 @@ export default function ViewCustomer() {
 
   const Section = ({ title, children }) => (
     <div className="space-y-2">
-      <h4 className="text-[#7B8CFF] font-medium">{title}</h4>
-      <div className="space-y-2">
-        {children}
-      </div>
+      {title && <h4 className="text-[#7B8CFF] font-normal">{title}</h4>}
+      <div className="space-y-2">{children}</div>
     </div>
   );
 
   const DenominationTable = ({ title, items }) => (
-    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md"> 
-      {title && <h3 className="text-white text-sm font-semibold">{title}</h3>}
+    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
+      {title && <h3 className="text-[#8F8F8F] text-sm">{title}</h3>}
       <table className="w-full text-xs">
         <thead>
           <tr className="text-gray-400">
@@ -192,17 +190,16 @@ export default function ViewCustomer() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-        <h2 className="text-white text-[16px] font-semibold">
-          {editMode ? "Edit Customer" : formData.name}
-        </h2>
-        <p className="text-gray-400 text-[12px]">
-          {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
-        </p>
+          <h2 className="text-white text-[16px] font-semibold">
+            {editMode ? "Edit Customer" : formData.name}
+          </h2>
+          <p className="text-gray-400 text-[12px]">
+            {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
+          </p>
         </div>
         <div className="flex gap-2">
           {!editMode ? (
@@ -222,9 +219,9 @@ export default function ViewCustomer() {
       </div>
 
       <div className="flex gap-6 items-start">
-        <div className={`${!editMode ? "flex-1" : "w-full"} bg-[#1A1F24] p-5 rounded-xl`}>
+        <div className="flex-1 bg-[#1A1F24] p-5 rounded-xl min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
           {editMode ? (
-            <>
+            <div>
               <div className="mb-4">
                 <label className="block text-sm text-[#ABABAB] mb-1">Full Name</label>
                 <input name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
@@ -242,31 +239,23 @@ export default function ViewCustomer() {
                   {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
                 </div>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-white text-[16px] font-semibold">Deals</h2>
-                </div>
+                <h2 className="text-white text-[16px] font-semibold">Deals</h2>
                 <div className="flex items-center gap-3">
                   <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-[150px]" />
                   <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-[180px]" />
                 </div>
               </div>
-
+              <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
               <div className="-mx-5">
                 <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
                       <th className="py-3 text-left pl-5">Date</th>
-                      <th
-                        className="py-3 cursor-pointer select-none"
-                        onClick={() => {
-                          if (sortBy === "type") setSortAsc(!sortAsc);
-                          else { setSortBy("type"); setSortAsc(true); }
-                        }}
-                      >
+                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
                         <div className="flex items-center gap-1 ml-2 justify-center">
                           Type
                           <span className="flex flex-col">
@@ -277,13 +266,7 @@ export default function ViewCustomer() {
                       </th>
                       <th>Customer Name</th>
                       <th>Buy Amount</th>
-                      <th
-                        className="py-3 cursor-pointer select-none"
-                        onClick={() => {
-                          if (sortBy === "currency") setSortAsc(!sortAsc);
-                          else { setSortBy("currency"); setSortAsc(true); }
-                        }}
-                      >
+                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "currency") setSortAsc(!sortAsc); else { setSortBy("currency"); setSortAsc(true); } }}>
                         <div className="flex items-center gap-1 ml-5 justify-center">
                           Currency
                           <span className="flex flex-col">
@@ -315,16 +298,15 @@ export default function ViewCustomer() {
                   </tbody>
                 </table>
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {!editMode && (
-          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
+          <div className={`w-80 bg-[#1A1F24] p-5 rounded-xl overflow-y-auto scrollbar-grey transition-all duration-300
+                          ${!selectedDeal ? "min-h-[calc(100vh-200px)] flex items-center justify-center" : "max-h-[calc(100vh-200px)]"}`}>
             {!selectedDeal ? (
-              <div className="text-center text-gray-400 h-full flex items-center justify-center">
-                Click a row to see details
-              </div>
+              <span className="text-gray-400 text-center">Click a row to see details</span>
             ) : (
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
@@ -334,9 +316,12 @@ export default function ViewCustomer() {
                   </span>
                 </div>
 
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
+
                 <Row label="Date" value={selectedDeal.date} />
                 <Row label="Deal ID" value={selectedDeal.id} />
                 <Row label="Transaction Mode" value={selectedDeal.mode} />
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Currency Information">
                   <Row label="Buy Currency" value={selectedDeal.buyCurrency} />
@@ -344,19 +329,22 @@ export default function ViewCustomer() {
                   <Row label="Exchange Rate" value={selectedDeal.rate} />
                   <Row label="Amount (Buy)" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
                 </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Denomination Details">
-                  <DenominationTable title="Received Items" items={selectedDeal.receivedItems} />
+                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems} />
                 </Section>
-                
+
                 <Section title="">
-                    <DenominationTable title="Paid Items" items={selectedDeal.paidItems} />
+                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems} />
                 </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Final Summary">
                   <Row label="Total Buy Amount" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
                   <Row label="Total Sell Amount" value={`${selectedDeal.sellAmt} ${selectedDeal.sellCurrency}`} />
                 </Section>
+                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Notes">
                   <p className="text-white text-xs">{selectedDeal.notes || "—"}</p>
