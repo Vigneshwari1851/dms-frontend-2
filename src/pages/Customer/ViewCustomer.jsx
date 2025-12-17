@@ -16,6 +16,7 @@ export default function ViewCustomer() {
   const [errors, setErrors] = useState({});
   const [initialData, setInitialData] = useState(null);
   const [customerDeals, setCustomerDeals] = useState([]);
+  const [selectedDeal, setSelectedDeal] = useState(null);
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
@@ -123,7 +124,7 @@ export default function ViewCustomer() {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleRowClick = (deal) => {
-    if (deal?.dealId) navigate(`/edit-deal/${deal.dealId}`);
+    setSelectedDeal(deal);
   };
 
   return (
@@ -252,9 +253,64 @@ export default function ViewCustomer() {
           )}
         </div>
 
-        {!editMode && (
-          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl text-gray-400 flex items-center justify-center">
-            Click a row to see details.
+       {!editMode && (
+          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl text-gray-400">
+            {!selectedDeal ? (
+              <div className="flex items-center justify-center h-full">
+                Click a row to see details.
+              </div>
+            ) : (
+              <div className="space-y-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white font-semibold">Deal Detail</h3>
+                  <span
+                    className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[selectedDeal.type]}`}
+                  >
+                    {selectedDeal.type}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Date</span>
+                    <span className="text-white">{selectedDeal.date}</span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Deal ID</span>
+                    <span className="text-white">{selectedDeal.id}</span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Buy Amount</span>
+                    <span className="text-white">
+                      {selectedDeal.buyAmt} {selectedDeal.currency}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Sell Amount</span>
+                    <span className="text-white">
+                      {selectedDeal.sellAmt} {selectedDeal.currency1}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Rate</span>
+                    <span className="text-white">{selectedDeal.rate}</span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-[#2A2F33] pb-1">
+                    <span>Status</span>
+                    <span
+                      className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[selectedDeal.status]}`}
+                    >
+                      {selectedDeal.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
