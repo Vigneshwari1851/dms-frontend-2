@@ -26,7 +26,7 @@ export default function Table({
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status", "Tallied", "Excess", "Short"];
-
+  const exportOptions = ["pdf"];
 
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -211,41 +211,55 @@ export default function Table({
                 {/* Export */}
                 {/* Export */}
                 {showExport && onExport && (
-                  <div className="relative">
+                  exportOptions.length === 1 ? (
                     <button
-                      onClick={() => setExportOpen(!exportOpen)}
+                      onClick={() => onExport(exportOptions[0])}
                       className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"
                     >
                       <img src={download} className="w-5 h-5" />
                       Export
                     </button>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        onClick={() => setExportOpen(!exportOpen)}
+                        className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"
+                      >
+                        <img src={download} className="w-5 h-5" />
+                        Export
+                      </button>
 
-                    {exportOpen && (
-                      <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                        <button
-                          onClick={() => {
-                            onExport("pdf");
-                            setExportOpen(false);   // ✅ CLOSE DROPDOWN
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                        >
-                          <img src={pdf} className="w-4 h-4" />
-                          PDF
-                        </button>
+                      {exportOpen && (
+                        <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                          {exportOptions.includes("pdf") && (
+                            <button
+                              onClick={() => {
+                                onExport("pdf");
+                                setExportOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                            >
+                              <img src={pdf} className="w-4 h-4" />
+                              PDF
+                            </button>
+                          )}
 
-                        <button
-                          onClick={() => {
-                            onExport("excel");
-                            setExportOpen(false);  
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                        >
-                          <img src={excel} className="w-4 h-4" />
-                          Excel
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                          {exportOptions.includes("excel") && (
+                            <button
+                              onClick={() => {
+                                onExport("excel");
+                                setExportOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                            >
+                              <img src={excel} className="w-4 h-4" />
+                              Excel
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
                 )}
 
               </div>
