@@ -505,7 +505,7 @@ export default function CreateDeal() {
                 <ul
                   className="
                     absolute left-0 right-0 mt-2 
-                    bg-[#2E3439] border border-[#2A2F33] 
+                    bg-[#2E3439]
                     rounded-lg z-20 max-h-48 overflow-y-auto
                   "
                 >
@@ -537,7 +537,7 @@ export default function CreateDeal() {
                           hover:bg-[#1E2328]
                           cursor-pointer
                           text-white
-                          border-b border-[#2A2F33] last:border-0
+                          
                         "
                       >
                         <p className="text-sm font-medium">{displayName}</p>
