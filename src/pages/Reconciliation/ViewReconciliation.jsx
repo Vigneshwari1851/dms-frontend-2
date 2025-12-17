@@ -769,7 +769,7 @@ export default function ViewReconciliation() {
                                 onChange={(e) => handleFieldChange("notes", e.target.value)}
                                 disabled={!isEditing}
                                 placeholder="Add reconciliation notes..."
-                                className="w-[408px] h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60  focus:border-blue-500"
+                                className="w-[408px] h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60  focus:border-blue-500 scrollbar-grey"
                             />
                         </div>
                     </div>
