@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { FiSearch } from "react-icons/fi"; 
 import searchIcon from "../../assets/Common/search.svg";
 import logo from "../../assets/Common/logo.svg";
 import person from "../../assets/Common/person.svg";

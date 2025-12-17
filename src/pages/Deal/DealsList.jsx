@@ -9,7 +9,7 @@ import Dropdown from "../../components/common/Dropdown";
 import pdf from "../../assets/common/pdf.svg";
 import excel from "../../assets/common/excel.svg";
 import Pagination from "../../components/common/Pagination";
-import { FiSearch } from "react-icons/fi";
+import searchIcon from "../../assets/Common/search.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 
@@ -367,7 +367,11 @@ export default function DealsList() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-[396px] h-8 pl-10 pr-3 rounded-lg bg-[#16191C] text-white  text-sm outline-none"
               />
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#ABABAB] text-lg" strokeWidth={2.5} />
+              <img
+                src={searchIcon}
+                alt="search"
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-70"
+              />
             </div>
           </div>
 
