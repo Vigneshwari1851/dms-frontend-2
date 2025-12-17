@@ -122,7 +122,7 @@ export async function createDeal(dealData) {
 export async function updateDeal(id, dealData) {
   try {
     const response = await fetch(`${API_URL}/deal/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       headers: getAuthHeaders(),
       body: JSON.stringify(dealData),
     });
