@@ -219,7 +219,7 @@ export default function ViewCustomer() {
       </div>
 
       <div className="flex gap-6 items-start">
-        <div className="flex-1 bg-[#1A1F24] p-5 rounded-xl min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
+        <div className="flex-1 bg-[#1A1F24] p-5 rounded-xl overflow-y-auto scrollbar-grey">
           {editMode ? (
             <div>
               <div className="mb-4">
