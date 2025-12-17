@@ -75,17 +75,24 @@ export default function CreateDeal() {
         if (data && data.length > 0) {
           const map = {};
           const symbols = {};
+          const codes = [];
           data.forEach((c) => {
-            map[c.name] = c.id;
-            symbols[c.name] = c.symbol || "";
+            map[c.code] = c.id;
+            symbols[c.code] = c.symbol || "";
+            codes.push(c.code);
           });
 
-          setCurrencyOptions(data.map((c) => c.name));
+          setCurrencyOptions(codes);
           setCurrencyMap(map);
           setCurrencySymbols(symbols);
 
-          if (!buyCurrency) setBuyCurrency(data[0].name);
-          if (!sellCurrency) setSellCurrency(data[0].name);
+          if (!buyCurrency && map["USD"]) {
+            setBuyCurrency("USD");
+          }
+
+          if (!sellCurrency && map["TZS"]) {
+            setSellCurrency("TZS");
+          }
         }
       } catch (error) {
         console.error("Error fetching currencies:", error);
@@ -409,6 +416,13 @@ export default function CreateDeal() {
     }
   };
 
+  const buyCurrencyOptions = currencyOptions.filter(
+    (c) => c !== sellCurrency
+  );
+
+  const sellCurrencyOptions = currencyOptions.filter(
+    (c) => c !== buyCurrency
+  );
   // Custom dropdown with fixed dimensions
   const CustomDropdown = ({
     value,
@@ -514,7 +528,7 @@ export default function CreateDeal() {
                 <ul
                   className="
                     absolute left-0 right-0 mt-2 
-                    bg-[#2E3439] border border-[#2A2F33] 
+                    bg-[#2E3439]
                     rounded-lg z-20 max-h-48 overflow-y-auto
                   "
                 >
@@ -546,7 +560,7 @@ export default function CreateDeal() {
                           hover:bg-[#1E2328]
                           cursor-pointer
                           text-white
-                          border-b border-[#2A2F33] last:border-0
+                          
                         "
                       >
                         <p className="text-sm font-medium">{displayName}</p>
@@ -611,7 +625,7 @@ export default function CreateDeal() {
               setValue={(value) => handleCurrencySelect(value, 'buy')}
               isOpen={buyCurrencyOpen}
               setIsOpen={setBuyCurrencyOpen}
-              options={currencyOptions}
+              options={buyCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />
@@ -648,7 +662,7 @@ export default function CreateDeal() {
               setValue={(value) => handleCurrencySelect(value, 'sell')}
               isOpen={sellCurrencyOpen}
               setIsOpen={setSellCurrencyOpen}
-              options={currencyOptions}
+              options={sellCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />

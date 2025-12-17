@@ -30,6 +30,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelRejectDeal: deactivateIcon,
         activate: activateIcon,
         logout: logoutIcon,
+        remove: deleteIcon
     };
 
     const labelMap = {
@@ -43,6 +44,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         confirm: "Confirm",
         activate: "Activate Account",
         logout: "Log Out",
+        remove: "Delete",
     };
 
     const colorMap = {
@@ -55,6 +57,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         resetPassword: "#1D4CB5",
         activate: "#1E902D",
         logout: "#BD404A",
+        remove: "#BD404A",
     };
 
     const iconToShow = iconMap[actionType] || confirmIcon;

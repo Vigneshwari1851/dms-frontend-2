@@ -149,29 +149,60 @@ export default function ViewCustomer() {
     </div>
   );
 
-  const DenominationTable = ({ title, items }) => (
-    <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
-      {title && <h3 className="text-[#8F8F8F] text-sm">{title}</h3>}
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="text-gray-400">
-            <th className="text-left">Denomination</th>
-            <th className="text-center">Qty</th>
-            <th className="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((i, idx) => (
-            <tr key={idx} className="text-white">
-              <td>{i.denomination}</td>
-              <td className="text-center">{i.quantity}</td>
-              <td className="text-right">{i.total}</td>
+  const DenominationTable = ({ title, items, currencyCode }) => {
+    const totalReceived = items.reduce(
+      (sum, item) => sum + Number(item.total.replace(/,/g, "")),
+      0
+    );
+
+    return (
+      <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
+        {title && (
+          <div className="flex justify-between items-center">
+            <h3 className="text-[#8F8F8F] text-sm">
+              {title}
+              {currencyCode && (
+                <span className="ml-1 text-[#8F8F8F]">
+                  ({currencyCode})
+                </span>
+              )}
+            </h3>
+          </div>
+        )}
+
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-gray-400">
+              <th className="text-left">Denomination</th>
+              <th className="text-center">Qty</th>
+              <th className="text-right">Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+          </thead>
+          <tbody>
+            {items.map((i, idx) => (
+              <tr key={idx} className="text-white">
+                <td>{i.denomination}</td>
+                <td className="text-center">{i.quantity}</td>
+                <td className="text-right">{i.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <span className="text-sm">
+          <span className="text-[#8F8F8F]">Total Received: </span>
+          <span className="text-white">
+            {totalReceived.toLocaleString()}
+          </span>
+          {currencyCode && (
+            <span className="text-[#8F8F8F] ml-1">
+              ({currencyCode})
+            </span>
+          )}
+        </span>
+
+      </div>
+    );
+  };
 
   let filteredData = customerDeals.filter(
     (d) =>
@@ -332,11 +363,11 @@ export default function ViewCustomer() {
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Denomination Details">
-                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems} />
+                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems}  currencyCode={selectedDeal.buyCurrency}/>
                 </Section>
 
                 <Section title="">
-                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems} />
+                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems}  currencyCode={selectedDeal.sellCurrency}/>
                 </Section>
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 

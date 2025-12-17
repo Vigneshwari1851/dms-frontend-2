@@ -472,40 +472,57 @@ export default function DealsTable() {
             </tr>
           </thead>
 
-          <tbody>
-            {paginatedData.map((item, index) => (
-              <tr
-                key={index}
-                className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
-                onClick={() => handleRowClick(item)}
-              >
-                <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">{item.id}</td>
-                <td>{item.date}</td>
-
-                <td>
-                  <div className="flex justify-center items-center">
-                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>
-                      {item.type}
-                    </span>
-                  </div>
-                </td>
-
-                <td>{item.customer}</td>
-                <td>{item.buyAmt}</td>
-                <td>{item.currency}</td>
-                <td>{item.rate}</td>
-                <td>{item.sellAmt}</td>
-                <td >{item.currency1}</td>
-
-                <td>
-                  <div className="flex justify-center items-center">
-                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>
-                      {item.status}
-                    </span>
-                  </div>
+            <tbody>
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={10}
+                  className="py-10 text-center text-gray-400 text-sm"
+                >
+                  No deals available
                 </td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map((item, index) => (
+                <tr
+                  key={index}
+                  className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
+                  onClick={() => handleRowClick(item)}
+                >
+                  <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                    {item.id}
+                  </td>
+                  <td>{item.date}</td>
+
+                  <td>
+                    <div className="flex justify-center items-center">
+                      <span
+                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
+                      >
+                        {item.type}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>{item.customer}</td>
+                  <td>{item.buyAmt}</td>
+                  <td>{item.currency}</td>
+                  <td>{item.rate}</td>
+                  <td>{item.sellAmt}</td>
+                  <td>{item.currency1}</td>
+
+                  <td>
+                    <div className="flex justify-center items-center">
+                      <span
+                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
