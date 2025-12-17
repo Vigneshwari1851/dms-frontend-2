@@ -2,3 +2,16 @@
 :root {
   font-family: "Poppins";
 }
+
+.scrollbar-grey::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-grey::-webkit-scrollbar-thumb {
+  background-color: #2E3439; 
+  border-radius: 8px;
+}
+
+.scrollbar-grey::-webkit-scrollbar-thumb:hover {
+  background-color: #7a7a7a;
+}

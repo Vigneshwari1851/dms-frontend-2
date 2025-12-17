@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import add from "../../assets/user/add_person.svg";
+import add from "../../assets/common/save.svg";
 import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg";
 import { createUser } from "../../api/user/user.jsx";
@@ -140,7 +140,7 @@ export default function AddUser() {
                         onClick={handleAddUser}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
                         <img src={add} alt="add" className="w-5 h-5" />
-                        Add User
+                        Save User
                     </button>
                 </div>
 

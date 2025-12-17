@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Toast from "../../components/common/Toast";
 import Table from "../../components/common/Table"; 
-import add from "../../assets/user/add_person.svg";
+import add from "../../assets/Common/Hplus.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification"; 
 import { fetchUsers, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
@@ -140,7 +140,7 @@ export default function ListUser() {
           columns={columns} 
           data={rowsWithActions}   
           title="Users List"
-          subtitle="Review and manage customer accounts"
+          subtitle=""
           sortableKeys={["email", "status"]}
            showRightSection={false}
         />

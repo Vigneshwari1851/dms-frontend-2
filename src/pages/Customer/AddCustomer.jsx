@@ -130,7 +130,7 @@ export default function AddCustomer() {
                         onClick={handleAddCustomer}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
                         <img src={add} alt="add" className="w-5 h-5" />
-                        Add Customer
+                        Save Customer
                     </button>
                 </div>
 

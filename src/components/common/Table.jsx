@@ -17,7 +17,10 @@ export default function Table({
   onSearch,
   sortableKeys = [],
   showRightSection = true,
+  showSearch = true,
+  showPagination = true,
   onRowClick,
+  showHeader = true,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status", "Tallied", "Excess", "Short"];
@@ -89,6 +92,18 @@ export default function Table({
       return <span className={`font-medium ${color}`}>{value}</span>;
     }
 
+    if (col.key === "balance") {
+      const isCR = typeof value === "string" && value.toUpperCase().endsWith("CR");
+      const isDB = typeof value === "string" && value.toUpperCase().endsWith("DB");
+
+      const colorClass = isCR
+        ? "text-[#82E890]" 
+        : isDB
+        ? "text-[#F93535]"
+        : "text-[#8F8F8F]";
+
+      return <span className={`font-medium ${colorClass}`}>{value}</span>;
+    }
     return value;
   };
 
@@ -146,15 +161,36 @@ export default function Table({
   return (
     <div className="mt-6 w-full">
       {/* HEADER */}
+      { showHeader && (
       <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
         <div className="flex items-center justify-between w-full">
-          <div>
-            <h2 className="text-white text-lg font-semibold">{title}</h2>
-            {subtitle && (
-              <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+          <div className="flex items-center gap-6">
+            <div>
+              <h2 className="text-white text-lg font-semibold">{title}</h2>
+              {subtitle && (
+                <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+              )}
+            </div>
+            {showSearch && (
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  onSearch && onSearch(e.target.value);
+                }}
+                placeholder="Search..."
+                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-99"
+              />
+              <img
+                src={searchIcon}
+                alt="search"
+                className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
+              />
+            </div>
             )}
           </div>
-
           {showRightSection && (
             <div className="flex items-center gap-4">
               {/* Date Filter */}
@@ -195,29 +231,9 @@ export default function Table({
               </div>
             </div>
           )}
-
-          {/* Search (if Right Section hidden) */}
-          {!showRightSection && (
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  onSearch && onSearch(e.target.value);
-                }}
-                placeholder="Search..."
-                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg border border-[#2A2F33] outline-none w-80"
-              />
-              <img
-                src={searchIcon}
-                alt="search"
-                className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
-              />
-            </div>
-          )}
         </div>
       </div>
+      )}
 
       {/* TABLE BODY */}
       <div className="bg-[#1A1F24] mt-[1.5px] py-4">
@@ -274,6 +290,7 @@ export default function Table({
       </div>
 
       {/* PAGINATION */}
+      {showPagination && (
       <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
         <Pagination
           currentPage={currentPage}
@@ -282,6 +299,7 @@ export default function Table({
           onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
         />
       </div>
+      )}
     </div>
   );
 }
