@@ -145,13 +145,15 @@ export default function ViewCustomer() {
   const Section = ({ title, children }) => (
     <div className="space-y-2">
       <h4 className="text-[#7B8CFF] font-medium">{title}</h4>
-      <div className="bg-[#16191C] p-3 rounded-lg space-y-2">
+      <div className="bg-[#16191C] p-2 rounded-lg space-y-2">
         {children}
       </div>
     </div>
   );
 
-  const DenominationTable = ({ items }) => (
+  const DenominationTable = ({ title, items }) => (
+  <div className=""> 
+    {title && <h3 className="text-white text-sm mb-2">{title}</h3>}
     <table className="w-full text-xs">
       <thead>
         <tr className="text-gray-400">
@@ -170,6 +172,7 @@ export default function ViewCustomer() {
         ))}
       </tbody>
     </table>
+    </div>
   );
 
   let filteredData = customerDeals.filter(
@@ -317,7 +320,7 @@ export default function ViewCustomer() {
         </div>
 
         {!editMode && (
-          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
+          <div className="w-80 bg-[#1A1F24] p-5 rounded-xl min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-grey">
             {!selectedDeal ? (
               <div className="text-center text-gray-400 h-full flex items-center justify-center">
                 Click a row to see details
@@ -326,7 +329,7 @@ export default function ViewCustomer() {
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <h3 className="text-white font-semibold">Deal Detail</h3>
-                  <span className={`px-3 py-1 rounded ${typeColors[selectedDeal.type]}`}>
+                  <span className={`px-3 py-1 rounded-2xl ${typeColors[selectedDeal.type]}`}>
                     {selectedDeal.type}
                   </span>
                 </div>
@@ -342,12 +345,12 @@ export default function ViewCustomer() {
                   <Row label="Amount (Buy)" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
                 </Section>
 
-                <Section title="Denomination Received">
-                  <DenominationTable items={selectedDeal.receivedItems} />
+                <Section title="Denomination Details">
+                  <DenominationTable title="Received Items" items={selectedDeal.receivedItems} />
                 </Section>
-
-                <Section title="Denomination Paid">
-                  <DenominationTable items={selectedDeal.paidItems} />
+                
+                <Section title="">
+                    <DenominationTable title="Paid Items" items={selectedDeal.paidItems} />
                 </Section>
 
                 <Section title="Final Summary">
