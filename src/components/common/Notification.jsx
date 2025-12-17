@@ -73,7 +73,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
                     alt="icon"
                     className="w-full h-[150px]"
                 />
-                <div className="mt-4 w-full flex flex-col gap-4 text-center">
+                <div className="mt-3 w-full flex flex-col gap-4 text-center">
                     <h2 className="text-xl font-semibold text-white">
                         {title}
                     </h2>

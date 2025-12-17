@@ -260,7 +260,7 @@ export default function DealsList() {
 
   const handleRowClick = (deal) => {
     if (deal?.dealId) {
-      navigate(`/edit-deal/${deal.dealId}`);
+      navigate(`/deals/edit-deal/${deal.dealId}`);
     }
   };
 
@@ -282,7 +282,7 @@ export default function DealsList() {
 
   const handleEdit = (dealId) => {
     console.log("Edit deal", dealId);
-    navigate(`/edit-deal/${dealId}`);
+    navigate(`/deals/edit-deal/${dealId}`);
     setOpenMenu(null);
   };
 
@@ -327,7 +327,7 @@ export default function DealsList() {
         <div className="flex items-center gap-3">
 
           <button
-            onClick={() => navigate("/create-deal")}
+            onClick={() => navigate("/deals/create-deal")}
             className="
     flex items-center 
     w-[173px] h-10 

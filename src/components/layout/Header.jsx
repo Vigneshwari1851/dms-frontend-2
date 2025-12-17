@@ -169,7 +169,7 @@ export default function Header() {
                         if (n.alertType === "RECONCILIATION") {
                               navigate(`/reconciliation/details/${n.id}`);
                             } else if (n.alertType === "PENDING_DEAL") {
-                              navigate(`/edit-deal/${n.id}`);
+                              navigate(`/deals/edit-deal/${n.id}`);
                             }
                       }}
                       className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
@@ -230,7 +230,7 @@ export default function Header() {
               <p className="text-gray-400 text-sm mb-4">{userRole}</p>
 
               <button
-                onClick={() => navigate("/my-profile")}
+                onClick={() => navigate("/users/my-profile")}
                 className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
               >
                 <img src={profile} alt="profile" className="w-5 h-5" /> My Profile

@@ -281,7 +281,7 @@ export default function DealsTable() {
 
   const handleRowClick = (deal) => {
     if (deal?.dealId) {
-      navigate(`/edit-deal/${deal.dealId}`);
+      navigate(`/deals/edit-deal/${deal.dealId}`);
     }
   };
 

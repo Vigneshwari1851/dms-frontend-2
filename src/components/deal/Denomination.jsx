@@ -3,7 +3,7 @@ import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
-import NotificationCard from "../../components/common/Notification"; 
+import NotificationCard from "../../components/common/Notification";
 
 export default function Denomination({
   denominationReceived: propReceived,
@@ -78,13 +78,14 @@ export default function Denomination({
   const handleDeleteClick = (listType, index) => {
     setConfirmModal({
       open: true,
-      title: "Confirm Delete",
+      title: "Please Confirm: Delete This Denomination Entry Permanently",
       message: "Are you sure you want to delete this denomination?",
       actionType: "remove",
       rowIndex: index,
       listType: listType
     });
   };
+
 
   const handleConfirmDelete = () => {
     const { rowIndex, listType } = confirmModal;
@@ -123,7 +124,7 @@ export default function Denomination({
         {/* Currency Display (Read-only) */}
         <div className="h-10">
           <span className="text-[#939AF0] text-sm">
-            {currencySymbol  || ""}
+            {currencySymbol || ""}
           </span>
         </div>
       </div>
@@ -298,12 +299,12 @@ export default function Denomination({
                           className="w-6 h-6"
                           alt="delete"
                           {...(list.length > 1
-                          ? {
+                            ? {
                               onMouseEnter: (e) => (e.currentTarget.src = trashHover),
                               onMouseLeave: (e) => (e.currentTarget.src = trash),
                             }
-                          : {})}
-                          />
+                            : {})}
+                        />
                       </button>
                     )}
                   </td>

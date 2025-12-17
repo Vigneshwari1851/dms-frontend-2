@@ -405,7 +405,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                 setConfirmModal({
                                                     open: true,
                                                     actionType: "remove",
-                                                    title: "Delete Row",
+                                                    title: "Please Confirm: Delete This Denomination Entry Permanently",
                                                     message: "Are you sure you want to delete this row?",
                                                     sectionId: section.id,
                                                     rowIndex: i,

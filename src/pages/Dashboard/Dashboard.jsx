@@ -75,7 +75,7 @@ export default function Dashboard() {
     text-sm font-medium 
     cursor-pointer
   "
-          onClick={() => navigate('/create-deal')}
+          onClick={() => navigate('/deals/create-deal')}
         >
           <img src={add} alt="add" className="w-5 h-5" />
           Create New Deal
