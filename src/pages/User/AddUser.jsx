@@ -10,15 +10,38 @@ export default function AddUser() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("");
-    const navigate = useNavigate();
     const [phone, setPhone] = useState("");
+    const [errors, setErrors] = useState({});
+
+    const navigate = useNavigate();
+
+    const validate = () => {
+        const newErrors = {};
+
+        if (!fullName.trim()) newErrors.fullName = "Full Name is required";
+
+        if (!email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+            newErrors.email = "Enter a valid email";
+        }
+
+        if (!phone.trim()) newErrors.phone = "Phone number is required";
+
+        if (!role) newErrors.role = "Role is required";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleAddUser = async () => {
+        if (!validate()) return;
+
         const payload = {
             full_name: fullName,
-            email: email,
+            email,
             phone_number: phone,
-            role: role
+            role,
         };
 
         const res = await createUser(payload);
@@ -44,9 +67,7 @@ export default function AddUser() {
         }
     };
 
-    const handleCancel = () => {
-        navigate("/users");
-    };
+    const handleCancel = () => navigate("/users");
 
     return (
         <>
@@ -68,6 +89,9 @@ export default function AddUser() {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                     />
+                    {errors.fullName && (
+                        <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 mt-6">
@@ -78,9 +102,12 @@ export default function AddUser() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
+                        {errors.email && (
+                            <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+                        )}
                     </div>
                     <div>
-                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                        <label className="block text-sm text-[#ABABAB] mb-1">
                             Phone <span className="text-red-500">*</span>
                         </label>
 
@@ -88,29 +115,32 @@ export default function AddUser() {
                             className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
                             value={phone}
                             onChange={(e) => {
-                                let value = e.target.value;
-                                const digits = value.replace(/\D/g, "");
-                                if (digits.length > 15) return;
-                                setPhone(value);
+                            let value = e.target.value;
+                            const digits = value.replace(/\D/g, "");
+                            if (digits.length > 15) return;
+                            setPhone(value);
                             }}
                             onKeyDown={(e) => {
-                                const allowedControlKeys = [
-                                    "Backspace",
-                                    "Delete",
-                                    "ArrowLeft",
-                                    "ArrowRight",
-                                    "Tab",
-                                ];
-                                if (allowedControlKeys.includes(e.key)) return;
-                                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
-                                if (/^[0-9]$/.test(e.key)) {
-                                    const currentDigits = phone.replace(/\D/g, "");
+                            const allowedControlKeys = [
+                                "Backspace",
+                                "Delete",
+                                "ArrowLeft",
+                                "ArrowRight",
+                                "Tab",
+                            ];
+                            if (allowedControlKeys.includes(e.key)) return;
+                            if (["+", " ", "-", "(", ")"].includes(e.key)) return;
+                            if (/^[0-9]$/.test(e.key)) {
+                                const currentDigits = phone.replace(/\D/g, "");
                                     if (currentDigits.length >= 15) e.preventDefault();
-                                    return;
-                                }
-                                e.preventDefault();
+                                return;
+                            }
+                            e.preventDefault();
                             }}
                         />
+                        {errors.phone && (
+                            <p className="text-red-400 text-xs mt-1">{errors.phone}</p>
+                        )}
                     </div>
                 </div>
 
@@ -124,8 +154,11 @@ export default function AddUser() {
                         options={["Maker", "Checker"]}
                         selected={role}
                         onChange={setRole}
-                        className="w-[580px]" 
+                        className="w-[580px]"
                     />
+                    {errors.role && (
+                        <p className="text-red-400 text-xs mt-1">{errors.role}</p>
+                    )}
                 </div>
 
                 <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
