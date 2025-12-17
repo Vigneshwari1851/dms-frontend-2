@@ -259,50 +259,72 @@ export default function CreateDeal() {
         total: (Number(item.price) || 0) * (Number(item.quantity) || 0)
       }));
 
+      
+      const hasPaidDenomination = denominationPaid.some(
+        item => Number(item.price) > 0 && Number(item.quantity) > 0
+      );
+
+      
+      const paidItemsPayload = hasPaidDenomination
+        ? paidItemsWithTotals
+          .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
+          .map(item => ({
+            price: String(item.price),
+            quantity: String(item.quantity),
+            total: String(item.total),
+            currency_id: item.currency_id || currencyMap[sellCurrency],
+          }))
+        : [
+          {
+            price: "0",
+            quantity: "0",
+            total: "0",
+            currency_id: currencyMap[sellCurrency],
+          }
+        ];
+
       const dealData = {
         customer_id: selectedCustomer.id,
         deal_type: txnType.toLowerCase(),
         transaction_mode: txnMode.toLowerCase(),
+
         buy_currency: buyCurrency,
         buy_currency_id: currencyMap[buyCurrency],
+
         sell_currency: sellCurrency,
         sell_currency_id: currencyMap[sellCurrency],
+
         amount: Number(amount),
         rate: Number(rate),
         amount_to_be_paid: Number(amountToBePaid),
+
         remarks: remarks,
-        status: status, // Use the status parameter
+        status: status,
+
         received_items: receivedItemsWithTotals
-          .filter((item) => item.price && item.quantity)
-          .map((item) => ({
+          .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
+          .map(item => ({
             price: String(item.price),
             quantity: String(item.quantity),
             total: String(item.total),
             currency_id: item.currency_id || currencyMap[buyCurrency],
           })),
 
-        paid_items: paidItemsWithTotals
-          .filter((item) => item.price && item.quantity)
-          .map((item) => ({
-            price: String(item.price),
-            quantity: String(item.quantity),
-            total: String(item.total),
-            currency_id: item.currency_id || currencyMap[sellCurrency],
-          })),
+        // ✅ final paid_items
+        paid_items: paidItemsPayload,
       };
 
       const result = await createDeal(dealData);
 
       if (result.success) {
-        const toastMessage = status === 'Completed'
-          ? "Deal completed successfully"
-          : "Deal is pending. Please review and complete";
+        const toastMessage =
+          status === 'Completed'
+            ? "Deal completed successfully"
+            : "Deal is pending. Please review and complete";
 
         showToast(toastMessage, status === 'Completed' ? 'success' : 'pending');
 
-        setTimeout(() => {
-          navigate("/deals");
-        }, 2000);
+        setTimeout(() => navigate("/deals"), 2000);
       } else {
         showToast(result.error?.message || "Failed to create deal", "error");
       }
@@ -313,6 +335,7 @@ export default function CreateDeal() {
       setLoading(false);
     }
   };
+
 
   const handleCustomerSearch = async (value) => {
     setCustomerQuery(value);

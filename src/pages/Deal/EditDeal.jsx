@@ -49,15 +49,7 @@ export default function EditDeal() {
     const isPending = (deal?.status || "").toLowerCase() === "pending";
     const isEditable = isPending && editMode;
 
-    // Calculate amount to be paid when amount or rate changes
-    useEffect(() => {
-        if (amount && rate && amount > 0 && rate > 0) {
-            const calculatedAmount = parseFloat(amount) * parseFloat(rate);
-            setAmountToBePaid(calculatedAmount.toFixed(2));
-        } else {
-            setAmountToBePaid("");
-        }
-    }, [amount, rate]);
+    
 
     // Fetch currencies on component mount
     useEffect(() => {
@@ -112,14 +104,8 @@ export default function EditDeal() {
         setAmount(dealData.amount || "");
         setRate(dealData.rate || "");
 
-        // Calculate amount to be paid if not provided
-        if (dealData.amount && dealData.rate) {
-            const calculated = parseFloat(dealData.amount) * parseFloat(dealData.rate);
-            setAmountToBePaid(calculated.toFixed(2));
-        } else {
-            setAmountToBePaid(dealData.amount_to_be_paid || "");
-        }
-
+        setAmountToBePaid(dealData.amount_to_be_paid || "0.00");
+        
         setNotes(dealData.remarks || "");
 
         const received = dealData.received_items || [];
@@ -211,31 +197,47 @@ export default function EditDeal() {
         setEditMode(false);
     };
 
-    const handleSave = async () => {
-        try {
-            // Only send transaction_mode and paid_items in update
-            const dealData = {
-                // Only include transaction_mode and paid_items
-                transaction_mode: txnMode.toLowerCase(),
-                paid_items: denominationPaid
-                    .filter((item) => item.price && item.quantity)
-                    .map((item) => ({
-                        price: String(item.price),
-                        quantity: String(item.quantity),
-                        currency_id: item.currency_id || currencyMap[sellCurrency],
-                    })),
-            };
+  const handleSave = async () => {
+    try {
+        if (!isEditable) return;
 
-            if (isEditable) {
-                await updateDeal(id, dealData);
-                setEditMode(false);
-                navigate("/deals");
-            }
-        } catch (err) {
-            console.error("Error updating deal:", err);
+        const dealData = {
+            deal_type: txnType.toLowerCase(), 
+            transaction_mode: txnMode.toLowerCase(), // "cash" or "credit"
+            amount: Number(amount),
+            rate: Number(rate),
+            remarks: notes,
+            status: deal.status || "Pending",
+            received_items: denominationReceived.map(item => ({
+                price: String(item.price),
+                quantity: String(item.quantity),
+                currency_id: item.currency_id || currencyMap[buyCurrency],
+            })),
+            paid_items: denominationPaid
+                .filter(item => item.price && item.quantity)
+                .map(item => ({
+                    price: String(item.price),
+                    quantity: String(item.quantity),
+                    currency_id: item.currency_id || currencyMap[sellCurrency],
+                })),
+        };
+
+        const response = await updateDeal(id, dealData); // PATCH request
+
+        if (response.success) {
+            setEditMode(false);
+            navigate("/deals");
+        } else {
+            console.error("Failed to update deal:", response.error);
             setError("Failed to update deal");
         }
-    };
+
+    } catch (err) {
+        console.error("Error updating deal:", err);
+        setError("Failed to update deal");
+    }
+};
+
 
     // Custom dropdown component with fixed width like CreateDeal
     const CustomDropdown = ({
