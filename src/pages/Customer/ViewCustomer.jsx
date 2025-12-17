@@ -188,7 +188,7 @@ export default function ViewCustomer() {
                 <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                      <th>Date</th>
+                      <th className="py-3 text-left pl-5">Date</th>
                       <th
                         className="py-3 cursor-pointer select-none"
                         onClick={() => {
@@ -230,7 +230,7 @@ export default function ViewCustomer() {
                   <tbody>
                     {paginatedData.map((item, idx) => (
                       <tr key={idx} className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer" onClick={() => handleRowClick(item)}>
-                        <td>{item.date}</td>
+                        <td className="py-3 font-normal text-[14px] text-left pl-5">{item.date}</td>
                         <td><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
                         <td>{item.customer}</td>
                         <td>{item.buyAmt}</td>
