@@ -32,6 +32,7 @@ export default function Sidebar() {
               onClick={() => navigate(item.path)}
               className={`
                 relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm w-full text-left
+                outline-none focus:outline-none focus:ring-0
                 ${
                 isActive
                     ? "bg-[#1D4CB5] text-white before:absolute before:-left-4 before:top-0 before:h-full before:w-6 before:bg-[#1D4CB5]"

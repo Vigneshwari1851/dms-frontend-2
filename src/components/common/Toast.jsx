@@ -5,26 +5,26 @@ import pendingIcon from "../../assets/toast/pending.svg";
 
 export default function Toast({ show, message, type }) {
 
-  const getIcon = () => {
-    if (type === "success") return successIcon;
-    if (type === "error") return failIcon;
-    return pendingIcon;
-  };
+    const getIcon = () => {
+        if (type === "success") return successIcon;
+        if (type === "error") return failIcon;
+        return pendingIcon;
+    };
 
-  if (!show) return null;
+    if (!show) return null;
 
-  return (
-    <>
-      {/* 🔹 BACKGROUND OVERLAY (SAME AS HEADER) */}
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
+    return (
+        <>
+            
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
 
-      {/* 🔹 TOAST */}
-      <div
-        className={`
-          fixed top-8 left-[1050px] z-50
+            {/* TOAST */}
+            <div
+                className={`
+           fixed top-[100px] left-[1150px] z-50
           flex items-center gap-4
-          w-[459px] h-14
-          px-4 py-3
+           w-auto   h-14
+          px-4 py-3 pr-10  
           rounded-lg
           text-white text-[16px] font-medium
           bg-[#2E3439]
@@ -35,12 +35,12 @@ export default function Toast({ show, message, type }) {
           backdrop-blur-xl
           transition-all duration-300
         `}
-      >
-        <img src={getIcon()} alt="icon" className="w-20 h-20" />
-        <span className="whitespace-nowrap leading-none">
-          {message}
-        </span>
-      </div>
-    </>
-  );
+            >
+                <img src={getIcon()} alt="icon" className="w-20 h-20" />
+                <span>
+                    {message}
+                </span>
+            </div>
+        </>
+    );
 }
