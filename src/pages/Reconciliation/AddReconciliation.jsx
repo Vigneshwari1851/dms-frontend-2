@@ -208,23 +208,15 @@ export default function AddReconciliation() {
             const result = await createReconciliation(reconciliationData);
 
             if (result.success) {
-                // ✅ SHOW SUCCESS TOAST
-                setToast({
-                    show: true,
-                    message: "Reconciliation Saved Successfully!",
-                    type: "success",
-                });
-
-                // Reset form after successful save
-                setTimeout(() => {
-                    setToast(prev => ({ ...prev, show: false }));
-                    setOpeningData({ sections: [] });
-                    setClosingData({ sections: [] });
-                    setNotes("");
-                    navigate("/reconciliation");
-                }, 3000);
-            } else {
-                // ❌ ERROR TOAST
+                    navigate("/reconciliation", {
+                        state: {
+                            toast: {
+                                message: "Reconciliation Saved Successfully!",
+                                type: "success",
+                            },
+                        },
+                    });
+                } else {
                 setToast({
                     show: true,
                     message: result.error?.message || "Failed to save reconciliation",
