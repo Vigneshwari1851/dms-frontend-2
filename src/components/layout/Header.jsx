@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react"; 
 import searchIcon from "../../assets/Common/search.svg";
 import logo from "../../assets/Common/logo.svg";
-import person from "../../assets/Common/person.svg";
 import profile from "../../assets/Common/profile.svg";
 import logout from "../../assets/Common/logout.svg";
 import NotificationCard from "../common/Notification"; 
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
 import { fetchReconciliationAlerts } from "../../api/reconcoliation"; 
-import bellIcon from "../../assets/notification/bell.svg"
-import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg"
+import bellIcon from "../../assets/notification/bell.svg";
+import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg";
 
 export default function Header() {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
@@ -30,20 +29,15 @@ export default function Header() {
   const loadNotifications = async () => {
     try {
       const res = await fetchReconciliationAlerts();
-
       if (res && Array.isArray(res.alerts)) {
-        const notifArray = res.alerts.map(alert => ({
+        setNotifications(res.alerts.map(alert => ({
           id: alert.id,
-          title: alert.title,          // ✅ from API
-          message: alert.message,      // ✅ from API
-          time: alert.created_at,       // "2 hours ago", "Yesterday"
-          alertType: alert.alertType,   // optional (useful later)
-        }));
-
-        setNotifications(notifArray);
-      } else {
-        setNotifications([]);
-      }
+          title: alert.title,
+          message: alert.message,
+          time: alert.created_at,
+          alertType: alert.alertType,
+        })));
+      } else setNotifications([]);
     } catch (err) {
       console.error("Error fetching notifications", err);
       setNotifications([]);
@@ -52,17 +46,12 @@ export default function Header() {
 
   useEffect(() => {
     loadNotifications();
-
     const FOUR_HOURS = 4 * 60 * 60 * 1000;
-
-    const intervalId = setInterval(() => {
-      loadNotifications();
-    }, FOUR_HOURS);
-
+    const intervalId = setInterval(loadNotifications, FOUR_HOURS);
     return () => clearInterval(intervalId);
   }, []);
 
- useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
         setNotifDropdownOpen(false);
@@ -91,8 +80,7 @@ export default function Header() {
       await logoutUser();
       localStorage.clear();
       navigate("/login");
-    } catch (err) {
-      console.error(err);
+    } catch {
       localStorage.clear();
       navigate("/login");
     } finally {
@@ -100,158 +88,139 @@ export default function Header() {
     }
   };
 
-  // const handleMarkAllRead = () => {
-  //   setNotifications([]);
-  // };
-
   return (
-    <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative">
+    <>
+      {/* 🔹 BLUR BACKGROUND WHEN NOTIF OR PROFILE DROPDOWN OPEN */}
+      {(notifDropdownOpen || avatarDropdownOpen) && (
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+          onClick={() => {
+            setNotifDropdownOpen(false);
+            setAvatarDropdownOpen(false);
+          }}
+        />
+      )}
 
-      {/* Left Logo */}
-      <img src={logo} alt="logo" /> 
+      <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative z-50">
+        {/* Left Logo */}
+        <img src={logo} alt="logo" /> 
 
-      {/* Right Section */}
-      <div className="flex items-center gap-6">
+        {/* Right Section */}
+        <div className="flex items-center gap-6">
+          {/* Search Bar */}
+          <div className="relative bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px]">
+            <img
+              src={searchIcon}
+              alt="search"
+              className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-70"
+            />
+            <input
+              type="text"
+              placeholder="Search"
+              className="bg-transparent w-full text-gray-300 pl-5 focus:outline-none"
+            />
+          </div>
 
-        {/* Search Bar */}
-        <div className="relative bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px]">
-          <img
-            src={searchIcon}
-            alt="search"
-            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-70"
-          />
-          <input
-            type="text"
-            placeholder="Search"
-            className="bg-transparent w-full text-gray-300 pl-5 focus:outline-none"
-          />
-        </div>
+          {/* Notification Bell */}
+          <div className="relative" ref={notifDropdownRef}>
+            <img
+              src={notifications.length > 0 ? bellnotificationIcon : bellIcon}
+              alt="notifications"
+              className="w-6 h-6 cursor-pointer"
+              onClick={() => {
+                setNotifDropdownOpen(!notifDropdownOpen);
+                setShowAllNotifications(false);
+              }}
+            />
 
-        {/* Notification Bell */}
-        <div className="relative" ref={notifDropdownRef}>
-          <img
-            src={notifications.length > 0 ? bellnotificationIcon : bellIcon}
-            alt="notifications"
-            className="w-6 h-6 cursor-pointer"
-            onClick={() => {
-              setNotifDropdownOpen(!notifDropdownOpen);
-              setShowAllNotifications(false);
-            }}
-          />
-
-          {notifDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
-              {/* <div className="flex justify-end items-center mb-3">
-                {notifications.length > 0 && (
-                  <button
-                    onClick={handleMarkAllRead}
-                    className="text-blue-500 text-sm text-center hover:underline"
-                  >
-                    Mark all read
-                  </button>
-                )}
-              </div> */}
-
-            <div
-              className={`${
-                showAllNotifications ? "max-h-70 overflow-y-auto scrollbar-grey pr-3" : ""
-              }`}
-            >
-              {notifications.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center">No notifications</p>
-                ) : (
-                  (notifications.slice(0, showAllNotifications ? notifications.length : 3)).map((n, idx) => (
-                    <div
-                      key={idx}
-                     onClick={() => {
-                        setNotifDropdownOpen(false);
-                        setShowAllNotifications(false);
-                        if (n.alertType === "RECONCILIATION") {
-                              navigate(`/reconciliation/details/${n.id}`);
-                            } else if (n.alertType === "PENDING_DEAL") {
-                              navigate(`/deals/edit-deal/${n.id}`);
-                            }
-                      }}
-                      className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
-                    >
-                    <div className="flex items-start gap-2 relative">
-                     <span
-                      className={`w-2 h-2 rounded-full mt-2 ${
-                        n.alertType === "RECONCILIATION"
-                          ? "bg-[#D83D00]"
-                          : "bg-[#D8AD00]"
-                      }`}
-                    ></span>
-                      <div className="flex flex-col gap-[9px]">
-                        <p className="font-semibold">{n.title}</p>
-                        <p className="text-gray-400 text-sm">{n.message}</p>
+            {notifDropdownOpen && (
+              <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
+                <div className={`${showAllNotifications ? "max-h-70 overflow-y-auto scrollbar-grey pr-3" : ""}`}>
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-400 text-sm text-center">No notifications</p>
+                  ) : (
+                    (notifications.slice(0, showAllNotifications ? notifications.length : 3)).map((n, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setNotifDropdownOpen(false);
+                          setShowAllNotifications(false);
+                          if (n.alertType === "RECONCILIATION") {
+                            navigate(`/reconciliation/details/${n.id}`);
+                          } else if (n.alertType === "PENDING_DEAL") {
+                            navigate(`/deals/edit-deal/${n.id}`);
+                          }
+                        }}
+                        className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
+                      >
+                        <div className="flex items-start gap-2 relative">
+                          <span
+                            className={`w-2 h-2 rounded-full mt-2 ${
+                              n.alertType === "RECONCILIATION" ? "bg-[#D83D00]" : "bg-[#D8AD00]"
+                            }`}
+                          ></span>
+                          <div className="flex flex-col gap-[9px]">
+                            <p className="font-semibold">{n.title}</p>
+                            <p className="text-gray-400 text-sm">{n.message}</p>
+                          </div>
+                        </div>
+                        <span className="text-gray-400 text-xs ml-auto">{n.time}</span>
                       </div>
-                    </div>
-
-                    <span className="text-gray-400 text-xs ml-auto">{n.time}</span>
-                    </div>
-                  ))
+                    ))
+                  )}
+                </div>
+                {notifications.length > 3 && !showAllNotifications && (
+                  <div className="text-center mt-2">
+                    <button
+                      onClick={() => setShowAllNotifications(true)}
+                      className="text-blue-500 text-sm hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
                 )}
-              </div>
-
-             {notifications.length > 3 && (
-              <div className="text-center mt-2">
-                <button
-                  onClick={() => setShowAllNotifications(true)}
-                  className="text-blue-500 text-sm hover:underline"
-                >
-                  View All
-                </button>
               </div>
             )}
-            </div>
-          )}
-        </div>
+          </div>
 
-        {/* Avatar + Dropdown */}
-        <div className="relative" ref={avatarDropdownRef}>
-          <div
+          {/* Avatar */}
+          <div className="relative" ref={avatarDropdownRef}>
+            <div
               onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
-              className="
-                w-10 h-10 rounded-full
-                bg-[#D76A71]
-                flex items-center justify-center
-                text-white font-semibold text-lg
-                cursor-pointer
-                select-none
-              "
+              className="w-10 h-10 rounded-full bg-[#D76A71] flex items-center justify-center text-white font-semibold text-lg cursor-pointer select-none"
             >
               {userInitial}
             </div>
 
-          {avatarDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">
-              <p className="text-white text-lg font-semibold">{userName}</p>
-              <p className="text-gray-400 text-sm mb-4">{userRole}</p>
+            {avatarDropdownOpen && (
+              <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">
+                <p className="text-white text-lg font-semibold">{userName}</p>
+                <p className="text-gray-400 text-sm mb-4">{userRole}</p>
 
-              <button
-                onClick={() => navigate("/users/my-profile")}
-                className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
-              >
-                <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
-              </button>
+                <button
+                  onClick={() => navigate("/users/my-profile")}
+                  className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
+                >
+                  <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
+                </button>
 
-              <button
-                onClick={handleLogoutClick}
-                className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
-              >
-                <img src={logout} alt="logout" className="w-5 h-5" /> Logout
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleLogoutClick}
+                  className="w-full flex items-center gap-3 px-1 py-2 text-red-400 hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
+                >
+                  <img src={logout} alt="logout" className="w-5 h-5" /> Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <NotificationCard
-        confirmModal={confirmModal}
-        onConfirm={handleConfirmLogout}
-        onCancel={() => setConfirmModal({ open: false })}
-      />
-    </header>
+        <NotificationCard
+          confirmModal={confirmModal}
+          onConfirm={handleConfirmLogout}
+          onCancel={() => setConfirmModal({ open: false })}
+        />
+      </header>
+    </>
   );
 }

@@ -7,6 +7,8 @@ import Denomination from "../../components/deal/Denomination";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchDealById, updateDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
+import NotificationCard from "../../components/common/Notification";
+
 
 export default function EditDeal() {
     const navigate = useNavigate();
@@ -49,7 +51,37 @@ export default function EditDeal() {
     const isPending = (deal?.status || "").toLowerCase() === "pending";
     const isEditable = isPending && editMode;
 
-    
+    const [confirmModal, setConfirmModal] = useState({
+        open: false,
+        title: "",
+        message: "",
+        confirmText: "",
+        cancelText: "Cancel",
+        isTallied: false,
+    });
+
+    const totalReceived = () =>
+        denominationReceived.reduce(
+            (sum, item) =>
+                sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+            0
+        );
+
+    const totalPaid = () =>
+        denominationPaid.reduce(
+            (sum, item) =>
+                sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+            0
+        );
+
+    const checkTally = () => {
+        const tolerance = 0.01;
+        return (
+            Math.abs(totalReceived() - Number(amount)) <= tolerance &&
+            Math.abs(totalPaid() - Number(amountToBePaid)) <= tolerance
+        );
+    };
+
 
     // Fetch currencies on component mount
     useEffect(() => {
@@ -105,7 +137,7 @@ export default function EditDeal() {
         setRate(dealData.rate || "");
 
         setAmountToBePaid(dealData.amount_to_be_paid || "0.00");
-        
+
         setNotes(dealData.remarks || "");
 
         const received = dealData.received_items || [];
@@ -197,46 +229,85 @@ export default function EditDeal() {
         setEditMode(false);
     };
 
-  const handleSave = async () => {
-    try {
+    const handleSave = () => {
         if (!isEditable) return;
 
-        const dealData = {
-            deal_type: txnType.toLowerCase(), 
-            transaction_mode: txnMode.toLowerCase(), // "cash" or "credit"
-            amount: Number(amount),
-            rate: Number(rate),
-            remarks: notes,
-            status: deal.status || "Pending",
-            received_items: denominationReceived.map(item => ({
-                price: String(item.price),
-                quantity: String(item.quantity),
-                currency_id: item.currency_id || currencyMap[buyCurrency],
-            })),
-            paid_items: denominationPaid
-                .filter(item => item.price && item.quantity)
-                .map(item => ({
-                    price: String(item.price),
-                    quantity: String(item.quantity),
-                    currency_id: item.currency_id || currencyMap[sellCurrency],
-                })),
-        };
+        const tallied = checkTally();
 
-        const response = await updateDeal(id, dealData); // PATCH request
+        setConfirmModal({
+            open: true,
+            actionType: tallied ? "confirm" : "delete", // ✅ THIS FIXES ICON
+            title: tallied
+                ? "Deal Tallied Successfully"
+                : "Deal Not Tallied",
+            message: tallied
+                ? "The deal has been tallied. Do you want to proceed?"
+                : "The deal is not tallied. Please review before proceeding.",
+            confirmText: tallied ? "Confirm" : "Review",
+            cancelText: "No",
+            isTallied: tallied,
+        });
+    };
 
-        if (response.success) {
-            setEditMode(false);
+
+    const updateDealTransaction = async (status) => {
+        try {
+            const dealData = {
+                deal_type: txnType.toLowerCase(),
+                transaction_mode: txnMode.toLowerCase(),
+                amount: Number(amount),
+                rate: Number(rate),
+                amount_to_be_paid: Number(amountToBePaid),
+                remarks: notes,
+                status,
+
+                received_items: denominationReceived
+                    .filter(i => i.price && i.quantity)
+                    .map(i => ({
+                        price: String(i.price),
+                        quantity: String(i.quantity),
+                        currency_id: i.currency_id || currencyMap[buyCurrency],
+                    })),
+
+                paid_items: denominationPaid
+                    .filter(i => i.price && i.quantity)
+                    .map(i => ({
+                        price: String(i.price),
+                        quantity: String(i.quantity),
+                        currency_id: i.currency_id || currencyMap[sellCurrency],
+                    })),
+            };
+
+            await updateDeal(id, dealData);
             navigate("/deals");
-        } else {
-            console.error("Failed to update deal:", response.error);
+        } catch (err) {
+            console.error("Error updating deal:", err);
             setError("Failed to update deal");
         }
+    };
 
-    } catch (err) {
-        console.error("Error updating deal:", err);
-        setError("Failed to update deal");
-    }
-};
+    const handleModalConfirm = () => {
+        if (confirmModal.isTallied) {
+            // Confirm → Completed
+            updateDealTransaction("Completed");
+        } else {
+            // Review → just close modal
+            setConfirmModal({ ...confirmModal, open: false });
+        }
+    };
+
+    const handleModalCancel = () => {
+        if (confirmModal.isTallied) {
+            // No → still Completed
+            updateDealTransaction("Completed");
+        } else {
+            // No → Pending
+            updateDealTransaction("Pending");
+        }
+    };
+
+
+
 
 
     // Custom dropdown component with fixed width like CreateDeal
@@ -597,6 +668,13 @@ export default function EditDeal() {
 
                 </div>
             )}
+
+            <NotificationCard
+                confirmModal={confirmModal}
+                onConfirm={handleModalConfirm}
+                onCancel={handleModalCancel}
+            />
+
         </>
     );
 }
