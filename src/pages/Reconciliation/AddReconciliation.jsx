@@ -8,12 +8,14 @@ import { createCurrency } from "../../api/currency/currency";
 import { createReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
     const [notes, setNotes] = useState("");
     const [skipClosing, setSkipClosing] = useState(false);
+    const navigate = useNavigate();
 
     const [currencyData, setCurrencyData] = useState({
         currencyName: "",
@@ -206,22 +208,15 @@ export default function AddReconciliation() {
             const result = await createReconciliation(reconciliationData);
 
             if (result.success) {
-                // ✅ SHOW SUCCESS TOAST
-                setToast({
-                    show: true,
-                    message: "Reconciliation Saved Successfully!",
-                    type: "success",
-                });
-
-                // Reset form after successful save
-                setTimeout(() => {
-                    setToast(prev => ({ ...prev, show: false }));
-                    setOpeningData({ sections: [] });
-                    setClosingData({ sections: [] });
-                    setNotes("");
-                }, 3000);
-            } else {
-                // ❌ ERROR TOAST
+                    navigate("/reconciliation", {
+                        state: {
+                            toast: {
+                                message: "Reconciliation Saved Successfully!",
+                                type: "success",
+                            },
+                        },
+                    });
+                } else {
                 setToast({
                     show: true,
                     message: result.error?.message || "Failed to save reconciliation",

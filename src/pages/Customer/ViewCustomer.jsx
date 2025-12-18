@@ -90,9 +90,24 @@ export default function ViewCustomer() {
     if (!validate()) return;
     const res = await updateCustomer(id, formData);
     if (res.success) {
-      setEditMode(false);
-      setInitialData(formData);
-    }
+    navigate("/customer-info", {
+      state: {
+        toast: {
+          message: "Customer updated successfully",
+          type: "success",
+        },
+      },
+    });
+  } else {
+    navigate("/customer-info", {
+      state: {
+        toast: {
+          message: "Failed to update customer",
+          type: "error",
+        },
+      },
+    });
+  }
   };
 
   const handleCancel = () => {

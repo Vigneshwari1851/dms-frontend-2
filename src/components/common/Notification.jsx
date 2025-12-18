@@ -7,6 +7,7 @@ import resetIcon from "../../assets/notification/link.svg";
 import confirmIcon from "../../assets/notification/save.svg";
 import activateIcon from "../../assets/notification/activate.svg";
 import logoutIcon from "../../assets/notification/logout.svg";
+import trashIcon from "../../assets/notification/trash.svg";
 
 function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     if (!confirmModal.open) return null;
@@ -30,7 +31,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         cancelRejectDeal: deactivateIcon,
         activate: activateIcon,
         logout: logoutIcon,
-        remove: deleteIcon
+        remove: trashIcon,
     };
 
     const labelMap = {

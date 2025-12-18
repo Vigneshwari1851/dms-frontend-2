@@ -279,7 +279,17 @@ export default function EditDeal() {
             };
 
             await updateDeal(id, dealData);
-            navigate("/deals");
+            navigate("/deals", {
+            state: {
+                toast: {
+                    message:
+                        status === "Completed"
+                            ? "Deal updated and completed successfully"
+                            : "Deal updated successfully",
+                    type: status === "Completed" ? "success" : "pending",
+                },
+            },
+        });
         } catch (err) {
             console.error("Error updating deal:", err);
             setError("Failed to update deal");
@@ -441,7 +451,7 @@ export default function EditDeal() {
 
                             <button
                                 onClick={handleSave}
-                                className="flex items-center justify-center gap-2 w-[91px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
+                                className="flex items-center justify-center gap-2 w-[91px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
                             >
                                 <img src={save} className="w-5 h-5" alt="Save" />
                                 Save
@@ -452,9 +462,9 @@ export default function EditDeal() {
                     {!editMode && isPending && (
                         <button
                             onClick={handleStartEdit}
-                            className="flex items-center justify-center w-[41px] h-[40px] rounded-[8px] bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
+                            className="flex items-center justify-center w-[41px] h-10 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
                         >
-                            <img src={editIcon} className="w-[41px] h-[40px]" alt="Edit" />
+                            <img src={editIcon} className="w-[41px] h-10" alt="Edit" />
                         </button>
                     )}
                 </div>

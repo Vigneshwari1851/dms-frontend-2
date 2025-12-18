@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Table from "../../components/common/Table";
 import add from "../../assets/dashboard/add.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
+import Toast from "../../components/common/Toast";
 
 export default function ReconciliationList() {
   const navigate = useNavigate();
@@ -15,6 +16,14 @@ export default function ReconciliationList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [exporting, setExporting] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+
+  const location = useLocation();
+
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   // Fetch reconciliations
   const fetchReconciliations = async () => {
@@ -39,6 +48,21 @@ export default function ReconciliationList() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (location.state?.toast) {
+      setToast({
+        show: true,
+        message: location.state.toast.message,
+        type: location.state.toast.type,
+      });
+
+      setTimeout(() => {
+        setToast(prev => ({ ...prev, show: false }));
+      }, 3000);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchReconciliations();
@@ -267,6 +291,11 @@ export default function ReconciliationList() {
         </div>
       )}
 
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+      />
       {/* Confirmation Modal */}
       <NotificationCard
         confirmModal={confirmModal}

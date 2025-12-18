@@ -374,7 +374,7 @@ export default function ViewUser() {
                                 onClick={() =>
                                 setConfirmModal({
                                     open: true,
-                                    actionType: "delete",
+                                    actionType: "remove",
                                     title: "Are you sure you want to delete this account?",
                                     message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
                                 })

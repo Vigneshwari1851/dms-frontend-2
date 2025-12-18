@@ -9,8 +9,10 @@ import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import { fetchDeals,exportDeals } from "../../api/deals.jsx";
+import { useNavigate } from "react-router-dom";
 
 export default function ListReport() {
+  const navigate = useNavigate();
   const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
@@ -372,7 +374,8 @@ export default function ListReport() {
                 {paginatedData.map((item, index) => (
                   <tr
                     key={index}
-                    className="rounded-2xl hover:bg-[#151517] transition-colors"
+                    className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                    onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
                   >
                     <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
                       {item.deal_number}

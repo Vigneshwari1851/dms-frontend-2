@@ -81,7 +81,7 @@ export default function ListUser() {
               onClick: () =>
                 setConfirmModal({
                   open: true,
-                  actionType: "delete",
+                  actionType: "remove",
                   id: user.id,
                   title: "Are you sure you want to delete this account?",
                   message:
@@ -166,7 +166,7 @@ export default function ListUser() {
               setToastType(isActive ? "success" : "error");
             }
 
-            if (actionType === "delete") {
+            if (actionType === "remove") {
               await deleteUser(id);
               setToastMessage("Account Deleted!");
               setToastType("error");
