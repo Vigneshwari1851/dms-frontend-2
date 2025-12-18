@@ -4,7 +4,6 @@ import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 import plus from "../../assets/common/save.svg";
 import Denomination from "../../components/deal/Denomination";
-import Toast from "../../components/common/Toast";
 import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
@@ -32,6 +31,7 @@ export default function CreateDeal() {
   const [rate, setRate] = useState("");
   const [amountToBePaid, setAmountToBePaid] = useState(0);
   const [remarks, setRemarks] = useState("");
+  const [errors, setErrors] = useState({});
 
   // Currencies list
   const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -45,12 +45,6 @@ export default function CreateDeal() {
   const [denominationPaid, setDenominationPaid] = useState([
     { price: 0, quantity: 0, total: 0, currency_id: 1 },
   ]);
-
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "success",
-  });
 
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
@@ -156,35 +150,38 @@ export default function CreateDeal() {
   };
 
   const validateForm = () => {
+    const newErrors = {};
+
     if (!selectedCustomer?.id) {
-      showToast("Please select a customer", "error");
-      return false;
+      newErrors.customer = "Please select a customer";
     }
+
     if (!txnType) {
-      showToast("Transaction type is required", "error");
-      return false;
+      newErrors.txnType = "Transaction type is required";
     }
+
     if (!txnMode) {
-      showToast("Transaction mode is required", "error");
-      return false;
+      newErrors.txnMode = "Transaction mode is required";
     }
+
     if (!buyCurrency) {
-      showToast("Buy currency type is required", "error");
-      return false;
+      newErrors.buyCurrency = "Buy currency type is required";
     }
+
     if (!sellCurrency) {
-      showToast("Sell currency type is required", "error");
-      return false;
+      newErrors.sellCurrency = "Sell currency type is required";
     }
+
     if (!amount || amount <= 0) {
-      showToast("Valid amount is required", "error");
-      return false;
+      newErrors.amount = "Enter a valid amount";
     }
+
     if (!rate || rate <= 0) {
-      showToast("Valid rate is required", "error");
-      return false;
+      newErrors.rate = "Enter a valid rate";
     }
-    return true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleCreateDeal = async () => {
@@ -324,16 +321,26 @@ export default function CreateDeal() {
       const result = await createDeal(dealData);
 
       if (result.success) {
-        const toastMessage =
-          status === 'Completed'
-            ? "Deal completed successfully"
-            : "Deal is pending. Please review and complete";
-
-        showToast(toastMessage, status === 'Completed' ? 'success' : 'pending');
-
-        setTimeout(() => navigate("/deals"), 2000);
+        navigate("/deals", {
+          state: {
+            toast: {
+              message:
+                status === "Completed"
+                  ? "Deal completed successfully"
+                  : "Deal is pending. Please review and complete",
+              type: status === "Completed" ? "success" : "pending",
+            },
+          },
+        });
       } else {
-        showToast(result.error?.message || "Failed to create deal", "error");
+        navigate("/deals", {
+          state: {
+            toast: {
+              message: result.error?.message || "Failed to create deal",
+              type: "error",
+            },
+          },
+        });
       }
     } catch (err) {
       console.error("Error creating deal:", err);
@@ -390,7 +397,15 @@ export default function CreateDeal() {
     setCustomerQuery(displayName);
     setPhone(displayPhone);
     setCustomerDropdownOpen(false);
+    setErrors(prev => ({ ...prev, customer: "" }));
   };
+
+  const hasTxnRowError = Boolean(
+    errors.txnType ||
+    errors.txnMode ||
+    errors.amount ||
+    errors.rate
+  );
 
   const handleCurrencySelect = (currency, type) => {
     if (type === 'buy') {
@@ -569,6 +584,11 @@ export default function CreateDeal() {
                   })}
                 </ul>
               )}
+              {errors.customer && (
+                <p className="text-red-400 text-[11px] mt-1">
+                  {errors.customer}
+                </p>
+              )}
             </div>
           </div>
 
@@ -594,11 +614,23 @@ export default function CreateDeal() {
             </label>
             <CustomDropdown
               value={txnType}
-              setValue={setTxnType}
+              setValue={(val) => {
+                setTxnType(val);
+                setErrors(prev => ({ ...prev, txnType: "" }));
+              }}
               isOpen={txnTypeOpen}
               setIsOpen={setTxnTypeOpen}
               options={["Buy", "Sell"]}
             />
+            {hasTxnRowError && (
+              <div className="h-3.5 mt-1">
+                {errors.txnType && (
+                  <p className="text-red-400 text-[11px] leading-3.5">
+                    {errors.txnType}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Transaction Mode */}
@@ -608,11 +640,19 @@ export default function CreateDeal() {
             </label>
             <CustomDropdown
               value={txnMode}
-              setValue={setTxnMode}
+              setValue={(val) => {
+                setTxnMode(val);
+                setErrors(prev => ({ ...prev, txnMode: "" }));
+              }}
               isOpen={txnModeOpen}
               setIsOpen={setTxnModeOpen}
               options={["Cash", "Credit"]}
             />
+            {errors.txnMode && (
+              <p className="text-red-400 text-[11px] mt-1">
+                {errors.txnMode}
+              </p>
+            )}
           </div>
 
           {/* Buy Currency Type */}
@@ -622,13 +662,17 @@ export default function CreateDeal() {
             </label>
             <CustomDropdown
               value={buyCurrency}
-              setValue={(value) => handleCurrencySelect(value, 'buy')}
+              setValue={(val) => {
+                handleCurrencySelect(val, "buy");
+                setErrors(prev => ({ ...prev, buyCurrency: "" }));
+              }}
               isOpen={buyCurrencyOpen}
               setIsOpen={setBuyCurrencyOpen}
               options={buyCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />
+            {hasTxnRowError && <div className="h-3.5 mt-1" />}
           </div>
 
           {/* Amount */}
@@ -646,10 +690,15 @@ export default function CreateDeal() {
                 const value = e.target.value;
                 if (/^\d*\.?\d*$/.test(value)) {
                   setAmount(value);
+                  setErrors(prev => ({ ...prev, amount: "" }));
                 }
               }}
             />
-
+            {errors.amount && (
+              <p className="text-red-400 text-[11px] mt-1">
+                {errors.amount}
+              </p>
+            )}
           </div>
 
           {/* Sell Currency Type */}
@@ -659,13 +708,17 @@ export default function CreateDeal() {
             </label>
             <CustomDropdown
               value={sellCurrency}
-              setValue={(value) => handleCurrencySelect(value, 'sell')}
+              setValue={(val) => {
+                handleCurrencySelect(val, "sell");
+                setErrors(prev => ({ ...prev, sellCurrency: "" }));
+              }}
               isOpen={sellCurrencyOpen}
               setIsOpen={setSellCurrencyOpen}
               options={sellCurrencyOptions}
               placeholder="Select"
               loading={loadingCurrencies}
             />
+            {hasTxnRowError && <div className="h-3.5 mt-1" />}
           </div>
 
           {/* Rate */}
@@ -683,9 +736,15 @@ export default function CreateDeal() {
                 const value = e.target.value;
                 if (/^\d*\.?\d*$/.test(value)) {
                   setRate(value);
+                  setErrors(prev => ({ ...prev, rate: "" }));
                 }
               }}
             />
+            {errors.rate && (
+              <p className="text-red-400 text-[11px] mt-1">
+                {errors.rate}
+              </p>
+            )}
 
           </div>
         </div>
@@ -775,14 +834,6 @@ export default function CreateDeal() {
         </div>
 
       </div>
-
-      {toast.show && (
-        <Toast
-          show={toast.show}
-          message={toast.message}
-          type={toast.type}
-        />
-      )}
 
       {/* Notification Card for tally status */}
       <NotificationCard
