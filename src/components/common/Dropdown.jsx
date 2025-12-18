@@ -1,12 +1,33 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/common/tick.svg";
 
-export default function Dropdown({ label, options, selected, onChange, className = "", renderOption }) {
+export default function Dropdown({
+    label,
+    options,
+    selected,
+    onChange,
+    className = "",
+    renderOption
+}) {
     const [open, setOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     return (
-        <div className={`relative ${className}`}>
+        <div ref={dropdownRef} className={`relative ${className}`}>
             <button
                 type="button"
                 className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between"
@@ -42,7 +63,11 @@ export default function Dropdown({ label, options, selected, onChange, className
                                     (typeof selected === "string"
                                         ? selected
                                         : selected?.label) && (
-                                        <img src={tick} alt="selected" className="w-4 h-4 ml-4 mr-2" />
+                                        <img
+                                            src={tick}
+                                            alt="selected"
+                                            className="w-4 h-4 ml-4 mr-2"
+                                        />
                                     )}
                             </li>
                         );
