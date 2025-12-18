@@ -8,12 +8,14 @@ import { createCurrency } from "../../api/currency/currency";
 import { createReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
     const [notes, setNotes] = useState("");
     const [skipClosing, setSkipClosing] = useState(false);
+    const navigate = useNavigate();
 
     const [currencyData, setCurrencyData] = useState({
         currencyName: "",
@@ -219,6 +221,7 @@ export default function AddReconciliation() {
                     setOpeningData({ sections: [] });
                     setClosingData({ sections: [] });
                     setNotes("");
+                    navigate("/reconciliation");
                 }, 3000);
             } else {
                 // ❌ ERROR TOAST
