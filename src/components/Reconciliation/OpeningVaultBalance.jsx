@@ -399,6 +399,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                             onChange={(e) =>
                                                 handleRowChange(section.id, i, "qty", e.target.value)
                                             }
+                                            onWheel={(e) => e.target.blur()}
                                             className="bg-transparent outline-none text-white w-full"
                                             placeholder="0"
                                             min="0"

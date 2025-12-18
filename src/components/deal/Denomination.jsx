@@ -217,6 +217,7 @@ export default function Denomination({
                           if (isReadOnly) return;
                           handleChange(list, setList, i, "quantity", e.target.value);
                         }}
+                        onWheel={(e) => e.target.blur()}
                         className="bg-transparent outline-none text-white w-full"
                         placeholder="0"
                         readOnly={isReadOnly}
