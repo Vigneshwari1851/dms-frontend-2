@@ -61,13 +61,13 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     }, []);
 
     const handleConfirmDelete = () => {
-    if (confirmModal.rowIndex !== null) {
-        deleteRow(confirmModal.sectionId, confirmModal.rowIndex);
-    } else {
-        deleteSection(confirmModal.sectionId);
-    }
+        if (confirmModal.rowIndex !== null) {
+            deleteRow(confirmModal.sectionId, confirmModal.rowIndex);
+        } else {
+            deleteSection(confirmModal.sectionId);
+        }
 
-    setConfirmModal({ open: false });
+        setConfirmModal({ open: false });
     };
 
     // Handle currency selection for a specific section
@@ -267,6 +267,14 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         );
     }
 
+    // Get already selected denominations in a section
+    const getUsedDenominations = (section) => {
+        return section.rows
+            .map(row => row.denom)
+            .filter(denom => denom !== "");
+    };
+
+
     return (
         <div className="mt-4">
             {/* Render each currency section */}
@@ -311,18 +319,18 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             {data.sections.length > 1 && (
                                 <button
                                     onClick={() =>
-                                    setConfirmModal({
-                                        open: true,
-                                        actionType: "remove",
-                                        title: "Please Confirm: Delete This Currency Entry Permanently",
-                                        message: "Are you sure you want to remove this currency?",
-                                        sectionId: section.id,
-                                        rowIndex: null,
-                                    })
+                                        setConfirmModal({
+                                            open: true,
+                                            actionType: "remove",
+                                            title: "Remove Currency",
+                                            message: "Are you sure you want to remove this currency?",
+                                            sectionId: section.id,
+                                            rowIndex: null,
+                                        })
                                     }
                                     className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
                                 >
-                                    <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)}/>
+                                    <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)} />
                                     Remove Currency
                                 </button>
                             )}
@@ -358,18 +366,27 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         {row.open && (
                                             <ul className="absolute w-full mt-2 bg-[#2E3439] 
                                             border border-[#2A2F33] rounded-lg z-30">
-                                                {denominationOptions.map((item) => (
-                                                    <li
-                                                        key={item}
-                                                        onClick={() => selectDenomination(section.id, i, item)}
-                                                        className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
-                                                    >
-                                                        <span>{currencySymbols[section.selectedCurrency]}{item}</span>
-                                                        {row.denom === item && (
-                                                            <img src={tick} className="w-4 h-4" alt="selected" />
-                                                        )}
-                                                    </li>
-                                                ))}
+                                                {denominationOptions
+                                                    .filter(item => {
+                                                        // Allow current row value
+                                                        if (row.denom === item) return true;
+
+                                                        // Hide already selected denominations in other rows
+                                                        return !getUsedDenominations(section).includes(item);
+                                                    })
+                                                    .map((item) => (
+                                                        <li
+                                                            key={item}
+                                                            onClick={() => selectDenomination(section.id, i, item)}
+                                                            className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
+                                                        >
+                                                            <span>{currencySymbols[section.selectedCurrency]}{item}</span>
+                                                            {row.denom === item && (
+                                                                <img src={tick} className="w-4 h-4" alt="selected" />
+                                                            )}
+                                                        </li>
+                                                    ))}
+
                                             </ul>
                                         )}
                                     </div>
@@ -402,14 +419,14 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                             <img
                                                 src={trash}
                                                 onClick={() =>
-                                                setConfirmModal({
-                                                    open: true,
-                                                    actionType: "remove",
-                                                    title: "Please Confirm: Delete This Denomination Entry Permanently",
-                                                    message: "Are you sure you want to delete this row?",
-                                                    sectionId: section.id,
-                                                    rowIndex: i,
-                                                })
+                                                    setConfirmModal({
+                                                        open: true,
+                                                        actionType: "remove",
+                                                        title: "Please Confirm: Delete This Denomination Entry Permanently",
+                                                        message: "Are you sure you want to delete this row?",
+                                                        sectionId: section.id,
+                                                        rowIndex: i,
+                                                    })
                                                 }
                                                 className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7"
                                                 alt="delete"
@@ -491,9 +508,9 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                 </div>
             </div>
             <NotificationCard
-            confirmModal={confirmModal}
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setConfirmModal({ open: false })}
+                confirmModal={confirmModal}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setConfirmModal({ open: false })}
             />
         </div>
     );

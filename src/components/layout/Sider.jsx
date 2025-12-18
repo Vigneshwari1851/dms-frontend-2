@@ -9,7 +9,7 @@ import customermanagement from "../../assets/customer/ledger.svg";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const location = useLocation(); // 👈 get current route
+  const location = useLocation(); 
 
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
