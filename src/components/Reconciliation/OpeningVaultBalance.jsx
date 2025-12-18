@@ -314,7 +314,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     setConfirmModal({
                                         open: true,
                                         actionType: "remove",
-                                        title: "Remove Currency",
+                                        title: "Please Confirm: Delete This Currency Entry Permanently",
                                         message: "Are you sure you want to remove this currency?",
                                         sectionId: section.id,
                                         rowIndex: null,
