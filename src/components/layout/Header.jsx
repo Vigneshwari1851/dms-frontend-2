@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from "react"; 
+import { useState, useRef, useEffect } from "react";
 import searchIcon from "../../assets/Common/search.svg";
 import logo from "../../assets/Common/logo.svg";
 import profile from "../../assets/Common/profile.svg";
 import logout from "../../assets/Common/logout.svg";
-import NotificationCard from "../common/Notification"; 
+import NotificationCard from "../common/Notification";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
-import { fetchReconciliationAlerts } from "../../api/reconcoliation"; 
+import { fetchReconciliationAlerts } from "../../api/reconcoliation";
 import bellIcon from "../../assets/notification/bell.svg";
 import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg";
 
@@ -103,7 +103,7 @@ export default function Header() {
 
       <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative z-50">
         {/* Left Logo */}
-        <img src={logo} alt="logo" /> 
+        <img src={logo} alt="logo" />
 
         {/* Right Section */}
         <div className="flex items-center gap-6">
@@ -155,9 +155,8 @@ export default function Header() {
                       >
                         <div className="flex items-start gap-2 relative">
                           <span
-                            className={`w-2 h-2 rounded-full mt-2 ${
-                              n.alertType === "RECONCILIATION" ? "bg-[#D83D00]" : "bg-[#D8AD00]"
-                            }`}
+                            className={`w-2 h-2 rounded-full mt-2 ${n.alertType === "RECONCILIATION" ? "bg-[#D83D00]" : "bg-[#D8AD00]"
+                              }`}
                           ></span>
                           <div className="flex flex-col gap-[9px]">
                             <p className="font-semibold">{n.title}</p>
@@ -198,11 +197,17 @@ export default function Header() {
                 <p className="text-gray-400 text-sm mb-4">{userRole}</p>
 
                 <button
-                  onClick={() => navigate("/users/my-profile")}
+                  onClick={() => {
+                    setAvatarDropdownOpen(false);
+                    setNotifDropdownOpen(false);
+                    navigate("/users/my-profile");
+                  }}
                   className="w-full flex items-center gap-3 px-1 py-2 text-white hover:bg-[#1A1E21] border-[#2E3439] border-t-2 text-[14px] font-normal"
                 >
-                  <img src={profile} alt="profile" className="w-5 h-5" /> My Profile
+                  <img src={profile} alt="profile" className="w-5 h-5" />
+                  My Profile
                 </button>
+
 
                 <button
                   onClick={handleLogoutClick}
