@@ -159,11 +159,11 @@ export default function Header() {
                               }`}
                           ></span>
                           <div className="flex flex-col gap-[9px]">
-                            <p className="font-semibold">{n.title}</p>
+                            <p className="font-normal">{n.title}</p>
                             <p className="text-gray-400 text-sm">{n.message}</p>
                           </div>
                         </div>
-                        <span className="text-gray-400 text-xs ml-auto">{n.time}</span>
+                        <span className="text-gray-400 text-xs">{n.time}</span>
                       </div>
                     ))
                   )}
