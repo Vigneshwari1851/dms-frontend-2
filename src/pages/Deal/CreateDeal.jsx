@@ -544,7 +544,7 @@ export default function CreateDeal() {
                   className="
                     absolute left-0 right-0 mt-2 
                     bg-[#2E3439]
-                    rounded-lg z-20 max-h-48 overflow-y-auto
+                    rounded-lg z-20 max-h-48 overflow-y-auto scrollbar-dark
                   "
                 >
                   {customerSearchLoading && (
