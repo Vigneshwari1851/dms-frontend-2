@@ -284,7 +284,7 @@ export default function EditDeal() {
                 toast: {
                     message:
                         status === "Completed"
-                            ? "Deal updated and completed successfully"
+                            ? "Deal completed successfully"
                             : "Deal updated successfully",
                     type: status === "Completed" ? "success" : "pending",
                 },

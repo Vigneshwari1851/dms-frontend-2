@@ -21,7 +21,7 @@ export default function Toast({ show, message, type }) {
             {/* TOAST */}
             <div
                 className={`
-           fixed top-[100px] left-[1150px] z-50
+           fixed top-[100px] left-[1130px] z-50
           flex items-center gap-4
            w-auto   h-14
           px-4 py-3 pr-10  

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
@@ -22,6 +22,19 @@ export default function DealsList() {
   const [error, setError] = useState(null);
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
   const location = useLocation();
+  const exportRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportRef.current && !exportRef.current.contains(event.target)) {
+        setExportOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const [toast, setToast] = useState({
     show: false,
@@ -188,17 +201,17 @@ export default function DealsList() {
     setOpenMenu(null);
   };
 
-    const handleExport = async (format) => {
+  const handleExport = async (format) => {
     try {
       setExporting(true);
       setExportOpen(false);
 
-        // Pass "today" as a string
-    const blob = await exportDeals(format);
+      // Pass "today" as a string
+      const blob = await exportDeals(format);
 
-    if (!blob) return;
+      if (!blob) return;
 
-   
+
 
     } catch (e) {
       console.error("Export failed", e);
@@ -295,7 +308,7 @@ export default function DealsList() {
               className="w-[180px]"
             />
 
-            <div className="relative">
+            <div className="relative" ref={exportRef}>
               <button
                 onClick={() => setExportOpen(!exportOpen)}
                 className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef  } from "react";
 import bgIcon from "../../assets/report/bgimage.svg";
 import download from "../../assets/dashboard/download.svg";
 import pdf from "../../assets/common/pdf.svg";
@@ -34,6 +34,20 @@ export default function ListReport() {
   const [customTo, setCustomTo] = useState(null);
 
   const [reportRows, setReportRows] = useState([]);
+    const exportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportRef.current && !exportRef.current.contains(event.target)) {
+        setExportOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
   const formats = [
@@ -150,7 +164,7 @@ export default function ListReport() {
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-white text-2xl font-semibold">Reports & Analytics</h1>
-         <div className="relative">
+         <div className="relative" ref={exportRef}>
                      <button
                        onClick={() => setExportOpen(!exportOpen)}
                        className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"

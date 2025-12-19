@@ -327,7 +327,7 @@ export default function CreateDeal() {
               message:
                 status === "Completed"
                   ? "Deal completed successfully"
-                  : "Deal is pending. Please review and complete",
+                  : "Deal is pending.",
               type: status === "Completed" ? "success" : "pending",
             },
           },

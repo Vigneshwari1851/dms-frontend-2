@@ -157,7 +157,7 @@ const calculateStatusFromVariance = (openingData, closingData) => {
 };
 
 // VaultRow component - receives handlers to update parent state
-function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
+function VaultRow({ idx, currency, currencyId, amount, breakdown, isEditing, onUpdate }) {
     const [open, setOpen] = useState(false);
 
     // Extract currency symbol from amount
@@ -188,6 +188,7 @@ function VaultRow({ idx, currency, amount, breakdown, isEditing, onUpdate }) {
         const rowSum = newBreakdown.reduce((acc, it) => acc + parseNumber(it.total), 0);
         const updatedRow = {
             currency,
+            currencyId,
             amount: formatWithSymbol(getSymbolFromAmount(amount), rowSum),
             breakdown: newBreakdown,
         };
@@ -750,12 +751,12 @@ export default function ViewReconciliation() {
                         <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
                             <p className="text-white font-semibold text-[15px]">Status</p>
 
-                                <span
-                                    className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
-                                >
-                                    {editableData.status}
-                                </span>
-                        
+                            <span
+                                className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
+                            >
+                                {editableData.status}
+                            </span>
+
                         </div>
                     </div>
 
@@ -792,6 +793,7 @@ export default function ViewReconciliation() {
                                     key={`opening-${index}`}
                                     idx={index}
                                     currency={row.currency}
+                                    currencyId={row.currencyId}
                                     amount={row.amount}
                                     breakdown={row.breakdown}
                                     isEditing={isEditing}
@@ -820,6 +822,7 @@ export default function ViewReconciliation() {
                                     key={`close-${index}`}
                                     idx={index}
                                     currency={row.currency}
+                                    currencyId={row.currencyId}
                                     amount={row.amount}
                                     breakdown={row.breakdown}
                                     isEditing={isEditing}
