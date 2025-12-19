@@ -544,7 +544,7 @@ export default function CreateDeal() {
                   className="
                     absolute left-0 right-0 mt-2 
                     bg-[#2E3439]
-                    rounded-lg z-20 max-h-48 overflow-y-auto
+                    rounded-lg z-20 max-h-48 overflow-y-auto scrollbar-grey
                   "
                 >
                   {customerSearchLoading && (
@@ -622,15 +622,13 @@ export default function CreateDeal() {
               setIsOpen={setTxnTypeOpen}
               options={["Buy", "Sell"]}
             />
-            {hasTxnRowError && (
-              <div className="h-3.5 mt-1">
-                {errors.txnType && (
-                  <p className="text-red-400 text-[11px] leading-3.5">
-                    {errors.txnType}
-                  </p>
-                )}
-              </div>
-            )}
+             <div className="min-h-3.5 mt-1">
+              {errors.txnType && (
+                <p className="text-red-400 text-[11px] leading-3.5">
+                  {errors.txnType}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Transaction Mode */}
@@ -648,11 +646,13 @@ export default function CreateDeal() {
               setIsOpen={setTxnModeOpen}
               options={["Cash", "Credit"]}
             />
+            <div className="min-h-3.5 mt-1">
             {errors.txnMode && (
-              <p className="text-red-400 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px] leading-3.5">
                 {errors.txnMode}
               </p>
             )}
+          </div>
           </div>
 
           {/* Buy Currency Type */}
@@ -672,7 +672,7 @@ export default function CreateDeal() {
               placeholder="Select"
               loading={loadingCurrencies}
             />
-            {hasTxnRowError && <div className="h-3.5 mt-1" />}
+            <div className="h-3.5 mt-1" />
           </div>
 
           {/* Amount */}
@@ -694,11 +694,13 @@ export default function CreateDeal() {
                 }
               }}
             />
+            <div className="min-h-3.5 mt-1">
             {errors.amount && (
-              <p className="text-red-400 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px]">
                 {errors.amount}
               </p>
             )}
+          </div>
           </div>
 
           {/* Sell Currency Type */}
@@ -718,7 +720,7 @@ export default function CreateDeal() {
               placeholder="Select"
               loading={loadingCurrencies}
             />
-            {hasTxnRowError && <div className="h-3.5 mt-1" />}
+            <div className="h-3.5 mt-1" />
           </div>
 
           {/* Rate */}
@@ -740,12 +742,13 @@ export default function CreateDeal() {
                 }
               }}
             />
+            <div className="min-h-3.5 mt-1">
             {errors.rate && (
-              <p className="text-red-400 text-[11px] mt-1">
+              <p className="text-red-400 text-[11px]">
                 {errors.rate}
               </p>
             )}
-
+          </div>
           </div>
         </div>
 
