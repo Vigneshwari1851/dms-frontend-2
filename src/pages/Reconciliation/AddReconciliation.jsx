@@ -211,7 +211,7 @@ export default function AddReconciliation() {
                     navigate("/reconciliation", {
                         state: {
                             toast: {
-                                message: "Reconciliation Saved Successfully!",
+                                message: "Reconciliation Saved !",
                                 type: "success",
                             },
                         },
@@ -219,7 +219,7 @@ export default function AddReconciliation() {
                 } else {
                 setToast({
                     show: true,
-                    message: result.error?.message || "Failed to save reconciliation",
+                    message: result.error?.message || "Failed to save ",
                     type: "error",
                 });
 
@@ -230,7 +230,7 @@ export default function AddReconciliation() {
         } catch (error) {
             setToast({
                 show: true,
-                message: "Network error. Please try again.",
+                message: "Please try again.",
                 type: "error",
             });
 
