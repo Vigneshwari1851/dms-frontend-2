@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Pagination from "../common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
 import SortableHeader from "../common/SortableHeader";
@@ -33,6 +33,20 @@ export default function Table({
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, asc: true });
   const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportRef.current && !exportRef.current.contains(event.target)) {
+        setExportOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const [dateFilter, setDateFilter] = useState({ from: null, to: null });
 
   const roleColors = {
@@ -220,7 +234,7 @@ export default function Table({
                       Export
                     </button>
                   ) : (
-                    <div className="relative">
+                    <div className="relative" ref={exportRef}>
                       <button
                         onClick={() => setExportOpen(!exportOpen)}
                         className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"

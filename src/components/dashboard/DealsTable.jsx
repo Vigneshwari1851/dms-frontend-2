@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
 import uparrowIcon from "../../assets/up_arrow.svg";
@@ -19,6 +19,21 @@ export default function DealsTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
+
+  const exportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportRef.current && !exportRef.current.contains(event.target)) {
+        setExportOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -363,7 +378,7 @@ export default function DealsTable() {
             className="w-[180px]"
           />
 
-          <div className="relative">
+          <div className="relative" ref={exportRef}>
             <button
               onClick={() => setExportOpen(!exportOpen)}
               className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
