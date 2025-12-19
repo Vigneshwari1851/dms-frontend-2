@@ -41,7 +41,7 @@ export default function Dropdown({
             </button>
 
             {open && (
-                <ul className="absolute w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10">
+                <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10  max-h-48 overflow-y-auto scrollbar-dark relative">
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;
 
