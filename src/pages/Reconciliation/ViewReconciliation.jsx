@@ -476,10 +476,10 @@ export default function ViewReconciliation() {
         if (editableData.status === "Tallied" || editableData.status === "Balance") {
             varianceColor = "#82E890";
             varianceIcon = balance;
-        } else if (editableData.status === "Excess" && isPositive) {
+        } else if (editableData.status === "Excess") {
             varianceColor = "#D8AD00";
             varianceIcon = high;
-        } else if (editableData.status === "Short" && !isPositive) {
+        } else if (editableData.status === "Short" ) {
             varianceColor = "#FF6B6B";
             varianceIcon = balance;
         } else {

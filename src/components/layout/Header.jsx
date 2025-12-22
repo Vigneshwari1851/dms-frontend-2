@@ -46,8 +46,9 @@ export default function Header() {
 
   useEffect(() => {
     loadNotifications();
-    const FOUR_HOURS = 4 * 60 * 60 * 1000;
-    const intervalId = setInterval(loadNotifications, FOUR_HOURS);
+    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000; 
+    const intervalId = setInterval(loadNotifications, TWO_DAYS);
+
     return () => clearInterval(intervalId);
   }, []);
 

@@ -408,7 +408,7 @@ export default function AddReconciliation() {
                 )}
 
                 {showCurrencyModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-9999">
+                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40  flex justify-center items-center">
                         <CurrencyForm
                             currencyName={currencyData.currencyName}
                             isoCode={currencyData.isoCode}

@@ -214,7 +214,7 @@ export default function ListReport() {
             />
           </div>
 
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <label className="text-gray-300 mb-2 text-sm">Format</label>
             <Dropdown
               label={format}
@@ -227,9 +227,9 @@ export default function ListReport() {
                 </div>
               )}
             />
-          </div>
+          </div> */}
 
-          <div className="flex justify-end mt-6">
+          <div className="flex  mt-6">
             <button
               className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-5 h-10 rounded-md text-sm font-medium"
               onClick={handleApplyFilters}
