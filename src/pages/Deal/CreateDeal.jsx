@@ -263,12 +263,12 @@ export default function CreateDeal() {
         total: (Number(item.price) || 0) * (Number(item.quantity) || 0)
       }));
 
-      
+
       const hasPaidDenomination = denominationPaid.some(
         item => Number(item.price) > 0 && Number(item.quantity) > 0
       );
 
-      
+
       const paidItemsPayload = hasPaidDenomination
         ? paidItemsWithTotals
           .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
@@ -293,19 +293,19 @@ export default function CreateDeal() {
         transaction_mode: txnMode.toLowerCase(),
 
         buy_currency: buyCurrency,
-        buy_currency_id: currencyMap[buyCurrency],
+        buy_currency_id: receivedItemsWithTotals[0]?.currency_id || currencyMap[buyCurrency],
 
         sell_currency: sellCurrency,
-        sell_currency_id: currencyMap[sellCurrency],
+        sell_currency_id: paidItemsWithTotals[0]?.currency_id || currencyMap[sellCurrency],
 
         amount: Number(amount),
-        rate: Number(rate),
+        exchange_rate: Number(rate),
         amount_to_be_paid: Number(amountToBePaid),
 
         remarks: remarks,
         status: status,
 
-        received_items: receivedItemsWithTotals
+        receivedItems: receivedItemsWithTotals
           .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
           .map(item => ({
             price: String(item.price),
@@ -315,7 +315,7 @@ export default function CreateDeal() {
           })),
 
         // ✅ final paid_items
-        paid_items: paidItemsPayload,
+        paidItems: paidItemsPayload,
       };
 
       const result = await createDeal(dealData);
@@ -369,7 +369,9 @@ export default function CreateDeal() {
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         setCustomerSearchLoading(true);
-        const response = await searchCustomers(value.trim());
+        const isNumeric = /^\d+$/.test(value.trim());
+        const searchType = isNumeric ? "phone" : "name";
+        const response = await searchCustomers(value.trim(), searchType);
 
         if (response.success) {
           setCustomerResults(response.data || []);
@@ -622,7 +624,7 @@ export default function CreateDeal() {
               setIsOpen={setTxnTypeOpen}
               options={["Buy", "Sell"]}
             />
-             <div className="min-h-3.5 mt-1">
+            <div className="min-h-3.5 mt-1">
               {errors.txnType && (
                 <p className="text-red-400 text-[11px] leading-3.5">
                   {errors.txnType}
@@ -647,12 +649,12 @@ export default function CreateDeal() {
               options={["Cash", "Credit"]}
             />
             <div className="min-h-3.5 mt-1">
-            {errors.txnMode && (
-              <p className="text-red-400 text-[11px] leading-3.5">
-                {errors.txnMode}
-              </p>
-            )}
-          </div>
+              {errors.txnMode && (
+                <p className="text-red-400 text-[11px] leading-3.5">
+                  {errors.txnMode}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Buy Currency Type */}
@@ -695,12 +697,12 @@ export default function CreateDeal() {
               }}
             />
             <div className="min-h-3.5 mt-1">
-            {errors.amount && (
-              <p className="text-red-400 text-[11px]">
-                {errors.amount}
-              </p>
-            )}
-          </div>
+              {errors.amount && (
+                <p className="text-red-400 text-[11px]">
+                  {errors.amount}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Sell Currency Type */}
@@ -743,12 +745,12 @@ export default function CreateDeal() {
               }}
             />
             <div className="min-h-3.5 mt-1">
-            {errors.rate && (
-              <p className="text-red-400 text-[11px]">
-                {errors.rate}
-              </p>
-            )}
-          </div>
+              {errors.rate && (
+                <p className="text-red-400 text-[11px]">
+                  {errors.rate}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

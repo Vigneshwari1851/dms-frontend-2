@@ -12,10 +12,11 @@ function getAuthHeaders() {
  * Search customers by name/phone.
  * Example: GET /customer?search=lavanya
  */
-export async function searchCustomers(searchTerm = "") {
+export async function searchCustomers(searchTerm = "", searchType = "name") {
   try {
     const query = new URLSearchParams({
       search: searchTerm || "",
+      searchType: searchType,
     }).toString();
 
     const response = await fetch(`${API_URL}/customer?${query}`, {

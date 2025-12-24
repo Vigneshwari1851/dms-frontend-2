@@ -1,4 +1,4 @@
-import { useState, useEffect,useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
 import download from "../../assets/dashboard/download.svg";
@@ -51,7 +51,7 @@ export default function DealsList() {
         // Transform API response to match table structure
         const transformedData = response.data.map((deal) => {
           const buyAmtValue = Number(deal.buyAmount);
-          const sellAmtValue = Number(deal.sellAmount);
+          const sellAmtValue = Number(deal.amount_to_be_paid);
 
           return {
             id: deal.deal_number,
@@ -60,7 +60,7 @@ export default function DealsList() {
             customer: deal.customer.name,
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
             currency: deal.buyCurrency || "---",
-            rate: deal.rate,
+            exchange_rate: deal.exchange_rate || deal.rate,
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
             currency1: deal.sellCurrency || "---",
             status: deal.status,
@@ -450,7 +450,7 @@ export default function DealsList() {
                   <td>{item.customer}</td>
                   <td>{item.buyAmt}</td>
                   <td>{item.currency}</td>
-                  <td>{item.rate}</td>
+                  <td>{item.exchange_rate}</td>
                   <td>{item.sellAmt}</td>
                   <td>{item.currency1}</td>
 

@@ -53,7 +53,7 @@ export default function DealsTable() {
             customer: deal.customer.name,
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
             currency: deal.buyCurrency || "---",
-            rate: deal.rate,
+            exchange_rate: deal.exchange_rate || deal.rate || 0,
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
             currency1: deal.sellCurrency || "---",
             status: deal.status,
@@ -98,7 +98,7 @@ export default function DealsTable() {
       customer: "Krishna",
       buyAmt: "50,000",
       currency: "USD",
-      rate: "81.90",
+      exchange_rate: "81.90",
       sellAmt: "30,000",
       currency1: "TZS",
       status: "Pending",
@@ -315,23 +315,23 @@ export default function DealsTable() {
   // };
 
   const handleExport = async (format) => {
-  try {
-    setExporting(true);
-    setExportOpen(false);
+    try {
+      setExporting(true);
+      setExportOpen(false);
 
-    // Pass "today" as a string
-    const blob = await exportDeals(format, "today");
+      // Pass "today" as a string
+      const blob = await exportDeals(format, "today");
 
-    if (!blob) return;
+      if (!blob) return;
 
-   
 
-  } catch (e) {
-    console.error("Export failed", e);
-  } finally {
-    setExporting(false);
-  }
-};
+
+    } catch (e) {
+      console.error("Export failed", e);
+    } finally {
+      setExporting(false);
+    }
+  };
 
 
 
@@ -487,7 +487,7 @@ export default function DealsTable() {
             </tr>
           </thead>
 
-            <tbody>
+          <tbody>
             {paginatedData.length === 0 ? (
               <tr>
                 <td
@@ -522,7 +522,7 @@ export default function DealsTable() {
                   <td>{item.customer}</td>
                   <td>{item.buyAmt}</td>
                   <td>{item.currency}</td>
-                  <td>{item.rate}</td>
+                  <td>{item.exchange_rate}</td>
                   <td>{item.sellAmt}</td>
                   <td>{item.currency1}</td>
 

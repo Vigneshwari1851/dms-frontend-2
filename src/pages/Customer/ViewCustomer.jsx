@@ -12,7 +12,7 @@ export default function ViewCustomer() {
   const navigate = useNavigate();
 
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", phone_number: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone_number: "", is_active: false });
   const [errors, setErrors] = useState({});
   const [initialData, setInitialData] = useState(null);
   const [customerDeals, setCustomerDeals] = useState([]);
@@ -43,13 +43,15 @@ export default function ViewCustomer() {
       setFormData({
         name: customer.name,
         email: customer.email,
-        phone_number: customer.phone_number
+        phone_number: customer.phone_number,
+        is_active: customer.is_active ?? false,
       });
 
       setInitialData({
         name: customer.name,
         email: customer.email,
-        phone_number: customer.phone_number
+        phone_number: customer.phone_number,
+        is_active: customer.is_active ?? false,
       });
 
       const deals = (customer.deals || []).map((deal) => ({
@@ -63,7 +65,7 @@ export default function ViewCustomer() {
         sellAmt: Number(deal.sellAmount).toLocaleString(),
         currency: deal.buyCurrency || "---",
         currency1: deal.sellCurrency || "---",
-        rate: deal.rate,
+        rate: deal.exchange_rate || deal.rate,
         status: deal.status
       }));
 
@@ -74,7 +76,8 @@ export default function ViewCustomer() {
   }, [id, navigate]);
 
   const handleChange = (e) => {
-    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
+    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    setFormData((p) => ({ ...p, [e.target.name]: value }));
   };
 
   const validate = () => {
@@ -90,24 +93,24 @@ export default function ViewCustomer() {
     if (!validate()) return;
     const res = await updateCustomer(id, formData);
     if (res.success) {
-    navigate("/customer-info", {
-      state: {
-        toast: {
-          message: "Customer updated successfully",
-          type: "success",
+      navigate("/customer-info", {
+        state: {
+          toast: {
+            message: "Customer updated successfully",
+            type: "success",
+          },
         },
-      },
-    });
-  } else {
-    navigate("/customer-info", {
-      state: {
-        toast: {
-          message: "Failed to update customer",
-          type: "error",
+      });
+    } else {
+      navigate("/customer-info", {
+        state: {
+          toast: {
+            message: "Failed to update customer",
+            type: "error",
+          },
         },
-      },
-    });
-  }
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -141,7 +144,7 @@ export default function ViewCustomer() {
       mode: deal.transaction_mode,
       buyCurrency: deal.buyCurrency,
       sellCurrency: deal.sellCurrency,
-      rate: `${deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
+      rate: `${deal.exchange_rate || deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
       buyAmt: item.buyAmt,
       sellAmt: item.sellAmt,
       receivedItems,
@@ -285,6 +288,18 @@ export default function ViewCustomer() {
                   {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
                 </div>
               </div>
+              <div className="mt-4">
+                <label className="flex items-center gap-2 text-sm text-[#ABABAB] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded bg-[#16191C] border-[#2A2F33] focus:ring-blue-500"
+                  />
+                  Is Active
+                </label>
+              </div>
             </div>
           ) : (
             <div>
@@ -378,11 +393,11 @@ export default function ViewCustomer() {
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
                 <Section title="Denomination Details">
-                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems}  currencyCode={selectedDeal.buyCurrency}/>
+                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems} currencyCode={selectedDeal.buyCurrency} />
                 </Section>
 
                 <Section title="">
-                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems}  currencyCode={selectedDeal.sellCurrency}/>
+                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems} currencyCode={selectedDeal.sellCurrency} />
                 </Section>
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 

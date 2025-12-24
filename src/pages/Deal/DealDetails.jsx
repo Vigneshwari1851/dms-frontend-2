@@ -142,7 +142,7 @@ export default function DealDetails() {
           </div>
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">Rate</label>
-            <p className="text-white text-lg">{formatCurrency(deal.rate)}</p>
+            <p className="text-white text-lg">{formatCurrency(deal.exchange_rate)}</p>
           </div>
         </div>
 
@@ -151,11 +151,10 @@ export default function DealDetails() {
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">Status</label>
             <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                deal.status === "Pending"
+              className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${deal.status === "Pending"
                   ? "bg-[#D8AD0024] text-[#D8AD00]"
                   : "bg-[#1D4CB53D] text-[#88ACFC]"
-              }`}
+                }`}
             >
               {deal.status}
             </span>

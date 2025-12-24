@@ -122,10 +122,10 @@ export default function EditDeal() {
         // Set buy and sell currencies from the API response
         // Try to get from direct fields first, then from items
         const buyCurrencyFromResponse = dealData.buy_currency ||
-            (dealData.received_items?.[0]?.currency?.name || "");
+            (dealData.receivedItems?.[0]?.currency?.name || "");
 
         const sellCurrencyFromResponse = dealData.sell_currency ||
-            (dealData.paid_items?.[0]?.currency?.name || "");
+            (dealData.paidItems?.[0]?.currency?.name || "");
 
         setBuyCurrency(buyCurrencyFromResponse);
         setSellCurrency(sellCurrencyFromResponse);
@@ -134,14 +134,14 @@ export default function EditDeal() {
         console.log("Sell currency set to:", sellCurrencyFromResponse);
 
         setAmount(dealData.amount || "");
-        setRate(dealData.rate || "");
+        setRate(dealData.exchange_rate || dealData.rate || "");
 
         setAmountToBePaid(dealData.amount_to_be_paid || "0.00");
 
         setNotes(dealData.remarks || "");
 
-        const received = dealData.received_items || [];
-        const paid = dealData.paid_items || [];
+        const received = dealData.receivedItems || [];
+        const paid = dealData.paidItems || [];
 
         const formattedReceived = received.length > 0
             ? received.map(item => ({
@@ -172,8 +172,8 @@ export default function EditDeal() {
             console.log("Full deal object:", deal);
             console.log("Buy currency field:", deal.buy_currency);
             console.log("Sell currency field:", deal.sell_currency);
-            console.log("Received items:", deal.received_items);
-            console.log("Paid items:", deal.paid_items);
+            console.log("Received items:", deal.receivedItems);
+            console.log("Paid items:", deal.paidItems);
         }
     }, [deal]);
 
@@ -256,12 +256,12 @@ export default function EditDeal() {
                 deal_type: txnType.toLowerCase(),
                 transaction_mode: txnMode.toLowerCase(),
                 amount: Number(amount),
-                rate: Number(rate),
+                exchange_rate: Number(rate),
                 amount_to_be_paid: Number(amountToBePaid),
                 remarks: notes,
                 status,
 
-                received_items: denominationReceived
+                receivedItems: denominationReceived
                     .filter(i => i.price && i.quantity)
                     .map(i => ({
                         price: String(i.price),
@@ -269,7 +269,7 @@ export default function EditDeal() {
                         currency_id: i.currency_id || currencyMap[buyCurrency],
                     })),
 
-                paid_items: denominationPaid
+                paidItems: denominationPaid
                     .filter(i => i.price && i.quantity)
                     .map(i => ({
                         price: String(i.price),
@@ -280,16 +280,16 @@ export default function EditDeal() {
 
             await updateDeal(id, dealData);
             navigate("/deals", {
-            state: {
-                toast: {
-                    message:
-                        status === "Completed"
-                            ? "Deal completed successfully"
-                            : "Deal updated successfully",
-                    type: status === "Completed" ? "success" : "pending",
+                state: {
+                    toast: {
+                        message:
+                            status === "Completed"
+                                ? "Deal completed successfully"
+                                : "Deal updated successfully",
+                        type: status === "Completed" ? "success" : "pending",
+                    },
                 },
-            },
-        });
+            });
         } catch (err) {
             console.error("Error updating deal:", err);
             setError("Failed to update deal");
