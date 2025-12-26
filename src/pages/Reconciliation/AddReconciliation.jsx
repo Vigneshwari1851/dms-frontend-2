@@ -8,14 +8,91 @@ import { createCurrency } from "../../api/currency/currency";
 import { createReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
     const [showCurrencyModal, setShowCurrencyModal] = useState(false);
     const [notes, setNotes] = useState("");
-    const [skipClosing, setSkipClosing] = useState(false);
+
     const navigate = useNavigate();
+    const { id } = useParams();
+    const [originalData, setOriginalData] = useState(null);
+
+    // Fetch reconciliation data if editing
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchRecon = async () => {
+            try {
+                const result = await fetchReconciliationById(id);
+                if (result.success || result.data) {
+                    const data = result.data?.data || result.data || result;
+
+                    // Parse notes
+                    if (data.notes) {
+                        const notesText = Array.isArray(data.notes)
+                            ? data.notes.map(n => typeof n === 'string' ? n : n.note || n.text).join('\n')
+                            : String(data.notes);
+                        setNotes(notesText);
+                    }
+
+                    // Store original data to know what to update
+                    setOriginalData(data);
+
+                    // Helper to convert API entries back to section format
+                    const convertEntriesToSections = (entries) => {
+                        if (!entries || !entries.length) return [];
+
+                        // Group by currency
+                        const byCurrency = {};
+                        entries.forEach(entry => {
+                            const currId = entry.currency_id || entry.currencyId;
+                            if (!byCurrency[currId]) {
+                                byCurrency[currId] = {
+                                    id: currId, // Unique ID for the section (using currency ID)
+                                    currencyId: currId,
+                                    currency: entry.currency?.code || "USD", // Fallback, will need actual code
+                                    selectedCurrency: entry.currency?.code || "USD",
+                                    exchangeRate: entry.exchange_rate || 1, // Capture exchange rate from entry
+                                    rows: []
+                                };
+                            }
+
+                            // Add row
+                            byCurrency[currId].rows.push({
+                                denom: entry.denomination,
+                                qty: entry.quantity,
+                                total: entry.amount
+                            });
+                        });
+
+                        return Object.values(byCurrency);
+                    };
+
+                    // Set Opening Data
+                    const openingSections = convertEntriesToSections(data.openingEntries || data.opening_entries);
+                    setOpeningData({ sections: openingSections });
+
+                    // Set Closing Data
+                    const closingSections = convertEntriesToSections(data.closingEntries || data.closing_entries);
+                    if (closingSections.length > 0) {
+                        setClosingData({ sections: closingSections });
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch reconciliation:", error);
+                setToast({
+                    show: true,
+                    message: "Failed to load reconciliation data",
+                    type: "error"
+                });
+            }
+        };
+
+        fetchRecon();
+    }, [id]);
 
     const [currencyData, setCurrencyData] = useState({
         currencyName: "",
@@ -32,6 +109,17 @@ export default function AddReconciliation() {
         sections: [] // Will be initialized by OpeningVaultBalance component
     });
 
+    // Helper to check if data has entered values
+    const hasEnteredValues = (data) => {
+        if (!data.sections) return false;
+
+        return data.sections.some(section =>
+            (section.rows || []).some(row =>
+                Number(row.qty) > 0 || Number(row.total) > 0
+            )
+        );
+    };
+
     // Calculate totals for summary (sum across all sections)
     const openingTotal = openingData.sections
         ? openingData.sections.reduce((sum, section) => {
@@ -40,7 +128,7 @@ export default function AddReconciliation() {
         }, 0)
         : 0;
 
-    const closingTotal = closingData.sections && !skipClosing
+    const closingTotal = closingData.sections
         ? closingData.sections.reduce((sum, section) => {
             return sum + (section.rows || []).reduce((rowSum, row) =>
                 rowSum + (Number(row.total) || 0), 0);
@@ -48,15 +136,15 @@ export default function AddReconciliation() {
         : 0;
 
     const totalTransactions = 0;
-    const difference = skipClosing ? 0 : closingTotal - openingTotal;
+    const difference = closingTotal - openingTotal;
 
     // Format variance value
     const varianceValue = difference >= 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`;
 
     // Determine status based on difference
     let status = "Tallied";
-    if (skipClosing) {
-        status = "Pending";
+    if (!hasEnteredValues(closingData)) {
+        status = "In_Progress";
     } else if (difference > 0) {
         status = "Excess";
     } else if (difference < 0) {
@@ -69,8 +157,8 @@ export default function AddReconciliation() {
     let varianceColor = "";
     let varianceIcon = balance;
 
-    if (skipClosing) {
-        varianceColor = "#9CA3AF";   // gray
+    if (status === "In_Progress") {
+        varianceColor = "#8B5CF6";   // violet
         varianceIcon = balance;
     } else if (status === "Tallied" || status === "Balance") {
         varianceColor = "#82E890";   // green
@@ -90,6 +178,7 @@ export default function AddReconciliation() {
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
         Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
+        In_Progress: "bg-[#8B5CF624] text-[#8B5CF6] border-[#8B5CF6]",
     };
 
     const handleCurrencyChange = (field, value) => {
@@ -129,24 +218,17 @@ export default function AddReconciliation() {
                 denomination: parseFloat(row.denom || 0),
                 quantity: parseInt(row.qty || 0),
                 amount: parseFloat(row.total || 0),
-                currency_id: section.currencyId
+                currency_id: section.currencyId,
+                exchange_rate: parseFloat(section.exchangeRate || 1) // Include exchange rate in API payload
             }))
         );
     };
 
-    const hasEnteredValues = (data) => {
-    if (!data.sections) return false;
 
-    return data.sections.some(section =>
-        (section.rows || []).some(row =>
-        Number(row.qty) > 0 || Number(row.total) > 0
-        )
-    );
-    };
 
     const showSaveButton =
-    hasEnteredValues(openingData) ||
-    (!skipClosing && hasEnteredValues(closingData));
+        hasEnteredValues(openingData) ||
+        hasEnteredValues(closingData);
 
     // Function to handle saving reconciliation with optional closing balance
     // Function to handle saving reconciliation with optional closing balance
@@ -155,8 +237,8 @@ export default function AddReconciliation() {
             // Prepare opening entries from all sections
             const openingEntries = formatEntriesForApi(openingData);
 
-            // Prepare closing entries (always optional)
-            const closingEntries = formatEntriesForApi(closingData);
+            // Prepare closing entries (send empty if no values entered to imply In_Progress)
+            const closingEntries = hasEnteredValues(closingData) ? formatEntriesForApi(closingData) : [];
 
             // Validation: Check if all opening sections have currency selected
             const openingHasCurrency = openingData.sections &&
@@ -193,33 +275,39 @@ export default function AddReconciliation() {
             // Show pending toast
             setToast({
                 show: true,
-                message: "Saving reconciliation...",
+                message: id ? "Updating reconciliation..." : "Saving reconciliation...",
                 type: "pending",
             });
 
             const reconciliationData = {
                 openingEntries,
                 closingEntries, // Can be empty array
-                notes: notes ? [notes] : []
+                notes: notes ? [notes] : [],
+                status: status || "Tallied" // Send calculated status
             };
 
             console.log('Sending reconciliation data:', reconciliationData);
 
-            const result = await createReconciliation(reconciliationData);
+            let result;
+            if (id) {
+                result = await updateReconciliation(id, reconciliationData);
+            } else {
+                result = await createReconciliation(reconciliationData);
+            }
 
             if (result.success) {
-                    navigate("/reconciliation", {
-                        state: {
-                            toast: {
-                                message: "Reconciliation Saved !",
-                                type: "success",
-                            },
+                navigate("/reconciliation", {
+                    state: {
+                        toast: {
+                            message: id ? "Reconciliation Updated!" : "Reconciliation Saved!",
+                            type: "success",
                         },
-                    });
-                } else {
+                    },
+                });
+            } else {
                 setToast({
                     show: true,
-                    message: result.error?.message || "Failed to save ",
+                    message: result.error?.message || (id ? "Failed to update" : "Failed to save"),
                     type: "error",
                 });
 
@@ -245,25 +333,14 @@ export default function AddReconciliation() {
         console.log("New currency added, refresh needed");
     };
 
-    // Function to toggle skip closing
-    const toggleSkipClosing = () => {
-        const newSkipValue = !skipClosing;
-        if (newSkipValue) {
-            // When enabling skip, confirm
-            if (window.confirm("Skip closing vault? This will mark the reconciliation as Pending. You can add closing balance later.")) {
-                setSkipClosing(true);
-            }
-        } else {
-            setSkipClosing(false);
-        }
-    };
+
 
     return (
         <>
             {/* HEADER */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-[16px] font-medium text-white">Daily Reconciliation</h2>
+                    <h2 className="text-[16px] font-medium text-white">{id ? "Edit Reconciliation" : "Daily Reconciliation"}</h2>
                     <p className="text-gray-400 text-[12px] mb-6">
                         Manually data entry for daily vault reconciliation
                     </p>
@@ -318,7 +395,7 @@ export default function AddReconciliation() {
                         >
                             <img src={bgIcon} alt="No Data" className="w-64 opacity-90" />
 
-                          
+
 
                             <p className="text-[#8F8F8F] mt-10 text-sm font-medium text-center w-[60%]">
                                 The summary hasn’t been generated yet.
@@ -327,18 +404,18 @@ export default function AddReconciliation() {
 
 
                     </div>
-                    {showSaveButton && (
-                        <div className="flex justify-end">
-                            <button
-                            onClick={handleSaveReconciliation}
-                            className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
-                            >
-                            <img src={save} alt="save" />
-                            {skipClosing ? "Save Opening Balance" : "Save Reconciliation"}
-                            </button>
-                        </div>
+                        {showSaveButton && (
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handleSaveReconciliation}
+                                    className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
+                                >
+                                    <img src={save} alt="save" />
+                                    {id ? "Update Reconciliation" : "Save Reconciliation"}
+                                </button>
+                            </div>
                         )}
-                        </>
+                    </>
                 )}
 
                 {/* OPENING TAB CONTENT */}
@@ -360,50 +437,11 @@ export default function AddReconciliation() {
                 {/* CLOSING TAB CONTENT */}
                 {activeTab === "closing" && (
                     <div>
-                        {/* <div className="mb-4 flex items-center justify-between">
-                            <p className="text-[#9CA3AF] text-sm">
-                                Closing vault balance is optional
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="skipClosingTab"
-                                    checked={skipClosing}
-                                    onChange={toggleSkipClosing}
-                                    className="w-4 h-4 rounded border border-[#2A2F33] bg-[#1E2328] text-[#1D4CB5]"
-                                />
-                                <label htmlFor="skipClosingTab" className="text-[#9CA3AF] text-sm">
-                                    Skip closing vault
-                                </label>
-                            </div>
-                        </div> */}
-
-                        {skipClosing ? (
-                            <div className="text-center py-10 bg-[#1E2328] rounded-xl border border-dashed border-[#2F343A]">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#374151] mb-4">
-                                    <svg className="w-6 h-6 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                </div>
-                                <p className="text-[#E3E3E3] text-lg mb-2">Closing Vault Skipped</p>
-                                <p className="text-[#9CA3AF] text-sm mb-4 max-w-md mx-auto">
-                                    You can skip closing vault now and add it later when available.
-                                    The reconciliation will be marked as "Pending".
-                                </p>
-                                <button
-                                    onClick={() => setSkipClosing(false)}
-                                    className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg hover:bg-[#2A5BD7] transition-colors text-sm"
-                                >
-                                    Add Closing Balance
-                                </button>
-                            </div>
-                        ) : (
-                            <OpeningVaultBalance
-                                data={closingData}
-                                setData={setClosingData}
-                                type="closing"
-                            />
-                        )}
+                        <OpeningVaultBalance
+                            data={closingData}
+                            setData={setClosingData}
+                            type="closing"
+                        />
                     </div>
                 )}
 

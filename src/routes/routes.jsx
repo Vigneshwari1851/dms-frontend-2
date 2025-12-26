@@ -55,10 +55,10 @@ export default function AppRoutes() {
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
         <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
         <Route path="customer-info" element={<ListCustomer />} />
-        <Route path="customer-info/add-customer" element={<AddCustomer/>} />  
+        <Route path="customer-info/add-customer" element={<AddCustomer />} />
         <Route path="customer-info/view/:id" element={<ViewCustomer />} />
         <Route path="users/my-profile" element={<MyProfile />} />
-        <Route path="/reconciliation/edit/:id" element={<ViewReconciliation />} />
+        <Route path="/reconciliation/edit/:id" element={<AddReconciliation />} />
       </Route>
     </Routes>
   );

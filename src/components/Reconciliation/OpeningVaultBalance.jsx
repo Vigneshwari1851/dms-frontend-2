@@ -49,6 +49,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             id: Date.now(),
                             selectedCurrency: defaultCurrency.code,
                             currencyId: defaultCurrency.id,
+                            exchangeRate: 1,
                             rows: [{ denom: "", qty: "", total: 0, open: false }],
                             currencyOpen: false
                         }]
@@ -82,6 +83,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                         ...section,
                         selectedCurrency: currencyName,
                         currencyId: currencyId,
+                        exchangeRate: 1, // Reset rate on currency change
                         currencyOpen: false
                     }
                     : section
@@ -111,6 +113,18 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         }));
     };
 
+    // Handle exchange rate change for a specific section
+    const handleRateChange = (sectionId, value) => {
+        setData(prev => ({
+            ...prev,
+            sections: prev.sections.map(section =>
+                section.id === sectionId
+                    ? { ...section, exchangeRate: value }
+                    : section
+            )
+        }));
+    };
+
     // Add a new currency section
     const addNewCurrencySection = () => {
         const defaultCurrency = currencyOptions[0] || "USD";
@@ -124,6 +138,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     id: Date.now(),
                     selectedCurrency: defaultCurrency,
                     currencyId: defaultCurrencyId,
+                    exchangeRate: 1,
                     rows: [{ denom: "", qty: "", total: 0, open: false }],
                     currencyOpen: false
                 }
@@ -283,57 +298,74 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     <div className="bg-[#1E2328] border border-[#16191C] rounded-xl p-3 w-full">
 
                         {/* SECTION HEADER WITH CURRENCY DROPDOWN */}
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="relative">
-                                <button
-                                    onClick={() => toggleCurrencyDropdown(section.id)}
-                                    className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4"
-                                >
-                                    <span className="text-[#939AF0] text-sm truncate max-w-[180px]">
-                                        {section.selectedCurrency || "Select Currency"}
-                                    </span>
-                                    <img src={down} className="w-3 shrink-0" alt="dropdown" />
-                                </button>
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex flex-col gap-2">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => toggleCurrencyDropdown(section.id)}
+                                        className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4"
+                                    >
+                                        <span className="text-[#939AF0] text-sm truncate max-w-[180px]">
+                                            {section.selectedCurrency || "Select Currency"}
+                                        </span>
+                                        <img src={down} className="w-3 shrink-0" alt="dropdown" />
+                                    </button>
 
-                                {section.currencyOpen && (
-                                    <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
-        bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
-                                        {currencyOptions.map((item) => (
-                                            <li
-                                                key={item}
-                                                onClick={() => handleCurrencySelect(section.id, item)}
-                                                className="px-4 py-2 flex items-center justify-between 
-                    hover:bg-[#1E2328] cursor-pointer text-white"
-                                            >
-                                                <span className="truncate max-w-[200px]">{item}</span>
-                                                {section.selectedCurrency === item && (
-                                                    <img src={tick} className="w-4 h-4 shrink-0" alt="selected" />
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                    {section.currencyOpen && (
+                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
+            bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
+                                            {currencyOptions.map((item) => (
+                                                <li
+                                                    key={item}
+                                                    onClick={() => handleCurrencySelect(section.id, item)}
+                                                    className="px-4 py-2 flex items-center justify-between 
+                        hover:bg-[#1E2328] cursor-pointer text-white"
+                                                >
+                                                    <span className="truncate max-w-[200px]">{item}</span>
+                                                    {section.selectedCurrency === item && (
+                                                        <img src={tick} className="w-4 h-4 shrink-0" alt="selected" />
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+
+                                {/* EXCHANGE RATE INPUT */}
+                                <div className="flex items-center gap-3 pl-4">
+                                    <label className="text-gray-400 text-sm">Rate:</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.0001"
+                                        value={section.exchangeRate || ""}
+                                        onChange={(e) => handleRateChange(section.id, e.target.value)}
+                                        className="bg-[#16191C]  text-white rounded px-2 py-1 w-24 text-sm outline-none focus:border-[#2ACC80]"
+                                        placeholder="1.0"
+                                    />
+                                </div>
                             </div>
 
-                            {/* Delete section button (only show if more than one section) */}
-                            {data.sections.length > 1 && (
-                                <button
-                                    onClick={() =>
-                                        setConfirmModal({
-                                            open: true,
-                                            actionType: "remove",
-                                            title: "Remove Currency",
-                                            message: "Are you sure you want to remove this currency?",
-                                            sectionId: section.id,
-                                            rowIndex: null,
-                                        })
-                                    }
-                                    className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
-                                >
-                                    <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)} />
-                                    Remove Currency
-                                </button>
-                            )}
+                            <div className="flex flex-col items-end gap-2">
+                                {data.sections.length > 1 && (
+                                    <button
+                                        onClick={() =>
+                                            setConfirmModal({
+                                                open: true,
+                                                actionType: "remove",
+                                                title: "Remove Currency",
+                                                message: "Are you sure you want to remove this currency?",
+                                                sectionId: section.id,
+                                                rowIndex: null,
+                                            })
+                                        }
+                                        className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
+                                    >
+                                        <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)} />
+                                        Remove Currency
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* INNER CARD */}

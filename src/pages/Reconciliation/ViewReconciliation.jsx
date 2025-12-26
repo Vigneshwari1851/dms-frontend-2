@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg";
-import saveIcon from "../../assets/common/save.svg";
+
 import expandRight from "../../assets/common/expandRight.svg";
 import edit from "../../assets/Common/edit.svg";
-import save from "../../assets/common/save.svg";
+
 import { useNavigate, useParams } from "react-router-dom";
 import DealsTable from "../../components/dashboard/DealsTable";
-import { fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
+import { fetchReconciliationById } from "../../api/reconcoliation";
 
 // Helper: get numeric value from strings like "$100", "€50", "100"
 const parseNumber = (str) => {
@@ -284,62 +284,16 @@ function VaultRow({ idx, currency, currencyId, amount, breakdown, isEditing, onU
     );
 }
 
-// UI vault → API entries
-const vaultDataToEntries = (vaultData = []) =>
-    vaultData.flatMap((row) =>
-        row.breakdown.map((b) => ({
-            denomination: parseNumber(b.denom),
-            quantity: Number(b.qty),
-            amount: parseNumber(b.total),
-            currency_id: row.currencyId,
-        }))
-    );
 
-// Build PATCH payload (partial update)
-const buildPatchPayload = (original, edited) => {
-    const payload = {};
-
-    // Notes
-    if (edited.notes !== original.notes) {
-        payload.notes = edited.notes
-            ? edited.notes.split("\n").filter(Boolean)
-            : [];
-    }
-
-    // Opening vault
-    if (
-        JSON.stringify(edited.openingVaultData) !==
-        JSON.stringify(original.openingVaultData)
-    ) {
-        payload.openingEntries = vaultDataToEntries(
-            edited.openingVaultData
-        );
-    }
-
-    // Closing vault
-    if (
-        JSON.stringify(edited.closingVaultData) !==
-        JSON.stringify(original.closingVaultData)
-    ) {
-        payload.closingEntries = vaultDataToEntries(
-            edited.closingVaultData
-        );
-    }
-
-    return payload;
-};
 
 
 export default function ViewReconciliation() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    // ---------- state: originalData (source of truth) and editable copy ----------
-    const [originalData, setOriginalData] = useState(null);
+    const [error, setError] = useState(null);
     const [editableData, setEditableData] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
 
     // Fetch reconciliation data by ID
     useEffect(() => {
@@ -348,10 +302,7 @@ export default function ViewReconciliation() {
                 setLoading(true);
                 setError(null);
 
-                console.log(`Fetching reconciliation with ID: ${id}`);
                 const result = await fetchReconciliationById(id);
-
-                console.log('Full API Response:', result);
 
                 if (!result) {
                     throw new Error("No response from server");
@@ -367,8 +318,6 @@ export default function ViewReconciliation() {
                 if (!data) {
                     throw new Error("No reconciliation data found");
                 }
-
-                console.log('Reconciliation Data:', data);
 
                 // Format date
                 const formatDate = (dateString) => {
@@ -391,11 +340,6 @@ export default function ViewReconciliation() {
                 const createdBy = data.createdBy || data.created_by || data.user || null;
                 const createdAt = data.created_at || data.createdAt || data.date;
 
-                console.log('Opening entries:', openingEntries);
-                console.log('Closing entries:', closingEntries);
-                console.log('Deals:', deals);
-                console.log('Notes:', notes);
-
                 // Convert API data to vault format
                 const openingVaultData = convertEntriesToVaultData(openingEntries, "opening");
                 const closingVaultData = convertEntriesToVaultData(closingEntries, "closing");
@@ -404,7 +348,11 @@ export default function ViewReconciliation() {
                 const openingTotal = calculateVaultTotal(openingVaultData);
                 const closingTotal = calculateVaultTotal(closingVaultData);
                 const varianceValue = calculateVariance(openingVaultData, closingVaultData);
-                const autoStatus = calculateStatusFromVariance(openingVaultData, closingVaultData);
+                // Determine Auto Status with In_Progress check
+                let autoStatus = calculateStatusFromVariance(openingVaultData, closingVaultData);
+                if (openingVaultData.length > 0 && (!closingVaultData || closingVaultData.length === 0)) {
+                    autoStatus = "In_Progress";
+                }
 
                 // Combine notes
                 let notesText = "";
@@ -417,11 +365,13 @@ export default function ViewReconciliation() {
                     notesText = notes;
                 }
 
+                const finalStatus = (status === "Tallied" || !status) && autoStatus === "In_Progress" ? "In_Progress" : (status || autoStatus);
+
                 const formattedData = {
                     id: data.id || id,
                     date: formatDate(createdAt),
                     varianceValue: varianceValue,
-                    status: status || autoStatus,
+                    status: finalStatus,
                     notes: notesText,
                     openingVaultTotal: openingTotal,
                     totalTransactions: deals.length || 0,
@@ -430,12 +380,9 @@ export default function ViewReconciliation() {
                     closingVaultData: closingVaultData,
                     deals: deals,
                     createdBy: createdBy,
-                    rawData: data // Store raw data for reference
+                    rawData: data
                 };
 
-                console.log('Formatted Data for UI:', formattedData);
-
-                setOriginalData(formattedData);
                 setEditableData(formattedData);
             } catch (err) {
                 console.error('Error in fetchReconciliationData:', err);
@@ -453,33 +400,24 @@ export default function ViewReconciliation() {
         }
     }, [id]);
 
-    // Auto-update status when vault data changes during editing
-    useEffect(() => {
-        if (isEditing && editableData) {
-            const newStatus = calculateStatusFromVariance(
-                editableData.openingVaultData,
-                editableData.closingVaultData
-            );
 
-            if (newStatus !== editableData.status && editableData.status !== "Tallied") {
-                handleFieldChange("status", newStatus);
-            }
-        }
-    }, [editableData?.openingVaultData, editableData?.closingVaultData, isEditing]);
+
 
     // compute variance color/icon based on status and sign
-    const isPositive = editableData ? String(editableData.varianceValue).startsWith("+") : true;
     let varianceColor = "";
     let varianceIcon = balance;
 
     if (editableData) {
-        if (editableData.status === "Tallied" || editableData.status === "Balance") {
+        if (editableData.status === "In_Progress") {
+            varianceColor = "#8B5CF6";
+            varianceIcon = balance;
+        } else if (editableData.status === "Tallied" || editableData.status === "Balance") {
             varianceColor = "#82E890";
             varianceIcon = balance;
         } else if (editableData.status === "Excess") {
             varianceColor = "#D8AD00";
             varianceIcon = high;
-        } else if (editableData.status === "Short" ) {
+        } else if (editableData.status === "Short") {
             varianceColor = "#FF6B6B";
             varianceIcon = balance;
         } else {
@@ -493,93 +431,9 @@ export default function ViewReconciliation() {
         Balance: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
+        Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
+        In_Progress: "bg-[#8B5CF624] text-[#8B5CF6] border-[#8B5CF6]",
     };
-
-    // ---------- handlers ----------
-    // open edit mode (make a deep copy)
-    const handleEdit = () => {
-        if (!originalData) return;
-
-        const copy = JSON.parse(JSON.stringify(originalData));
-        setEditableData(copy);
-        setIsEditing(true);
-    };
-
-    // Cancel -> revert
-    const handleCancel = () => {
-        if (originalData) {
-            setEditableData(JSON.parse(JSON.stringify(originalData)));
-        }
-        setIsEditing(false);
-    };
-
-    // Save -> commit to originalData
-    const handleSave = async () => {
-        try {
-            if (!originalData || !editableData) return;
-
-            const payload = buildPatchPayload(originalData, editableData);
-
-            // Nothing changed
-            if (Object.keys(payload).length === 0) {
-                alert("No changes to save");
-                setIsEditing(false);
-                return;
-            }
-
-            const res = await updateReconciliation(editableData.id, payload);
-
-            if (!res.success) {
-                alert("Failed to update reconciliation");
-                return;
-            }
-
-            // Commit after PATCH success
-            setOriginalData(JSON.parse(JSON.stringify(editableData)));
-            setIsEditing(false);
-
-            alert("Reconciliation updated successfully");
-        } catch (err) {
-            console.error(err);
-            alert("Something went wrong while saving");
-        }
-    };
-
-
-    // Update opening vault row
-    const updateOpeningVaultRow = (rowIndex, updatedRow) => {
-        setEditableData((prev) => {
-            if (!prev) return prev;
-            const newVault = prev.openingVaultData.map((r, i) =>
-                i === rowIndex ? updatedRow : r
-            );
-            return { ...prev, openingVaultData: newVault };
-        });
-    };
-
-    // Update closing vault row
-    const updateClosingVaultRow = (rowIndex, updatedRow) => {
-        setEditableData((prev) => {
-            if (!prev) return prev;
-            const newVault = prev.closingVaultData.map((r, i) =>
-                i === rowIndex ? updatedRow : r
-            );
-            return { ...prev, closingVaultData: newVault };
-        });
-    };
-
-    // update simple fields like notes, status
-    const handleFieldChange = (field, value) => {
-        setEditableData((prev) => {
-            if (!prev) return prev;
-            return { ...prev, [field]: value };
-        });
-    };
-
-    // For the header icon visibility
-    const showEditIcon = editableData &&
-        (editableData.status === "Excess" || editableData.status === "Short" ||
-            editableData.status === "Balance");
 
     // Loading state
     if (loading) {
@@ -660,33 +514,14 @@ export default function ViewReconciliation() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* Cancel/Save shown during edit mode */}
-                    {isEditing ? (
-                        <>
-                            <button
-                                onClick={handleCancel}
-                                className="w-[95px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={handleSave}
-                                className="flex items-center justify-center gap-2 w-[91px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2">
-                                <img src={save} className="w-5 h-5" />
-                                Save
-                            </button>
-                        </>
-                    ) : (
-                        // show edit icon only for required statuses
-                        showEditIcon && (
-                            <img
-                                src={edit}
-                                alt="edit"
-                                className="w-10 h-10 cursor-pointer"
-                                onClick={handleEdit}
-                            />
-                        )
+                    {/* EDIT ICON */}
+                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "In_Progress" || editableData.status === "Tallied" ) && (
+                        <img
+                            src={edit}
+                            alt="edit"
+                            className="w-10 h-10 cursor-pointer"
+                            onClick={() => navigate(`/reconciliation/edit/${id}`)}
+                        />
                     )}
                 </div>
             </div>
@@ -752,7 +587,7 @@ export default function ViewReconciliation() {
                             <p className="text-white font-semibold text-[15px]">Status</p>
 
                             <span
-                                className={`w-[70px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
+                                className={`w-[90px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
                             >
                                 {editableData.status}
                             </span>
@@ -767,8 +602,7 @@ export default function ViewReconciliation() {
 
                             <textarea
                                 value={editableData.notes}
-                                onChange={(e) => handleFieldChange("notes", e.target.value)}
-                                disabled={!isEditing}
+                                disabled={true}
                                 placeholder="Add reconciliation notes..."
                                 className="w-[408px] h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60  focus:border-blue-500 scrollbar-grey"
                             />
@@ -796,8 +630,6 @@ export default function ViewReconciliation() {
                                     currencyId={row.currencyId}
                                     amount={row.amount}
                                     breakdown={row.breakdown}
-                                    isEditing={isEditing}
-                                    onUpdate={updateOpeningVaultRow}
                                 />
                             ))
                         ) : (
@@ -825,8 +657,6 @@ export default function ViewReconciliation() {
                                     currencyId={row.currencyId}
                                     amount={row.amount}
                                     breakdown={row.breakdown}
-                                    isEditing={isEditing}
-                                    onUpdate={updateClosingVaultRow}
                                 />
                             ))
                         ) : (
