@@ -29,7 +29,7 @@ function ActionDropdown({ options = [] }) {
 
       setDropdownStyle({
         position: "fixed",
-        left: rect.right,              
+        left: rect.right,
         transform: "translateX(-100%)",
         width: DROPDOWN_WIDTH,
         top,

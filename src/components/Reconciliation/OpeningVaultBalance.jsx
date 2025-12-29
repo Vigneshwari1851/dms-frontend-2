@@ -336,12 +336,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     <label className="text-gray-400 text-sm">Rate:</label>
                                     <input
                                         type="number"
-                                        min="0"
-                                        step="0.0001"
+                                        // min="0"
+                                        // step="0.0001"
                                         value={section.exchangeRate || ""}
                                         onChange={(e) => handleRateChange(section.id, e.target.value)}
-                                        className="bg-[#16191C]  text-white rounded px-2 py-1 w-24 text-sm outline-none focus:border-[#2ACC80]"
-                                        placeholder="1.0"
+                                        className="bg-[#16191C]  text-white rounded-lg px-2 py-1 w-24 text-sm outline-none "
+                                        // placeholder="Exchange rate"
                                     />
                                 </div>
                             </div>

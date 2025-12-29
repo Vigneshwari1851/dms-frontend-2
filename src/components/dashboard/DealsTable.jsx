@@ -52,10 +52,10 @@ export default function DealsTable() {
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
             customer: deal.customer.name,
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
-            currency: deal.buyCurrency || "---",
-            exchange_rate: deal.exchange_rate || deal.rate || 0,
+            currency: deal.buyCurrency.code || "---",
+            exchange_rate: deal.exchange_rate,
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
-            currency1: deal.sellCurrency || "---",
+            currency1: deal.sellCurrency.code || "---",
             status: deal.status,
             dealId: deal.id,
           };

@@ -122,10 +122,10 @@ export default function EditDeal() {
         // Set buy and sell currencies from the API response
         // Try to get from direct fields first, then from items
         const buyCurrencyFromResponse = dealData.buy_currency ||
-            (dealData.receivedItems?.[0]?.currency?.name || "");
+            (dealData.receivedItems?.[0]?.currency?.code || "");
 
         const sellCurrencyFromResponse = dealData.sell_currency ||
-            (dealData.paidItems?.[0]?.currency?.name || "");
+            (dealData.paidItems?.[0]?.currency?.code || "");
 
         setBuyCurrency(buyCurrencyFromResponse);
         setSellCurrency(sellCurrencyFromResponse);
@@ -266,6 +266,7 @@ export default function EditDeal() {
                     .map(i => ({
                         price: String(i.price),
                         quantity: String(i.quantity),
+                        total: String(i.total || (Number(i.price) * Number(i.quantity))),
                         currency_id: i.currency_id || currencyMap[buyCurrency],
                     })),
 
@@ -274,6 +275,7 @@ export default function EditDeal() {
                     .map(i => ({
                         price: String(i.price),
                         quantity: String(i.quantity),
+                        total: String(i.total || (Number(i.price) * Number(i.quantity))),
                         currency_id: i.currency_id || currencyMap[sellCurrency],
                     })),
             };

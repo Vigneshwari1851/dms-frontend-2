@@ -413,12 +413,12 @@ export default function ListReport() {
                     <td>{item.customer?.name}</td>
 
                     <td>{item.buyAmount}</td>
-                    <td>{item.buyCurrency}</td>
+                    <td>{item.buyCurrency.code}</td>
 
-                    <td>{item.rate}</td>
+                    <td>{item.exchange_rate}</td>
 
                     <td>{item.sellAmount}</td>
-                    <td>{item.sellCurrency}</td>
+                    <td>{item.sellCurrency.code}</td>
 
                     {/* STATUS */}
                     <td>
