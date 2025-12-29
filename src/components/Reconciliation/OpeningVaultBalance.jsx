@@ -49,7 +49,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             id: Date.now(),
                             selectedCurrency: defaultCurrency.code,
                             currencyId: defaultCurrency.id,
-                            exchangeRate: 1,
+                            exchangeRate: "",
                             rows: [{ denom: "", qty: "", total: 0, open: false }],
                             currencyOpen: false
                         }]
@@ -83,7 +83,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                         ...section,
                         selectedCurrency: currencyName,
                         currencyId: currencyId,
-                        exchangeRate: 1, // Reset rate on currency change
+                        exchangeRate: "",
                         currencyOpen: false
                     }
                     : section
@@ -138,7 +138,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     id: Date.now(),
                     selectedCurrency: defaultCurrency,
                     currencyId: defaultCurrencyId,
-                    exchangeRate: 1,
+                    exchangeRate: "",
                     rows: [{ denom: "", qty: "", total: 0, open: false }],
                     currencyOpen: false
                 }
@@ -193,16 +193,31 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         }));
     };
 
-    // Calculate total for a specific section
-    const calculateSectionTotal = (section) => {
-        return section.rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
+    // Raw total per section
+    const calculateRawSectionTotal = (section) => {
+        return section.rows.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+        );
     };
 
-    // Calculate grand total across all sections
+    // Converted total per section (TZS)
+    const calculateConvertedSectionTotal = (section) => {
+        const rawTotal = calculateRawSectionTotal(section);
+        const rate = Number(section.exchangeRate || 1);
+        return rate > 0 ? rawTotal / rate : rawTotal;
+    };
+
+    // Grand total (TZS only)
     const calculateGrandTotal = () => {
         if (!data.sections) return 0;
-        return data.sections.reduce((sum, section) => sum + calculateSectionTotal(section), 0);
+
+        return data.sections.reduce(
+            (sum, section) => sum + calculateConvertedSectionTotal(section),
+            0
+        );
     };
+
 
     // Delete an entire currency section
     const deleteSection = (sectionId) => {
@@ -341,7 +356,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         value={section.exchangeRate || ""}
                                         onChange={(e) => handleRateChange(section.id, e.target.value)}
                                         className="bg-[#16191C]  text-white rounded-lg px-2 py-1 w-24 text-sm outline-none "
-                                        // placeholder="Exchange rate"
+                                    // placeholder="Exchange rate"
                                     />
                                 </div>
                             </div>
@@ -495,7 +510,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
                                 <input
                                     readOnly
-                                    value={calculateSectionTotal(section).toFixed(2)}
+                                    value={calculateRawSectionTotal(section).toFixed(2)}
                                     className="w-[200px] bg-[#1B1E21] border border-[#2A2F33] 
                                     rounded-lg px-3 py-1 text-[#2ACC80] text-right"
                                 />
@@ -535,11 +550,15 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
             {/* GRAND TOTAL */}
             <div className="mt-6">
-                <div className="bg-[#152F1F] w-full rounded-xl h-10 flex items-center justify-between px-4 text-white font-normal text-[14px]">
-                    <p>Total {type === 'opening' ? 'Opening' : 'Closing'} Balance</p>
+                <div className="bg-[#152F1F] w-full rounded-xl h-10 
+        flex items-center justify-between px-4 text-white 
+        font-normal text-[14px]"
+                >
+                    <p>Total {type === "opening" ? "Opening" : "Closing"} Balance (TZS)</p>
                     <p>{calculateGrandTotal().toFixed(2)}</p>
                 </div>
             </div>
+
             <NotificationCard
                 confirmModal={confirmModal}
                 onConfirm={handleConfirmDelete}
