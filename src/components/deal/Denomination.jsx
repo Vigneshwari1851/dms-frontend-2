@@ -4,6 +4,7 @@ import tick from "../../assets/common/tick.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
 import NotificationCard from "../../components/common/Notification";
+import Dropdown from "../../components/common/Dropdown";
 
 export default function Denomination({
   denominationReceived: propReceived,
@@ -70,8 +71,7 @@ export default function Denomination({
       .map((item, index) => index === currentIndex ? null : String(item.price))
       .filter(price => price && price !== "0" && price !== "undefined" && price !== "null");
 
-    // Filter out already selected prices
-    return allOptions.filter(option => !selectedPrices.includes(option));
+    return allOptions.filter((option) => !selectedPrices.includes(option));
   };
 
   // Open confirmation modal on trash click
@@ -82,7 +82,7 @@ export default function Denomination({
       message: "Are you sure you want to delete this denomination?",
       actionType: "remove",
       rowIndex: index,
-      listType: listType
+      listType
     });
   };
 
@@ -92,11 +92,15 @@ export default function Denomination({
 
     if (listType === "received") {
       if (denominationReceived.length > 1) {
-        setDenominationReceived(prev => prev.filter((_, i) => i !== rowIndex));
+        setDenominationReceived((prev) =>
+          prev.filter((_, i) => i !== rowIndex)
+        );
       }
     } else if (listType === "paid") {
       if (denominationPaid.length > 1) {
-        setDenominationPaid(prev => prev.filter((_, i) => i !== rowIndex));
+        setDenominationPaid((prev) =>
+          prev.filter((_, i) => i !== rowIndex)
+        );
       }
     }
 
@@ -148,68 +152,41 @@ export default function Denomination({
                 <tr key={i} className="border-b border-[#1B1E21]">
                   {/* DENOMINATION DROPDOWN */}
                   <td className="py-2 pr-2">
-                    <div className="relative w-full">
-                      <button
-                        onClick={() => {
-                          if (isReadOnly) return;
+                    {isReadOnly ? (
+                      <div className="w-full h-10 bg-[#1B1E21] border border-[#2A2F33] rounded-md px-3 flex items-center">
+                        <span>
+                          {currencySymbol}
+                          {row.price || "0.00"}
+                        </span>
+                      </div>
+                    ) : (
+                      <Dropdown
+                        label={`${currencySymbol}0.00`}
+                        options={availableOptions}
+                        selected={row.price?.toString()}
+                        onChange={(val) => {
+                          const price =
+                            typeof val === "string" ? val : val?.label;
                           const updated = [...list];
-                          updated[i].open = !updated[i].open;
+                          updated[i].price = price;
+                          updated[i].total =
+                            Number(updated[i].quantity || 0) *
+                            Number(price || 0);
                           setList(updated);
                         }}
-                        className={`
-                          w-full h-10
-                          bg-[#1B1E21]
-                          border border-[#2A2F33]
-                          rounded-md
-                          px-3
-                          text-left text-white
-                          flex items-center justify-between
-                          ${isReadOnly ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}
-                        `}
-                        disabled={isReadOnly}
-                      >
-                        <span>
-                          {row.price
-                            ? `${currencySymbol}${row.price}`
-                            : `${currencySymbol}0.00`}
-                        </span>
-
-                        {!isReadOnly && <img src={down} className="w-3" />}
-                      </button>
-
-                      {row.open && !isReadOnly && (
-                        <ul
-                          className="
-                            absolute left-0 right-0 mt-2 z-20
-                            bg-[#2E3439]
-                            border border-[#2A2F33]
-                            rounded-lg
-                          "
-                        >
-                          {availableOptions.map((item) => (
-                            <li
-                              key={item}
-                              onClick={() => {
-                                const updated = [...list];
-                                updated[i].price = item;
-                                updated[i].open = false;
-                                updated[i].total = Number(updated[i].quantity || 0) * Number(item);
-                                setList(updated);
-                              }}
-                              className="px-4 py-2 flex items-center justify-between hover:bg-[#1E2328] cursor-pointer text-white"
-                            >
-                              <span>{currencySymbol}{item}</span>
-                              {row.price === item && <img src={tick} className="w-4 h-4" />}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                        className="w-full"
+                        renderOption={(opt) => `${currencySymbol}${opt}`}
+                      />
+                    )}
                   </td>
 
                   {/* QUANTITY */}
                   <td className="py-2 px-2">
-                    <div className={`flex items-center bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 ${isReadOnly ? 'opacity-70' : ''}`}>
+                    <div
+                      className={`flex items-center bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 ${
+                        isReadOnly ? "opacity-70" : ""
+                      }`}
+                    >
                       <input
                         type="number"
                         value={row.quantity}
@@ -303,7 +280,7 @@ export default function Denomination({
                             ? {
                               onMouseEnter: (e) => (e.currentTarget.src = trashHover),
                               onMouseLeave: (e) => (e.currentTarget.src = trash),
-                            }
+                              }
                             : {})}
                         />
                       </button>

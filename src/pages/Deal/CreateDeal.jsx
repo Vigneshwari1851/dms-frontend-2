@@ -8,6 +8,7 @@ import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
 import { fetchCurrencies } from "../../api/currency/currency";
+import Dropdown from "../../components/common/Dropdown";
 
 export default function CreateDeal() {
   const navigate = useNavigate();
@@ -440,76 +441,76 @@ export default function CreateDeal() {
   const sellCurrencyOptions = currencyOptions.filter(
     (c) => c !== buyCurrency
   );
-  // Custom dropdown with fixed dimensions
-  const CustomDropdown = ({
-    value,
-    setValue,
-    isOpen,
-    setIsOpen,
-    options,
-    placeholder,
-    loading = false
-  }) => (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="
-          w-[172px] h-8
-         bg-[#16191C]
-                  rounded-lg
-                  text-[14px]
-                  text-[#ABABAB]
-                  font-medium
-                  flex items-center justify-between
-                  px-4
-        "
-      >
-        <span className="truncate">{value || placeholder}</span>
-        <img src={down} alt="down" className="w-3" />
-      </button>
+  // // Custom dropdown with fixed dimensions
+  // const CustomDropdown = ({
+  //   value,
+  //   setValue,
+  //   isOpen,
+  //   setIsOpen,
+  //   options,
+  //   placeholder,
+  //   loading = false
+  // }) => (
+  //   <div className="relative">
+  //     <button
+  //       onClick={() => setIsOpen(!isOpen)}
+  //       className="
+  //         w-[172px] h-8
+  //        bg-[#16191C]
+  //                 rounded-lg
+  //                 text-[14px]
+  //                 text-[#ABABAB]
+  //                 font-medium
+  //                 flex items-center justify-between
+  //                 px-4
+  //       "
+  //     >
+  //       <span className="truncate">{value || placeholder}</span>
+  //       <img src={down} alt="down" className="w-3" />
+  //     </button>
 
-      {isOpen && (
-        <ul className="
-         absolute left-0 right-0 mt-2 
-                  bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10
-        ">
-          {loading ? (
-            <li className="px-3 py-2 text-sm text-gray-300">
-              Loading...
-            </li>
-          ) : options.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-gray-300">
-              No options
-            </li>
-          ) : (
-            options.map((option) => (
-              <li
-                key={option}
-                onClick={() => {
-                  setValue(option);
-                  setIsOpen(false);
-                }}
-                className="
-                px-4 py-2 
-                        flex items-center justify-between
-                        hover:bg-[#1E2328]
-                        cursor-pointer
-                        text-white
-                        pl-2
-                "
-              >
-                <span className="truncate">{option}</span>
-                {value === option && (
-                  <img src={tick} className="w-4 h-4" />
-                )}
-              </li>
-            ))
-          )}
-        </ul>
-      )}
-    </div>
-  );
+  //     {isOpen && (
+  //       <ul className="
+  //        absolute left-0 right-0 mt-2 
+  //                 bg-[#2E3439] border border-[#2A2F33] 
+  //                 rounded-lg z-10
+  //       ">
+  //         {loading ? (
+  //           <li className="px-3 py-2 text-sm text-gray-300">
+  //             Loading...
+  //           </li>
+  //         ) : options.length === 0 ? (
+  //           <li className="px-3 py-2 text-sm text-gray-300">
+  //             No options
+  //           </li>
+  //         ) : (
+  //           options.map((option) => (
+  //             <li
+  //               key={option}
+  //               onClick={() => {
+  //                 setValue(option);
+  //                 setIsOpen(false);
+  //               }}
+  //               className="
+  //               px-4 py-2 
+  //                       flex items-center justify-between
+  //                       hover:bg-[#1E2328]
+  //                       cursor-pointer
+  //                       text-white
+  //                       pl-2
+  //               "
+  //             >
+  //               <span className="truncate">{option}</span>
+  //               {value === option && (
+  //                 <img src={tick} className="w-4 h-4" />
+  //               )}
+  //             </li>
+  //           ))
+  //         )}
+  //       </ul>
+  //     )}
+  //   </div>
+  // );
 
   return (
     <>
@@ -614,15 +615,12 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-            <CustomDropdown
-              value={txnType}
-              setValue={(val) => {
-                setTxnType(val);
-                setErrors(prev => ({ ...prev, txnType: "" }));
-              }}
-              isOpen={txnTypeOpen}
-              setIsOpen={setTxnTypeOpen}
+            <Dropdown
+              label="Type"
               options={["Buy", "Sell"]}
+              selected={txnType}
+              onChange={(val) => setTxnType(val)}
+              className="w-[172px]"
             />
             <div className="min-h-3.5 mt-1">
               {errors.txnType && (
@@ -638,16 +636,16 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Mode <span className="text-red-500">*</span>
             </label>
-            <CustomDropdown
-              value={txnMode}
-              setValue={(val) => {
-                setTxnMode(val);
-                setErrors(prev => ({ ...prev, txnMode: "" }));
-              }}
-              isOpen={txnModeOpen}
-              setIsOpen={setTxnModeOpen}
-              options={["Cash", "Credit"]}
-            />
+             <Dropdown
+                label="Mode"
+                options={["Cash", "Credit"]}
+                selected={txnMode}
+                onChange={(val) => {
+                  setTxnMode(val);
+                  setErrors(prev => ({ ...prev, txnMode: "" }));
+                }}
+                className="w-[172px]"
+              />
             <div className="min-h-3.5 mt-1">
               {errors.txnMode && (
                 <p className="text-red-400 text-[11px] leading-3.5">
@@ -662,17 +660,15 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Buy Currency Type <span className="text-red-500">*</span>
             </label>
-            <CustomDropdown
-              value={buyCurrency}
-              setValue={(val) => {
+            <Dropdown
+              label="Buy Currency"
+              options={buyCurrencyOptions}
+              selected={buyCurrency}
+              onChange={(val) => {
                 handleCurrencySelect(val, "buy");
                 setErrors(prev => ({ ...prev, buyCurrency: "" }));
               }}
-              isOpen={buyCurrencyOpen}
-              setIsOpen={setBuyCurrencyOpen}
-              options={buyCurrencyOptions}
-              placeholder="Select"
-              loading={loadingCurrencies}
+              className="w-[172px]"
             />
             <div className="h-3.5 mt-1" />
           </div>
@@ -683,7 +679,7 @@ export default function CreateDeal() {
               Amount <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
               type="text"
               inputMode="decimal"
@@ -710,17 +706,15 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Sell Currency Type <span className="text-red-500">*</span>
             </label>
-            <CustomDropdown
-              value={sellCurrency}
-              setValue={(val) => {
+             <Dropdown
+              label="Sell Currency"
+              options={sellCurrencyOptions}
+              selected={sellCurrency}
+              onChange={(val) => {
                 handleCurrencySelect(val, "sell");
                 setErrors(prev => ({ ...prev, sellCurrency: "" }));
               }}
-              isOpen={sellCurrencyOpen}
-              setIsOpen={setSellCurrencyOpen}
-              options={sellCurrencyOptions}
-              placeholder="Select"
-              loading={loadingCurrencies}
+              className="w-[172px]"
             />
             <div className="h-3.5 mt-1" />
           </div>
@@ -731,7 +725,7 @@ export default function CreateDeal() {
               Rate <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-[167px] h-8 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
               placeholder="0.00"
               type="text"
               inputMode="decimal"
@@ -755,7 +749,7 @@ export default function CreateDeal() {
         </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
-        <div className="mt-6">
+        <div className="">
 
           <div
             className="
@@ -784,7 +778,7 @@ export default function CreateDeal() {
         </div>
 
         {/* Denomination Section */}
-        <div className="mt-8">
+        <div className="">
           <Denomination
             denominationReceived={denominationReceived}
             setDenominationReceived={setDenominationReceived}
