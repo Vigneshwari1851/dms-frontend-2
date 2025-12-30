@@ -62,23 +62,27 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         loadCurrencies();
     }, []);
 
-    useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => ({
-            ...section,
-            currencyOpen: false,
-            rows: section.rows.map(row => ({ ...row, open: false })),
-            })),
-        }));
-        }
-    };
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    setData(prev => {
+      const anyOpen = prev.sections.some(section => section.currencyOpen || section.rows.some(row => row.open));
+      if (!anyOpen) return prev; 
+      const clickedInside = event.target.closest('.dropdown-toggle') || event.target.closest('.dropdown-menu');
+      if (clickedInside) return prev; 
+      return {
+        ...prev,
+        sections: prev.sections.map(section => ({
+          ...section,
+          currencyOpen: false,
+          rows: section.rows.map(row => ({ ...row, open: false }))
+        }))
+      };
+    });
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [setData]);
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [setData]);
 
     const handleConfirmDelete = () => {
         if (confirmModal.rowIndex !== null) {
@@ -347,7 +351,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                 <div className="relative">
                                     <button
                                         onClick={() => toggleCurrencyDropdown(section.id)}
-                                        className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4"
+                                        className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4 dropdown-toggle"
                                     >
                                         <span className="text-[#939AF0] text-sm truncate max-w-[180px]">
                                             {section.selectedCurrency || "Select Currency"}
@@ -356,8 +360,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                     </button>
 
                                     {section.currencyOpen && (
-                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
-            bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
+                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px] bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20 dropdown-menu">
                                             {currencyOptions.map((item) => (
                                                 <li
                                                     key={item}
@@ -429,7 +432,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                     <div className="relative">
                                         <button
                                             onClick={() => toggleRowDropdown(section.id, i)}
-                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-white flex justify-between items-center"
+                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-white flex justify-between items-center dropdown-toggle"
                                         >
                                             <span>
                                                 {row.denom
@@ -440,8 +443,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                         </button>
 
                                         {row.open && (
-                                            <ul className="absolute w-full mt-2 bg-[#2E3439] 
-                                            border border-[#2A2F33] rounded-lg z-30">
+                                            <ul className="absolute w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-30 dropdown-menu">
                                                 {denominationOptions
                                                     .filter(item => {
                                                         // Allow current row value
@@ -455,11 +457,9 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                                             key={item}
                                                             onClick={() => selectDenomination(section.id, i, item)}
                                                             className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
-                                                        >
+                                                            >
                                                             <span>{currencySymbols[section.selectedCurrency]}{item}</span>
-                                                            {row.denom === item && (
-                                                                <img src={tick} className="w-4 h-4" alt="selected" />
-                                                            )}
+                                                            {row.denom === item && <img src={tick} className="w-4 h-4" alt="selected" />}
                                                         </li>
                                                     ))}
 
