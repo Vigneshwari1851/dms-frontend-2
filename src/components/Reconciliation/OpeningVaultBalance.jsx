@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
@@ -18,9 +18,22 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         sectionId: null,
         rowIndex: null,
     });
+    const wrapperRef = useRef(null);
 
     const [openCurrencySection, setOpenCurrencySection] = useState(null);
     const [openRow, setOpenRow] = useState({ sectionId: null, rowIndex: null });
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                setOpenCurrencySection(null);
+                setOpenRow({ sectionId: null, rowIndex: null });
+            }
+        };
+
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     // Initialize with one section if none exists
     useEffect(() => {
@@ -264,7 +277,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         section.rows.map(row => row.denom).filter(x => x !== "");
 
     return (
-        <div className="mt-4">
+        <div ref={wrapperRef} className="mt-4">
             {/* Render each currency section */}
             {data.sections.map((section, sectionIndex) => (
                 <div key={section.id} className="mb-6">
