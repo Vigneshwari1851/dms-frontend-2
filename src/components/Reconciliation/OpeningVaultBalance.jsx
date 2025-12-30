@@ -63,23 +63,22 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     }, []);
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setData(prev => ({
-                    ...prev,
-                    sections: prev.sections.map(section => ({
-                        ...section,
-                        currencyOpen: false,
-                        rows: section.rows.map(row => ({ ...row, open: false }))
-                    }))
-                }));
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
+    const handleClickOutside = (event) => {
+        if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setData(prev => ({
+            ...prev,
+            sections: prev.sections.map(section => ({
+            ...section,
+            currencyOpen: false,
+            rows: section.rows.map(row => ({ ...row, open: false })),
+            })),
+        }));
+        }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [setData]);
 
     const handleConfirmDelete = () => {
         if (confirmModal.rowIndex !== null) {
@@ -251,38 +250,48 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     };
 
     // Toggle currency dropdown for a specific section
-    const toggleCurrencyDropdown = (sectionId) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id === sectionId) {
-                    return { ...section, currencyOpen: !section.currencyOpen };
-                }
-                // Close other dropdowns
-                return { ...section, currencyOpen: false };
-            })
-        }));
-    };
+const toggleCurrencyDropdown = (sectionId) => {
+  setData(prev => ({
+    ...prev,
+    sections: prev.sections.map(section => {
+      if (section.id === sectionId) {
+        // Toggle this one, close all row dropdowns
+        return {
+          ...section,
+          currencyOpen: !section.currencyOpen,
+          rows: section.rows.map(row => ({ ...row, open: false }))
+        };
+      }
+      // Close all other sections
+      return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+    })
+  }));
+};
 
-    // Toggle denomination dropdown for a specific row
-    const toggleRowDropdown = (sectionId, rowIndex) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id !== sectionId) return section;
+// Toggle denomination dropdown
+const toggleRowDropdown = (sectionId, rowIndex) => {
+  setData(prev => ({
+    ...prev,
+    sections: prev.sections.map(section => {
+      if (section.id !== sectionId) {
+        // Close all dropdowns in other sections
+        return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+      }
 
-                const updatedRows = [...section.rows];
-                updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
+      const updatedRows = [...section.rows];
+      // Toggle only the clicked row
+      updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
 
-                // Close other dropdowns in the same section
-                updatedRows.forEach((row, idx) => {
-                    if (idx !== rowIndex) row.open = false;
-                });
+      // Close other rows in this section
+      updatedRows.forEach((row, idx) => {
+        if (idx !== rowIndex) row.open = false;
+      });
 
-                return { ...section, rows: updatedRows };
-            })
-        }));
-    };
+      // Close currency dropdown of this section if row opens
+      return { ...section, rows: updatedRows, currencyOpen: false };
+    })
+  }));
+};
 
     // Select a denomination for a specific row
     const selectDenomination = (sectionId, rowIndex, value) => {
@@ -326,7 +335,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
 
     return (
-        <div className="mt-4">
+        <div className="mt-4" ref={wrapperRef}>
             {/* Render each currency section */}
             {data.sections.map((section, sectionIndex) => (
                 <div key={section.id} className="mb-6">
