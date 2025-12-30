@@ -304,6 +304,14 @@ export default function OpeningVaultBalance({ data, setData, type }) {
             .filter(denom => denom !== "");
     };
 
+    const getUsedDenominationsExceptCurrent = (section, currentIndex) => {
+        return section.rows
+            .filter((_, idx) => idx !== currentIndex)
+            .map(row => String(row.denom))
+            .filter(denom => denom && denom !== "undefined" && denom !== "null");
+    };
+
+
 
     return (
         <div className="mt-4">
@@ -415,12 +423,11 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                             border border-[#2A2F33] rounded-lg z-30">
                                                 {denominationOptions
                                                     .filter(item => {
-                                                        // Allow current row value
-                                                        if (row.denom === item) return true;
+                                                        if (String(row.denom) === item) return true;
 
-                                                        // Hide already selected denominations in other rows
-                                                        return !getUsedDenominations(section).includes(item);
+                                                        return !getUsedDenominationsExceptCurrent(section, i).includes(item);
                                                     })
+
                                                     .map((item) => (
                                                         <li
                                                             key={item}

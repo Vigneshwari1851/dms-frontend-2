@@ -4,15 +4,16 @@ import add from "../../assets/common/save.svg";
 import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg";
 import { createUser } from "../../api/user/user.jsx";
+import Toast from "../../components/common/Toast";
 
 export default function AddUser() {
-    
+
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("");
     const [phone, setPhone] = useState("");
+    const [toast, setToast] = useState({ show: false, message: "", type: "" });
     const [errors, setErrors] = useState({});
-
     const navigate = useNavigate();
 
     const validate = () => {
@@ -56,14 +57,18 @@ export default function AddUser() {
                 },
             });
         } else {
-            navigate("/users", {
-                state: {
-                    toast: {
-                        message: "Failed to add user",
-                        type: "error",
-                    },
-                },
+            const errorMessage = res.error?.message || res.error?.error || "Failed to create user";
+            // Show toast on current page instead of navigating
+            setToast({
+                show: true,
+                message: errorMessage,
+                type: "error"
             });
+
+            // Hide toast after 3 seconds
+            setTimeout(() => {
+                setToast({ show: false, message: "", type: "" });
+            }, 3000);
         }
     };
 
@@ -115,27 +120,27 @@ export default function AddUser() {
                             className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
                             value={phone}
                             onChange={(e) => {
-                            let value = e.target.value;
-                            const digits = value.replace(/\D/g, "");
-                            if (digits.length > 15) return;
-                            setPhone(value);
+                                let value = e.target.value;
+                                const digits = value.replace(/\D/g, "");
+                                if (digits.length > 15) return;
+                                setPhone(value);
                             }}
                             onKeyDown={(e) => {
-                            const allowedControlKeys = [
-                                "Backspace",
-                                "Delete",
-                                "ArrowLeft",
-                                "ArrowRight",
-                                "Tab",
-                            ];
-                            if (allowedControlKeys.includes(e.key)) return;
-                            if (["+", " ", "-", "(", ")"].includes(e.key)) return;
-                            if (/^[0-9]$/.test(e.key)) {
-                                const currentDigits = phone.replace(/\D/g, "");
+                                const allowedControlKeys = [
+                                    "Backspace",
+                                    "Delete",
+                                    "ArrowLeft",
+                                    "ArrowRight",
+                                    "Tab",
+                                ];
+                                if (allowedControlKeys.includes(e.key)) return;
+                                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
+                                if (/^[0-9]$/.test(e.key)) {
+                                    const currentDigits = phone.replace(/\D/g, "");
                                     if (currentDigits.length >= 15) e.preventDefault();
-                                return;
-                            }
-                            e.preventDefault();
+                                    return;
+                                }
+                                e.preventDefault();
                             }}
                         />
                         {errors.phone && (
@@ -163,7 +168,7 @@ export default function AddUser() {
 
                 <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
                     <img src={authLogo} alt="auth logo" className="w-5 h-5" />
-                        Default password will be sent to the user's email address. User will be required to change password on first login.
+                    Default password will be sent to the user's email address. User will be required to change password on first login.
                 </p>
 
                 {/* Buttons */}
@@ -178,6 +183,7 @@ export default function AddUser() {
                 </div>
 
             </div>
+            <Toast show={toast.show} message={toast.message} type={toast.type} />
 
         </>
     );

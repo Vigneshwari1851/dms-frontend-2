@@ -67,8 +67,8 @@ export default function Denomination({
 
     // Get all selected prices except the current row's price
     const selectedPrices = list
-      .map((item, index) => index === currentIndex ? null : item.price)
-      .filter(price => price && price !== "0" && price !== 0);
+      .map((item, index) => index === currentIndex ? null : String(item.price))
+      .filter(price => price && price !== "0" && price !== "undefined" && price !== "null");
 
     // Filter out already selected prices
     return allOptions.filter(option => !selectedPrices.includes(option));
