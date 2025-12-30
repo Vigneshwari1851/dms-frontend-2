@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
@@ -7,6 +7,7 @@ import trashHover from "../../assets/reconciliation/trash_hover.svg";
 import NotificationCard from "../../components/common/Notification";
 
 export default function OpeningVaultBalance({ data, setData, type }) {
+    const wrapperRef = useRef(null);
     const [currencyOptions, setCurrencyOptions] = useState([]);
     const [currencyMap, setCurrencyMap] = useState({});
     const [currencySymbols, setCurrencySymbols] = useState({});
@@ -59,6 +60,25 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         };
 
         loadCurrencies();
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                setData(prev => ({
+                    ...prev,
+                    sections: prev.sections.map(section => ({
+                        ...section,
+                        currencyOpen: false,
+                        rows: section.rows.map(row => ({ ...row, open: false }))
+                    }))
+                }));
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
     const handleConfirmDelete = () => {
