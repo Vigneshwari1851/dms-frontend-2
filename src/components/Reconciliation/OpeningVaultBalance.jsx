@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
 import tick from "../../assets/common/tick.svg";
@@ -7,6 +7,7 @@ import trashHover from "../../assets/reconciliation/trash_hover.svg";
 import NotificationCard from "../../components/common/Notification";
 
 export default function OpeningVaultBalance({ data, setData, type }) {
+    const wrapperRef = useRef(null);
     const [currencyOptions, setCurrencyOptions] = useState([]);
     const [currencyMap, setCurrencyMap] = useState({});
     const [currencySymbols, setCurrencySymbols] = useState({});
@@ -60,6 +61,28 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
         loadCurrencies();
     }, []);
+
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    setData(prev => {
+      const anyOpen = prev.sections.some(section => section.currencyOpen || section.rows.some(row => row.open));
+      if (!anyOpen) return prev; 
+      const clickedInside = event.target.closest('.dropdown-toggle') || event.target.closest('.dropdown-menu');
+      if (clickedInside) return prev; 
+      return {
+        ...prev,
+        sections: prev.sections.map(section => ({
+          ...section,
+          currencyOpen: false,
+          rows: section.rows.map(row => ({ ...row, open: false }))
+        }))
+      };
+    });
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [setData]);
 
     const handleConfirmDelete = () => {
         if (confirmModal.rowIndex !== null) {
@@ -231,38 +254,48 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     };
 
     // Toggle currency dropdown for a specific section
-    const toggleCurrencyDropdown = (sectionId) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id === sectionId) {
-                    return { ...section, currencyOpen: !section.currencyOpen };
-                }
-                // Close other dropdowns
-                return { ...section, currencyOpen: false };
-            })
-        }));
-    };
+const toggleCurrencyDropdown = (sectionId) => {
+  setData(prev => ({
+    ...prev,
+    sections: prev.sections.map(section => {
+      if (section.id === sectionId) {
+        // Toggle this one, close all row dropdowns
+        return {
+          ...section,
+          currencyOpen: !section.currencyOpen,
+          rows: section.rows.map(row => ({ ...row, open: false }))
+        };
+      }
+      // Close all other sections
+      return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+    })
+  }));
+};
 
-    // Toggle denomination dropdown for a specific row
-    const toggleRowDropdown = (sectionId, rowIndex) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id !== sectionId) return section;
+// Toggle denomination dropdown
+const toggleRowDropdown = (sectionId, rowIndex) => {
+  setData(prev => ({
+    ...prev,
+    sections: prev.sections.map(section => {
+      if (section.id !== sectionId) {
+        // Close all dropdowns in other sections
+        return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+      }
 
-                const updatedRows = [...section.rows];
-                updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
+      const updatedRows = [...section.rows];
+      // Toggle only the clicked row
+      updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
 
-                // Close other dropdowns in the same section
-                updatedRows.forEach((row, idx) => {
-                    if (idx !== rowIndex) row.open = false;
-                });
+      // Close other rows in this section
+      updatedRows.forEach((row, idx) => {
+        if (idx !== rowIndex) row.open = false;
+      });
 
-                return { ...section, rows: updatedRows };
-            })
-        }));
-    };
+      // Close currency dropdown of this section if row opens
+      return { ...section, rows: updatedRows, currencyOpen: false };
+    })
+  }));
+};
 
     // Select a denomination for a specific row
     const selectDenomination = (sectionId, rowIndex, value) => {
@@ -306,7 +339,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
 
     return (
-        <div className="mt-4">
+        <div className="mt-4" ref={wrapperRef}>
             {/* Render each currency section */}
             {data.sections.map((section, sectionIndex) => (
                 <div key={section.id} className="mb-6">
@@ -318,7 +351,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                 <div className="relative">
                                     <button
                                         onClick={() => toggleCurrencyDropdown(section.id)}
-                                        className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4"
+                                        className="w-auto min-w-[90px] h-6 bg-transparent rounded-lg text-[#E3E3E3] flex items-center text-center justify-between px-4 dropdown-toggle"
                                     >
                                         <span className="text-[#939AF0] text-sm truncate max-w-[180px]">
                                             {section.selectedCurrency || "Select Currency"}
@@ -327,8 +360,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     </button>
 
                                     {section.currencyOpen && (
-                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
-            bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
+                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px] bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20 dropdown-menu">
                                             {currencyOptions.map((item) => (
                                                 <li
                                                     key={item}
@@ -400,7 +432,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     <div className="relative">
                                         <button
                                             onClick={() => toggleRowDropdown(section.id, i)}
-                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-white flex justify-between items-center"
+                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-white flex justify-between items-center dropdown-toggle"
                                         >
                                             <span>
                                                 {row.denom
@@ -411,8 +443,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         </button>
 
                                         {row.open && (
-                                            <ul className="absolute w-full mt-2 bg-[#2E3439] 
-                                            border border-[#2A2F33] rounded-lg z-30">
+                                            <ul className="absolute w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-30 dropdown-menu">
                                                 {denominationOptions
                                                     .filter(item => {
                                                         // Allow current row value
@@ -426,11 +457,9 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                             key={item}
                                                             onClick={() => selectDenomination(section.id, i, item)}
                                                             className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
-                                                        >
+                                                            >
                                                             <span>{currencySymbols[section.selectedCurrency]}{item}</span>
-                                                            {row.denom === item && (
-                                                                <img src={tick} className="w-4 h-4" alt="selected" />
-                                                            )}
+                                                            {row.denom === item && <img src={tick} className="w-4 h-4" alt="selected" />}
                                                         </li>
                                                     ))}
 
