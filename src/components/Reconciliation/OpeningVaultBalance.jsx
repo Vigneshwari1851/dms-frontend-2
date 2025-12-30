@@ -19,6 +19,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         rowIndex: null,
     });
 
+    const [openCurrencySection, setOpenCurrencySection] = useState(null);
+    const [openRow, setOpenRow] = useState({ sectionId: null, rowIndex: null });
 
     // Initialize with one section if none exists
     useEffect(() => {
@@ -50,8 +52,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             selectedCurrency: defaultCurrency.code,
                             currencyId: defaultCurrency.id,
                             exchangeRate: 1,
-                            rows: [{ denom: "", qty: "", total: 0, open: false }],
-                            currencyOpen: false
+                            rows: [{ denom: "", qty: "", total: 0 }],
                         }]
                     }));
                 }
@@ -82,13 +83,13 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     ? {
                         ...section,
                         selectedCurrency: currencyName,
-                        currencyId: currencyId,
-                        exchangeRate: 1, // Reset rate on currency change
-                        currencyOpen: false
+                        currencyId,
+                        exchangeRate: 1
                     }
                     : section
             )
         }));
+        setOpenCurrencySection(null);
     };
 
     // Handle row changes within a specific section
@@ -139,8 +140,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     selectedCurrency: defaultCurrency,
                     currencyId: defaultCurrencyId,
                     exchangeRate: 1,
-                    rows: [{ denom: "", qty: "", total: 0, open: false }],
-                    currencyOpen: false
+                    rows: [{ denom: "", qty: "", total: 0 }],
                 }
             ]
         }));
@@ -159,12 +159,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     ...section,
                     rows: [
                         ...section.rows,
-                        {
-                            denom: "",
-                            qty: "",
-                            total: 0,
-                            open: false
-                        }
+                        { denom: "", qty: "", total: 0 }
                     ]
                 };
             })
@@ -181,7 +176,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                 // Don't delete the last row, just reset it
                 if (section.rows.length <= 1) {
                     const updatedRows = [...section.rows];
-                    updatedRows[rowIndex] = { denom: "", qty: "", total: 0, open: false };
+                    updatedRows[rowIndex] = { denom: "", qty: "", total: 0 };
                     return { ...section, rows: updatedRows };
                 }
 
@@ -193,12 +188,9 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         }));
     };
 
-    // Calculate total for a specific section
-    const calculateSectionTotal = (section) => {
-        return section.rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
-    };
+    const calculateSectionTotal = (section) =>
+        section.rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
-    // Calculate grand total across all sections
     const calculateGrandTotal = () => {
         if (!data.sections) return 0;
         return data.sections.reduce((sum, section) => sum + calculateSectionTotal(section), 0);
@@ -217,39 +209,24 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
     // Toggle currency dropdown for a specific section
     const toggleCurrencyDropdown = (sectionId) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id === sectionId) {
-                    return { ...section, currencyOpen: !section.currencyOpen };
-                }
-                // Close other dropdowns
-                return { ...section, currencyOpen: false };
-            })
-        }));
+        setOpenCurrencySection(prev =>
+            prev === sectionId ? null : sectionId
+        );
+
+        setOpenRow({ sectionId: null, rowIndex: null });
     };
 
     // Toggle denomination dropdown for a specific row
     const toggleRowDropdown = (sectionId, rowIndex) => {
-        setData(prev => ({
-            ...prev,
-            sections: prev.sections.map(section => {
-                if (section.id !== sectionId) return section;
+        setOpenRow(prev =>
+            prev.sectionId === sectionId && prev.rowIndex === rowIndex
+                ? { sectionId: null, rowIndex: null }
+                : { sectionId, rowIndex }
+        );
 
-                const updatedRows = [...section.rows];
-                updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
-
-                // Close other dropdowns in the same section
-                updatedRows.forEach((row, idx) => {
-                    if (idx !== rowIndex) row.open = false;
-                });
-
-                return { ...section, rows: updatedRows };
-            })
-        }));
+        setOpenCurrencySection(null);
     };
 
-    // Select a denomination for a specific row
     const selectDenomination = (sectionId, rowIndex, value) => {
         setData(prev => ({
             ...prev,
@@ -258,7 +235,6 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
                 const updatedRows = [...section.rows];
                 updatedRows[rowIndex].denom = value;
-                updatedRows[rowIndex].open = false;
 
                 // Recalculate total
                 const d = parseFloat(value || 0);
@@ -268,6 +244,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                 return { ...section, rows: updatedRows };
             })
         }));
+
+        setOpenRow({ sectionId: null, rowIndex: null });
     };
 
     // Common denomination options
@@ -282,13 +260,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         );
     }
 
-    // Get already selected denominations in a section
-    const getUsedDenominations = (section) => {
-        return section.rows
-            .map(row => row.denom)
-            .filter(denom => denom !== "");
-    };
-
+    const getUsedDenominations = (section) =>
+        section.rows.map(row => row.denom).filter(x => x !== "");
 
     return (
         <div className="mt-4">
@@ -311,15 +284,13 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         <img src={down} className="w-3 shrink-0" alt="dropdown" />
                                     </button>
 
-                                    {section.currencyOpen && (
-                                        <ul className="absolute left-0 mt-2 w-auto min-w-[90px]
-            bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
-                                            {currencyOptions.map((item) => (
+                                    {openCurrencySection === section.id && (
+                                        <ul className="absolute left-0 mt-2 w-auto min-w[90px] bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20">
+                                            {currencyOptions.map(item => (
                                                 <li
                                                     key={item}
                                                     onClick={() => handleCurrencySelect(section.id, item)}
-                                                    className="px-4 py-2 flex items-center justify-between 
-                        hover:bg-[#1E2328] cursor-pointer text-white"
+                                                    className="px-4 py-2 flex items-center justify-between gap-4 hover:bg-[#1E2328] cursor-pointer text-white"
                                                 >
                                                     <span className="truncate max-w-[200px]">{item}</span>
                                                     {section.selectedCurrency === item && (
@@ -395,9 +366,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                             <img src={down} className="w-3" alt="dropdown" />
                                         </button>
 
-                                        {row.open && (
-                                            <ul className="absolute w-full mt-2 bg-[#2E3439] 
-                                            border border-[#2A2F33] rounded-lg z-30">
+                                        {openRow.sectionId === section.id && openRow.rowIndex === i && (
+                                            <ul className="absolute w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-30">
                                                 {denominationOptions
                                                     .filter(item => {
                                                         // Allow current row value
@@ -406,7 +376,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                         // Hide already selected denominations in other rows
                                                         return !getUsedDenominations(section).includes(item);
                                                     })
-                                                    .map((item) => (
+                                                    .map(item => (
                                                         <li
                                                             key={item}
                                                             onClick={() => selectDenomination(section.id, i, item)}
@@ -478,7 +448,6 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                 </div>
                             ))}
 
-                            {/* ADD Row - Always show the Add button */}
                             <div className="flex justify-end">
                                 <button
                                     onClick={() => addRow(section.id)}
@@ -512,28 +481,10 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                 + Add Different Currency
                             </button>
                         </div>
-
-
-
                     </div>
-
-                    {/* ADD NEW CURRENCY SECTION BUTTON (only after last section) */}
-                    {/* {sectionIndex === data.sections.length - 1 && (
-                        <div className="mt-4 flex justify-center">
-                            <button
-                                onClick={addNewCurrencySection}
-                                className="px-4 py-2 border-2 border-dashed border-[#2F343A] rounded-lg 
-                                text-[#838383] hover:text-white hover:border-[#939AF0] 
-                                transition-colors bg-[#1E2328]"
-                            >
-                                + Add Different Currency
-                            </button>
-                        </div>
-                    )} */}
                 </div>
             ))}
 
-            {/* GRAND TOTAL */}
             <div className="mt-6">
                 <div className="bg-[#152F1F] w-full rounded-xl h-10 flex items-center justify-between px-4 text-white font-normal text-[14px]">
                     <p>Total {type === 'opening' ? 'Opening' : 'Closing'} Balance</p>
