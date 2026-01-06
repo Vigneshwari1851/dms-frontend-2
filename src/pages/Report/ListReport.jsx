@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef  } from "react";
 import bgIcon from "../../assets/report/bgimage.svg";
 import download from "../../assets/dashboard/download.svg";
-import pdf from "../../assets/common/pdf.svg";
-import excel from "../../assets/common/excel.svg";
+import pdf from "../../assets/Common/pdf.svg";
+import excel from "../../assets/Common/excel.svg";
 import Dropdown from "../../components/common/Dropdown";
 import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";

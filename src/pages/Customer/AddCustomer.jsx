@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import add from "../../assets/common/save.svg";
+import add from "../../assets/Common/save.svg";
 import { addCustomer } from "../../api/customers";
 
 export default function AddCustomer() {

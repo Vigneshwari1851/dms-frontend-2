@@ -4,8 +4,8 @@ import searchIcon from "../../assets/Common/search.svg";
 import SortableHeader from "../common/SortableHeader";
 import download from "../../assets/dashboard/download.svg";
 import Dropdown from "../../components/common/Dropdown";
-import pdf from "../../assets/common/pdf.svg";
-import excel from "../../assets/common/excel.svg";
+import pdf from "../../assets/Common/pdf.svg";
+import excel from "../../assets/Common/excel.svg";
 import DateFilter from "./DateFilter";
 
 export default function Table({

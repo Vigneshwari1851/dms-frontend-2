@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import add from "../../assets/common/save.svg";
+import add from "../../assets/Common/save.svg";
 import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg";
 import { createUser } from "../../api/user/user.jsx";

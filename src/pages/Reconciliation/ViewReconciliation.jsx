@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg";
 
-import expandRight from "../../assets/common/expandRight.svg";
+import expandRight from "../../assets/Common/expandRight.svg";
 import edit from "../../assets/Common/edit.svg";
 
 import { useNavigate, useParams } from "react-router-dom";

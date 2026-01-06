@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import down from "../../assets/dashboard/down.svg";
-import tick from "../../assets/common/tick.svg";
-import plus from "../../assets/common/save.svg";
+import tick from "../../assets/Common/tick.svg";
+import plus from "../../assets/Common/save.svg";
 import Denomination from "../../components/deal/Denomination";
 import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
