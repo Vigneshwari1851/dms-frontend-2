@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchCustomerById, updateCustomer } from "../../api/customers";
-import saveIcon from "../../assets/common/save.svg";
+import saveIcon from "../../assets/Common/save.svg";
 import edit from "../../assets/Common/edit.svg";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";

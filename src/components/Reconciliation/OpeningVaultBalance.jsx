@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import down from "../../assets/dashboard/down.svg";
 import trash from "../../assets/reconciliation/trash.svg";
-import tick from "../../assets/common/tick.svg";
+import tick from "../../assets/Common/tick.svg";
 import { fetchCurrencies } from "../../api/currency/currency";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
 import NotificationCard from "../../components/common/Notification";

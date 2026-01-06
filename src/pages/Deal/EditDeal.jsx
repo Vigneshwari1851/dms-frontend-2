@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
-import tick from "../../assets/common/tick.svg";
-import editIcon from "../../assets/common/edit.svg";
-import save from "../../assets/common/save.svg";
+import tick from "../../assets/Common/tick.svg";
+import editIcon from "../../assets/Common/edit.svg";
+import save from "../../assets/Common/save.svg";
 import Denomination from "../../components/deal/Denomination";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchDealById, updateDeal } from "../../api/deals";

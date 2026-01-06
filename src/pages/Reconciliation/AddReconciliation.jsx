@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg";
-import save from "../../assets/common/save.svg";
+import save from "../../assets/Common/save.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";

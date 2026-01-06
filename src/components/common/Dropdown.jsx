@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import down from "../../assets/dashboard/down.svg";
-import tick from "../../assets/common/tick.svg";
+import tick from "../../assets/Common/tick.svg";
 
 export default function Dropdown({
     label,
