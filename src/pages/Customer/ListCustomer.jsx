@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Table from "../../components/common/Table";
 import { searchCustomers } from "../../api/customers";
-import add from "../../assets/Common/Hplus.svg";
+import add from "../../assets/Common/HPlus.svg";
 import Toast from "../../components/common/Toast";
 
 export default function ListCustomer() {
