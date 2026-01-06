@@ -4,7 +4,7 @@ import { Routes, Route, Router } from "react-router-dom";
 import Login from "../pages/Auth/Login/Login";
 import VerifyOtp from "../pages/Auth/VerifyLogin/VerifyLogin";
 import ResetPassword from "../pages/Auth/ResetPassword/ResetPassword";
-import Dashboard from "../pages/Dashboard/dashboard";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import IpBlocked from "../pages/Error/IpBlocked";
 import AccountDisabled from "../pages/Error/AccountDeactivated";
 import ForgotPassword from "../pages/Auth/ForgetPassword/ForgotPassword";
