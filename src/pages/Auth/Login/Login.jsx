@@ -300,7 +300,7 @@ function Login() {
                 disabled={!formData.email || isSubmitting}
 
               >
-                {isSubmitting ? "Saving in..." : "Saving"}
+                {isSubmitting ? "Logging in..." : "Login"}
               </button>
 
             </div>
