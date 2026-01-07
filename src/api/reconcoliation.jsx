@@ -1,4 +1,6 @@
-const API_URL = "http://24.199.110.37";
+import API_BASE_URL from "./config";
+
+const API_URL = API_BASE_URL;
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
