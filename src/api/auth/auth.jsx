@@ -1,4 +1,4 @@
-const API_URL = "http://24.199.110.37/";  
+const API_URL = "http://24.199.110.37";  
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
