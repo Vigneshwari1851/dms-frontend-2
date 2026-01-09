@@ -2,24 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import { addCustomer } from "../../api/customers";
+import Dropdown from "../../components/common/Dropdown";
 
 export default function AddCustomer() {
     
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [deal_type, setDealType] = useState("");
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
 
     const validate = () => {
         const newErrors = {};
         if (!fullName.trim()) newErrors.fullName = "Full Name is required";
-        if (!email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-            newErrors.email = "Enter a valid email";
-        }
         if (!phone.trim()) newErrors.phone = "Phone number is required";
+        if (!deal_type) newErrors.deal_type = "Deal type is required";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -31,6 +29,7 @@ export default function AddCustomer() {
             name: fullName,
             email: email,
             phone_number: phone,
+            deal_type: deal_type,
         };
 
         const res = await addCustomer(payload);
@@ -81,13 +80,12 @@ export default function AddCustomer() {
 
                 <div className="grid grid-cols-2 gap-6 mt-6">
                     <div>
-                        <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
+                        <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email</label>
                         <input
                             className={`w-full bg-[#16191C] rounded-lg px-3 py-2 `}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
-                        {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB] mb-1">
@@ -122,6 +120,25 @@ export default function AddCustomer() {
                             }}
                         />
                         {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
+                    </div>
+                    <div>
+                        <label className="block text-sm text-[#ABABAB] mt-2 mb-2">
+                        Customer Type <span className="text-red-500">*</span>
+                        </label>
+                        <Dropdown
+                            label="Customer Type"
+                            options={["Buy", "Sell"]}
+                            selected={
+                                deal_type === "buy" ? "Buy" :
+                                deal_type === "sell" ? "Sell" :
+                                ""
+                            }
+                            onChange={(val) => setDealType(val.toLowerCase())}
+                            className="w-[580px]"
+                        />
+                        {errors.deal_type && (
+                        <p className="text-red-400 text-xs mt-1">{errors.deal_type}</p>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-8">
