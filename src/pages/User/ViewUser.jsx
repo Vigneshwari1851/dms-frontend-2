@@ -390,15 +390,7 @@ export default function ViewUser() {
                     <div className="flex justify-end gap-3 mt-8">
                         <button
                             onClick={() => {
-                                navigate("/users", {
-                                    state: {
-                                        toast: {
-                                            show: true,
-                                            message: "Changes reverted",
-                                            type: "error",
-                                        },
-                                    },
-                                });
+                                navigate("/users");
                             }}
                             className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
                         >
