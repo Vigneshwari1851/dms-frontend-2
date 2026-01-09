@@ -656,97 +656,189 @@ export default function CreateDeal() {
             </div>
           </div>
 
-          {/* Buy Currency Type */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Currency Type <span className="text-red-500">*</span>
-            </label>
-            <Dropdown
-              label="Buy Currency"
-              options={buyCurrencyOptions}
-              selected={buyCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "buy");
-                setErrors(prev => ({ ...prev, buyCurrency: "" }));
-              }}
-              className="w-[172px]"
-            />
-            <div className="h-3.5 mt-1" />
-          </div>
+           {txnType.toLowerCase() === "sell" ? (
+            <>
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Sell Currency Type <span className="text-red-500">*</span>
+                </label>
+                <Dropdown
+                  label="Sell Currency"
+                  options={sellCurrencyOptions}
+                  selected={sellCurrency}
+                  onChange={(val) => {
+                    handleCurrencySelect(val, "sell");
+                    setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                  }}
+                  className="w-[172px]"
+                />
+                <div className="h-3.5 mt-1" />
+              </div>
 
-          {/* Amount */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Amount <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
-              placeholder="0.00"
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setAmount(value);
-                  setErrors(prev => ({ ...prev, amount: "" }));
-                }
-              }}
-            />
-            <div className="min-h-3.5 mt-1">
-              {errors.amount && (
-                <p className="text-red-400 text-[11px]">
-                  {errors.amount}
-                </p>
-              )}
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Amount <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                  placeholder="0.00"
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) {
+                      setAmount(value);
+                      setErrors(prev => ({ ...prev, amount: "" }));
+                    }
+                  }}
+                />
+                <div className="min-h-3.5 mt-1">
+                  {errors.amount && (
+                    <p className="text-red-400 text-[11px]">
+                      {errors.amount}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Buy Currency Type */}
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Buy Currency Type <span className="text-red-500">*</span>
+                </label>
+                <Dropdown
+                  label="Buy Currency"
+                  options={buyCurrencyOptions}
+                  selected={buyCurrency}
+                  onChange={(val) => {
+                    handleCurrencySelect(val, "buy");
+                    setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                  }}
+                  className="w-[172px]"
+                />
+                <div className="h-3.5 mt-1" />
+              </div>
+
+               <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Rate <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                  placeholder="0.00"
+                  type="text"
+                  inputMode="decimal"
+                  value={rate}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) {
+                      setRate(value);
+                      setErrors(prev => ({ ...prev, rate: "" }));
+                    }
+                  }}
+                />
+                <div className="min-h-3.5 mt-1">
+                  {errors.rate && (
+                    <p className="text-red-400 text-[11px]">
+                      {errors.rate}
+                    </p>
+                  )}
+                </div>
+              </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Buy Currency Type <span className="text-red-500">*</span>
+                  </label>
+                  <Dropdown
+                    label="Buy Currency"
+                    options={buyCurrencyOptions}
+                    selected={buyCurrency}
+                    onChange={(val) => {
+                      handleCurrencySelect(val, "buy");
+                      setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                    }}
+                    className="w-[172px]"
+                  />
+                  <div className="h-3.5 mt-1" />
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Amount <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                    placeholder="0.00"
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*\.?\d*$/.test(value)) {
+                        setAmount(value);
+                        setErrors(prev => ({ ...prev, amount: "" }));
+                      }
+                    }}
+                  />
+                  <div className="min-h-3.5 mt-1">
+                    {errors.amount && (
+                      <p className="text-red-400 text-[11px]">
+                        {errors.amount}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sell Currency Type */}
+                <div>
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Sell Currency Type <span className="text-red-500">*</span>
+                  </label>
+                  <Dropdown
+                    label="Sell Currency"
+                    options={sellCurrencyOptions}
+                    selected={sellCurrency}
+                    onChange={(val) => {
+                      handleCurrencySelect(val, "sell");
+                      setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                    }}
+                    className="w-[172px]"
+                  />
+                  <div className="h-3.5 mt-1" />
+                </div>
+                <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Rate <span className="text-red-500">*</span>
+              </label>
+              <input
+                className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                placeholder="0.00"
+                type="text"
+                inputMode="decimal"
+                value={rate}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setRate(value);
+                    setErrors(prev => ({ ...prev, rate: "" }));
+                  }
+                }}
+              />
+              <div className="min-h-3.5 mt-1">
+                {errors.rate && (
+                  <p className="text-red-400 text-[11px]">
+                    {errors.rate}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Sell Currency Type */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Sell Currency Type <span className="text-red-500">*</span>
-            </label>
-             <Dropdown
-              label="Sell Currency"
-              options={sellCurrencyOptions}
-              selected={sellCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "sell");
-                setErrors(prev => ({ ...prev, sellCurrency: "" }));
-              }}
-              className="w-[172px]"
-            />
-            <div className="h-3.5 mt-1" />
-          </div>
-
-          {/* Rate */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Rate <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
-              placeholder="0.00"
-              type="text"
-              inputMode="decimal"
-              value={rate}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setRate(value);
-                  setErrors(prev => ({ ...prev, rate: "" }));
-                }
-              }}
-            />
-            <div className="min-h-3.5 mt-1">
-              {errors.rate && (
-                <p className="text-red-400 text-[11px]">
-                  {errors.rate}
-                </p>
-              )}
-            </div>
-          </div>
+              </>
+            )}
         </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
