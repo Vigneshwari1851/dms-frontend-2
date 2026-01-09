@@ -440,84 +440,8 @@ export default function CreateDeal() {
       })));
     }
   };
-
-  const buyCurrencyOptions = currencyOptions.filter(
-    (c) => c !== sellCurrency
-  );
-
-  const sellCurrencyOptions = currencyOptions.filter(
-    (c) => c !== buyCurrency
-  );
-  // // Custom dropdown with fixed dimensions
-  // const CustomDropdown = ({
-  //   value,
-  //   setValue,
-  //   isOpen,
-  //   setIsOpen,
-  //   options,
-  //   placeholder,
-  //   loading = false
-  // }) => (
-  //   <div className="relative">
-  //     <button
-  //       onClick={() => setIsOpen(!isOpen)}
-  //       className="
-  //         w-[172px] h-8
-  //        bg-[#16191C]
-  //                 rounded-lg
-  //                 text-[14px]
-  //                 text-[#ABABAB]
-  //                 font-medium
-  //                 flex items-center justify-between
-  //                 px-4
-  //       "
-  //     >
-  //       <span className="truncate">{value || placeholder}</span>
-  //       <img src={down} alt="down" className="w-3" />
-  //     </button>
-
-  //     {isOpen && (
-  //       <ul className="
-  //        absolute left-0 right-0 mt-2 
-  //                 bg-[#2E3439] border border-[#2A2F33] 
-  //                 rounded-lg z-10
-  //       ">
-  //         {loading ? (
-  //           <li className="px-3 py-2 text-sm text-gray-300">
-  //             Loading...
-  //           </li>
-  //         ) : options.length === 0 ? (
-  //           <li className="px-3 py-2 text-sm text-gray-300">
-  //             No options
-  //           </li>
-  //         ) : (
-  //           options.map((option) => (
-  //             <li
-  //               key={option}
-  //               onClick={() => {
-  //                 setValue(option);
-  //                 setIsOpen(false);
-  //               }}
-  //               className="
-  //               px-4 py-2 
-  //                       flex items-center justify-between
-  //                       hover:bg-[#1E2328]
-  //                       cursor-pointer
-  //                       text-white
-  //                       pl-2
-  //               "
-  //             >
-  //               <span className="truncate">{option}</span>
-  //               {value === option && (
-  //                 <img src={tick} className="w-4 h-4" />
-  //               )}
-  //             </li>
-  //           ))
-  //         )}
-  //       </ul>
-  //     )}
-  //   </div>
-  // );
+  const buyCurrencyOptions = currencyOptions;
+  const sellCurrencyOptions = currencyOptions;
 
   return (
     <>
