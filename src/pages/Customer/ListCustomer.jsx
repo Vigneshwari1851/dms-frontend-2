@@ -64,17 +64,21 @@ export default function ListCustomer() {
 
   const columns = [
     { label: "Customer Name", key: "full_name", align: "left" },
+    { label: "Customer Type", key: "deal_type", align: "center" },
     { label: "Email", key: "email", align: "center" },
     { label: "Phone", key: "phone_number", align: "center" },
-    { label: "Amount", key: "balance", align: "left"}
+    { label: "Amount", key: "balance", align: "left"},
+    { label: "Created At", key: "created_at", align: "center" },
   ];
 
   const tableData = customers.map((c) => ({
     id: c.id,
     full_name: c.name || c.full_name || c.customer_name || "-",
+    deal_type: c.deal_type || "-",
     email: c.email || "-",
     phone_number: c.phone_number || c.phone || c.mobile || "-",
-    balance: c.balance
+    balance: c.balance,
+    created_at: new Date(c.created_at).toISOString().split("T")[0]
   }));
 
   return (
