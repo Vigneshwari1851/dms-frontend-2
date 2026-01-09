@@ -398,6 +398,11 @@ export default function CreateDeal() {
     setCustomerQuery(displayName);
     setPhone(displayPhone);
     setCustomerDropdownOpen(false);
+
+    setTxnType(
+      customer?.deal_type === "sell" ? "Sell" : "Buy"
+    );
+
     setErrors(prev => ({ ...prev, customer: "" }));
   };
 
@@ -613,13 +618,13 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-            <Dropdown
-              label="Type"
-              options={["Buy", "Sell"]}
-              selected={txnType}
-              onChange={(val) => setTxnType(val)}
-              className="w-[172px]"
-            />
+           <div
+              className={`
+              className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
+              `}
+            >
+              {txnType}
+            </div>
             <div className="min-h-3.5 mt-1">
               {errors.txnType && (
                 <p className="text-red-400 text-[11px] leading-3.5">
