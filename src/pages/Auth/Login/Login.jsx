@@ -16,6 +16,8 @@ function Login() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorType, setErrorType] = useState("");
 
   // Load saved email on page load
   useEffect(() => {
@@ -33,6 +35,7 @@ function Login() {
     const { name, value } = event.target;
 
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
 
     // if email cleared → remove saved email
     if (name === "email" && !value) {
@@ -73,6 +76,7 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
 
     // Weekend check
     const today = new Date().getDay();
@@ -120,16 +124,18 @@ function Login() {
         return;
       }
     } catch (error) {
-      const backendMsg =
-        error?.data?.error || error?.data?.message || error?.message;
+        const backendMsg =
+        error?.data?.error || error?.data?.message || error?.message || "Login failed";
 
+      const lowerMsg = backendMsg.toLowerCase();
 
-      setStatus({
-        type: "error",
-        message: "Incorrect password. Please try again.",
+      setErrors({
+        email: lowerMsg.includes("email") ? backendMsg : "",
+        password: lowerMsg.includes("password") ? backendMsg : "",
       });
-    }
 
+      setErrorMessage(backendMsg);
+    }
     setIsSubmitting(false);
   };
 
