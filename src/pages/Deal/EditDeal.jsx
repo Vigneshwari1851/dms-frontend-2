@@ -18,6 +18,7 @@ export default function EditDeal() {
     const [deal, setDeal] = useState(null);
     const [error, setError] = useState(null);
     const [editMode, setEditMode] = useState(false);
+    const dimOnEdit = editMode ? "opacity-50" : "";
 
     // Form States
     const [customerName, setCustomerName] = useState("");
@@ -387,7 +388,7 @@ export default function EditDeal() {
                                 Full Name <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed"
+                                className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
                                 value={customerName}
                                 disabled
                             />
@@ -398,7 +399,7 @@ export default function EditDeal() {
                                 Phone Number <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white cursor-not-allowed"
+                                className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
                                 value={phoneNumber}
                                 disabled
                             />
@@ -412,8 +413,8 @@ export default function EditDeal() {
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Type <span className="text-red-500">*</span>
                             </label>
-                            <div className="w-[190px] h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white">
-                                {txnType}
+                            <div
+                                className={`w-[172px] bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>                                {txnType}
                             </div>
                         </div>
 
@@ -442,7 +443,7 @@ export default function EditDeal() {
                                 options={currencyOptions}
                                 selected={buyCurrency}
                                 onChange={() => {}}
-                                className="w-[172px]"
+                                className={`w-[172px] ${dimOnEdit}`}
                                 disabled
                             />
                         </div>
@@ -475,7 +476,7 @@ export default function EditDeal() {
                                 options={currencyOptions}
                                 selected={sellCurrency}
                                 onChange={() => {}}
-                                className="w-[172px]"
+                                className={`w-[172px] ${dimOnEdit}`}
                                 disabled
                             />
                         </div>
