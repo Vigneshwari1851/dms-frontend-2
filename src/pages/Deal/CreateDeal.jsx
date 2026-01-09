@@ -618,7 +618,7 @@ export default function CreateDeal() {
         {/* Row 2 - Transaction fields in one line (6 fields) */}
         <div className="flex items-end gap-6 mt-6">
           {/* Transaction Type */}
-          <div>
+          <div className="w-[190px]">
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
