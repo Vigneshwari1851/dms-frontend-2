@@ -352,8 +352,12 @@ export default function CreateDeal() {
 
   const handleCustomerSearch = async (value) => {
     setCustomerQuery(value);
-    setSelectedCustomer(null);
-    setPhone("");
+    
+    if (!value || value.trim().length === 0) {
+      setSelectedCustomer(null);
+      setPhone("");
+      setTxnType("");
+    }
 
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
