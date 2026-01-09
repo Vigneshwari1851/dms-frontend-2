@@ -16,6 +16,7 @@ export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
+  const statuses = ["All Status", "Pending", "Completed"];
 
   const [dateRange, setDateRange] = useState("Today");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -122,7 +123,12 @@ export default function ListReport() {
     }
   };
 
-  const sortedData = [...reportRows].sort((a, b) => {
+  const filteredData = reportRows.filter((item) => {
+    if (statusFilter === "All Status") return true;
+    return item.status === statusFilter;
+  });
+
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
     let valB = b[sortBy];
@@ -214,20 +220,14 @@ export default function ListReport() {
             />
           </div>
 
-          {/* <div className="flex flex-col">
-            <label className="text-gray-300 mb-2 text-sm">Format</label>
+          <div className="flex flex-col">
+            <label className="text-gray-300 mb-2 text-sm">Status</label>
             <Dropdown
-              label={format}
-              options={formats}
-              onChange={(value) => setFormat(value.label)}
-              renderOption={(option) => (
-                <div className="flex items-center gap-2">
-                  <img src={option.icon} alt={option.label} className="w-4 h-4" />
-                  <span>{option.label}</span>
-                </div>
-              )}
+              label={tempStatusFilter}
+              options={statuses}
+              onChange={(value) => setTempStatusFilter(value)}
             />
-          </div> */}
+          </div>
 
           <div className="flex  mt-6">
             <button
