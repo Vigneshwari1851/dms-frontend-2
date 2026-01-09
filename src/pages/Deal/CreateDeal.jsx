@@ -620,18 +620,12 @@ export default function CreateDeal() {
             </label>
            <div
               className={`
-              className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
+              className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
               `}
             >
               {txnType}
             </div>
-            <div className="min-h-3.5 mt-1">
-              {errors.txnType && (
-                <p className="text-red-400 text-[11px] leading-3.5">
-                  {errors.txnType}
-                </p>
-              )}
-            </div>
+            <div className="min-h-3.5 mt-1"/>
           </div>
 
           {/* Transaction Mode */}
