@@ -238,7 +238,6 @@ export default function CreateDeal() {
       // For "Deal Tallied Successfully" -> "No" button was clicked
       // Create deal with "Completed" status
       setConfirmModal({ ...confirmModal, open: false });
-      await createDealTransaction('Completed');
     } else {
       // For "Deal Not Tallied" -> "No" button was clicked
       // Create deal with "Pending" status
