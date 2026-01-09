@@ -488,27 +488,23 @@ export default function DealsList() {
                           className="fixed inset-0 z-10"
                           onClick={() => setOpenMenu(null)}
                         ></div>
-                        <div className="absolute right-10 mt-1 w-30 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                          <button
-                            onClick={() => handleRowClick(item.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
-                          >
-                            Review Deal
-                          </button>
-                          {/* <button
-                        onClick={() => handleViewSlip(item.id)}
+                        <div className="absolute right-10 mt-1 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                      <button
+                        onClick={() => handleRowClick(item)}
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
                       >
-                        View Deal Slip
-                      </button> */}
+                        View Deal
+                      </button>
 
-                          <button
-                            onClick={() => handleEdit(item.dealId)}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] last:rounded-b-lg"
-                          >
-                            Edit Deal
-                          </button>
-                        </div>
+                      {item.status === "Pending" && (
+                        <button
+                          onClick={() => handleEdit(item.dealId)}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] rounded-b-lg"
+                        >
+                          Edit Deal
+                        </button>
+                      )}
+                    </div>
                       </>
                     )}
                   </td>

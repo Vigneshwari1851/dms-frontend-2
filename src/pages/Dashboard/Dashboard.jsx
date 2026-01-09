@@ -55,7 +55,7 @@ export default function Dashboard() {
   };
 
   const getChangeText = (percentage) => {
-    if (percentage === 0) return "No change from yesterday";
+    if (percentage === 0) return "";
     return `${percentage >= 0 ? "+" : ""}${percentage}% from yesterday`;
   };
 
