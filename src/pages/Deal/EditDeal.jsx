@@ -409,12 +409,12 @@ export default function EditDeal() {
                     {/* Row 2 - All transaction fields in one line (like CreateDeal) */}
                     <div className="flex items-end gap-6 mt-6">
                         {/* Transaction Type - NOT editable */}
-                        <div>
+                        <div className="w-[190px]">
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Type <span className="text-red-500">*</span>
                             </label>
                             <div
-                                className={`w-[172px] bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>                                {txnType}
+                                className={`w-[190px] h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>                                {txnType}
                             </div>
                         </div>
 
