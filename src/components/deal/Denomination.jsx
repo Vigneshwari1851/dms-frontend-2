@@ -183,7 +183,7 @@ export default function Denomination({
                   {/* QUANTITY */}
                   <td className="py-2 px-2">
                     <div
-                      className={`flex items-center bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 ${
+                      className={`flex items-center h-9 bg-[#16191C] rounded-md px-2 py-1 ${
                         isReadOnly ? "opacity-70" : ""
                       }`}
                     >
@@ -200,57 +200,6 @@ export default function Denomination({
                         readOnly={isReadOnly}
                         disabled={isReadOnly}
                       />
-
-                      {/* UP / DOWN BUTTONS - Only show if not read-only */}
-                      {!isReadOnly && (
-                        <div className="flex flex-col ml-2">
-                          <button
-                            onClick={() =>
-                              handleChange(
-                                list,
-                                setList,
-                                i,
-                                "quantity",
-                                Number(row.quantity || 0) + 1
-                              )
-                            }
-                            className="w-3 h-3 flex items-center justify-center"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="#E3E3E3"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M6 15l6-6 6 6" />
-                            </svg>
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handleChange(
-                                list,
-                                setList,
-                                i,
-                                "quantity",
-                                Math.max(0, Number(row.quantity || 0) - 1)
-                              )
-                            }
-                            className="w-3 h-3 flex items-center justify-center"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="#E3E3E3"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M18 9l-6 6-6-6" />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </td>
 
@@ -260,7 +209,7 @@ export default function Denomination({
                       type="number"
                       readOnly
                       value={row.total}
-                      className="w-full bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed"
+                      className="w-full h-9 bg-[#16191C] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed"
                     />
                   </td>
 
