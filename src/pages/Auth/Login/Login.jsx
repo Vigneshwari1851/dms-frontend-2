@@ -79,16 +79,16 @@ function Login() {
     setErrorMessage("");
 
     // Weekend check
-    const today = new Date().getDay();
-    if (today === 0 || today === 6) {
-      navigate("/account-disabled", {
-        state: {
-          message:
-            "Your account is temporarily deactivated on weekends for routine system checks. Please try again on Monday.",
-        },
-      });
-      return;
-    }
+    // const today = new Date().getDay();
+    // if (today === 0 || today === 6) {
+    //   navigate("/account-disabled", {
+    //     state: {
+    //       message:
+    //         "Your account is temporarily deactivated on weekends for routine system checks. Please try again on Monday.",
+    //     },
+    //   });
+    //   return;
+    // }
 
     if (!validateForm()) return;
 
