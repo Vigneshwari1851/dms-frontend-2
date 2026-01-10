@@ -86,6 +86,15 @@ export default function EditDeal() {
         );
     };
 
+    const tolerance = 0.01;
+
+    const isReceivedTallied =
+    Number(amount) > 0 &&
+    Math.abs(totalReceived() - Number(amount)) <= tolerance;
+
+    const isPaidTallied =
+    Number(amountToBePaid) > 0 &&
+    Math.abs(totalPaid() - Number(amountToBePaid)) <= tolerance;
 
     // Fetch currencies on component mount
     useEffect(() => {
@@ -540,6 +549,8 @@ export default function EditDeal() {
                                 currencySymbols={currencySymbols}
                                 receivedReadOnly={!amountEdited}
                                 paidReadOnly={!isEditable}
+                                hideAddReceived={isReceivedTallied}
+                                hideAddPaid={isPaidTallied}
                             />
                         </div>
                     </div>
