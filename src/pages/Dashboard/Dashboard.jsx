@@ -61,31 +61,32 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-10">
-        <h1 className="text-white text-2xl font-semibold">Welcome back!</h1>
+      <div className="flex items-center justify-between mb-6 lg:mb-10">
+        <h1 className="text-white text-xl lg:text-2xl font-semibold">Welcome back!</h1>
         <button
           className="
-    flex items-center 
-    w-[173px] h-10 
+    flex items-center justify-center 
+    w-auto px-3 lg:w-[173px] h-10 
     bg-[#1D4CB5] hover:bg-blue-600 
     text-white 
-    px-2 py-2 
     rounded-lg 
-    gap-2.5
+    gap-2 lg:gap-2.5
     text-sm font-medium 
     cursor-pointer
+    lg:mr-0
   "
           onClick={() => navigate('/deals/create-deal')}
         >
           <img src={add} alt="add" className="w-5 h-5" />
-          Create New Deal
+          <span className="lg:hidden">New Deal</span>
+          <span className="hidden lg:inline">Create New Deal</span>
         </button>
 
       </div>
 
       {/* <p className="text-gray-400 mb-6">Welcome back!</p> */}
 
-      <div className="grid grid-cols-4 gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-10">
         <StatCard
           title="Total Deals Today"
           value={stats.today?.dealCount || 0}

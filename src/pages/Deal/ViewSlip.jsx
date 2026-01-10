@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import leftArrow from "../../assets/Common/leftBack.svg";
 import plus from "../../assets/dashboard/add.svg";
-import pdf from  "../../assets/Common/pdf.pdf";
+import pdf from "../../assets/Common/pdf.pdf";
 import logo from "../../assets/Common/logo.svg";
 
-export default function ViewSlip({ 
+export default function ViewSlip({
   dealData = {
     dealId: "D001",
     status: "Pending",
@@ -32,7 +32,7 @@ export default function ViewSlip({
 }) {
   const navigate = useNavigate();
 
-  
+
 
   return (
     <div className="w-full">
@@ -56,7 +56,7 @@ export default function ViewSlip({
         }
       `}</style>
       {/* Page Header */}
-      <div className="flex items-center justify-between pb-6 border-b border-[#2A2D31]">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between pb-6 gap-4 border-b border-[#2A2D31]">
         <div>
           <button
             onClick={() => navigate(-1)}
@@ -65,18 +65,15 @@ export default function ViewSlip({
             <img src={leftArrow} alt="back" className="w-4 h-4 cursor-pointer" />
             <h1 className="text-[16px] font-medium text-[#E3E3E3]">View Slip</h1>
           </button>
-          <p className="text-gray-400 text-sm ml-5">Validate deal summary</p>
+          <p className="text-gray-400 text-sm ml-6 font-poppins">Validate deal summary</p>
         </div>
-
-       
       </div>
 
       {/* Main Content */}
-      <div className="flex w-full gap-8">
+      <div className="flex flex-col lg:flex-row w-full gap-8 mt-6">
         {/* LEFT: PDF Preview Thumbnail */}
-        <div className="w-[260px] flex flex-col items-center pr-8 border-r-7 border-[#2A2D31]">
-          <div className=" p-4 h-[330px] w-full flex flex-col items-center justify-center relative overflow-hidden">
-           
+        <div className="w-full lg:w-[260px] flex flex-col items-center lg:pr-8 lg:border-r border-[#2A2D31]">
+          <div className="p-4 h-[330px] w-full flex flex-col items-center justify-center relative overflow-hidden bg-[#1D2125] lg:bg-transparent rounded-lg">
             <iframe
               src={`${dealData.pdfSource || pdf}#toolbar=0&navpanes=0&scrollbar=0`}
               className="w-full h-full rounded-lg overflow-hidden"
@@ -89,89 +86,77 @@ export default function ViewSlip({
         </div>
 
         {/* RIGHT: Deal Slip Card */}
-        <div className="flex-1">
-          <div 
-            className="bg-[#2E3439] border border-[#2A2D31] p-5 shadow-xl flex flex-col overflow-hidden"
-            style={{
-              width: '595px',
-              height: '800px',
-              top: '14px',
-              left: '60px',
-              opacity: 1,
-              position: 'relative'
-            }}
+        <div className="flex-1 flex justify-center lg:justify-start">
+          <div
+            className="bg-[#2E3439] border border-[#2A2D31] p-5 lg:p-8 shadow-xl flex flex-col overflow-hidden w-full lg:w-[595px] max-w-full h-auto min-h-[700px] lg:min-h-[800px] relative rounded-xl"
           >
             {/* Deal Slip Header */}
-            <div className="flex justify-between items-start mb-8">
-              <img src={logo} alt="logo" />
-              <div className="flex flex-col items-end gap-2">
-                <h2 className="text-xl font-semibold text-white">Deal Slip – {dealData.dealId || dealData.dealNumber}</h2>
-                <span className={`px-3 py-1 rounded-2xl text-sm border font-medium ${
-                  dealData.status === "Pending" 
+            <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4 sm:gap-0">
+              <img src={logo} alt="logo" className="h-8 lg:h-auto" />
+              <div className="flex flex-col items-start sm:items-end gap-2">
+                <h2 className="text-lg lg:text-xl font-semibold text-white">Deal Slip – {dealData.dealId || dealData.dealNumber}</h2>
+                <span className={`px-3 py-1 rounded-2xl text-xs lg:text-sm border font-medium ${dealData.status === "Pending"
                     ? "bg-yellow-600/20 text-yellow-400"
                     : dealData.status === "Approved"
-                    ? "bg-green-600/20 text-green-400"
-                    : "bg-red-600/20 text-red-400"
-                }`}>
+                      ? "bg-green-600/20 text-green-400"
+                      : "bg-red-600/20 text-red-400"
+                  }`}>
                   {dealData.status}
                 </span>
               </div>
             </div>
 
             {/* General Deal Information Table */}
-            
             <div className="border border-[#2A2D31] rounded-lg overflow-hidden mb-5">
-              <table className="w-full text-sm">
-                <thead className="bg-[#0F1012]">
-                  
-                </thead>
-                <tbody className="bg-[#1E2328]">
-                  <BeneficiaryRow label="Deal Date" value={dealData.dealDate} />
-                  <BeneficiaryRow label="Deal Number" value={dealData.dealNumber} />
-                  <BeneficiaryRow label="Customer Name" value={dealData.customerName} />
-                  <BeneficiaryRow label="Phone number" value={dealData.phoneNumber} />
-                  <BeneficiaryRow label="Transaction Type" value={dealData.transactionType} />
-                  <BeneficiaryRow label="Currency Type" value={dealData.currencyType} />
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody className="bg-[#1E2328]">
+                    <BeneficiaryRow label="Deal Date" value={dealData.dealDate} />
+                    <BeneficiaryRow label="Deal Number" value={dealData.dealNumber} />
+                    <BeneficiaryRow label="Customer Name" value={dealData.customerName} />
+                    <BeneficiaryRow label="Phone number" value={dealData.phoneNumber} />
+                    <BeneficiaryRow label="Transaction Type" value={dealData.transactionType} />
+                    <BeneficiaryRow label="Currency Type" value={dealData.currencyType} />
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Beneficiary Details Table */}
-            <h3 className="text-lg font-semibold text-white mb-4">Beneficiary Details</h3>
+            <h3 className="text-base lg:text-lg font-semibold text-white mb-4">Beneficiary Details</h3>
             <div className="border border-[#2A2D31] rounded-lg overflow-hidden mb-5">
-              <table className="w-full text-sm">
-                <thead className="bg-[#0F1012]">
-                 
-                </thead>
-                <tbody className="bg-[#1E2328]">
-                  <BeneficiaryRow label="USD Selling" value={dealData.beneficiaryDetails?.usdSelling} />
-                  <BeneficiaryRow label="Rate" value={dealData.beneficiaryDetails?.rate} />
-                  <BeneficiaryRow label="TZS amount to be paid" value={dealData.beneficiaryDetails?.tzsAmount} />
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody className="bg-[#1E2328]">
+                    <BeneficiaryRow label="USD Selling" value={dealData.beneficiaryDetails?.usdSelling} />
+                    <BeneficiaryRow label="Rate" value={dealData.beneficiaryDetails?.rate} />
+                    <BeneficiaryRow label="TZS amount to be paid" value={dealData.beneficiaryDetails?.tzsAmount} />
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Denomination Table */}
             <div className="flex-1 flex flex-col min-h-0">
-              <h3 className="text-lg font-semibold text-white mb-4">Denomination Table</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-white mb-4">Denomination Table</h3>
               <div className="border border-[#2A2D31] rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
-                <div className="overflow-y-auto flex-1 custom-scrollbar">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto flex-1 custom-scrollbar">
+                  <table className="w-full text-sm min-w-[350px]">
                     <thead className="bg-[#0F1012] sticky top-0">
                       <tr>
-                        <th className="p-3 border-b border-r border-[#2A2D31] text-left text-white font-normal">Denomination (cash)</th>
-                        <th className="p-3 border-b border-r border-[#2A2D31] text-left text-white  font-normal">Quantity</th>
-                        <th className="p-3 border-b border-[#2A2D31] text-left text-white  font-normal">Tally Total</th>
+                        <th className="p-3 border-b border-r border-[#2A2D31] text-left text-white font-normal text-xs lg:text-sm">Denomination (cash)</th>
+                        <th className="p-3 border-b border-r border-[#2A2D31] text-left text-white  font-normal text-xs lg:text-sm">Quantity</th>
+                        <th className="p-3 border-b border-[#2A2D31] text-left text-white  font-normal text-xs lg:text-sm">Tally Total</th>
                       </tr>
                     </thead>
                     <tbody className="bg-[#1E2328]">
                       {dealData.denominations && dealData.denominations.length > 0 ? (
                         dealData.denominations.map((item, index) => (
-                          <Row 
-                            key={index} 
-                            denom={item.denom} 
-                            qty={item.qty} 
-                            total={item.total} 
+                          <Row
+                            key={index}
+                            denom={item.denom}
+                            qty={item.qty}
+                            total={item.total}
                           />
                         ))
                       ) : (

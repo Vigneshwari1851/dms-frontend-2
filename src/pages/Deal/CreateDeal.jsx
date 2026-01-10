@@ -524,7 +524,7 @@ export default function CreateDeal() {
       <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
 
         {/* Row 1 - Full Name & Phone */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Full Name <span className="text-red-500">*</span>
@@ -606,8 +606,8 @@ export default function CreateDeal() {
           </div>
         </div>
 
-        {/* Row 2 - Transaction fields in one line (6 fields) */}
-        <div className="flex items-end gap-6 mt-6">
+        {/* Row 2 - Transaction fields (Responsive Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
           {/* Transaction Type */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
@@ -618,9 +618,9 @@ export default function CreateDeal() {
               options={["Buy", "Sell"]}
               selected={txnType}
               onChange={(val) => setTxnType(val)}
-              className="w-[172px]"
+              className="w-full"
             />
-            <div className="min-h-3.5 mt-1">
+            <div className="min-h-[14px] mt-1">
               {errors.txnType && (
                 <p className="text-red-400 text-[11px] leading-3.5">
                   {errors.txnType}
@@ -634,17 +634,17 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Mode <span className="text-red-500">*</span>
             </label>
-             <Dropdown
-                label="Mode"
-                options={["Cash", "Credit"]}
-                selected={txnMode}
-                onChange={(val) => {
-                  setTxnMode(val);
-                  setErrors(prev => ({ ...prev, txnMode: "" }));
-                }}
-                className="w-[172px]"
-              />
-            <div className="min-h-3.5 mt-1">
+            <Dropdown
+              label="Mode"
+              options={["Cash", "Credit"]}
+              selected={txnMode}
+              onChange={(val) => {
+                setTxnMode(val);
+                setErrors(prev => ({ ...prev, txnMode: "" }));
+              }}
+              className="w-full"
+            />
+            <div className="min-h-[14px] mt-1">
               {errors.txnMode && (
                 <p className="text-red-400 text-[11px] leading-3.5">
                   {errors.txnMode}
@@ -654,7 +654,7 @@ export default function CreateDeal() {
           </div>
 
           {/* Buy Currency Type */}
-          <div>
+          <div className="lg:min-w-0">
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Buy Currency Type <span className="text-red-500">*</span>
             </label>
@@ -666,9 +666,9 @@ export default function CreateDeal() {
                 handleCurrencySelect(val, "buy");
                 setErrors(prev => ({ ...prev, buyCurrency: "" }));
               }}
-              className="w-[172px]"
+              className="w-full"
             />
-            <div className="h-3.5 mt-1" />
+            <div className="h-[14px] mt-1" />
           </div>
 
           {/* Amount */}
@@ -677,7 +677,7 @@ export default function CreateDeal() {
               Amount <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
               placeholder="0.00"
               type="text"
               inputMode="decimal"
@@ -690,7 +690,7 @@ export default function CreateDeal() {
                 }
               }}
             />
-            <div className="min-h-3.5 mt-1">
+            <div className="min-h-[14px] mt-1">
               {errors.amount && (
                 <p className="text-red-400 text-[11px]">
                   {errors.amount}
@@ -700,11 +700,11 @@ export default function CreateDeal() {
           </div>
 
           {/* Sell Currency Type */}
-          <div>
+          <div className="lg:min-w-0">
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Sell Currency Type <span className="text-red-500">*</span>
             </label>
-             <Dropdown
+            <Dropdown
               label="Sell Currency"
               options={sellCurrencyOptions}
               selected={sellCurrency}
@@ -712,9 +712,9 @@ export default function CreateDeal() {
                 handleCurrencySelect(val, "sell");
                 setErrors(prev => ({ ...prev, sellCurrency: "" }));
               }}
-              className="w-[172px]"
+              className="w-full"
             />
-            <div className="h-3.5 mt-1" />
+            <div className="h-[14px] mt-1" />
           </div>
 
           {/* Rate */}
@@ -723,7 +723,7 @@ export default function CreateDeal() {
               Rate <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
               placeholder="0.00"
               type="text"
               inputMode="decimal"
@@ -736,7 +736,7 @@ export default function CreateDeal() {
                 }
               }}
             />
-            <div className="min-h-3.5 mt-1">
+            <div className="min-h-[14px] mt-1">
               {errors.rate && (
                 <p className="text-red-400 text-[11px]">
                   {errors.rate}
@@ -810,8 +810,8 @@ export default function CreateDeal() {
           />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 mt-8">
+        {/* Desktop Buttons */}
+        <div className="hidden lg:flex justify-end gap-3 mt-8">
           <button
             className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-[#2A2F34]"
             onClick={() => navigate("/deals")}
@@ -821,12 +821,30 @@ export default function CreateDeal() {
           </button>
 
           <button
-            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            className="w-auto flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
             onClick={handleCreateDeal}
             disabled={loading}
           >
             <img src={plus} className="w-5 h-5" />
             {loading ? "Saving..." : "Save Deal"}
+          </button>
+        </div>
+
+        {/* Mobile Action Buttons (sticky at bottom, same line) */}
+        <div className="lg:hidden sticky bottom-4 flex justify-between items-center mt-6">
+          <button
+            className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
+            onClick={() => navigate("/deals")}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+            onClick={handleCreateDeal}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
 

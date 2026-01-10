@@ -239,7 +239,8 @@ export default function ReconciliationList() {
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium"
         >
           <img src={add} alt="add" className="w-5 h-5" />
-          Create Reconciliation
+          <span className="lg:hidden text-[14px]">Create</span>
+          <span className="hidden lg:inline text-[14px]">Create Reconciliation</span>
         </button>
       </div>
 
@@ -276,7 +277,7 @@ export default function ReconciliationList() {
             showRightSection={true}
             onRowClick={handleRowClick}
             onSearch={handleSearch}
-            onExport={handleExport}   
+            onExport={handleExport}
             showExport={true}
           // sortableKeys={["date", "status", "totalTransactions"]}
           />

@@ -77,7 +77,7 @@ export default function MyProfile() {
         )}
       </div>
 
-      <div className="bg-[#1A1F24] rounded-xl p-5">
+      <div className="bg-[#1A1F24] rounded-xl p-4 lg:p-5">
         {/* <div className="flex items-center gap-6 mb-8">
           <div className="relative">
             <div className="w-16 h-16 rounded-full bg-[#16191C] flex items-center justify-center">
@@ -93,7 +93,7 @@ export default function MyProfile() {
           </div>
         </div> */}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div>
             <label className="block text-[#ABABAB] text-sm mb-1">
               Full Name
@@ -135,6 +135,7 @@ export default function MyProfile() {
               readOnly={!editMode}
               className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white`}
                 onKeyDown={(e) => {
+                    if (!editMode) return;
                     const allowedControlKeys = [
                         "Backspace",
                         "Delete",
@@ -145,7 +146,7 @@ export default function MyProfile() {
                     if (allowedControlKeys.includes(e.key)) return;
                     if (["+", " ", "-", "(", ")"].includes(e.key)) return;
                     if (/^[0-9]$/.test(e.key)) {
-                        const currentDigits = phone.replace(/\D/g, "");
+                        const currentDigits = formData.phone.replace(/\D/g, "");
                         if (currentDigits.length >= 15) e.preventDefault();
                         return;
                     }
@@ -156,20 +157,36 @@ export default function MyProfile() {
         </div>
 
         {editMode && (
-          <div className="flex justify-end gap-3 mt-10">
-            <button
-              onClick={handleCancel}
-              className="px-6 py-2 rounded-lg border border-[#8A8F94] text-white hover:bg-[#2A2F33]"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 rounded-lg bg-[#1D4CB5] text-white hover:bg-[#173B8B]"
-            >
-              Save
-            </button>
-          </div>
+          <>
+            <div className="flex flex-col lg:hidden gap-3 mt-6">
+              <button
+                onClick={handleCancel}
+                className="w-full h-12 px-4 py-3 rounded-lg border border-[#8A8F94] text-white hover:bg-[#2A2F33] text-sm font-medium active:opacity-80"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="w-full h-12 px-4 py-3 rounded-lg bg-[#1D4CB5] text-white hover:bg-[#173B8B] text-sm font-medium active:opacity-80"
+              >
+                Save
+              </button>
+            </div>
+            <div className="hidden lg:flex justify-end gap-3 mt-10">
+              <button
+                onClick={handleCancel}
+                className="px-6 py-2 rounded-lg border border-[#8A8F94] text-white hover:bg-[#2A2F33]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 rounded-lg bg-[#1D4CB5] text-white hover:bg-[#173B8B]"
+              >
+                Save
+              </button>
+            </div>
+          </>
         )}
       </div>
     </>

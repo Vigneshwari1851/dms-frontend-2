@@ -354,20 +354,20 @@ export default function DealsTable() {
   }
 
   return (
-    <div className="mt-6 bg-[#1A1F24] p-5 rounded-xl">
+    <div className="mt-6 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
       {/* Header Row */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
         <h2 className="text-white text-[16px] font-semibold">
           Today’s Deals
         </h2>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
           <Dropdown
             label="All Status"
             options={statuses}
             selected={statusFilter}
             onChange={(value) => setStatusFilter(value)}
-            className="w-[150px]"
+            className="w-full lg:w-[150px]"
           />
 
           <Dropdown
@@ -375,19 +375,19 @@ export default function DealsTable() {
             options={currencyList}
             selected={currencyFilter}
             onChange={(value) => setCurrencyFilter(value)}
-            className="w-[180px]"
+            className="w-full lg:w-[180px]"
           />
 
-          <div className="relative" ref={exportRef}>
+          <div className="relative w-full lg:w-auto" ref={exportRef}>
             <button
               onClick={() => setExportOpen(!exportOpen)}
-              className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+              className="w-full lg:px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
             >
               <img src={download} alt="download" className="w-6 h-6" /> Export
             </button>
 
             {exportOpen && (
-              <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
+              <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
                 <button
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
                   onClick={() => handleExport("pdf")}
@@ -410,11 +410,11 @@ export default function DealsTable() {
         </div>
       </div>
 
-      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
+      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
 
-      {/* Table */}
-      <div className="-mx-5">
-        <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+      {/* Table Container with Overflow */}
+      <div className="-mx-4 lg:-mx-5 overflow-x-auto scrollbar-grey">
+        <table className="min-w-[1000px] lg:min-w-full w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
           <thead>
             <tr className="text-[#FFFFFF] text-[12px] font-normal">
               <th className="py-3 text-left pl-5">Deal ID</th>

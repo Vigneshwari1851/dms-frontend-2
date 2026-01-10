@@ -27,11 +27,21 @@ function ActionDropdown({ options = [] }) {
 
       const DROPDOWN_WIDTH = 180;
 
+      // On mobile, adjust positioning to fit within viewport
+      const isMobile = window.innerWidth < 640;
+      let left = rect.right;
+      let transform = "translateX(-100%)";
+      
+      if (isMobile && rect.right > window.innerWidth - 20) {
+        left = rect.left;
+        transform = "translateX(0)";
+      }
+      
       setDropdownStyle({
         position: "fixed",
-        left: rect.right,
-        transform: "translateX(-100%)",
-        width: DROPDOWN_WIDTH,
+        left,
+        transform,
+        width: isMobile ? Math.min(DROPDOWN_WIDTH, window.innerWidth - 40) : DROPDOWN_WIDTH,
         top,
         minWidth: rect.width,
         maxHeight: "300px",
@@ -63,7 +73,10 @@ function ActionDropdown({ options = [] }) {
     <>
       <button
         ref={buttonRef}
-        onClick={toggleDropdown}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleDropdown();
+        }}
         className="text-white font-bold text-xl w-8 h-8 rounded-full flex items-center justify-center relative z-10 hover:bg-[#2E3439]"
       >
         &#8942;
@@ -80,7 +93,8 @@ function ActionDropdown({ options = [] }) {
               <button
                 key={idx}
                 className="block w-full text-left text-xs px-4 py-2 text-[#FFFFFF] hover:bg-[#151517] whitespace-nowrap"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   opt.onClick();
                   setOpen(false);
                 }}

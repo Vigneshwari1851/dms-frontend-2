@@ -175,107 +175,112 @@ export default function Table({
   );
 
   return (
-    <div className="mt-6 w-full">
+    <div className="mt-6 w-full overflow-x-hidden">
       {/* HEADER */}
-      { showHeader && (
-      <div className="bg-[#1A1F24] rounded-t-lg px-5 py-4">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <div>
-              <h2 className="text-white text-lg font-semibold">{title}</h2>
-              {subtitle && (
-                <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+      {showHeader && (
+        <div className="bg-[#1A1F24] rounded-t-lg px-3 sm:px-5 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between w-full gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full lg:w-auto">
+              <div className="min-w-0">
+                <h2 className="text-white text-base sm:text-lg font-semibold">{title}</h2>
+                {subtitle && (
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">{subtitle}</p>
+                )}
+              </div>
+              {showSearch && (
+                <div className="relative flex-1 sm:flex-initial min-w-0">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      onSearch && onSearch(e.target.value);
+                    }}
+                    placeholder="Search..."
+                    className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-full sm:w-64 lg:w-99"
+                  />
+                  <img
+                    src={searchIcon}
+                    alt="search"
+                    className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
+                  />
+                </div>
               )}
             </div>
-            {showSearch && (
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  onSearch && onSearch(e.target.value);
-                }}
-                placeholder="Search..."
-                className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-99"
-              />
-              <img
-                src={searchIcon}
-                alt="search"
-                className="w-4 h-4 absolute left-3 top-2.5 opacity-70"
-              />
-            </div>
-            )}
-          </div>
-          {showRightSection && (
-            <div className="flex items-center gap-4">
-              {/* Date Filter */}
-              <DateFilter onApply={(range) => setDateFilter(range)} />
+            {showRightSection && (
+              <div className="flex flex-row items-center gap-2 sm:gap-4 w-full lg:w-auto lg:flex-nowrap">
+                {/* Date Filter */}
+                <div className="flex-1 lg:flex-none">
+                  <DateFilter onApply={(range) => setDateFilter(range)} />
+                </div>
 
                 {/* Status Filter */}
-                <Dropdown
-                  label="All Status"
-                  options={statuses}
-                  selected={statusFilter}
-                  onChange={(value) => setStatusFilter(value)}
-                  className="w-[130px]"
+                <div className="flex-1 lg:flex-none">
+                  <Dropdown
+                    label="All Status"
+                    options={statuses}
+                    selected={statusFilter}
+                    onChange={(value) => setStatusFilter(value)}
+                    className="w-full sm:w-[130px]"
+                  />
+                </div>
 
-                />
-
-              
                 {/* Export */}
                 {showExport && onExport && (
-                  exportOptions.length === 1 ? (
-                    <button
-                      onClick={() => onExport(exportOptions[0])}
-                      className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"
-                    >
-                      <img src={download} className="w-5 h-5" />
-                      Export
-                    </button>
-                  ) : (
-                    <div className="relative" ref={exportRef}>
+                  <div className="flex-1 lg:flex-none">
+                    {exportOptions.length === 1 ? (
                       <button
-                        onClick={() => setExportOpen(!exportOpen)}
-                        className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2"
+                        onClick={() => onExport(exportOptions[0])}
+                        className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap"
                       >
-                        <img src={download} className="w-5 h-5" />
-                        Export
+                        <img src={download} className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden sm:inline">Export</span>
+                        <span className="lg:hidden">Export</span>
                       </button>
+                    ) : (
+                      <div className="relative" ref={exportRef}>
+                        <button
+                          onClick={() => setExportOpen(!exportOpen)}
+                          className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                        >
+                          <img src={download} className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="hidden sm:inline">Export</span>
+                          <span className="lg:hidden">Export</span>
+                        </button>
 
-                      {exportOpen && (
-                        <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                          {exportOptions.includes("pdf") && (
-                            <button
-                              onClick={() => {
-                                onExport("pdf");
-                                setExportOpen(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                            >
-                              <img src={pdf} className="w-4 h-4" />
-                              PDF
-                            </button>
-                          )}
+                        {exportOpen && (
+                          <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                            {exportOptions.includes("pdf") && (
+                              <button
+                                onClick={() => {
+                                  onExport("pdf");
+                                  setExportOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                              >
+                                <img src={pdf} className="w-4 h-4" />
+                                PDF
+                              </button>
+                            )}
 
-                          {exportOptions.includes("excel") && (
-                            <button
-                              onClick={() => {
-                                onExport("excel");
-                                setExportOpen(false);
-                              }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                            >
-                              <img src={excel} className="w-4 h-4" />
-                              Excel
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
+                            {exportOptions.includes("excel") && (
+                              <button
+                                onClick={() => {
+                                  onExport("excel");
+                                  setExportOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                              >
+                                <img src={excel} className="w-4 h-4" />
+                                Excel
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
-
               </div>
             )}
           </div>
@@ -283,8 +288,8 @@ export default function Table({
       )}
 
       {/* TABLE BODY */}
-      <div className="bg-[#1A1F24] mt-[1.5px] py-4">
-        <table className="w-full text-[#8F8F8F] font-normal text-[13px]">
+      <div className="bg-[#1A1F24] mt-[1.5px] py-4 overflow-x-auto">
+        <table className="w-full text-[#8F8F8F] font-normal text-[13px] min-w-[640px]">
           <thead>
             <tr className="text-[#FFFFFF] text-[12px] font-normal">
               {columns.map((col, index) =>
@@ -296,12 +301,12 @@ export default function Table({
                     sortBy={sortConfig.key}
                     sortAsc={sortConfig.asc}
                     onSort={handleSort}
-                    className={`py-3 px-4 text-${col.align || "center"}`}
+                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                   />
                 ) : (
                   <th
                     key={index}
-                    className={`py-3 px-4 text-${col.align || "center"}`}
+                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                   >
                     {col.label}
                   </th>
@@ -321,7 +326,7 @@ export default function Table({
                 {columns.map((col, colIndex) => (
                   <td
                     key={colIndex}
-                    className={`py-3 px-4 text-${col.align || "center"}`}
+                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                   >
                     {col.key === "full_name" ? (
                       <span className="text-white">{row[col.key]}</span>

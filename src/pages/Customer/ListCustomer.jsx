@@ -66,7 +66,7 @@ export default function ListCustomer() {
     { label: "Customer Name", key: "full_name", align: "left" },
     { label: "Email", key: "email", align: "center" },
     { label: "Phone", key: "phone_number", align: "center" },
-    { label: "Amount", key: "balance", align: "left"}
+    { label: "Amount", key: "balance", align: "left" }
   ];
 
   const tableData = customers.map((c) => ({
@@ -80,16 +80,16 @@ export default function ListCustomer() {
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-2xl font-semibold">Customer Ledger</h1>
+        <h1 className="text-white text-xl lg:text-2xl font-semibold">Customer Ledger</h1>
         <button
           onClick={handleAddCustomer}
-          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium"
+          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
         >
-          <img src={add} alt="add" className="w-5 h-5" />
+          <img src={add} alt="add" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
           Add Customer
         </button>
       </div>
-      <p className="text-gray-400 mb-6">View all customers and their ledger</p>
+      <p className="text-gray-400 mb-6 hidden lg:block">View all customers and their ledger</p>
 
       <div className="mt-8">
         <Table

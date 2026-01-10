@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { fetchCustomerById, updateCustomer } from "../../api/customers";
 import saveIcon from "../../assets/Common/save.svg";
 import edit from "../../assets/Common/edit.svg";
+import tickIcon from "../../assets/Common/tick.svg";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
@@ -174,10 +176,10 @@ export default function ViewCustomer() {
     );
 
     return (
-      <div className="bg-[#16191C] p-2 rounded-lg space-y-2 shadow-md">
+      <div className="bg-[#16191C] p-2 lg:p-2 rounded-lg space-y-2 shadow-md overflow-x-auto">
         {title && (
           <div className="flex justify-between items-center">
-            <h3 className="text-[#8F8F8F] text-sm">
+            <h3 className="text-[#8F8F8F] text-xs lg:text-sm">
               {title}
               {currencyCode && (
                 <span className="ml-1 text-[#8F8F8F]">
@@ -188,25 +190,27 @@ export default function ViewCustomer() {
           </div>
         )}
 
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-gray-400">
-              <th className="text-left">Denomination</th>
-              <th className="text-center">Qty</th>
-              <th className="text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((i, idx) => (
-              <tr key={idx} className="text-white rounded-lg">
-                <td className="py-2 px-1 rounded-l-lg">{i.denomination}</td>
-                <td className="text-center py-2">{i.quantity}</td>
-                <td className="text-right py-2 px-1 rounded-r-lg">{i.total}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-[200px]">
+            <thead>
+              <tr className="text-gray-400">
+                <th className="text-left px-1 lg:px-2">Denomination</th>
+                <th className="text-center px-1 lg:px-2">Qty</th>
+                <th className="text-right px-1 lg:px-2">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <span className="text-sm">
+            </thead>
+            <tbody>
+              {items.map((i, idx) => (
+                <tr key={idx} className="text-white rounded-lg">
+                  <td className="py-2 px-1 lg:px-2 rounded-l-lg">{i.denomination}</td>
+                  <td className="text-center py-2 px-1 lg:px-2">{i.quantity}</td>
+                  <td className="text-right py-2 px-1 lg:px-2 rounded-r-lg">{i.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <span className="text-xs lg:text-sm block">
           <span className="text-[#8F8F8F]">Total Received: </span>
           <span className="text-white">
             {totalReceived.toLocaleString()}
@@ -241,34 +245,60 @@ export default function ViewCustomer() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-white text-[16px] font-semibold">
-            {editMode ? "Edit Customer" : formData.name}
-          </h2>
-          <p className="text-gray-400 text-[12px]">
-            {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
-          </p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-3 lg:gap-0">
+        <div className="flex items-center justify-between w-full lg:w-auto">
+          <div className="min-w-0 flex-1 lg:flex-initial">
+            <h2 className="text-white text-base lg:text-[16px] font-semibold truncate">
+              {editMode ? "Edit Customer" : formData.name}
+            </h2>
+            <p className="text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
+              {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
+            </p>
+          </div>
+
+          {/* Mobile Only: Edit Icons (Pencil or Save/Cancel) */}
+          <div className="lg:hidden flex items-center gap-2 ml-3 flex-shrink-0">
+            {!editMode && (
+              <button
+                onClick={() => setEditMode(true)}
+                className="p-1 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-lg transition-colors"
+              >
+                <img src={edit} alt="edit" className="w-6 h-6 cursor-pointer" />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2">
+
+        <div className="hidden lg:flex gap-2">
           {!editMode ? (
-            <button onClick={() => setEditMode(true)} className=" bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md">
+            <button
+              onClick={() => setEditMode(true)}
+              className="p-1 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-lg transition-colors"
+            >
               <img src={edit} alt="edit" className="w-8 h-8 cursor-pointer" />
             </button>
           ) : (
-            <>
-              <button onClick={handleCancel} className="px-4 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200">Cancel</button>
-              <button onClick={handleSave} className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white"
+              >
                 <img src={saveIcon} alt="save" className="w-4 h-4" />
                 Save
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex gap-6 items-start">
-        <div className="flex-1 bg-[#1A1F24] p-5 rounded-xl overflow-y-auto scrollbar-grey">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+        <div className="w-full lg:flex-1 bg-[#1A1F24] p-4 lg:p-5 rounded-xl overflow-y-auto scrollbar-grey">
           {editMode ? (
             <div>
               <div className="mb-4">
@@ -276,7 +306,7 @@ export default function ViewCustomer() {
                 <input name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div>
                   <label className="block text-sm text-[#ABABAB] mb-1">Email</label>
                   <input name="email" value={formData.email} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
@@ -288,7 +318,7 @@ export default function ViewCustomer() {
                   {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-6">
                 <label className="flex items-center gap-2 text-sm text-[#ABABAB] cursor-pointer">
                   <input
                     type="checkbox"
@@ -303,21 +333,21 @@ export default function ViewCustomer() {
             </div>
           ) : (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white text-[16px] font-semibold">Deals</h2>
-                <div className="flex items-center gap-3">
-                  <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-[150px]" />
-                  <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-[180px]" />
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 lg:gap-0 mb-4">
+                <h2 className="text-white text-base lg:text-[16px] font-semibold">Deals</h2>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3">
+                  <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-full sm:w-[150px]" />
+                  <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-full sm:w-[180px]" />
                 </div>
               </div>
-              <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
-              <div className="-mx-5">
-                <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+              <div className="border-t-[3px] border-[#16191C] mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
+              <div className="-mx-4 lg:-mx-5 overflow-x-auto">
+                <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse min-w-[800px] lg:min-w-full">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                      <th className="py-3 text-left pl-5">Date</th>
-                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
-                        <div className="flex items-center gap-1 ml-2 justify-center">
+                      <th className="py-3 text-left pl-3 lg:pl-5 px-2 lg:px-0">Date</th>
+                      <th className="py-3 cursor-pointer select-none px-2 lg:px-0" onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
+                        <div className="flex items-center gap-1 ml-0 lg:ml-2 justify-center">
                           Type
                           <span className="flex flex-col">
                             <img src={uparrowIcon} className={`w-3 h-3 -mt-[5px] ${sortBy === "type" && !sortAsc ? "opacity-100" : "opacity-30"}`} />
@@ -325,10 +355,10 @@ export default function ViewCustomer() {
                           </span>
                         </div>
                       </th>
-                      <th>Customer Name</th>
-                      <th>Buy Amount</th>
-                      <th className="py-3 cursor-pointer select-none" onClick={() => { if (sortBy === "currency") setSortAsc(!sortAsc); else { setSortBy("currency"); setSortAsc(true); } }}>
-                        <div className="flex items-center gap-1 ml-5 justify-center">
+                      <th className="px-2 lg:px-0">Customer Name</th>
+                      <th className="px-2 lg:px-0">Buy Amount</th>
+                      <th className="py-3 cursor-pointer select-none px-2 lg:px-0" onClick={() => { if (sortBy === "currency") setSortAsc(!sortAsc); else { setSortBy("currency"); setSortAsc(true); } }}>
+                        <div className="flex items-center gap-1 ml-0 lg:ml-5 justify-center">
                           Currency
                           <span className="flex flex-col">
                             <img src={uparrowIcon} className={`w-3 h-3 -mt-[5px] ${sortBy === "currency" && !sortAsc ? "opacity-100" : "opacity-30"}`} />
@@ -336,46 +366,78 @@ export default function ViewCustomer() {
                           </span>
                         </div>
                       </th>
-                      <th>Rate</th>
-                      <th>Sell Amount</th>
-                      <th>Currency</th>
-                      <th>Status</th>
+                      <th className="px-2 lg:px-0">Rate</th>
+                      <th className="px-2 lg:px-0">Sell Amount</th>
+                      <th className="px-2 lg:px-0">Currency</th>
+                      <th className="px-2 lg:px-0">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedData.map((item, idx) => (
                       <tr key={idx} className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer" onClick={() => handleRowClick(item)}>
-                        <td className="py-3 font-normal text-[14px] text-left pl-5">{item.date}</td>
-                        <td><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
-                        <td>{item.customer}</td>
-                        <td>{item.buyAmt}</td>
-                        <td>{item.currency}</td>
-                        <td>{item.rate}</td>
-                        <td>{item.sellAmt}</td>
-                        <td>{item.currency1}</td>
-                        <td><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>{item.status}</span></td>
+                        <td className="py-3 font-normal text-[14px] text-left pl-3 lg:pl-5 px-2 lg:px-0">{item.date}</td>
+                        <td className="px-2 lg:px-0"><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
+                        <td className="px-2 lg:px-0">{item.customer}</td>
+                        <td className="px-2 lg:px-0">{item.buyAmt}</td>
+                        <td className="px-2 lg:px-0">{item.currency}</td>
+                        <td className="px-2 lg:px-0">{item.rate}</td>
+                        <td className="px-2 lg:px-0">{item.sellAmt}</td>
+                        <td className="px-2 lg:px-0">{item.currency1}</td>
+                        <td className="px-2 lg:px-0"><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>{item.status}</span></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              {totalPages > 1 && (
+                <div className="mt-4 flex justify-center lg:justify-end px-4 lg:px-0">
+                  <div className="flex items-center gap-2 lg:gap-3">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-2 py-1 border border-[#2A2F33] rounded-lg text-white flex items-center gap-2 text-sm ${currentPage === 1 ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <span className="hidden sm:inline">‹</span>
+                      <span className="sm:hidden">Prev</span>
+                    </button>
+                    <span className="text-xs lg:text-sm text-[#8F8F8F] whitespace-nowrap">
+                      <span className="text-white mr-1">{currentPage}</span>
+                      <span className="mx-1">of</span>
+                      <span className="text-white ml-1">{totalPages}</span>
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-2 py-1 border border-[#2A2F33] rounded-lg text-white flex items-center gap-2 text-sm ${currentPage === totalPages ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <span className="hidden sm:inline">›</span>
+                      <span className="sm:hidden">Next</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {!editMode && (
-          <div className={`w-80 bg-[#1A1F24] p-5 rounded-xl overflow-y-auto scrollbar-grey transition-all duration-300
-                          ${!selectedDeal ? "min-h-[calc(100vh-200px)] flex items-center justify-center" : "max-h-[calc(100vh-200px)]"}`}>
+          <div className={`w-full lg:w-80 bg-[#1A1F24] p-4 lg:p-5 rounded-xl overflow-y-auto scrollbar-grey transition-all duration-300
+                          ${!selectedDeal ? "min-h-[200px] lg:min-h-[calc(100vh-200px)] flex items-center justify-center" : "max-h-[600px] lg:max-h-[calc(100vh-200px)]"}`}>
             {!selectedDeal ? (
               <span className="text-gray-400 text-center">Click a row to see details</span>
             ) : (
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <h3 className="text-white font-semibold">Deal Detail</h3>
-                  <span className={`px-3 py-1 rounded-2xl ${typeColors[selectedDeal.type]}`}>
+              <div className="space-y-3 lg:space-y-4 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-white font-semibold text-base lg:text-lg truncate">
+                    Deal Detail
+                  </h3>
+                  <span
+                    className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
+                  >
                     {selectedDeal.type}
                   </span>
                 </div>
+
 
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
@@ -416,6 +478,24 @@ export default function ViewCustomer() {
         )}
 
       </div>
+
+      {/* Mobile Sticky Action Bar */}
+      {editMode && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 flex gap-4 z-50">
+          <button
+            onClick={handleCancel}
+            className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B]"
+          >
+            Save
+          </button>
+        </div>
+      )}
     </div>
   );
 }
