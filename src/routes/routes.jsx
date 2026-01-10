@@ -33,8 +33,6 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-login" element={<VerifyOtp />} />
-      <Route path="/ip-blocked" element={<IpBlocked />} />
-      <Route path="/account-disabled" element={<AccountDisabled />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Routes (with layout) */}
