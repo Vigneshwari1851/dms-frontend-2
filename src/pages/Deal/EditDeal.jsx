@@ -44,6 +44,7 @@ export default function EditDeal() {
     const [amountToBePaid, setAmountToBePaid] = useState("");
     const [notes, setNotes] = useState("");
     const [amountEdited, setAmountEdited] = useState(false);
+    const [originalAmount, setOriginalAmount] = useState("");
 
     // Currencies data
     const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -140,6 +141,8 @@ export default function EditDeal() {
         setRate(dealData.exchange_rate || dealData.rate || "");
 
         setAmountToBePaid(dealData.amount_to_be_paid || "0.00");
+        setAmount(dealData.amount || "");
+        setOriginalAmount(String(dealData.amount || ""));
 
         setNotes(dealData.remarks || "");
 
@@ -460,8 +463,9 @@ export default function EditDeal() {
                                 value={amount}
                                 readOnly={!isEditable}
                                 onChange={(e) => {
-                                    setAmount(e.target.value);
-                                    setAmountEdited(true);
+                                    const newAmount = e.target.value;
+                                    setAmount(newAmount);
+                                    setAmountEdited(newAmount !== originalAmount);
                                 }}
                             />
                         </div>

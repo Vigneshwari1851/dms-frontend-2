@@ -30,7 +30,7 @@ export default function Dropdown({
         <div ref={dropdownRef} className={`relative ${className}`}>
             <button
                 type="button"
-                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between"
+                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-white font-normal flex items-center justify-between"
                 onClick={(e) => {
                     e.stopPropagation();
                     setOpen((prev) => !prev);
