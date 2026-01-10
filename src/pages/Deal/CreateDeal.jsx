@@ -183,6 +183,21 @@ export default function CreateDeal() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const receivedTotal = denominationReceived.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
+  }, 0);
+
+  const paidTotal = denominationPaid.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
+  }, 0);
+
+  const isReceivedTallied =
+    Number(amount) > 0 && Math.abs(receivedTotal - Number(amount)) <= 0.01;
+
+  const isPaidTallied =
+    Number(amountToBePaid) > 0 &&
+    Math.abs(paidTotal - Number(amountToBePaid)) <= 0.01;
+
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
 
@@ -804,8 +819,9 @@ export default function CreateDeal() {
             paidCurrency={sellCurrency}
             currencySymbols={currencySymbols}
             receivedReadOnly={false}
-
             paidReadOnly={false}
+            hideAddReceived={isReceivedTallied}
+            hideAddPaid={isPaidTallied}
           />
         </div>
 

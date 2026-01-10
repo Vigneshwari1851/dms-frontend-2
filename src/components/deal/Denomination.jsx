@@ -16,7 +16,9 @@ export default function Denomination({
   currencySymbols = {},
   isEditable = true,
   receivedReadOnly = true,
-  paidReadOnly = false
+  paidReadOnly = false,
+  hideAddReceived = false,
+  hideAddPaid = false
 }) {
   // Use props if provided, otherwise use local state
   const [denominationReceived, setDenominationReceived] = propReceived
@@ -244,16 +246,20 @@ export default function Denomination({
         </table>
 
         {/* ADD BUTTON - Only show if not read-only */}
-        {!isReadOnly && (
-          <div className="flex justify-end">
-            <button
-              className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]"
-              onClick={() => handleAdd(list, setList, isReadOnly)}
-            >
-              + Add
-            </button>
-          </div>
-        )}
+        {!isReadOnly &&
+          !(
+            (listType === "received" && hideAddReceived) ||
+            (listType === "paid" && hideAddPaid)
+          ) && (
+            <div className="flex justify-end">
+              <button
+                className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]"
+                onClick={() => handleAdd(list, setList, isReadOnly)}
+              >
+                + Add
+              </button>
+            </div>
+          )}
 
         {/* TOTAL FIELD */}
         <div className="flex justify-between items-center mt-4">
