@@ -127,7 +127,9 @@ export default function ListCustomer() {
           data={tableData}
           itemsPerPage={10}
           onSearch={handleSearch}
-          onRowClick={(row) => navigate(`/customer-info/view/${row.id}`, { state: { customer: row } })}
+          onRowClick={(row) =>
+            navigate(`/customer-info/view/${row.id}`)
+          }          
           showRightSection={false}
         />
         {loading && <p className="text-white text-center mt-4">Searching...</p>}
