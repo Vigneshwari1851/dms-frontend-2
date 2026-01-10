@@ -447,8 +447,8 @@ export default function EditDeal() {
                                 selected={buyCurrency}
                                 onChange={() => {}}
                                 className={`w-[172px] ${dimOnEdit}`}
-                                disabled
-                            />
+                                disabled={true}      
+                       />
                         </div>
 
                         {/* Amount - NOT editable */}
@@ -481,7 +481,7 @@ export default function EditDeal() {
                                 selected={sellCurrency}
                                 onChange={() => {}}
                                 className={`w-[172px] ${dimOnEdit}`}
-                                disabled
+                                disabled={true}      
                             />
                         </div>
 

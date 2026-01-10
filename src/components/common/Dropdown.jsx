@@ -8,7 +8,8 @@ export default function Dropdown({
     selected,
     onChange,
     className = "",
-    renderOption
+    renderOption,
+    disabled = false,
 }) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -30,17 +31,19 @@ export default function Dropdown({
         <div ref={dropdownRef} className={`relative ${className}`}>
             <button
                 type="button"
+                disabled={disabled}
                 className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-white font-normal flex items-center justify-between"
                 onClick={(e) => {
+                    if (disabled) return;
                     e.stopPropagation();
                     setOpen((prev) => !prev);
                 }}
             >
                 {selected || label}
-                <img src={down} alt="chevrondown" />
+                <img src={down} alt="chevrondown" className={disabled ? "opacity-0" : ""} />
             </button>
 
-            {open && (
+            {open && !disabled && (
                 <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10  max-h-48 overflow-y-auto scrollbar-dark absolute">
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;
