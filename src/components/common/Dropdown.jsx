@@ -13,6 +13,7 @@ export default function Dropdown({
 }) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const hasValue = Boolean(selected);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -32,14 +33,19 @@ export default function Dropdown({
             <button
                 type="button"
                 disabled={disabled}
-                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-white font-normal flex items-center justify-between"
+                className={`
+                    w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] font-normal 
+                    flex items-center justify-between
+                    ${disabled ? "cursor-not-allowed" : "cursor-pointer"}
+                    ${hasValue ? "text-white" : "text-[#ABABAB]"}
+                `}
                 onClick={(e) => {
                     if (disabled) return;
                     e.stopPropagation();
                     setOpen((prev) => !prev);
                 }}
             >
-                {selected || label}
+                {selected ? selected : label}
                 <img src={down} alt="chevrondown" className={disabled ? "opacity-0" : ""} />
             </button>
 
