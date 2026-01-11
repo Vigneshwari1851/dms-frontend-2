@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
-import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
+import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx";
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 import edit from "../../assets/Common/edit.svg";
 
@@ -160,24 +160,24 @@ export default function ViewUser() {
     return (
         <>
             {/* PAGE HEADER */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h2 className="text-[16px] font-medium text-white">User Details</h2>
                     <p className="text-gray-400 text-[12px]">View and manage user information</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                <span
-                    className={`
-                        px-4 py-1 rounded-full text-[12px]
-                        ${isActive 
-                            ? "bg-[#10B93524] text-[#82E890]"
-                            : "bg-[#BD404A24] text-[#FF8A8A]"
-                        }
+                    <span
+                        className={`
+                        px-4 py-1 rounded-full text-[12px] lg:px-4 lg:text-[12px]
+                        ${isActive
+                                ? "bg-[#10B93524] text-[#82E890]"
+                                : "bg-[#BD404A24] text-[#FF8A8A]"
+                            }
                     `}
-                >
-                    {isActive ? "Active" : "Inactive"}
-                </span>
+                    >
+                        {isActive ? "Active" : "Inactive"}
+                    </span>
 
                     {!editMode && (
                         <button
@@ -187,7 +187,7 @@ export default function ViewUser() {
                             <img
                                 src={edit}
                                 alt="edit"
-                                className="w-8 h-8 cursor-pointer"
+                                className="w-8 h-8 cursor-pointer lg:w-8 lg:h-8"
                             />
                         </button>
                     )}
@@ -195,7 +195,7 @@ export default function ViewUser() {
             </div>
 
             {/* MAIN FORM CONTAINER */}
-            <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
+            <div className="mt-4 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
                 {/* FULL NAME */}
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">
@@ -207,8 +207,8 @@ export default function ViewUser() {
                         onChange={handleChange}
                         readOnly={!editMode}
                         className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
-                            ${!editMode 
-                                ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                            ${!editMode
+                                ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
                                 : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                     />
@@ -216,7 +216,7 @@ export default function ViewUser() {
                 </div>
 
                 {/* EMAIL + PHONE */}
-                <div className="grid grid-cols-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB] mb-1">
                             Email
@@ -227,8 +227,8 @@ export default function ViewUser() {
                             onChange={handleChange}
                             readOnly={!editMode}
                             className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
-                                ${!editMode 
-                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                                ${!editMode
+                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
                                     : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                         />
@@ -245,8 +245,8 @@ export default function ViewUser() {
                             onChange={handleChange}
                             readOnly={!editMode}
                             className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
-                                ${!editMode 
-                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80" 
+                                ${!editMode
+                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
                                     : "border border-[#2A2F33] focus:border-blue-500"}
                             `}
                         />
@@ -256,30 +256,30 @@ export default function ViewUser() {
 
                 {/* ROLE */}
                 <div className="mt-6">
-                <label className="block font-normal text-sm text-[#ABABAB] mb-1">
-                    Role
-                </label>
-                {!editMode && (
+                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                        Role
+                    </label>
+                    {!editMode && (
                         <input
                             value={formData.role}
                             readOnly
-                        className={`w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white
-                            ${!editMode 
-                                ? "border border-transparent hover:border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
-                                : "border border-[#2A2F33] focus:border-blue-500"
-                            }
+                            className={`w-full lg:w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white
+                            ${!editMode
+                                    ? "border border-transparent hover:border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
+                                    : "border border-[#2A2F33] focus:border-blue-500"
+                                }
                         `}
                         />
-                )}
-                {editMode && (
+                    )}
+                    {editMode && (
                         <Dropdown
                             label="Select Role"
                             options={["Maker", "Checker"]}
                             selected={formData.role}
-                        onChange={(value) =>
-                            setFormData((prev) => ({ ...prev, role: value }))
-                        }
-                            className="w-[566px]"
+                            onChange={(value) =>
+                                setFormData((prev) => ({ ...prev, role: value }))
+                            }
+                            className="w-full lg:w-[566px] max-w-full"
                         />
                     )}
                 </div>
@@ -292,43 +292,42 @@ export default function ViewUser() {
                     Account Status
                 </h3>
 
-                <div className="bg-[#16191C] px-5 py-4 rounded-xl flex items-center justify-between">
-                    <div>
-                        <p className="text-white text-[14px] mb-1">Account Active</p>
-                        <p className="text-[#9EA3A7] text-[12px]">
-                            User can login and access the system
-                        </p>
-                    </div>
+                <div className="bg-[#16191C] px-4 lg:px-5 py-4 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-white text-[14px]">Account Active</p>
 
-                    {/* SWITCH */}
-                    <label
-                        className={`relative inline-flex items-center ${
-                            !editMode ? "cursor-not-allowed" : "cursor-pointer"
-                        }`}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={() => {
-                                if (!editMode) return;
-                                setConfirmModal({
-                                    open: true,
-                                    actionType: isActive ? "deactivate" : "activate",
-                                    title: isActive
-                                        ? "Are you sure you want to deactivate this user account?"
-                                        : "Are you sure you want to activate this user account?",
-                                    message: isActive
-                                        ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
-                                        : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
-                                });
-                            }}
-                            disabled={!editMode}
-                            className="sr-only peer"
-                            
-                        />
-                        <div className={`w-10 h-5 rounded-full transition ${isActive ? "bg-blue-600" : "bg-gray-600"} ${!editMode ? "opacity-60" : ""}`}></div>
-                        <div className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${isActive ? "translate-x-5" : ""} ${!editMode ? "opacity-60" : ""}`}></div>
-                    </label>
+                        {/* SWITCH */}
+                        <label
+                            className={`relative inline-flex items-center ${!editMode ? "cursor-not-allowed" : "cursor-pointer"
+                                }`}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={isActive}
+                                onChange={() => {
+                                    if (!editMode) return;
+                                    setConfirmModal({
+                                        open: true,
+                                        actionType: isActive ? "deactivate" : "activate",
+                                        title: isActive
+                                            ? "Are you sure you want to deactivate this user account?"
+                                            : "Are you sure you want to activate this user account?",
+                                        message: isActive
+                                            ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
+                                            : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
+                                    });
+                                }}
+                                disabled={!editMode}
+                                className="sr-only peer"
+
+                            />
+                            <div className={`w-10 h-5 rounded-full transition ${isActive ? "bg-blue-600" : "bg-gray-600"} ${!editMode ? "opacity-60" : ""}`}></div>
+                            <div className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${isActive ? "translate-x-5" : ""} ${!editMode ? "opacity-60" : ""}`}></div>
+                        </label>
+                    </div>
+                    <p className="text-[#9EA3A7] text-[12px]">
+                        User can login and access the system
+                    </p>
                 </div>
 
                 {/* SECURITY ACTIONS - ONLY IN EDIT MODE */}
@@ -337,24 +336,27 @@ export default function ViewUser() {
                         <h3 className="text-white font-semibold text-[14px] mt-6 mb-3">
                             Security Actions
                         </h3>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col lg:flex-row gap-3">
                             <button
                                 className="
-                                    px-4 py-2 
+                                    w-full lg:w-auto
+                                    px-4 py-3 lg:py-2
+                                    h-12 lg:h-auto
                                     border border-[#1D4CB5] 
                                     text-white 
-                                    rounded-md 
-                                    text-sm 
+                                    rounded-lg lg:rounded-md
+                                    text-sm font-medium lg:font-normal
                                     transition 
                                     hover:bg-[#1D4CB5]
                                     hover:text-white
+                                    active:opacity-80
                                 "
                                 onClick={() =>
                                     setConfirmModal({
                                         open: true,
                                         actionType: "resetPassword",
                                         title: "Are you sure you want to send a password reset link?",
-                                        message: "You want to send a password reset link to this user’s registered email address? The user will be able to create a new password from their email.",
+                                        message: "You want to send a password reset link to this user's registered email address? The user will be able to create a new password from their email.",
                                     })
                                 }
                             >
@@ -362,56 +364,88 @@ export default function ViewUser() {
                             </button>
                             <button
                                 className="
-                                    px-4 py-2 
+                                    w-full lg:w-auto
+                                    px-4 py-3 lg:py-2
+                                    h-12 lg:h-auto
                                     border border-[#B51D1D] 
-                                    text-[#FF6B6B] 
-                                    rounded-md 
-                                    text-sm 
+                                    text-[#FF6B6B] lg:text-[#FF6B6B]
+                                    rounded-lg lg:rounded-md
+                                    text-sm font-medium lg:font-normal
                                     transition
                                     hover:bg-[#B51D1D]
                                     hover:text-white
+                                    active:opacity-80
                                 "
                                 onClick={() =>
-                                setConfirmModal({
-                                    open: true,
-                                    actionType: "remove",
-                                    title: "Are you sure you want to delete this account?",
-                                    message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
-                                })
-                            }
+                                    setConfirmModal({
+                                        open: true,
+                                        actionType: "remove",
+                                        title: "Are you sure you want to delete this account?",
+                                        message: "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
+                                    })
+                                }
                             >
                                 Delete Account
                             </button>
                         </div>
-
                     </>
                 )}
+
+                {/* Mobile Divider and Static Buttons */}
                 {editMode && (
-                    <div className="flex justify-end gap-3 mt-8">
-                        <button
-                            onClick={() => {
-                                navigate("/users", {
-                                    state: {
-                                        toast: {
-                                            show: true,
-                                            message: "Changes reverted",
-                                            type: "error",
+                    <div className="lg:hidden mt-8">
+                        <div className="border-b border-[#2A2F33] mb-6"></div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    navigate("/users", {
+                                        state: {
+                                            toast: {
+                                                show: true,
+                                                message: "Changes reverted",
+                                                type: "error",
+                                            },
                                         },
-                                    },
-                                });
-                            }}
-                            className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
-                        >
-                            Save Changes
-                        </button>
+                                    });
+                                }}
+                                className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B]"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
                     </div>
                 )}
+
+                <div className="hidden lg:flex justify-end gap-3 mt-8">
+                    <button
+                        onClick={() => {
+                            navigate("/users", {
+                                state: {
+                                    toast: {
+                                        show: true,
+                                        message: "Changes reverted",
+                                        type: "error",
+                                    },
+                                },
+                            });
+                        }}
+                        className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
+                    >
+                        Save
+                    </button>
+                </div>
                 <NotificationCard
                     confirmModal={confirmModal}
                     onCancel={() =>
@@ -437,7 +471,9 @@ export default function ViewUser() {
                         setConfirmModal((prev) => ({ ...prev, open: false }));
                     }}
                 />
-            </div>
+            </div >
+
+
         </>
     );
 }

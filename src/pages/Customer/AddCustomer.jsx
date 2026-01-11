@@ -4,7 +4,7 @@ import add from "../../assets/Common/save.svg";
 import { addCustomer } from "../../api/customers";
 
 export default function AddCustomer() {
-    
+
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
@@ -63,12 +63,12 @@ export default function AddCustomer() {
     return (
         <>
             <div >
-                <h2 className="text-[16px] font-medium">Add New Customer</h2>
+                <h2 className="text-[16px] font-medium text-white lg:text-[16px]">Add New Customer</h2>
                 <p className="text-gray-400 text-[12px] mb-6">Enter customer details.</p>
 
             </div>
 
-            <div className="mt-4 bg-[#1A1F24] p-5 rounded-xl ">
+            <div className="mt-4 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
@@ -79,7 +79,7 @@ export default function AddCustomer() {
                     {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
                         <input
@@ -124,13 +124,20 @@ export default function AddCustomer() {
                         {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 mt-8">
-                    <button onClick={handleCancel} className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200">Cancel</button>
+                <div className="flex gap-3 mt-8 lg:justify-end">
+                    <button
+                        onClick={handleCancel}
+                        className="flex-1 lg:flex-none px-4 lg:px-6 py-3 lg:py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200 text-sm font-medium"
+                    >
+                        Cancel
+                    </button>
                     <button
                         onClick={handleAddCustomer}
-                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 lg:px-6 py-3 lg:py-2 rounded-lg text-sm font-medium"
+                    >
                         <img src={add} alt="add" className="w-5 h-5" />
-                        Save Customer
+                        <span className="lg:hidden">Save</span>
+                        <span className="hidden lg:inline">Save Customer</span>
                     </button>
                 </div>
 

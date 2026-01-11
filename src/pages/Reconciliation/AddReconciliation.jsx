@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg";
 import save from "../../assets/Common/save.svg";
+import expandRight from "../../assets/Common/expandRight.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";
@@ -19,6 +20,15 @@ export default function AddReconciliation() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [originalData, setOriginalData] = useState(null);
+    const [activeSection, setActiveSection] = useState("summary");
+
+    const toggleSection = (section) => {
+        if (window.innerWidth < 1024) {
+            setActiveSection(activeSection === section ? null : section);
+        } else {
+            setActiveTab(section);
+        }
+    };
 
     // Fetch reconciliation data if editing
     useEffect(() => {
@@ -357,8 +367,8 @@ export default function AddReconciliation() {
 
             <div className="mt-4 bg-[#16191C] rounded-xl p-3">
 
-                {/* TABS */}
-                <div className="flex gap-6 mb-6 ">
+                {/* TABS / ACCORDION HEADERS */}
+                <div className="hidden lg:flex gap-6 mb-6">
                     {["summary", "opening", "closing"].map((tab) => (
                         <button
                             key={tab}
@@ -380,70 +390,105 @@ export default function AddReconciliation() {
                     ))}
                 </div>
 
-                {/* SUMMARY TAB */}
-                {activeTab === "summary" && (
-
-                    <><div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+                {/* MOBILE ACCORDION STRUCTURE */}
+                <div className="flex flex-col gap-4 lg:gap-0">
+                    {/* SUMMARY SECTION */}
+                    <div className="lg:contents">
                         <div
-                            className="bg-[#16191C] p-10 rounded-xl flex flex-col items-center justify-center h-[400px]"
-                            style={{
-                                borderWidth: "1px",
-                                borderStyle: "dashed",
-                                borderColor: "#155DFC",
-                                borderRadius: "10px",
-                            }}
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("summary")}
                         >
-                            <img src={bgIcon} alt="No Data" className="w-64 opacity-90" />
-
-
-
-                            <p className="text-[#8F8F8F] mt-10 text-sm font-medium text-center w-[60%]">
-                                The summary hasn’t been generated yet.
-                            </p>
+                            <h3 className="text-white text-[15px] font-medium">Summary</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "summary" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
                         </div>
 
+                        {/* SUMMARY TAB CONTENT */}
+                        <div className={`${activeTab === "summary" ? "lg:block" : "lg:hidden"} ${activeSection === "summary" ? "block" : "hidden"} mt-2 lg:mt-0`}>
+                            {activeTab === "summary" || activeSection === "summary" ? (
+                                <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+                                    <div
+                                        className="bg-[#16191C] p-10 rounded-xl flex flex-col items-center justify-center h-[300px] lg:h-[400px]"
+                                        style={{
+                                            borderWidth: "1px",
+                                            borderStyle: "dashed",
+                                            borderColor: "#155DFC",
+                                            borderRadius: "10px",
+                                        }}
+                                    >
+                                        <img src={bgIcon} alt="No Data" className="w-48 lg:w-64 opacity-90" />
+                                        <p className="text-[#8F8F8F] mt-6 lg:mt-10 text-sm font-medium text-center w-[80%] lg:w-[60%]">
+                                            The summary hasn’t been generated yet.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : null}
 
+                            {(activeTab === "summary" || activeSection === "summary") && showSaveButton && (
+                                <div className="flex justify-end mt-4 lg:mt-0">
+                                    <button
+                                        onClick={handleSaveReconciliation}
+                                        className="w-full lg:w-auto mt-0 lg:mt-2 px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center justify-center gap-2 hover:bg-[#2A5BD7] transition-colors"
+                                    >
+                                        <img src={save} alt="save" />
+                                        {id ? "Update Reconciliation" : "Save Reconciliation"}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                        {showSaveButton && (
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleSaveReconciliation}
-                                    className="px-4 py-2 mt-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center gap-2 hover:bg-[#2A5BD7] transition-colors"
-                                >
-                                    <img src={save} alt="save" />
-                                    {id ? "Update Reconciliation" : "Save Reconciliation"}
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )}
 
-                {/* OPENING TAB CONTENT */}
-                {activeTab === "opening" && (
-                    <div>
-                        {/* <div className="mb-4 flex items-center justify-between">
-                            <p className="text-[#9CA3AF] text-sm">
-                                Opening vault balance is required
-                            </p>
-                        </div> */}
-                        <OpeningVaultBalance
-                            data={openingData}
-                            setData={setOpeningData}
-                            type="opening"
-                        />
-                    </div>
-                )}
+                    {/* OPENING SECTION */}
+                    <div className="lg:contents">
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("opening")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Opening Vault Balance</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "opening" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
+                        </div>
 
-                {/* CLOSING TAB CONTENT */}
-                {activeTab === "closing" && (
-                    <div>
-                        <OpeningVaultBalance
-                            data={closingData}
-                            setData={setClosingData}
-                            type="closing"
-                        />
+                        {/* OPENING TAB CONTENT */}
+                        <div className={`${activeTab === "opening" ? "lg:block" : "lg:hidden"} ${activeSection === "opening" ? "block" : "hidden"} mt-2 lg:mt-0`}>
+                            <OpeningVaultBalance
+                                data={openingData}
+                                setData={setOpeningData}
+                                type="opening"
+                            />
+                        </div>
                     </div>
-                )}
+
+                    {/* CLOSING SECTION */}
+                    <div className="lg:contents">
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("closing")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Closing Vault Balance</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "closing" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
+                        </div>
+
+                        {/* CLOSING TAB CONTENT */}
+                        <div className={`${activeTab === "closing" ? "lg:block" : "lg:hidden"} ${activeSection === "closing" ? "block" : "hidden"} mt-2 lg:mt-0`}>
+                            <OpeningVaultBalance
+                                data={closingData}
+                                setData={setClosingData}
+                                type="closing"
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 {showCurrencyModal && (
                     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40  flex justify-center items-center">

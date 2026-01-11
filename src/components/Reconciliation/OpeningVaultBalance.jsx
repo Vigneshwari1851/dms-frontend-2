@@ -62,27 +62,27 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         loadCurrencies();
     }, []);
 
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    setData(prev => {
-      const anyOpen = prev.sections.some(section => section.currencyOpen || section.rows.some(row => row.open));
-      if (!anyOpen) return prev; 
-      const clickedInside = event.target.closest('.dropdown-toggle') || event.target.closest('.dropdown-menu');
-      if (clickedInside) return prev; 
-      return {
-        ...prev,
-        sections: prev.sections.map(section => ({
-          ...section,
-          currencyOpen: false,
-          rows: section.rows.map(row => ({ ...row, open: false }))
-        }))
-      };
-    });
-  };
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            setData(prev => {
+                const anyOpen = prev.sections.some(section => section.currencyOpen || section.rows.some(row => row.open));
+                if (!anyOpen) return prev;
+                const clickedInside = event.target.closest('.dropdown-toggle') || event.target.closest('.dropdown-menu');
+                if (clickedInside) return prev;
+                return {
+                    ...prev,
+                    sections: prev.sections.map(section => ({
+                        ...section,
+                        currencyOpen: false,
+                        rows: section.rows.map(row => ({ ...row, open: false }))
+                    }))
+                };
+            });
+        };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, [setData]);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [setData]);
 
     const handleConfirmDelete = () => {
         if (confirmModal.rowIndex !== null) {
@@ -254,48 +254,48 @@ useEffect(() => {
     };
 
     // Toggle currency dropdown for a specific section
-const toggleCurrencyDropdown = (sectionId) => {
-  setData(prev => ({
-    ...prev,
-    sections: prev.sections.map(section => {
-      if (section.id === sectionId) {
-        // Toggle this one, close all row dropdowns
-        return {
-          ...section,
-          currencyOpen: !section.currencyOpen,
-          rows: section.rows.map(row => ({ ...row, open: false }))
-        };
-      }
-      // Close all other sections
-      return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
-    })
-  }));
-};
+    const toggleCurrencyDropdown = (sectionId) => {
+        setData(prev => ({
+            ...prev,
+            sections: prev.sections.map(section => {
+                if (section.id === sectionId) {
+                    // Toggle this one, close all row dropdowns
+                    return {
+                        ...section,
+                        currencyOpen: !section.currencyOpen,
+                        rows: section.rows.map(row => ({ ...row, open: false }))
+                    };
+                }
+                // Close all other sections
+                return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+            })
+        }));
+    };
 
-// Toggle denomination dropdown
-const toggleRowDropdown = (sectionId, rowIndex) => {
-  setData(prev => ({
-    ...prev,
-    sections: prev.sections.map(section => {
-      if (section.id !== sectionId) {
-        // Close all dropdowns in other sections
-        return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
-      }
+    // Toggle denomination dropdown
+    const toggleRowDropdown = (sectionId, rowIndex) => {
+        setData(prev => ({
+            ...prev,
+            sections: prev.sections.map(section => {
+                if (section.id !== sectionId) {
+                    // Close all dropdowns in other sections
+                    return { ...section, currencyOpen: false, rows: section.rows.map(row => ({ ...row, open: false })) };
+                }
 
-      const updatedRows = [...section.rows];
-      // Toggle only the clicked row
-      updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
+                const updatedRows = [...section.rows];
+                // Toggle only the clicked row
+                updatedRows[rowIndex].open = !updatedRows[rowIndex].open;
 
-      // Close other rows in this section
-      updatedRows.forEach((row, idx) => {
-        if (idx !== rowIndex) row.open = false;
-      });
+                // Close other rows in this section
+                updatedRows.forEach((row, idx) => {
+                    if (idx !== rowIndex) row.open = false;
+                });
 
-      // Close currency dropdown of this section if row opens
-      return { ...section, rows: updatedRows, currencyOpen: false };
-    })
-  }));
-};
+                // Close currency dropdown of this section if row opens
+                return { ...section, rows: updatedRows, currencyOpen: false };
+            })
+        }));
+    };
 
     // Select a denomination for a specific row
     const selectDenomination = (sectionId, rowIndex, value) => {
@@ -354,8 +354,8 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                     <div className="bg-[#1E2328] border border-[#16191C] rounded-xl p-3 w-full">
 
                         {/* SECTION HEADER WITH CURRENCY DROPDOWN */}
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex flex-col gap-2">
+                        <div className="flex flex-row lg:flex-row justify-between items-center mb-4 gap-2">
+                            <div className="flex flex-row lg:flex-col items-center lg:items-start gap-2 lg:gap-2">
                                 <div className="relative">
                                     <button
                                         onClick={() => toggleCurrencyDropdown(section.id)}
@@ -387,21 +387,39 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                 </div>
 
                                 {/* EXCHANGE RATE INPUT */}
-                                <div className="flex items-center gap-3 pl-4">
-                                    <label className="text-gray-400 text-sm">Rate:</label>
+                                <div className="flex items-center gap-1 lg:gap-3 lg:pl-4">
+                                    <label className="text-gray-400 text-[18px] lg:text-sm font-medium">Rate:</label>
                                     <input
                                         type="number"
                                         // min="0"
                                         // step="0.0001"
                                         value={section.exchangeRate || ""}
                                         onChange={(e) => handleRateChange(section.id, e.target.value)}
-                                        className="bg-[#16191C]  text-white rounded-lg px-2 py-1 w-24 text-sm outline-none "
-                                    // placeholder="Exchange rate"
+                                        className="bg-[#16191C] text-white rounded-lg px-2 py-1 w-20 lg:w-24 text-sm outline-none"
                                     />
                                 </div>
+
+                                {/* MOBILE DELETE BUTTON */}
+                                <button
+                                    onClick={() => {
+                                        if (data.sections.length === 1) return; // Prevent deleting last section
+                                        setConfirmModal({
+                                            open: true,
+                                            actionType: "remove",
+                                            title: "Remove Currency",
+                                            message: "Are you sure you want to remove this currency?",
+                                            sectionId: section.id,
+                                            rowIndex: null,
+                                        });
+                                    }}
+                                    className={`lg:hidden bg-transparent text-white rounded-lg hover:opacity-90 transition-colors ml-10 ${data.sections.length === 1 ? "opacity-50" : ""}`}
+                                >
+                                    <img src={trash} className="w-7 h-7 shrink-0 brightness-0 invert" alt="delete" />
+                                </button>
                             </div>
 
-                            <div className="flex flex-col items-end gap-2">
+                            {/* DESKTOP DELETE BUTTON */}
+                            <div className="hidden lg:flex flex-col items-end">
                                 {data.sections.length > 1 && (
                                     <button
                                         onClick={() =>
@@ -414,10 +432,10 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                                 rowIndex: null,
                                             })
                                         }
-                                        className="px-3 py-1 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm flex items-center gap-2"
+                                        className="bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 px-3 py-1 transition-colors text-sm flex items-center gap-2"
                                     >
-                                        <img src={trash} className="w-5 h-5" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)} />
-                                        Remove Currency
+                                        <img src={trash} className="w-5 h-5 shrink-0" alt="delete" onMouseEnter={(e) => (e.currentTarget.src = trashHover)} onMouseLeave={(e) => (e.currentTarget.src = trash)} />
+                                        <span>Remove Currency</span>
                                     </button>
                                 )}
                             </div>
@@ -426,7 +444,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                         {/* INNER CARD */}
                         <div className="bg-[#16191C] p-5 rounded-lg mx-auto">
                             {/* TABLE HEADER */}
-                            <div className="grid grid-cols-3 gap-6 text-[#ABABAB] text-[14px] mb-2">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-6 text-[#ABABAB] text-[14px] mb-2">
                                 <p>Denomination</p>
                                 <p>Quantity</p>
                                 <p>Total</p>
@@ -434,7 +452,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
 
                             {/* ROWS */}
                             {section.rows.map((row, i) => (
-                                <div key={i} className="grid grid-cols-3 gap-6 mb-4 border-b border-[#1E2328] pb-4 relative">
+                                <div key={i} className="grid grid-cols-[1.2fr_0.8fr_1fr] md:grid-cols-3 gap-2 sm:gap-6 mb-4 border-b border-[#1E2328] pb-4 relative">
 
                                     {/* DENOMINATION DROPDOWN */}
                                     <div className="relative">
@@ -464,7 +482,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                                             key={item}
                                                             onClick={() => selectDenomination(section.id, i, item)}
                                                             className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
-                                                            >
+                                                        >
                                                             <span>{currencySymbols[section.selectedCurrency]}{item}</span>
                                                             {row.denom === item && <img src={tick} className="w-4 h-4" alt="selected" />}
                                                         </li>
@@ -495,7 +513,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                             type="text"
                                             readOnly
                                             value={row.total}
-                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-[#ABABAB]"
+                                            className="w-full bg-[#1E2328] rounded-lg px-2 sm:px-3 py-2 text-[#ABABAB] text-sm sm:text-base truncate"
                                         />
 
                                         {/* Show delete button only if there's more than one row */}
@@ -512,7 +530,7 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                                         rowIndex: i,
                                                     })
                                                 }
-                                                className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7"
+                                                className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7 shrink-0 lg:brightness-100 lg:invert-0 brightness-0 invert"
                                                 alt="delete"
                                                 title="Delete row"
                                                 onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
@@ -521,8 +539,8 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                         )}
                                         {/* For the last row, show a disabled or hidden delete button */}
                                         {section.rows.length === 1 && (
-                                            <div className="w-7 h-7 opacity-30 cursor-not-allowed" title="Cannot delete the last row">
-                                                <img src={trash} className="w-7 h-7" alt="delete disabled" />
+                                            <div className="w-7 h-7 shrink-0 opacity-30 cursor-not-allowed" title="Cannot delete the last row">
+                                                <img src={trash} className="w-7 h-7 brightness-0 invert lg:brightness-100 lg:invert-0" alt="delete disabled" />
                                             </div>
                                         )}
                                     </div>
@@ -534,9 +552,10 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                                 <button
                                     onClick={() => addRow(section.id)}
                                     className="mt-2 border border-[#ABABAB] text-[#ABABAB] 
-                                    px-2 py-1 rounded-lg hover:bg-[#1E2328] transition-colors"
+                                    px-3 py-1 rounded-lg hover:bg-[#1E2328] transition-colors font-medium text-[13px]"
                                 >
-                                    + Add Row
+                                    <span className="lg:inline hidden">+ Add Row</span>
+                                    <span className="lg:hidden inline">+ Add</span>
                                 </button>
                             </div>
 
@@ -557,10 +576,11 @@ const toggleRowDropdown = (sectionId, rowIndex) => {
                         <div className="h-[35px] bg-[#16191C] mt-2 flex items-center justify-center rounded-lg border border-dashed border-[#2F343A]">
                             <button
                                 onClick={addNewCurrencySection}
-                                className="bg-transparent text-center text-[#838383] text-[12px] font-normal hover:text-white transition-colors"
+                                className="bg-transparent text-center text-[#838383] text-[13px] font-medium hover:text-white transition-colors"
                                 title="Add a row with same values as last row"
                             >
-                                + Add Different Currency
+                                <span className="lg:inline hidden">+ Add Different Currency</span>
+                                <span className="lg:hidden inline">+ Add</span>
                             </button>
                         </div>
 

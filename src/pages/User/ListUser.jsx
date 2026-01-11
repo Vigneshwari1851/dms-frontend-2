@@ -1,12 +1,12 @@
-import { useState,useEffect  } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Toast from "../../components/common/Toast";
-import Table from "../../components/common/Table"; 
+import Table from "../../components/common/Table";
 import add from "../../assets/Common/HPlus.svg";
 import ActionDropdown from "../../components/common/ActionDropdown";
-import NotificationCard from "../../components/common/Notification"; 
-import { fetchUsers, updateUserStatus, deleteUser } from "../../api/user/user.jsx"; 
+import NotificationCard from "../../components/common/Notification";
+import { fetchUsers, updateUserStatus, deleteUser } from "../../api/user/user.jsx";
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 
 export default function ListUser() {
@@ -23,12 +23,12 @@ export default function ListUser() {
 
 
   useEffect(() => {
-      if (location.state?.toast) {
-          setToastMessage(location.state.toast.message);
-          setToastType(location.state.toast.type);
-          setShowToast(true);
-          setTimeout(() => setShowToast(false), 2500);
-      }
+    if (location.state?.toast) {
+      setToastMessage(location.state.toast.message);
+      setToastType(location.state.toast.type);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    }
   }, [location.state]);
 
   useEffect(() => {
@@ -45,13 +45,20 @@ export default function ListUser() {
     navigate("/users/add-user");
   };
 
+  const handleRowClick = (row) => {
+    // Navigate to user detail page when row is clicked (especially useful on mobile)
+    if (row.id) {
+      navigate(`/users/details/${row.id}`);
+    }
+  };
+
   const columns = [
     { label: "Name", key: "full_name", align: "left" },
     { label: "Role", key: "role", align: "center" },
     { label: "Email", key: "email", align: "center" },
     { label: "User Status", key: "status", align: "center" },
     { label: "last Login", key: "last_login", align: "left" },
-    { label: "Actions", key: "actions", align: "center" },
+    { label: "Actions", key: "actions", align: "center", className: "hidden lg:table-cell" },
   ];
 
   const rowsWithActions = users.map((user) => ({
@@ -85,22 +92,22 @@ export default function ListUser() {
                   id: user.id,
                   title: "Are you sure you want to delete this account?",
                   message:
-                  "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
+                    "You are about to delete this user account. Once deleted, the user will lose all system access. Do you wish to continue?",
                 }),
             },
             {
               label: user.is_active ? "Deactivate User" : "Activate User",
               onClick: () =>
                 setConfirmModal({
-                    open: true,
-                    actionType: user.is_active ? "deactivate" : "activate",
-                    id: user.id,
-                    title: user.is_active
-                        ? "Are you sure you want to deactivate this user account?"
-                        : "Are you sure you want to activate this user account?",
-                    message: user.is_active
-                        ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
-                        : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
+                  open: true,
+                  actionType: user.is_active ? "deactivate" : "activate",
+                  id: user.id,
+                  title: user.is_active
+                    ? "Are you sure you want to deactivate this user account?"
+                    : "Are you sure you want to activate this user account?",
+                  message: user.is_active
+                    ? "You are about to deactivate this user account. The user will be unable to log in until reactivated. Do you want to continue?"
+                    : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
                 })
             },
             {
@@ -124,29 +131,30 @@ export default function ListUser() {
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-2xl font-semibold">Users</h1>
-        <button    
-        onClick={handleAddUser}
-        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
-          <img src={add} alt="add" className="w-5 h-5" />
+        <h1 className="text-white text-xl lg:text-2xl font-semibold">Users</h1>
+        <button
+          onClick={handleAddUser}
+          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium">
+          <img src={add} alt="add" className="w-4 h-4 lg:w-5 lg:h-5" />
           Add User
         </button>
       </div>
 
-      <p className="text-gray-400 mb-6">Manage system users and roles</p>
+      <p className="text-gray-400 mb-6 hidden lg:block">Manage system users and roles</p>
 
       <div className="mt-8">
-        <Table 
-          columns={columns} 
-          data={rowsWithActions}   
+        <Table
+          columns={columns}
+          data={rowsWithActions}
           title="Users List"
           subtitle=""
           sortableKeys={["email", "status"]}
-           showRightSection={false}
+          showRightSection={false}
+          onRowClick={handleRowClick}
         />
       </div>
-       <Toast show={showToast} message={toastMessage} type={toastType} />
-       <NotificationCard 
+      <Toast show={showToast} message={toastMessage} type={toastType} />
+      <NotificationCard
         confirmModal={confirmModal}
         onConfirm={async () => {
           const { actionType, id, email } = confirmModal;

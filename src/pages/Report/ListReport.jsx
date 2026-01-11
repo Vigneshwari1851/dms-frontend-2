@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef  } from "react";
+import { useState, useEffect, useRef } from "react";
 import bgIcon from "../../assets/report/bgimage.svg";
 import download from "../../assets/dashboard/download.svg";
 import pdf from "../../assets/Common/pdf.svg";
@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
-import { fetchDeals,exportDeals } from "../../api/deals.jsx";
+import { fetchDeals, exportDeals } from "../../api/deals.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function ListReport() {
@@ -34,11 +34,16 @@ export default function ListReport() {
   const [customTo, setCustomTo] = useState(null);
 
   const [reportRows, setReportRows] = useState([]);
-    const exportRef = useRef(null);
+  const exportRef = useRef(null);
+  const mobileExportRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportRef.current && !exportRef.current.contains(event.target)) {
+      if (
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        (!mobileExportRef.current || !mobileExportRef.current.contains(event.target))
+      ) {
         setExportOpen(false);
       }
     };
@@ -103,17 +108,17 @@ export default function ListReport() {
     setReportRows(data || []);
   };
 
-    const handleExport = async (format) => {
+  const handleExport = async (format) => {
     try {
       setExporting(true);
       setExportOpen(false);
 
-        // Pass "today" as a string
-    const blob = await exportDeals(format);
+      // Pass "today" as a string
+      const blob = await exportDeals(format);
 
-    if (!blob) return;
+      if (!blob) return;
 
-   
+
 
     } catch (e) {
       console.error("Export failed", e);
@@ -162,37 +167,38 @@ export default function ListReport() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-white text-2xl font-semibold">Reports & Analytics</h1>
-         <div className="relative" ref={exportRef}>
-                     <button
-                       onClick={() => setExportOpen(!exportOpen)}
-                       className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
-                     >
-                       <img src={download} alt="download" className="w-6 h-6" /> Export
-                     </button>
-       
-                     {exportOpen && (
-                       <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
-                         <button
-                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
-                           onClick={() => handleExport("pdf")}
-                           disabled={exporting}
-                         >
-                           <img src={pdf} alt="pdf" className="w-4 h-4" />
-                           PDF
-                         </button>
-                         <button
-                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                           onClick={() => handleExport("excel")}
-                           disabled={exporting}
-                         >
-                           <img src={excel} alt="excel" className="w-4 h-4" />
-                           Excel
-                         </button>
-                       </div>
-                     )}
-                   </div>
+      <div className="flex flex-row items-center justify-between gap-4">
+        <h1 className="text-white text-lg lg:text-2xl font-semibold">Reports & Analytics</h1>
+        <div className="relative hidden lg:block" ref={exportRef}>
+          <button
+            onClick={() => setExportOpen(!exportOpen)}
+            className="p-2 lg:px-5 lg:py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+          >
+            <img src={download} alt="download" className="w-6 h-6" />
+            <span className="hidden lg:inline">Export</span>
+          </button>
+
+          {exportOpen && (
+            <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
+              <button
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                onClick={() => handleExport("pdf")}
+                disabled={exporting}
+              >
+                <img src={pdf} alt="pdf" className="w-4 h-4" />
+                PDF
+              </button>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                onClick={() => handleExport("excel")}
+                disabled={exporting}
+              >
+                <img src={excel} alt="excel" className="w-4 h-4" />
+                Excel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <p className="text-gray-400 mb-6">
@@ -200,9 +206,9 @@ export default function ListReport() {
       </p>
 
       {/* Filters */}
-      <div className="bg-[#1A1D23] p-5 rounded-xl mt-4">
-        <div className="grid grid-cols-3 gap-6">
-          <div className="flex flex-col">
+      <div className="bg-[#1A1D23] p-4 lg:p-5 rounded-xl mt-4">
+        <div className="flex flex-row items-end gap-3 lg:grid lg:grid-cols-3 lg:gap-6">
+          <div className="flex flex-col flex-1 lg:flex-none">
             <label className="text-gray-300 mb-2 text-sm">Date Range</label>
             <Dropdown
               label={tempDateRange}
@@ -214,28 +220,44 @@ export default function ListReport() {
             />
           </div>
 
-          {/* <div className="flex flex-col">
-            <label className="text-gray-300 mb-2 text-sm">Format</label>
-            <Dropdown
-              label={format}
-              options={formats}
-              onChange={(value) => setFormat(value.label)}
-              renderOption={(option) => (
-                <div className="flex items-center gap-2">
-                  <img src={option.icon} alt={option.label} className="w-4 h-4" />
-                  <span>{option.label}</span>
-                </div>
-              )}
-            />
-          </div> */}
-
-          <div className="flex  mt-6">
+          <div className="flex lg:mt-6">
             <button
-              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-5 h-10 rounded-md text-sm font-medium"
+              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 h-10 rounded-md text-sm font-medium whitespace-nowrap"
               onClick={handleApplyFilters}
             >
-              Apply filters
+              Apply
             </button>
+          </div>
+
+          {/* Mobile Export Button */}
+          <div className="relative lg:hidden" ref={mobileExportRef}>
+            <button
+              onClick={() => setExportOpen(!exportOpen)}
+              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white w-10 h-10 rounded-md flex items-center justify-center"
+            >
+              <img src={download} alt="download" className="w-5 h-5" />
+            </button>
+
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                  onClick={() => handleExport("pdf")}
+                  disabled={exporting}
+                >
+                  <img src={pdf} alt="pdf" className="w-4 h-4" />
+                  PDF
+                </button>
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                  onClick={() => handleExport("excel")}
+                  disabled={exporting}
+                >
+                  <img src={excel} alt="excel" className="w-4 h-4" />
+                  Excel
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -243,15 +265,15 @@ export default function ListReport() {
       {/* CUSTOM DATE MODAL */}
       {showCustomModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1A1D23] p-6 rounded-xl w-[650px] border border-[#2A2D33] shadow-lg">
+          <div className="bg-[#1A1D23] p-6 rounded-xl w-full max-w-[650px] mx-4 border border-[#2A2D33] shadow-lg">
             <h2 className="text-white text-lg font-semibold mb-4">
               Select Date Range
             </h2>
 
-            <div className="flex justify-between gap-6">
+            <div className="flex flex-col lg:flex-row justify-between gap-6">
               <div className="flex-1">
                 <label className="text-gray-300 mb-2 text-sm">From:</label>
-               <CalendarMini
+                <CalendarMini
                   selectedDate={customFrom}
                   onDateSelect={(date) => {
                     console.log("fromdate:", date);
@@ -303,7 +325,7 @@ export default function ListReport() {
       )}
 
       {/* Table */}
-      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
         {reportRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
@@ -320,7 +342,7 @@ export default function ListReport() {
               </h2>
             </div>
 
-            <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px]">
+            <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
               <thead>
                 <tr className="text-[#FFFFFF] text-[12px] font-normal">
                   <th className="py-3">Deal ID</th>
@@ -336,15 +358,13 @@ export default function ListReport() {
                       <span className="flex flex-col">
                         <img
                           src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${
-                            sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
+                          className={`w-3 h-3 -mt-[5px] ${sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
+                            }`}
                         />
                         <img
                           src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${
-                            sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
+                            }`}
                         />
                       </span>
                     </div>
@@ -363,15 +383,13 @@ export default function ListReport() {
                       <span className="flex flex-col">
                         <img
                           src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${
-                            sortBy === "buyCurrency" && !sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
+                          className={`w-3 h-3 -mt-[5px] ${sortBy === "buyCurrency" && !sortAsc ? "opacity-100" : "opacity-30"
+                            }`}
                         />
                         <img
                           src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${
-                            sortBy === "buyCurrency" && sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
+                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "buyCurrency" && sortAsc ? "opacity-100" : "opacity-30"
+                            }`}
                         />
                       </span>
                     </div>
@@ -401,9 +419,8 @@ export default function ListReport() {
                     <td>
                       <div className="flex justify-center items-center">
                         <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${
-                            typeColors[item.deal_type]
-                          }`}
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type]
+                            }`}
                         >
                           {item.deal_type.toUpperCase()}
                         </span>
@@ -424,9 +441,8 @@ export default function ListReport() {
                     <td>
                       <div className="flex justify-center items-center">
                         <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${
-                            statusColors[item.status]
-                          }`}
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]
+                            }`}
                         >
                           {item.status}
                         </span>

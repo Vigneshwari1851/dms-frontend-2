@@ -8,7 +8,8 @@ export default function Dropdown({
     selected,
     onChange,
     className = "",
-    renderOption
+    renderOption,
+    buttonClassName = ""
 }) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -30,18 +31,18 @@ export default function Dropdown({
         <div ref={dropdownRef} className={`relative ${className}`}>
             <button
                 type="button"
-                className="w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between"
+                className={`w-full px-3 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between border border-transparent transition-all ${buttonClassName}`}
                 onClick={(e) => {
                     e.stopPropagation();
                     setOpen((prev) => !prev);
                 }}
             >
-                {selected || label}
-                <img src={down} alt="chevrondown" />
+                <span className="truncate">{selected || label}</span>
+                <img src={down} alt="chevrondown" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
             </button>
 
             {open && (
-                <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10  max-h-48 overflow-y-auto scrollbar-dark absolute">
+                <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-dark absolute">
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;
 

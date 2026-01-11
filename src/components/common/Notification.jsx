@@ -66,36 +66,36 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     const confirmBtnColor = colorMap[actionType] || "#1E902D";
 
     return (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50 p-4">
 
-            <div className="w-[470px] min-h-[374px] bg-[#1E2328] rounded-lg shadow-xl px-10 pt-10 pb-6 flex flex-col items-center">
+            <div className="w-full max-w-[470px] min-h-[374px] bg-[#1E2328] rounded-lg shadow-xl px-6 sm:px-10 pt-6 sm:pt-10 pb-6 flex flex-col items-center">
 
                 <img
                     src={iconToShow}
                     alt="icon"
-                    className="w-full h-[150px]"
+                    className="w-full max-w-[150px] sm:max-w-none h-auto sm:h-[150px]"
                 />
-                <div className="mt-3 w-full flex flex-col gap-4 text-center">
-                    <h2 className="text-xl font-semibold text-white">
+                <div className="mt-3 w-full flex flex-col gap-3 sm:gap-4 text-center">
+                    <h2 className="text-lg sm:text-xl font-semibold text-white px-2">
                         {title}
                     </h2>
 
-                    <p className="text-gray-400 text-[15px] leading-relaxed">
+                    <p className="text-gray-400 text-sm sm:text-[15px] leading-relaxed px-2">
                         {message}
                     </p>
                 </div>
 
-                <div className="mt-auto w-full flex gap-2 pt-6">
+                <div className="mt-auto w-full flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4 sm:pt-6">
                     <button
                         onClick={onCancel}
-                        className="flex-1 border border-gray-500 rounded-lg text-white font-semibold hover:bg-white hover:text-black transition-all duration-200 h-11"
+                        className="flex-1 w-full sm:w-auto h-12 sm:h-11 border border-gray-500 rounded-lg text-white font-semibold hover:bg-white hover:text-black transition-all duration-200 text-sm sm:text-base py-3 sm:py-0 active:opacity-80"
                     >
                         {cancelText}
                     </button>
 
                     <button
                         onClick={onConfirm}
-                        className="flex-1 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-80 h-11"
+                        className="flex-1 w-full sm:w-auto h-12 sm:h-11 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-80 text-sm sm:text-base py-3 sm:py-0 active:opacity-80"
                         style={{ backgroundColor: confirmBtnColor }}
                     >
                         {finalConfirmLabel}

@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchDealById, updateDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 
 export default function EditDeal() {
@@ -93,11 +94,11 @@ export default function EditDeal() {
                     const map = {};
                     const symbols = {};
                     data.forEach((c) => {
-                        map[c.name] = c.id;
-                        symbols[c.name] = c.symbol || "";
+                        map[c.code] = c.id;
+                        symbols[c.code] = c.symbol || "";
                     });
 
-                    setCurrencyOptions(data.map((c) => c.name));
+                    setCurrencyOptions(data.map((c) => c.code));
                     setCurrencyMap(map);
                     setCurrencySymbols(symbols);
                 }
@@ -322,7 +323,7 @@ export default function EditDeal() {
 
 
 
-    // Custom dropdown component with fixed width like CreateDeal
+    // Custom dropdown component with fluid width
     const CustomDropdown = ({
         value,
         setValue,
@@ -331,14 +332,13 @@ export default function EditDeal() {
         options,
         placeholder,
         loading = false,
-        width = "172px",
         editable = false // Add editable prop
     }) => (
         <div className="relative">
             <button
                 onClick={() => editable && setIsOpen(!isOpen)}
                 className={`
-                   w-[${width}]
+                   w-full
                    h-10
                   bg-[#16191C]
                   rounded-lg
@@ -360,7 +360,7 @@ export default function EditDeal() {
                 <ul className={`
                     absolute left-0 right-0 mt-2 
                   bg-[#2E3439] border border-[#2A2F33] 
-                  rounded-lg z-10 w-[${width}]                    
+                  rounded-lg z-10 w-full                    
                 `}>
                     {loading ? (
                         <li className="px-3 py-2 text-sm text-gray-300">
@@ -398,18 +398,17 @@ export default function EditDeal() {
         </div>
     );
 
-    // Custom input component with fixed width like CreateDeal
+    // Custom input component with fluid width
     const CustomInput = ({
         value,
         onChange,
         placeholder,
         type = "text",
         readOnly = false,
-        width = "167px"
     }) => (
         <input
             className={`
-                w-[${width}]
+                w-full
                 h-10
                 bg-[#16191C]
                 rounded-lg
@@ -434,16 +433,29 @@ export default function EditDeal() {
     return (
         <>
             {/* Page Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div>
-                    <h2 className="text-[16px] font-medium text-white">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4 gap-4 lg:gap-0">
+                <div className="flex items-center justify-between w-full lg:w-auto">
+                    <h2 className="text-[16px] lg:text-[18px] font-medium text-white">
                         Deal ID - {deal?.deal_number || id || "Loading..."}
                     </h2>
+
+                    {/* Mobile Only: Edit Pencil (only when not in edit mode) */}
+                    <div className="lg:hidden flex items-center gap-2">
+                        {!editMode && isPending && (
+                            <button
+                                onClick={handleStartEdit}
+                                className="p-1 hover:bg-[#2A2F34] rounded-lg transition-colors bg-[#1D4CB5]"
+                            >
+                                <img src={editIcon} className="w-6 h-6" alt="Edit" />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto justify-end">
                     {editMode && (
-                        <>
+                        <div className="hidden lg:flex items-center gap-2 w-full lg:w-auto justify-end">
+                            {/* Desktop Buttons */}
                             <button
                                 className="w-[95px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center px-3 py-2 cursor-pointer hover:bg-white hover:text-black"
                                 onClick={handleCancelEdit}
@@ -453,20 +465,20 @@ export default function EditDeal() {
 
                             <button
                                 onClick={handleSave}
-                                className="flex items-center justify-center gap-2 w-[91px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-2"
+                                className="w-[91px] h-10 flex items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-3"
                             >
-                                <img src={save} className="w-5 h-5" alt="Save" />
                                 Save
                             </button>
-                        </>
+                        </div>
                     )}
 
                     {!editMode && isPending && (
+                        /* Desktop Only: Edit Icon button */
                         <button
                             onClick={handleStartEdit}
-                            className="flex items-center justify-center w-[41px] h-10 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
+                            className="hidden lg:flex w-full lg:w-[41px] h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
                         >
-                            <img src={editIcon} className="w-[41px] h-10" alt="Edit" />
+                            <img src={editIcon} className="lg:w-[41px] lg:h-10" alt="Edit" />
                         </button>
                     )}
                 </div>
@@ -488,10 +500,10 @@ export default function EditDeal() {
 
             {/* Form Container */}
             {!loading && (
-                <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
+                <div className="mt-4 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
 
                     {/* Row 1 - Customer Name & Phone */}
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Full Name <span className="text-red-500">*</span>
@@ -515,8 +527,8 @@ export default function EditDeal() {
                         </div>
                     </div>
 
-                    {/* Row 2 - All transaction fields in one line (like CreateDeal) */}
-                    <div className="flex items-end gap-6 mt-6">
+                    {/* Row 2 - Transaction fields (Responsive Grid) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
                         {/* Transaction Type - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
@@ -678,6 +690,26 @@ export default function EditDeal() {
                         />
                     </div>
 
+                    {/* Mobile Action Buttons (sticky at bottom, same line) */}
+                    {editMode && (
+                        <div className="lg:hidden sticky bottom-4 flex justify-between items-center mt-6">
+                            <button
+                                onClick={handleCancelEdit}
+                                className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    )}
+
+
+
                 </div>
             )}
 
@@ -686,6 +718,7 @@ export default function EditDeal() {
                 onConfirm={handleModalConfirm}
                 onCancel={handleModalCancel}
             />
+
 
         </>
     );

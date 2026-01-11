@@ -13,6 +13,7 @@ import searchIcon from "../../assets/Common/search.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import Toast from "../../components/common/Toast";
+import editIcon from "../../assets/Common/edit.svg";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function DealsList() {
             customer: deal.customer.name,
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
             currency: deal.buyCurrency.code || "---",
-            exchange_rate: deal.exchange_rate ,
+            exchange_rate: deal.exchange_rate,
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
             currency1: deal.sellCurrency.code || "---",
             status: deal.status,
@@ -235,52 +236,47 @@ export default function DealsList() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-2xl font-semibold">Deals Overview</h1>
-          <p className="text-gray-400 text-sm mt-1">Manage and review all deals</p>
+          <h1 className="text-white text-xl lg:text-2xl font-semibold">Deals Overview</h1>
+          <p className="text-gray-400 text-sm mt-1 hidden lg:block">Manage and review all deals</p>
         </div>
 
-        <div className="flex items-center gap-3">
-
-          <button
-            onClick={() => navigate("/deals/create-deal")}
-            className="
-    flex items-center 
-    w-[173px] h-10 
-    bg-[#1D4CB5] hover:bg-blue-600 
-    text-white font-medium text-sm
-    px-2 py-2 
-    gap-2.5
-    rounded-lg
-    cursor-pointer
-  "
-
-          >
-            <img src={add} alt="add" className="w-5 h-5" />
-            Create New Deal
-          </button>
-
-        </div>
+        <button
+          onClick={() => navigate("/deals/create-deal")}
+          className="
+            flex items-center justify-center
+            w-auto h-10 
+            bg-[#1D4CB5] hover:bg-blue-600 
+            text-white font-medium text-sm
+            px-4 py-2 
+            gap-2
+            rounded-lg
+            cursor-pointer
+          "
+        >
+          <img src={add} alt="add" className="w-5 h-5" />
+          <span className="lg:hidden">New Deal</span>
+          <span className="hidden lg:inline">Create New Deal</span>
+        </button>
       </div>
 
       {/* Table Container */}
-      <div className="bg-[#1A1F24] p-5 rounded-xl">
+      <div className="bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
         {/* Filters Row */}
-        {/* Filters Row */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
           {/* Left side: Deal Records + Search */}
-          <div className="flex items-center gap-4">
-            <h2 className="text-white text-[16px] font-semibold">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+            <h2 className="text-white text-[16px] font-semibold flex-shrink-0">
               Deal Records
             </h2>
 
             {/* Search Box with icon */}
-            <div className="relative">
+            <div className="relative w-full lg:w-[396px]">
               <input
                 type="text"
                 placeholder="Search deals..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-[396px] h-8 pl-10 pr-3 rounded-lg bg-[#16191C] text-white  text-sm outline-none"
+                className="w-full h-8 pl-10 pr-3 rounded-lg bg-[#16191C] text-white text-sm outline-none border border-transparent focus:border-[#1D4CB5] transition-all"
               />
               <img
                 src={searchIcon}
@@ -291,13 +287,13 @@ export default function DealsList() {
           </div>
 
           {/* Right side: Filters and buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
             <Dropdown
               label="All Status"
               options={statuses}
               selected={statusFilter}
               onChange={(value) => setStatusFilter(value)}
-              className="w-[150px]"
+              className="w-full sm:w-[150px]"
             />
 
             <Dropdown
@@ -305,19 +301,19 @@ export default function DealsList() {
               options={currencyList}
               selected={currencyFilter}
               onChange={(value) => setCurrencyFilter(value)}
-              className="w-[180px]"
+              className="w-full sm:w-[180px]"
             />
 
-            <div className="relative" ref={exportRef}>
+            <div className="relative w-full lg:w-auto" ref={exportRef}>
               <button
                 onClick={() => setExportOpen(!exportOpen)}
-                className="px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+                className="w-full px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
               >
                 <img src={download} alt="download" className="w-6 h-6" /> Export
               </button>
 
               {exportOpen && (
-                <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
+                <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
                   <button
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
                     onClick={() => handleExport("pdf")}
@@ -340,11 +336,11 @@ export default function DealsList() {
           </div>
         </div>
 
-        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5"></div>
+        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
 
-        {/* Table */}
-        <div className="-mx-5">
-          <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+        {/* Table Container with Overflow */}
+        <div className="-mx-4 lg:-mx-5 overflow-x-auto scrollbar-grey">
+          <table className="min-w-[1100px] lg:min-w-full w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
             <thead>
               <tr className="text-[#FFFFFF] text-[12px] font-normal">
                 <th className="py-3 text-left pl-5">Deal ID</th>

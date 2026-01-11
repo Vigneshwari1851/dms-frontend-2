@@ -10,7 +10,9 @@ import { fetchReconciliationAlerts } from "../../api/reconcoliation";
 import bellIcon from "../../assets/notification/bell.svg";
 import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg";
 
-export default function Header() {
+import { Bars3Icon } from "@heroicons/react/24/outline";
+
+export default function Header({ toggleSidebar }) {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -46,7 +48,7 @@ export default function Header() {
 
   useEffect(() => {
     loadNotifications();
-    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000; 
+    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
     const intervalId = setInterval(loadNotifications, TWO_DAYS);
 
     return () => clearInterval(intervalId);
@@ -102,14 +104,24 @@ export default function Header() {
         />
       )}
 
-      <header className="w-full h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-10 relative z-50">
-        {/* Left Logo */}
-        <img src={logo} alt="logo" />
+      <header className="w-full h-[72px] lg:h-[92px] bg-[#1E2328] border-b border-[#16191C] flex items-center justify-between px-4 lg:px-10 relative z-50 transition-all duration-300">
+        <div className="flex items-center gap-4">
+          {/* Hamburger Menu - Only Mobile */}
+          <button
+            onClick={toggleSidebar}
+            className="lg:hidden text-white hover:bg-white/10 p-1 rounded-md transition-colors"
+          >
+            <Bars3Icon className="w-6 h-6" />
+          </button>
+
+          {/* Left Logo */}
+          <img src={logo} alt="logo" className="h-8 lg:h-auto" />
+        </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-6">
-          {/* Search Bar */}
-          <div className="relative bg-[#0F1113] border border-[#16191C] px-4 py-2 rounded-xl w-[300px]">
+        <div className="flex items-center gap-3 lg:gap-6">
+          {/* Search Bar - Hidden on small mobile, smaller on medium */}
+          <div className="hidden md:relative md:flex bg-[#0F1113] border border-[#16191C] px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl w-[150px] lg:w-[300px]">
             <img
               src={searchIcon}
               alt="search"
@@ -135,7 +147,7 @@ export default function Header() {
             />
 
             {notifDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-96 bg-[#1E2328] rounded-xl shadow-lg p-4 animate-fadeIn z-50">
+              <div className="fixed lg:absolute left-0 lg:left-auto right-0 top-[72px] lg:top-auto lg:mt-3 w-full lg:w-96 bg-[#1E2328] rounded-none lg:rounded-xl shadow-lg p-4 animate-fadeIn z-50 transition-all">
                 <div className={`${showAllNotifications ? "max-h-70 overflow-y-auto scrollbar-grey pr-3" : ""}`}>
                   {notifications.length === 0 ? (
                     <p className="text-gray-400 text-sm text-center">No notifications</p>
@@ -193,7 +205,7 @@ export default function Header() {
             </div>
 
             {avatarDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-[#1E2328] rounded-xl shadow-lg p-4 z-50">
+              <div className="fixed lg:absolute left-0 lg:left-auto right-0 top-[72px] lg:top-auto lg:mt-3 w-full lg:w-64 bg-[#1E2328] rounded-none lg:rounded-xl shadow-lg p-4 z-50 transition-all">
                 <p className="text-white text-lg font-semibold">{userName}</p>
                 <p className="text-gray-400 text-sm mb-4">{userRole}</p>
 

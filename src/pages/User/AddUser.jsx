@@ -79,14 +79,14 @@ export default function AddUser() {
 
             {/* Page Header */}
             <div >
-                <h2 className="text-[16px] font-medium">Add New User</h2>
+                <h2 className="text-[16px] font-medium text-white lg:text-[16px]">Add New User</h2>
                 <p className="text-gray-400 text-[12px] mb-6">Create a new user account for the system</p>
 
             </div>
 
 
             {/* Form Container */}
-            <div className="mt-4 bg-[#1A1F24] p-5 rounded-xl ">
+            <div className="mt-4 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
@@ -99,7 +99,7 @@ export default function AddUser() {
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email <span className="text-red-500">*</span></label>
                         <input
@@ -159,7 +159,7 @@ export default function AddUser() {
                         options={["Maker", "Checker"]}
                         selected={role}
                         onChange={setRole}
-                        className="w-[580px]"
+                        className="w-full lg:w-[580px] max-w-full"
                     />
                     {errors.role && (
                         <p className="text-red-400 text-xs mt-1">{errors.role}</p>
@@ -172,13 +172,27 @@ export default function AddUser() {
                 </p>
 
                 {/* Buttons */}
-                <div className="flex justify-end gap-3 mt-8">
-                    <button onClick={handleCancel} className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200">Cancel</button>
+                <div className="flex flex-col lg:flex-row justify-between lg:justify-end items-stretch lg:items-center gap-3 mt-8">
+                    <button 
+                        onClick={handleCancel} 
+                        className="lg:hidden w-full h-12 px-4 py-3 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200 text-sm font-medium active:opacity-80"
+                    >
+                        Cancel
+                    </button>
+                    <div className="hidden lg:flex justify-end gap-3">
+                        <button onClick={handleCancel} className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200">Cancel</button>
+                        <button
+                            onClick={handleAddUser}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            <img src={add} alt="add" className="w-5 h-5" />
+                            Save User
+                        </button>
+                    </div>
                     <button
                         onClick={handleAddUser}
-                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        className="lg:hidden w-full h-12 flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-3 rounded-lg text-sm font-medium active:opacity-80">
                         <img src={add} alt="add" className="w-5 h-5" />
-                        Save User
+                        Save
                     </button>
                 </div>
 

@@ -294,6 +294,13 @@ export default function ViewReconciliation() {
 
     const [error, setError] = useState(null);
     const [editableData, setEditableData] = useState(null);
+    const [activeSection, setActiveSection] = useState("Summary");
+
+    const toggleSection = (sectionName) => {
+        if (window.innerWidth < 1024) {
+            setActiveSection(activeSection === sectionName ? null : sectionName);
+        }
+    };
 
     // Fetch reconciliation data by ID
     useEffect(() => {
@@ -515,7 +522,7 @@ export default function ViewReconciliation() {
 
                 <div className="flex items-center gap-3">
                     {/* EDIT ICON */}
-                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "In_Progress" || editableData.status === "Tallied" ) && (
+                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "In_Progress" || editableData.status === "Tallied") && (
                         <img
                             src={edit}
                             alt="edit"
@@ -528,7 +535,7 @@ export default function ViewReconciliation() {
 
             <div className="mt-2" />
 
-            <div className="mt-4 bg-[#16191C] rounded-xl p-4">
+            <div className="mt-4 lg:bg-[#16191C] lg:rounded-xl lg:p-4">
                 {error && (
                     <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded-lg">
                         <p className="text-red-400">{error}</p>
@@ -541,138 +548,212 @@ export default function ViewReconciliation() {
                     </div>
                 )}
 
-                <div className="flex gap-6">
-                    {/* LEFT CARD - Summary (READ ONLY) */}
-                    <div className="w-[65%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
-                        <h3 className="text-white text-[15px] font-medium mb-1">Reconciliation Summary</h3>
-
-                        {/* Rows: Opening Vault Total - READ ONLY */}
-                        <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                            <p className="text-[#E3E3E3] text-[14px]">Opening Vault Total</p>
-                            <p className="text-white text-[13px]">
-                                {calculateVaultTotal(editableData.openingVaultData)}
-                            </p>
+                {/* ACCORDION / GRID CONTAINER */}
+                <div className="flex flex-col lg:flex-row lg:gap-6">
+                    {/* SUMMARY SECTION */}
+                    <div className="w-full lg:w-[65%] mb-4 lg:mb-0">
+                        {/* Mobile Header */}
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("Summary")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Reconciliation Summary</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "Summary" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
                         </div>
 
-                        {/* Total Transactions - READ ONLY */}
-                        <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                            <p className="text-[#E3E3E3] text-[14px]">Total Transactions</p>
-                            <p className="text-white text-[13px]">
-                                {editableData.totalTransactions}
-                            </p>
-                        </div>
+                        {/* Content */}
+                        <div className={`${activeSection === "Summary" ? "block" : "hidden"} lg:block mt-2 lg:mt-0 bg-[#1E2328] p-5 rounded-xl border border-[#16191C]`}>
+                            <h3 className="hidden lg:block text-white text-[15px] font-medium mb-1">Reconciliation Summary</h3>
 
-                        {/* Closing Vault - READ ONLY */}
-                        <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                            <p className="text-[#E3E3E3] text-[14px]">Closing Vault Total</p>
-                            <p className="text-white text-[13px]">
-                                {calculateVaultTotal(editableData.closingVaultData)}
-                            </p>
-                        </div>
-
-                        {/* Variance - READ ONLY */}
-                        <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
-                            <div className="flex items-center gap-2">
-                                <img src={varianceIcon} className="w-5 h-5" alt="variance" />
-                                <p className="text-[#E3E3E3] text-[14px]">Difference / Variance</p>
+                            {/* Rows: Opening Vault Total - READ ONLY */}
+                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
+                                <p className="text-[#E3E3E3] text-[14px]">Opening Vault Total</p>
+                                <p className="text-white text-[13px]">
+                                    {calculateVaultTotal(editableData.openingVaultData)}
+                                </p>
                             </div>
 
-                            <p className="text-[13px]" style={{ color: varianceColor }}>
-                                {editableData.varianceValue}
-                            </p>
-                        </div>
+                            {/* Total Transactions - READ ONLY */}
+                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
+                                <p className="text-[#E3E3E3] text-[14px]">Total Transactions</p>
+                                <p className="text-white text-[13px]">
+                                    {editableData.totalTransactions}
+                                </p>
+                            </div>
 
-                        {/* Status - Editable */}
-                        <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
-                            <p className="text-white font-semibold text-[15px]">Status</p>
+                            {/* Closing Vault - READ ONLY */}
+                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
+                                <p className="text-[#E3E3E3] text-[14px]">Closing Vault Total</p>
+                                <p className="text-white text-[13px]">
+                                    {calculateVaultTotal(editableData.closingVaultData)}
+                                </p>
+                            </div>
 
-                            <span
-                                className={`w-[90px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
-                            >
-                                {editableData.status}
-                            </span>
+                            {/* Variance - READ ONLY */}
+                            <div className="flex justify-between items-center py-3 border-b border-[#16191C]">
+                                <div className="flex items-center gap-2">
+                                    <img src={varianceIcon} className="w-5 h-5" alt="variance" />
+                                    <p className="text-[#E3E3E3] text-[14px]">Difference / Variance</p>
+                                </div>
 
+                                <p className="text-[13px]" style={{ color: varianceColor }}>
+                                    {editableData.varianceValue}
+                                </p>
+                            </div>
+
+                            {/* Status - Editable */}
+                            <div className="flex justify-between items-center py-3 bg-[#16191C] px-2 rounded-lg mt-4 h-8">
+                                <p className="text-white font-semibold text-[15px]">Status</p>
+
+                                <span
+                                    className={`w-[90px] h-6 inline-flex items-center justify-center rounded-2xl text-[12px] ${statusStyle[editableData.status] || statusStyle.Tallied}`}
+                                >
+                                    {editableData.status}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* RIGHT SIDE NOTES */}
-                    <div className="w-[460px] h-[296px] flex flex-col justify-between">
-                        <div className="bg-[#1E2328] rounded-xl p-5">
-                            <p className="text-white text-[16px] font-medium mb-2">Notes</p>
+                    {/* NOTES SECTION */}
+                    <div className="w-full lg:w-[460px] mb-4 lg:mb-0">
+                        {/* Mobile Header */}
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("Notes")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Notes</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "Notes" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
+                        </div>
 
+                        {/* Content */}
+                        <div className={`${activeSection === "Notes" ? "block" : "hidden"} lg:block mt-2 lg:mt-0 bg-[#1E2328] rounded-xl p-5 lg:h-[296px]`}>
+                            <p className="hidden lg:block text-white text-[16px] font-medium mb-2">Notes</p>
                             <textarea
                                 value={editableData.notes}
                                 disabled={true}
                                 placeholder="Add reconciliation notes..."
-                                className="w-[408px] h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60  focus:border-blue-500 scrollbar-grey"
+                                className="w-full lg:w-[408px] h-[150px] lg:h-[220px] bg-[#16191C] text-white text-[14px] p-2 rounded-sm outline-none resize-none placeholder:text-[#4D5567] disabled:opacity-60 focus:border-blue-500 scrollbar-grey"
                             />
                         </div>
                     </div>
                 </div>
 
                 {/* Vault Balances */}
-                <div className="flex gap-6 mt-5">
+                <div className="flex flex-col lg:flex-row lg:gap-6 mt-0 lg:mt-5">
                     {/* Opening Vault */}
-                    <div className="w-[50%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
-                        <h3 className="text-white text-[15px] font-medium mb-4">Opening Vault Balance</h3>
-
-                        <div className="flex justify-between text-[#939AF0] text-[14px] font-medium border-b border-[#16191C] pb-2 mb-2">
-                            <span>Currency</span>
-                            <span>Total Amount</span>
+                    <div className="w-full lg:w-[50%] mb-4 lg:mb-0">
+                        {/* Mobile Header */}
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("Opening")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Opening Vault Balance</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "Opening" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
                         </div>
 
-                        {editableData.openingVaultData && editableData.openingVaultData.length > 0 ? (
-                            editableData.openingVaultData.map((row, index) => (
-                                <VaultRow
-                                    key={`opening-${index}`}
-                                    idx={index}
-                                    currency={row.currency}
-                                    currencyId={row.currencyId}
-                                    amount={row.amount}
-                                    breakdown={row.breakdown}
-                                />
-                            ))
-                        ) : (
-                            <div className="text-gray-400 text-center py-4">
-                                No opening vault data available
+                        {/* Content */}
+                        <div className={`${activeSection === "Opening" ? "block" : "hidden"} lg:block mt-2 lg:mt-0 bg-[#1E2328] p-5 rounded-xl border border-[#16191C]`}>
+                            <h3 className="hidden lg:block text-white text-[15px] font-medium mb-4">Opening Vault Balance</h3>
+
+                            <div className="flex justify-between text-[#939AF0] text-[14px] font-medium border-b border-[#16191C] pb-2 mb-2">
+                                <span>Currency</span>
+                                <span>Total Amount</span>
                             </div>
-                        )}
+
+                            {editableData.openingVaultData && editableData.openingVaultData.length > 0 ? (
+                                editableData.openingVaultData.map((row, index) => (
+                                    <VaultRow
+                                        key={`opening-${index}`}
+                                        idx={index}
+                                        currency={row.currency}
+                                        currencyId={row.currencyId}
+                                        amount={row.amount}
+                                        breakdown={row.breakdown}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-gray-400 text-center py-4">
+                                    No opening vault data available
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Closing Vault */}
-                    <div className="w-[50%] bg-[#1E2328] p-5 rounded-xl border border-[#16191C]">
-                        <h3 className="text-white text-[15px] font-medium mb-4">Closing Vault Balance</h3>
-
-                        <div className="flex justify-between text-[#939AF0] text-[14px] font-medium border-b border-[#16191C] pb-2 mb-2">
-                            <span>Currency</span>
-                            <span>Total Amount</span>
+                    <div className="w-full lg:w-[50%] mb-4 lg:mb-0">
+                        {/* Mobile Header */}
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                            onClick={() => toggleSection("Closing")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Closing Vault Balance</h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "Closing" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
                         </div>
 
-                        {editableData.closingVaultData && editableData.closingVaultData.length > 0 ? (
-                            editableData.closingVaultData.map((row, index) => (
-                                <VaultRow
-                                    key={`close-${index}`}
-                                    idx={index}
-                                    currency={row.currency}
-                                    currencyId={row.currencyId}
-                                    amount={row.amount}
-                                    breakdown={row.breakdown}
-                                />
-                            ))
-                        ) : (
-                            <div className="text-gray-400 text-center py-4">
-                                No closing vault data available
+                        {/* Content */}
+                        <div className={`${activeSection === "Closing" ? "block" : "hidden"} lg:block mt-2 lg:mt-0 bg-[#1E2328] p-5 rounded-xl border border-[#16191C]`}>
+                            <h3 className="hidden lg:block text-white text-[15px] font-medium mb-4">Closing Vault Balance</h3>
+
+                            <div className="flex justify-between text-[#939AF0] text-[14px] font-medium border-b border-[#16191C] pb-2 mb-2">
+                                <span>Currency</span>
+                                <span>Total Amount</span>
                             </div>
-                        )}
+
+                            {editableData.closingVaultData && editableData.closingVaultData.length > 0 ? (
+                                editableData.closingVaultData.map((row, index) => (
+                                    <VaultRow
+                                        key={`close-${index}`}
+                                        idx={index}
+                                        currency={row.currency}
+                                        currencyId={row.currencyId}
+                                        amount={row.amount}
+                                        breakdown={row.breakdown}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-gray-400 text-center py-4">
+                                    No closing vault data available
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Deals Table - Show if deals exist */}
-
             <div className="mt-6">
-                <h3 className="text-white text-lg font-medium mb-4">Associated Deals</h3>
-                <DealsTable />
+                <div
+                    className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
+                    onClick={() => toggleSection("Deals")}
+                >
+                    <h3 className="text-white text-[15px] font-medium">Associated Deals</h3>
+                    <img
+                        src={expandRight}
+                        className={`w-3 h-3 transition-transform duration-200 ${activeSection === "Deals" ? "rotate-90" : ""}`}
+                        alt="expand"
+                    />
+                </div>
+
+                <div className={`${activeSection === "Deals" ? "block" : "hidden"} lg:block mt-4 lg:mt-0`}>
+                    <h3 className="hidden lg:block text-white text-lg font-medium mb-4">Associated Deals</h3>
+                    <DealsTable />
+                </div>
             </div>
 
         </>
