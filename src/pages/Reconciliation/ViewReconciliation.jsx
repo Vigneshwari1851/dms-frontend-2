@@ -148,7 +148,7 @@ const calculateStatusFromVariance = (openingData, closingData) => {
     const variance = closingNum - openingNum;
 
     if (Math.abs(variance) < 0.01) {
-        return "Balance";
+        return "Tallied";
     } else if (variance > 0) {
         return "Excess";
     } else {
@@ -355,11 +355,8 @@ export default function ViewReconciliation() {
                 const openingTotal = calculateVaultTotal(openingVaultData);
                 const closingTotal = calculateVaultTotal(closingVaultData);
                 const varianceValue = calculateVariance(openingVaultData, closingVaultData);
-                // Determine Auto Status with In_Progress check
+                // Determine Auto Status
                 let autoStatus = calculateStatusFromVariance(openingVaultData, closingVaultData);
-                if (openingVaultData.length > 0 && (!closingVaultData || closingVaultData.length === 0)) {
-                    autoStatus = "In_Progress";
-                }
 
                 // Combine notes
                 let notesText = "";
@@ -372,7 +369,7 @@ export default function ViewReconciliation() {
                     notesText = notes;
                 }
 
-                const finalStatus = (status === "Tallied" || !status) && autoStatus === "In_Progress" ? "In_Progress" : (status || autoStatus);
+                const finalStatus = status || autoStatus;
 
                 const formattedData = {
                     id: data.id || id,
@@ -415,10 +412,7 @@ export default function ViewReconciliation() {
     let varianceIcon = balance;
 
     if (editableData) {
-        if (editableData.status === "In_Progress") {
-            varianceColor = "#8B5CF6";
-            varianceIcon = balance;
-        } else if (editableData.status === "Tallied" || editableData.status === "Balance") {
+        if (editableData.status === "Tallied" || editableData.status === "Balance") {
             varianceColor = "#82E890";
             varianceIcon = balance;
         } else if (editableData.status === "Excess") {
@@ -439,7 +433,6 @@ export default function ViewReconciliation() {
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
         Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
-        In_Progress: "bg-[#8B5CF624] text-[#8B5CF6] border-[#8B5CF6]",
     };
 
     // Loading state
@@ -522,7 +515,7 @@ export default function ViewReconciliation() {
 
                 <div className="flex items-center gap-3">
                     {/* EDIT ICON */}
-                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "In_Progress" || editableData.status === "Tallied") && (
+                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "Tallied") && (
                         <img
                             src={edit}
                             alt="edit"
