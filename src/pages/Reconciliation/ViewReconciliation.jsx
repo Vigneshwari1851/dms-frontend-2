@@ -432,7 +432,7 @@ export default function ViewReconciliation() {
         Balance: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
-        Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
+        In_Progress: "bg-[#939AF024] text-[#939AF0] border-[#939AF0]",
     };
 
     // Loading state

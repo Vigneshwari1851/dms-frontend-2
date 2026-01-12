@@ -61,6 +61,7 @@ export default function Table({
     Tallied: "text-[#82E890] bg-[#10B93524] border-[#82E890] border",
     Excess: "text-[#D8AD00] bg-[#302700] border-[#D8AD00] border",
     Short: "text-[#F7626E] bg-[#BD404A24] border-[#F7626E] border",
+    In_Progress: "bg-[#939AF024] text-[#939AF0] border-[#939AF0] border",
   };
 
   const handleSort = (key) => {
