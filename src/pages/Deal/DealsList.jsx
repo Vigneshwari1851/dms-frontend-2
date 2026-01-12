@@ -24,6 +24,11 @@ export default function DealsList() {
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
   const location = useLocation();
   const exportRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
+  const [exportOpen, setExportOpen] = useState(false);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (exportRef.current && !exportRef.current.contains(event.target)) {
@@ -47,9 +52,12 @@ export default function DealsList() {
     const loadDeals = async () => {
       try {
         setLoading(true);
-        const response = await fetchDeals({});
 
-        // Transform API response to match table structure
+        const response = await fetchDeals({
+          page: currentPage,
+          limit: itemsPerPage,
+        });
+
         const transformedData = response.data.map((deal) => {
           const buyAmtValue = Number(deal.buyAmount);
           const sellAmtValue = Number(deal.amount_to_be_paid);
@@ -70,11 +78,13 @@ export default function DealsList() {
         });
 
         setDeals(transformedData);
+        setTotalPages(response.pagination?.totalPages || 1); // ✅ REQUIRED
         setError(null);
       } catch (err) {
         console.error("Error loading deals:", err);
         setError("Failed to load deals");
         setDeals([]);
+        setTotalPages(1); // safety
       } finally {
         setLoading(false);
       }
@@ -83,20 +93,17 @@ export default function DealsList() {
     const loadCurrencies = async () => {
       try {
         const res = await fetchCurrencies();
-
         const currencies = Array.isArray(res) ? res : [];
-        const list = ["All Currencies", ...currencies.map(c => c.code)];
-
-        setCurrencyList(list);
+        setCurrencyList(["All Currencies", ...currencies.map(c => c.code)]);
       } catch (err) {
         console.error("Failed to load currencies", err);
         setCurrencyList(["All Currencies"]);
       }
     };
 
-    loadCurrencies();
     loadDeals();
-  }, []);
+    loadCurrencies();
+  }, [currentPage]);
 
   useEffect(() => {
     if (location.state?.toast) {
@@ -161,18 +168,6 @@ export default function DealsList() {
         : b.currency.localeCompare(a.currency)
     );
   }
-
-  // Pagination Logic
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [exportOpen, setExportOpen] = useState(false);
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-
-
-  const paginatedData = filteredAndSortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const handleRowClick = (deal) => {
     if (deal?.dealId) {
@@ -422,7 +417,14 @@ export default function DealsList() {
             </thead>
 
             <tbody>
-              {paginatedData.map((item, index) => (
+            {filteredAndSortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-10 text-center text-gray-400">
+                    No deals found
+                  </td>
+                </tr>
+              ) : (
+              filteredAndSortedData.map((item, index) => (
                 <tr
                   key={index}
                   className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
@@ -505,7 +507,8 @@ export default function DealsList() {
                     )}
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>
