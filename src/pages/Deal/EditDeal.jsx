@@ -552,7 +552,7 @@ export default function EditDeal() {
                     {/* Denomination Section */}
 
                     <div className="mt-8">
-                        <div className={!isEditable ? "pointer-events-none" : ""}>
+                        {/* <div className={!isEditable ? "pointer-events-none" : ""}> */}
                             <Denomination
                                 denominationReceived={denominationReceived}
                                 setDenominationReceived={setDenominationReceived}
@@ -566,7 +566,7 @@ export default function EditDeal() {
                                 hideAddReceived={isReceivedTallied}
                                 hideAddPaid={isPaidTallied}
                             />
-                        </div>
+                        {/* </div> */}
                     </div>
 
                     {/* Notes - NOT editable */}

@@ -9,7 +9,7 @@ import { createCurrency } from "../../api/currency/currency";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
-import {createReconciliation, fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
+import { createReconciliation, fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");

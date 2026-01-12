@@ -20,7 +20,9 @@ export default function Denomination({
   receivedReadOnly = true,
   paidReadOnly = false,
   hideAddReceived = false,
-  hideAddPaid = false
+  hideAddPaid = false,
+  receivedAmount = 0,
+  paidAmount = 0,
 }) {
   const [activeTab, setActiveTab] = useState("received");
   // Use props if provided, otherwise use local state
@@ -116,6 +118,21 @@ export default function Denomination({
     setConfirmModal({ open: false });
   };
 
+  const shouldHideAddMobile = (list, listType) => {
+    const denominationTotal = calculateTotal(list);
+
+    if (listType === "received") {
+      return Number(denominationTotal) === Number(receivedAmount);
+    }
+
+    if (listType === "paid") {
+      return Number(denominationTotal) === Number(paidAmount);
+    }
+
+    return false;
+  };
+
+
   const renderTable = (
     title,
     list,
@@ -147,7 +164,7 @@ export default function Denomination({
 
       {/* MOBILE CONTENT (Compact Flex) */}
       <div className="lg:hidden">
-        {!isReadOnly && (
+        {!isReadOnly && !shouldHideAddMobile(list, listType) && (
           <div className="flex justify-end mb-4 px-3">
             <div className="flex items-center">
               <div className="w-[99px]"></div>
@@ -166,6 +183,7 @@ export default function Denomination({
             </div>
           </div>
         )}
+
 
         <div className="space-y-4">
           <div className="flex items-center h-[15px] px-3 mb-4">

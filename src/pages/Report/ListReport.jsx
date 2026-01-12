@@ -340,7 +340,7 @@ export default function ListReport() {
 
       {/* Table */}
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
-      {paginatedData.length === 0 ? (
+        {paginatedData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
           </div>
