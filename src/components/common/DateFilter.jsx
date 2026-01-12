@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import calendar from "../../assets/Common/calendar.svg";
 import CalendarMini from "./CalendarMini";
+import Dropdown from "./Dropdown";
 
 export default function DateFilter({ onApply }) {
   const [open, setOpen] = useState(false);
@@ -65,9 +66,20 @@ export default function DateFilter({ onApply }) {
       </div>
 
       {open && (
-        <div className="fixed sm:absolute top-12 right-0 sm:right-2 w-[calc(100vw-2rem)] sm:w-[750px] max-w-[750px] bg-[#1B1F23] border border-[#2A2F33] rounded-xl z-50 shadow-lg">
+        <div className="fixed sm:absolute inset-0 sm:inset-auto sm:top-12 sm:right-2 w-full sm:w-[750px] max-w-full sm:max-w-[750px] bg-[#1B1F23] sm:border sm:border-[#2A2F33] sm:rounded-xl z-[100] shadow-2xl flex flex-col h-full sm:h-auto overflow-hidden">
 
-          <div className="flex flex-col sm:flex-row px-3 sm:px-5 pt-5">
+          {/* MOBILE HEADER */}
+          <div className="flex sm:hidden items-center justify-between px-5 py-4 border-b border-[#2A2F33] bg-[#16191C]">
+            <h3 className="text-white font-semibold">Select Date Range</h3>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-gray-400 hover:text-white text-2xl"
+            >
+              &times;
+            </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row px-3 sm:px-5 pt-5 flex-1 overflow-y-auto sm:overflow-visible">
 
             {/* LEFT SIDE FULL COLUMN */}
             <div className="flex flex-col flex-1">
@@ -89,10 +101,21 @@ export default function DateFilter({ onApply }) {
                   </div>
                 </div>
 
+                {/* MOBILE ONLY DROPDOWN */}
+                <div className="sm:hidden flex flex-col mt-2">
+                  <label className="text-gray-400 text-xs mb-1">Range:</label>
+                  <Dropdown
+                    options={["Today", "Yesterday", "Last 7 days", "This month", "Custom"]}
+                    selected={selectedOption}
+                    onChange={(val) => handleOptionClick(val)}
+                    buttonClassName="h-10 bg-[#131619] border-[#2A2F33] text-sm text-white"
+                  />
+                </div>
+
               </div>
 
               {/* ROW 2: CALENDARS */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-4 pb-4 sm:ml-2">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-4 pb-4 sm:ml-2 items-center sm:items-start">
 
                 <CalendarMini
                   selectedDate={fromDate}
@@ -111,13 +134,13 @@ export default function DateFilter({ onApply }) {
 
             </div>
 
-            {/* RIGHT SIDE OPTIONS */}
-            <div className="w-full sm:w-[180px] flex flex-row sm:flex-col gap-2 sm:gap-3 sm:ml-5 mt-4 sm:mt-5 pb-4 sm:pb-0 overflow-x-auto sm:overflow-x-visible">
+            {/* RIGHT SIDE OPTIONS (Desktop only) */}
+            <div className="hidden sm:flex w-[180px] flex-col gap-3 ml-5 mt-5">
               {["Today", "Yesterday", "Last 7 days", "This month", "Custom"].map(
                 (item) => (
                   <div
                     key={item}
-                    className={`text-[#B4B4B4] cursor-pointer hover:text-white text-sm sm:text-[15px] whitespace-nowrap ${selectedOption === item ? "text-white" : ""
+                    className={`cursor-pointer hover:text-white text-[15px] ${selectedOption === item ? "text-white" : "text-[#B4B4B4]"
                       }`}
                     onClick={() => handleOptionClick(item)}
                   >
@@ -130,16 +153,16 @@ export default function DateFilter({ onApply }) {
           </div>
 
           {/* FOOTER BUTTONS */}
-          <div className="bg-[#16191C] px-3 sm:px-5 py-4 flex justify-end gap-3 rounded-b-xl border-t border-[#2A2F33]">
+          <div className="bg-[#16191C] px-3 sm:px-5 py-4 flex justify-between sm:justify-end gap-3 rounded-b-xl border-t border-[#2A2F33] mt-auto">
             <button
-              className="px-4 sm:px-5 py-2 rounded-lg bg-[#1F2327] border border-[#2A2F33] text-white text-sm"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-3 sm:py-2 rounded-lg bg-[#1F2327] border border-[#2A2F33] text-white text-sm font-medium"
               onClick={() => setOpen(false)}
             >
               Cancel
             </button>
 
             <button
-              className="px-4 sm:px-5 py-2 rounded-lg bg-blue-600 text-white text-sm"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-3 sm:py-2 rounded-lg bg-[#1D4CB5] text-white text-sm font-medium"
               onClick={handleApply}
             >
               Apply

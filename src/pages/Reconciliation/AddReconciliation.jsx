@@ -362,7 +362,7 @@ export default function AddReconciliation() {
 
                 {/* TABS / ACCORDION HEADERS */}
                 <div className="hidden lg:flex gap-6 mb-6">
-                    {["summary", "opening", "closing"].map((tab) => (
+                    {["summary", "opening", "closing", "notes"].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -376,6 +376,7 @@ export default function AddReconciliation() {
                             {tab === "summary" && "Summary"}
                             {tab === "opening" && "Opening Vault Balance"}
                             {tab === "closing" && "Closing Vault Balance"}
+                            {tab === "notes" && "Notes"}
                             {activeTab === tab && (
                                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D4CB5]"></div>
                             )}
@@ -479,6 +480,45 @@ export default function AddReconciliation() {
                                 setData={setClosingData}
                                 type="closing"
                             />
+                        </div>
+                    </div>
+
+                    {/* NOTES SECTION */}
+                    <div className="lg:contents">
+                        <div
+                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer mt-4"
+                            onClick={() => toggleSection("notes")}
+                        >
+                            <h3 className="text-white text-[15px] font-medium">Notes </h3>
+                            <img
+                                src={expandRight}
+                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "notes" ? "rotate-90" : ""}`}
+                                alt="expand"
+                            />
+                        </div>
+
+                        {/* NOTES TAB CONTENT */}
+                        <div className={`${activeTab === "notes" ? "lg:block" : "lg:hidden"} ${activeSection === "notes" ? "block" : "hidden"} mt-2 lg:mt-0`}>
+                            <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="Add any additional notes or remarks here..."
+                                    className="w-full bg-[#16191C] text-white p-4 rounded-xl border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[150px] resize-none text-sm"
+                                />
+                            </div>
+
+                            {(activeTab === "notes" || activeSection === "notes") && showSaveButton && (
+                                <div className="flex justify-end mt-4">
+                                    <button
+                                        onClick={handleSaveReconciliation}
+                                        className="w-full lg:w-auto mt-0 lg:mt-2 px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center justify-center gap-2 hover:bg-[#2A5BD7] transition-colors"
+                                    >
+                                        <img src={save} alt="save" />
+                                        {id ? "Update Reconciliation" : "Save Reconciliation"}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
