@@ -556,7 +556,7 @@ export default function CreateDeal() {
         {/* Row 2 - Transaction fields (Responsive Grid) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
           {/* Transaction Type */}
-          <div className="w-[190px]">
+          <div className="w-full">
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
@@ -608,7 +608,7 @@ export default function CreateDeal() {
                     handleCurrencySelect(val, "sell");
                     setErrors(prev => ({ ...prev, sellCurrency: "" }));
                   }}
-                  className="w-[172px]"
+                  className="w-full"
                 />
                 <div className="h-3.5 mt-1" />
               </div>
@@ -653,7 +653,7 @@ export default function CreateDeal() {
                     handleCurrencySelect(val, "buy");
                     setErrors(prev => ({ ...prev, buyCurrency: "" }));
                   }}
-                  className="w-[172px]"
+                  className="w-full"
                 />
                 <div className="h-3.5 mt-1" />
               </div>
@@ -699,7 +699,7 @@ export default function CreateDeal() {
                       handleCurrencySelect(val, "buy");
                       setErrors(prev => ({ ...prev, buyCurrency: "" }));
                     }}
-                    className="w-[172px]"
+                    className="w-full"
                   />
                   <div className="h-3.5 mt-1" />
                 </div>
@@ -855,7 +855,7 @@ export default function CreateDeal() {
           </button>
 
           <button
-            className="w-auto flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-blue-600 h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            className="w-auto flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
             onClick={handleCreateDeal}
             disabled={loading}
           >
@@ -874,7 +874,7 @@ export default function CreateDeal() {
             Cancel
           </button>
           <button
-            className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+            className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-[#173B8B] transition-colors"
             onClick={handleCreateDeal}
             disabled={loading}
           >

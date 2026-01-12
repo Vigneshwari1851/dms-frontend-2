@@ -178,7 +178,7 @@ export default function ListReport() {
         <div className="relative hidden lg:block" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="p-2 lg:px-5 lg:py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+            className="p-2 lg:px-5 lg:py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
           >
             <img src={download} alt="download" className="w-6 h-6" />
             <span className="hidden lg:inline">Export</span>

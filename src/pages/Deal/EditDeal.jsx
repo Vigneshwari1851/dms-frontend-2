@@ -435,12 +435,12 @@ export default function EditDeal() {
                     {/* Row 2 - Transaction fields (Responsive Grid) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
                         {/* Transaction Type - NOT editable */}
-                        <div className="w-[190px]">
+                        <div className="w-full">
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Type <span className="text-red-500">*</span>
                             </label>
                             <div
-                                className={`w-[190px] h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>                                {txnType}
+                                className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>                                {txnType}
                             </div>
                         </div>
 
@@ -480,7 +480,7 @@ export default function EditDeal() {
                                 Amount <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
                                 placeholder="0.00"
                                 type="text"
                                 value={amount}
@@ -514,7 +514,7 @@ export default function EditDeal() {
                                 Rate <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
                                 placeholder="0.00"
                                 type="text"
                                 value={rate}

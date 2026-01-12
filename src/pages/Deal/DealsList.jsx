@@ -245,7 +245,7 @@ export default function DealsList() {
           className="
             flex items-center justify-center
             w-auto h-10 
-            bg-[#1D4CB5] hover:bg-blue-600 
+           bg-[#1D4CB5] hover:bg-[#173B8B]
             text-white font-medium text-sm
             px-4 py-2 
             gap-2
@@ -265,7 +265,7 @@ export default function DealsList() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
           {/* Left side: Deal Records + Search */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
-            <h2 className="text-white text-[16px] font-semibold flex-shrink-0">
+            <h2 className="text-white text-[16px] font-semibold shrink-0">
               Deal Records
             </h2>
 
@@ -307,7 +307,7 @@ export default function DealsList() {
             <div className="relative w-full lg:w-auto" ref={exportRef}>
               <button
                 onClick={() => setExportOpen(!exportOpen)}
-                className="w-full px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
+                className="w-full px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
               >
                 <img src={download} alt="download" className="w-6 h-6" /> Export
               </button>
