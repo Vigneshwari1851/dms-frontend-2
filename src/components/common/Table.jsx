@@ -25,7 +25,7 @@ export default function Table({
   showHeader = true,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const statuses = ["All Status", "Tallied", "Excess", "Short"];
+  const statuses = ["All Status","In_Progress", "Tallied", "Excess", "Short"];
   const exportOptions = ["pdf"];
 
 

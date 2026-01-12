@@ -18,7 +18,9 @@ export default function Denomination({
   currencySymbols = {},
   isEditable = true,
   receivedReadOnly = true,
-  paidReadOnly = false
+  paidReadOnly = false,
+  hideAddReceived = false,
+  hideAddPaid = false
 }) {
   const [activeTab, setActiveTab] = useState("received");
   // Use props if provided, otherwise use local state
@@ -320,11 +322,24 @@ export default function Denomination({
             ))}
           </tbody>
         </table>
-        {!isReadOnly && (
-          <div className="flex justify-end">
-            <button className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]" onClick={() => handleAdd(list, setList, isReadOnly)}>+ Add</button>
-          </div>
-        )}
+
+        {/* ADD BUTTON - Only show if not read-only */}
+        {!isReadOnly &&
+          !(
+            (listType === "received" && hideAddReceived) ||
+            (listType === "paid" && hideAddPaid)
+          ) && (
+            <div className="flex justify-end">
+              <button
+                className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]"
+                onClick={() => handleAdd(list, setList, isReadOnly)}
+              >
+                + Add
+              </button>
+            </div>
+          )}
+
+        {/* TOTAL FIELD */}
         <div className="flex justify-between items-center mt-4">
           <h1 className="text-[#00C853] font-medium">Total</h1>
           <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />

@@ -9,10 +9,12 @@ export default function Dropdown({
     onChange,
     className = "",
     renderOption,
+    disabled = false,,
     buttonClassName = ""
 }) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const hasValue = Boolean(selected);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -31,17 +33,26 @@ export default function Dropdown({
         <div ref={dropdownRef} className={`relative ${className}`}>
             <button
                 type="button"
-                className={`w-full px-3 py-2 bg-[#16191C] rounded-lg text-[14px] text-[#ABABAB] font-normal flex items-center justify-between border border-transparent transition-all ${buttonClassName}`}
+                disabled={disabled}
+                className={`
+                    w-full px-4 py-2 bg-[#16191C] rounded-lg text-[14px] font-normal 
+                    flex items-center justify-between
+                    border border-transparent transition-all 
+                    ${buttonClassName}
+                    ${disabled ? "cursor-not-allowed" : "cursor-pointer"}
+                    ${hasValue ? "text-white" : "text-[#ABABAB]"}
+                `}
                 onClick={(e) => {
+                    if (disabled) return;
                     e.stopPropagation();
                     setOpen((prev) => !prev);
                 }}
             >
-                <span className="truncate">{selected || label}</span>
-                <img src={down} alt="chevrondown" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+                <span className="truncate">{selected ? selected : label}</span>
+                <img src={down} alt="chevrondown" className={disabled ? "opacity-0" : ""} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
             </button>
 
-            {open && (
+            {open && !disabled && (
                 <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-dark absolute">
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;

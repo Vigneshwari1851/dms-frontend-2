@@ -16,6 +16,7 @@ export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
+  const statuses = ["All Status", "Pending", "Completed"];
 
   const [dateRange, setDateRange] = useState("Today");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -127,7 +128,12 @@ export default function ListReport() {
     }
   };
 
-  const sortedData = [...reportRows].sort((a, b) => {
+  const filteredData = reportRows.filter((item) => {
+    if (statusFilter === "All Status") return true;
+    return item.status === statusFilter;
+  });
+
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
     let valB = b[sortBy];
@@ -217,6 +223,15 @@ export default function ListReport() {
                 setTempDateRange(value);
                 if (value === "Custom") setShowCustomModal(true);
               }}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-300 mb-2 text-sm">Status</label>
+            <Dropdown
+              label={tempStatusFilter}
+              options={statuses}
+              onChange={(value) => setTempStatusFilter(value)}
             />
           </div>
 
@@ -326,7 +341,7 @@ export default function ListReport() {
 
       {/* Table */}
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
-        {reportRows.length === 0 ? (
+      {paginatedData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
           </div>

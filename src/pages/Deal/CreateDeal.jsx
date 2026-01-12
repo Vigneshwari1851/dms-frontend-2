@@ -101,7 +101,7 @@ export default function CreateDeal() {
   // Calculate amount to be paid when amount or rate changes
   useEffect(() => {
     if (amount && rate && amount > 0 && rate > 0) {
-      const calculatedAmount = parseFloat(amount) / parseFloat(rate);
+      const calculatedAmount = parseFloat(amount) * parseFloat(rate);
       setAmountToBePaid(calculatedAmount.toFixed(2));
     } else {
       setAmountToBePaid(0);
@@ -183,6 +183,21 @@ export default function CreateDeal() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const receivedTotal = denominationReceived.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
+  }, 0);
+
+  const paidTotal = denominationPaid.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
+  }, 0);
+
+  const isReceivedTallied =
+    Number(amount) > 0 && Math.abs(receivedTotal - Number(amount)) <= 0.01;
+
+  const isPaidTallied =
+    Number(amountToBePaid) > 0 &&
+    Math.abs(paidTotal - Number(amountToBePaid)) <= 0.01;
+
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
 
@@ -238,7 +253,6 @@ export default function CreateDeal() {
       // For "Deal Tallied Successfully" -> "No" button was clicked
       // Create deal with "Completed" status
       setConfirmModal({ ...confirmModal, open: false });
-      await createDealTransaction('Completed');
     } else {
       // For "Deal Not Tallied" -> "No" button was clicked
       // Create deal with "Pending" status
@@ -352,8 +366,12 @@ export default function CreateDeal() {
 
   const handleCustomerSearch = async (value) => {
     setCustomerQuery(value);
-    setSelectedCustomer(null);
-    setPhone("");
+    
+    if (!value || value.trim().length === 0) {
+      setSelectedCustomer(null);
+      setPhone("");
+      setTxnType("");
+    }
 
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -398,6 +416,11 @@ export default function CreateDeal() {
     setCustomerQuery(displayName);
     setPhone(displayPhone);
     setCustomerDropdownOpen(false);
+
+    setTxnType(
+      customer?.deal_type === "sell" ? "Sell" : "Buy"
+    );
+
     setErrors(prev => ({ ...prev, customer: "" }));
   };
 
@@ -431,84 +454,8 @@ export default function CreateDeal() {
       })));
     }
   };
-
-  const buyCurrencyOptions = currencyOptions.filter(
-    (c) => c !== sellCurrency
-  );
-
-  const sellCurrencyOptions = currencyOptions.filter(
-    (c) => c !== buyCurrency
-  );
-  // // Custom dropdown with fixed dimensions
-  // const CustomDropdown = ({
-  //   value,
-  //   setValue,
-  //   isOpen,
-  //   setIsOpen,
-  //   options,
-  //   placeholder,
-  //   loading = false
-  // }) => (
-  //   <div className="relative">
-  //     <button
-  //       onClick={() => setIsOpen(!isOpen)}
-  //       className="
-  //         w-[172px] h-8
-  //        bg-[#16191C]
-  //                 rounded-lg
-  //                 text-[14px]
-  //                 text-[#ABABAB]
-  //                 font-medium
-  //                 flex items-center justify-between
-  //                 px-4
-  //       "
-  //     >
-  //       <span className="truncate">{value || placeholder}</span>
-  //       <img src={down} alt="down" className="w-3" />
-  //     </button>
-
-  //     {isOpen && (
-  //       <ul className="
-  //        absolute left-0 right-0 mt-2 
-  //                 bg-[#2E3439] border border-[#2A2F33] 
-  //                 rounded-lg z-10
-  //       ">
-  //         {loading ? (
-  //           <li className="px-3 py-2 text-sm text-gray-300">
-  //             Loading...
-  //           </li>
-  //         ) : options.length === 0 ? (
-  //           <li className="px-3 py-2 text-sm text-gray-300">
-  //             No options
-  //           </li>
-  //         ) : (
-  //           options.map((option) => (
-  //             <li
-  //               key={option}
-  //               onClick={() => {
-  //                 setValue(option);
-  //                 setIsOpen(false);
-  //               }}
-  //               className="
-  //               px-4 py-2 
-  //                       flex items-center justify-between
-  //                       hover:bg-[#1E2328]
-  //                       cursor-pointer
-  //                       text-white
-  //                       pl-2
-  //               "
-  //             >
-  //               <span className="truncate">{option}</span>
-  //               {value === option && (
-  //                 <img src={tick} className="w-4 h-4" />
-  //               )}
-  //             </li>
-  //           ))
-  //         )}
-  //       </ul>
-  //     )}
-  //   </div>
-  // );
+  const buyCurrencyOptions = currencyOptions;
+  const sellCurrencyOptions = currencyOptions;
 
   return (
     <>
@@ -609,24 +556,18 @@ export default function CreateDeal() {
         {/* Row 2 - Transaction fields (Responsive Grid) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
           {/* Transaction Type */}
-          <div>
+          <div className="w-[190px]">
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-            <Dropdown
-              label="Type"
-              options={["Buy", "Sell"]}
-              selected={txnType}
-              onChange={(val) => setTxnType(val)}
-              className="w-full"
-            />
-            <div className="min-h-[14px] mt-1">
-              {errors.txnType && (
-                <p className="text-red-400 text-[11px] leading-3.5">
-                  {errors.txnType}
-                </p>
-              )}
+           <div
+              className={`
+              className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
+              `}
+            >
+              {txnType}
             </div>
+            <div className="min-h-3.5 mt-1"/>
           </div>
 
           {/* Transaction Mode */}
@@ -644,7 +585,7 @@ export default function CreateDeal() {
               }}
               className="w-full"
             />
-            <div className="min-h-[14px] mt-1">
+            <div className="min-h-3.5 mt-1">
               {errors.txnMode && (
                 <p className="text-red-400 text-[11px] leading-3.5">
                   {errors.txnMode}
@@ -653,97 +594,189 @@ export default function CreateDeal() {
             </div>
           </div>
 
-          {/* Buy Currency Type */}
-          <div className="lg:min-w-0">
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Currency Type <span className="text-red-500">*</span>
-            </label>
-            <Dropdown
-              label="Buy Currency"
-              options={buyCurrencyOptions}
-              selected={buyCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "buy");
-                setErrors(prev => ({ ...prev, buyCurrency: "" }));
-              }}
-              className="w-full"
-            />
-            <div className="h-[14px] mt-1" />
-          </div>
+           {txnType.toLowerCase() === "sell" ? (
+            <>
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Sell Currency Type <span className="text-red-500">*</span>
+                </label>
+                <Dropdown
+                  label="Sell Currency"
+                  options={sellCurrencyOptions}
+                  selected={sellCurrency}
+                  onChange={(val) => {
+                    handleCurrencySelect(val, "sell");
+                    setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                  }}
+                  className="w-[172px]"
+                />
+                <div className="h-3.5 mt-1" />
+              </div>
 
-          {/* Amount */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Amount <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-              placeholder="0.00"
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setAmount(value);
-                  setErrors(prev => ({ ...prev, amount: "" }));
-                }
-              }}
-            />
-            <div className="min-h-[14px] mt-1">
-              {errors.amount && (
-                <p className="text-red-400 text-[11px]">
-                  {errors.amount}
-                </p>
-              )}
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Amount <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                  placeholder="0.00"
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) {
+                      setAmount(value);
+                      setErrors(prev => ({ ...prev, amount: "" }));
+                    }
+                  }}
+                />
+                <div className="min-h-3.5 mt-1">
+                  {errors.amount && (
+                    <p className="text-red-400 text-[11px]">
+                      {errors.amount}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Buy Currency Type */}
+              <div className="lg:min-w-0">
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Buy Currency Type <span className="text-red-500">*</span>
+                </label>
+                <Dropdown
+                  label="Buy Currency"
+                  options={buyCurrencyOptions}
+                  selected={buyCurrency}
+                  onChange={(val) => {
+                    handleCurrencySelect(val, "buy");
+                    setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                  }}
+                  className="w-[172px]"
+                />
+                <div className="h-3.5 mt-1" />
+              </div>
+
+               <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Rate <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                  placeholder="0.00"
+                  type="text"
+                  inputMode="decimal"
+                  value={rate}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) {
+                      setRate(value);
+                      setErrors(prev => ({ ...prev, rate: "" }));
+                    }
+                  }}
+                />
+                <div className="min-h-3.5 mt-1">
+                  {errors.rate && (
+                    <p className="text-red-400 text-[11px]">
+                      {errors.rate}
+                    </p>
+                  )}
+                </div>
+              </div>
+              </>
+            ) : (
+              <>
+                <div  className="lg:min-w-0">
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Buy Currency Type <span className="text-red-500">*</span>
+                  </label>
+                  <Dropdown
+                    label="Buy Currency"
+                    options={buyCurrencyOptions}
+                    selected={buyCurrency}
+                    onChange={(val) => {
+                      handleCurrencySelect(val, "buy");
+                      setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                    }}
+                    className="w-[172px]"
+                  />
+                  <div className="h-3.5 mt-1" />
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Amount <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+                    placeholder="0.00"
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*\.?\d*$/.test(value)) {
+                        setAmount(value);
+                        setErrors(prev => ({ ...prev, amount: "" }));
+                      }
+                    }}
+                  />
+                  <div className="min-h-3.5 mt-1">
+                    {errors.amount && (
+                      <p className="text-red-400 text-[11px]">
+                        {errors.amount}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sell Currency Type */}
+                <div className="lg:min-w-0">
+                  <label className="text-[#ABABAB] text-sm mb-1 block">
+                    Sell Currency Type <span className="text-red-500">*</span>
+                  </label>
+                 <Dropdown
+                    label="Sell Currency"
+                    options={sellCurrencyOptions}
+                    selected={sellCurrency}
+                    onChange={(val) => {
+                      handleCurrencySelect(val, "sell");
+                      setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                    }}
+                    className="w-full"
+                  />
+                  <div className="h-3.5 mt-1" />
+                </div>
+                <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Rate <span className="text-red-500">*</span>
+              </label>
+              <input
+                className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+                placeholder="0.00"
+                type="text"
+                inputMode="decimal"
+                value={rate}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setRate(value);
+                    setErrors(prev => ({ ...prev, rate: "" }));
+                  }
+                }}
+              />
+              <div className="min-h-3.5 mt-1">
+                {errors.rate && (
+                  <p className="text-red-400 text-[11px]">
+                    {errors.rate}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Sell Currency Type */}
-          <div className="lg:min-w-0">
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Sell Currency Type <span className="text-red-500">*</span>
-            </label>
-            <Dropdown
-              label="Sell Currency"
-              options={sellCurrencyOptions}
-              selected={sellCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "sell");
-                setErrors(prev => ({ ...prev, sellCurrency: "" }));
-              }}
-              className="w-full"
-            />
-            <div className="h-[14px] mt-1" />
-          </div>
-
-          {/* Rate */}
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Rate <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-              placeholder="0.00"
-              type="text"
-              inputMode="decimal"
-              value={rate}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setRate(value);
-                  setErrors(prev => ({ ...prev, rate: "" }));
-                }
-              }}
-            />
-            <div className="min-h-[14px] mt-1">
-              {errors.rate && (
-                <p className="text-red-400 text-[11px]">
-                  {errors.rate}
-                </p>
-              )}
-            </div>
-          </div>
+              </>
+            )}
         </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
@@ -786,8 +819,9 @@ export default function CreateDeal() {
             paidCurrency={sellCurrency}
             currencySymbols={currencySymbols}
             receivedReadOnly={false}
-
             paidReadOnly={false}
+            hideAddReceived={isReceivedTallied}
+            hideAddPaid={isPaidTallied}
           />
         </div>
 

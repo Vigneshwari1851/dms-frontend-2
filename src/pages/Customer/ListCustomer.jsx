@@ -64,18 +64,47 @@ export default function ListCustomer() {
 
   const columns = [
     { label: "Customer Name", key: "full_name", align: "left" },
+    { label: "Customer Type", key: "deal_type", align: "center" },
     { label: "Email", key: "email", align: "center" },
     { label: "Phone", key: "phone_number", align: "center" },
-    { label: "Amount", key: "balance", align: "left" }
+    { label: "Amount", key: "balance", align: "left" },
+    { label: "Created At", key: "created_at", align: "center" },
   ];
 
-  const tableData = customers.map((c) => ({
-    id: c.id,
-    full_name: c.name || c.full_name || c.customer_name || "-",
-    email: c.email || "-",
-    phone_number: c.phone_number || c.phone || c.mobile || "-",
-    balance: c.balance
-  }));
+  const dealTypeStyles = {
+    Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+    Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+  };
+
+  const tableData = customers.map((c) => {
+    const dealTypeLabel = c.deal_type
+      ? c.deal_type.charAt(0).toUpperCase() + c.deal_type.slice(1)
+      : "-";
+
+    return {
+      id: c.id,
+      full_name: c.name || c.full_name || c.customer_name || "-",
+      deal_type: dealTypeLabel !== "-" ? (
+        <span
+          className={`
+            inline-flex items-center justify-center
+            px-3 py-1
+            rounded-2xl
+            text-xs font-medium
+            ${dealTypeStyles[dealTypeLabel]}
+          `}
+        >
+          {dealTypeLabel}
+        </span>
+      ) : (
+        "-"
+      ),
+      email: c.email || "-",
+      phone_number: c.phone_number || c.phone || c.mobile || "-",
+      balance: c.balance,
+      created_at: new Date(c.created_at).toISOString().split("T")[0],
+    };
+  });
 
   return (
     <>
@@ -98,7 +127,9 @@ export default function ListCustomer() {
           data={tableData}
           itemsPerPage={10}
           onSearch={handleSearch}
-          onRowClick={(row) => navigate(`/customer-info/view/${row.id}`, { state: { customer: row } })}
+          onRowClick={(row) =>
+            navigate(`/customer-info/view/${row.id}`)
+          }          
           showRightSection={false}
         />
         {loading && <p className="text-white text-center mt-4">Searching...</p>}
