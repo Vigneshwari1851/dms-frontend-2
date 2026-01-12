@@ -17,6 +17,11 @@ export default function ListReport() {
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
   const statuses = ["All Status", "Pending", "Completed"];
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    limit: 10,
+  });
 
   const [dateRange, setDateRange] = useState("Today");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -72,41 +77,35 @@ export default function ListReport() {
     return `${year}-${month}-${day}`;
   };
 
+  const fetchReportData = async (page = pagination.page) => {
+    try {
+      const apiDateFilter = dateRange.toLowerCase().replace(" ", "");
+      const { data, pagination: pag } = await fetchDeals({
+        page,
+        limit: pagination.limit,
+        dateFilter: apiDateFilter === "custom" ? "custom" : apiDateFilter,
+        ...(apiDateFilter === "custom" && { startDate: customFrom, endDate: customTo }),
+        currency: currencyFilter !== "All Currencies" ? currencyFilter : undefined,
+      });
+
+      setReportRows(data || []);
+      setPagination((prev) => ({
+        ...prev,
+        page: pag.page || page,
+        totalPages: pag.totalPages || 1,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch report data:", error);
+    }
+  };
+
   const handleApplyFilters = async () => {
-    let apiDateFilter = "";
-    let finalStart = "";
-    let finalEnd = "";
-
-    const today = formatDate(new Date());
-
-    if (tempDateRange === "Today") {
-      apiDateFilter = "today";
-    }
-
-    else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
-    else if (tempDateRange === "Last 30 days") apiDateFilter = "last30";
-    else if (tempDateRange === "Last 90 days") apiDateFilter = "last90";
-
-    else if (tempDateRange === "Custom") {
-      apiDateFilter = "custom";
-      finalStart = customFrom;
-      finalEnd = customTo;
-    }
-
+    setPagination((prev) => ({ ...prev, page: 1 }));
     setDateRange(tempDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
-    setCurrentPage(1);
 
-    const { data } = await fetchDeals({
-      dateFilter: apiDateFilter,
-      ...(apiDateFilter === "custom" && {
-        startDate: finalStart,
-        endDate: finalEnd,
-      }),
-    });
-
-    setReportRows(data || []);
+    await fetchReportData(1);
   };
 
   const handleExport = async (format) => {
@@ -469,10 +468,14 @@ export default function ListReport() {
             </table>
 
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPrev={() => {
+                if (pagination.page > 1) fetchReportData(pagination.page - 1);
+              }}
+              onNext={() => {
+                if (pagination.page < pagination.totalPages) fetchReportData(pagination.page + 1);
+              }}
             />
           </>
         )}
