@@ -14,11 +14,17 @@ function getAuthHeaders() {
  * Search customers by name/phone.
  * Example: GET /customer?search=lavanya
  */
-export async function searchCustomers(searchTerm = "", searchType = "name") {
+export async function searchCustomers(
+  searchTerm = "",
+  searchType = "name",
+  { page = 1, limit = 10 } = {}
+) {
   try {
     const query = new URLSearchParams({
-      search: searchTerm || "",
-      searchType: searchType,
+      search: searchTerm,
+      searchType,
+      page,
+      limit,
     }).toString();
 
     const response = await fetch(`${API_URL}/customer?${query}`, {
@@ -29,14 +35,25 @@ export async function searchCustomers(searchTerm = "", searchType = "name") {
     const result = await response.json();
 
     if (!response.ok) {
-      console.error("Failed to search customers:", result);
-      return { success: false, error: result, data: [] };
+      return {
+        success: false,
+        data: [],
+        pagination: { totalPages: 1 },
+      };
     }
 
-    return { success: true, data: result.data || [] };
+    return {
+      success: true,
+      data: result.data || [],
+      pagination: result.pagination,
+    };
   } catch (error) {
-    console.error("Error searching customers:", error);
-    return { success: false, error, data: [] };
+    console.error(error);
+    return {
+      success: false,
+      data: [],
+      pagination: { totalPages: 1 },
+    };
   }
 }
 

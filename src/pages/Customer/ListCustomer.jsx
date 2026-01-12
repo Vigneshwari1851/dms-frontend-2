@@ -10,6 +10,12 @@ export default function ListCustomer() {
   const location = useLocation();
 
   const [customers, setCustomers] = useState([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
@@ -28,33 +34,37 @@ export default function ListCustomer() {
   }, [location.state]);
 
   useEffect(() => {
-    fetchCustomers("");
-  }, []);
+    fetchCustomers(search, currentPage);
+  }, [currentPage]);
 
-  const fetchCustomers = async (value) => {
-    try {
-      setLoading(true);
-      const res = await searchCustomers(value.trim());
-      if (res.success) {
-        setCustomers(res.data || []);
-      } else {
-        setCustomers([]);
-      }
-    } catch (err) {
-      console.error("Error fetching customers:", err);
+  const fetchCustomers = async (search = "", page = currentPage) => {
+    setLoading(true);
+
+    const res = await searchCustomers(search, "name", {
+      page,
+      limit: itemsPerPage,
+    });
+
+    if (res.success) {
+      setCustomers(res.data);
+      setPagination(res.pagination);
+    } else {
       setCustomers([]);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   const handleSearch = (value) => {
     setSearch(value);
+    setCurrentPage(1);
 
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
     searchTimeoutRef.current = setTimeout(() => {
-      fetchCustomers(value);
+      fetchCustomers(value, 1);
     }, 300);
   };
 
@@ -125,7 +135,9 @@ export default function ListCustomer() {
           title="Search Customer"
           columns={columns}
           data={tableData}
-          itemsPerPage={10}
+          currentPage={currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
           onSearch={handleSearch}
           onRowClick={(row) =>
             navigate(`/customer-info/view/${row.id}`)
