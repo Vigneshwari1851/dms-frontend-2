@@ -46,6 +46,7 @@ export default function ViewCustomer() {
         name: customer.name,
         email: customer.email,
         phone_number: customer.phone_number,
+        deal_type: customer.deal_type,
         is_active: customer.is_active ?? false,
       });
 
@@ -236,12 +237,12 @@ export default function ViewCustomer() {
     <div>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-3 lg:gap-0">
         <div className="flex items-center justify-between w-full lg:w-auto">
-          <div className="min-w-0 flex-1 lg:flex-initial">
+        <div className="min-w-0 flex-1 lg:flex-initial">
             <h2 className="text-white text-base lg:text-[16px] font-semibold truncate">
-              {editMode ? "Edit Customer" : formData.name}
+              {editMode ? "Edit Customer" : `Customer Name: ${formData.name}`}
             </h2>
-            <p className="text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
-              {editMode ? "Edit customer info" : `${formData.phone_number} - ${formData.email}`}
+            <p className="mt-2 text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
+              {editMode ? "Edit customer info" : `Contact Number: ${formData.phone_number}`}
             </p>
           </div>
 

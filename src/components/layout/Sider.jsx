@@ -30,7 +30,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
   return (
     <div
       className={`
-        fixed lg:static inset-y-0 left-0 z-[60] w-64 h-full bg-[#1E2328] border-r border-[#161A1D] p-4 text-white
+        fixed lg:static inset-y-0 left-0 z-60 w-64 h-full bg-[#1E2328] border-r border-[#161A1D] p-4 text-white
         transition-transform duration-300 transform
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
