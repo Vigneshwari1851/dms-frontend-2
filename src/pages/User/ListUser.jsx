@@ -19,6 +19,8 @@ export default function ListUser() {
   const [toastType, setToastType] = useState("");
 
   const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [pagination, setPagination] = useState({ totalPages: 1 });
 
 
@@ -32,13 +34,21 @@ export default function ListUser() {
   }, [location.state]);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(currentPage);
+  }, [currentPage]);
 
-  const loadUsers = async () => {
-    const res = await fetchUsers();
+  const loadUsers = async (page = currentPage) => {
+    const res = await fetchUsers({
+      page,
+      limit: itemsPerPage,
+    });
+
     setUsers(res.data);
     setPagination(res.pagination);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   const handleAddUser = () => {
@@ -151,6 +161,9 @@ export default function ListUser() {
           sortableKeys={["email", "status"]}
           showRightSection={false}
           onRowClick={handleRowClick}
+          currentPage={currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
         />
       </div>
       <Toast show={showToast} message={toastMessage} type={toastType} />

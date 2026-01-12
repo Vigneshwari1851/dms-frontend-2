@@ -23,13 +23,14 @@ export default function Table({
   showPagination = true,
   onRowClick,
   showHeader = true,
+  currentPage,
+  totalPages,
+  onPageChange,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status","In_Progress", "Tallied", "Excess", "Short"];
   const exportOptions = ["pdf"];
 
-
-  const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, asc: true });
   const [exportOpen, setExportOpen] = useState(false);
@@ -167,12 +168,6 @@ export default function Table({
       return 0;
     });
   }, [filteredData, sortConfig]);
-
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div className="mt-6 w-full overflow-x-hidden">
@@ -316,7 +311,7 @@ export default function Table({
           </thead>
 
           <tbody>
-            {paginatedData.map((row, rowIndex) => (
+            {sortedData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
                 onClick={() => onRowClick && onRowClick(row)}   // <-- ADD THIS
@@ -347,8 +342,8 @@ export default function Table({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPrev={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            onPrev={() => onPageChange(currentPage - 1)}
+            onNext={() => onPageChange(currentPage + 1)}
           />
         </div>
       )}
