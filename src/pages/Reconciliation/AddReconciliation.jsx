@@ -6,11 +6,10 @@ import expandRight from "../../assets/Common/expandRight.svg";
 import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import { createCurrency } from "../../api/currency/currency";
-import { createReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
+import {createReconciliation, fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
 
 export default function AddReconciliation() {
     const [activeTab, setActiveTab] = useState("summary");
