@@ -280,7 +280,7 @@ export default function Denomination({
                   )}
                 </td>
                 <td className="py-2 px-2">
-                  <div className={`flex items-center bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 ${isReadOnly ? "opacity-70" : ""}`}>
+                  <div className={`flex items-center bg-[#16191C] h-9 rounded-md px-2 py-1 ${isReadOnly ? "opacity-70" : ""}`}>
                     <input
                       type="number"
                       value={row.quantity}
@@ -291,20 +291,10 @@ export default function Denomination({
                       readOnly={isReadOnly}
                       disabled={isReadOnly}
                     />
-                    {!isReadOnly && (
-                      <div className="flex flex-col ml-2">
-                        <button onClick={() => handleChange(list, setList, i, "quantity", Number(row.quantity || 0) + 1)} className="w-3 h-3 flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" stroke="#E3E3E3" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" /></svg>
-                        </button>
-                        <button onClick={() => handleChange(list, setList, i, "quantity", Math.max(0, Number(row.quantity || 0) - 1))} className="w-3 h-3 flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" stroke="#E3E3E3" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 9l-6 6-6-6" /></svg>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </td>
                 <td className="py-2 pl-2">
-                  <input type="number" readOnly value={row.total} className="w-full bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed" />
+                  <input type="number" readOnly value={row.total} className="w-full h-9 bg-[#16191C] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed" />
                 </td>
                 <td className="py-2 pl-2">
                   {!isReadOnly && (
@@ -342,7 +332,7 @@ export default function Denomination({
         {/* TOTAL FIELD */}
         <div className="flex justify-between items-center mt-4">
           <h1 className="text-[#00C853] font-medium">Total</h1>
-          <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />
+          <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#16191C] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />
         </div>
       </div>
     </div>
