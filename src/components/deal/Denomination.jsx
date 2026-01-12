@@ -301,7 +301,7 @@ export default function Denomination({
                     <button onClick={() => handleDeleteClick(listType, i)} className="text-sm flex items-center gap-2" disabled={list.length === 1}>
                       <img
                         src={trash}
-                        className="w-6 h-6"
+                        className="w-8 h-8"
                         alt="delete"
                         {...(list.length > 1 ? { onMouseEnter: (e) => (e.currentTarget.src = trashHover), onMouseLeave: (e) => (e.currentTarget.src = trash) } : {})}
                       />
