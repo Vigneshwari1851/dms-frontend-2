@@ -194,18 +194,18 @@ export default function ReconciliationList() {
     }
   };
 
-  const handleStatusToggle = (id, currentStatus) => {
-    const newStatus = currentStatus === "Tallied" ? "Pending" : "Tallied";
-    setConfirmModal({
-      open: true,
-      actionType: "statusToggle",
-      title: "Change Status",
-      message: `Are you sure you want to change status from ${currentStatus} to ${newStatus}?`,
-      id: id,
-      currentStatus,
-      newStatus
-    });
-  };
+  // const handleStatusToggle = (id, currentStatus) => {
+  //   const newStatus = currentStatus === "Tallied" ? "Pending" : "Tallied";
+  //   setConfirmModal({
+  //     open: true,
+  //     actionType: "statusToggle",
+  //     title: "Change Status",
+  //     message: `Are you sure you want to change status from ${currentStatus} to ${newStatus}?`,
+  //     id: id,
+  //     currentStatus,
+  //     newStatus
+  //   });
+  // };
 
   const handleConfirm = () => {
     const { actionType, id } = confirmModal;
@@ -216,10 +216,10 @@ export default function ReconciliationList() {
       // After successful deletion, refresh the list
       fetchReconciliations();
     } else if (actionType === "statusToggle") {
-      // Call update status API here
-      console.log(`Toggling status for reconciliation ${id}`);
-      // After successful update, refresh the list
-      fetchReconciliations();
+      // // Call update status API here
+      // console.log(`Toggling status for reconciliation ${id}`);
+      // // After successful update, refresh the list
+      // fetchReconciliations();
     }
 
     setConfirmModal({ open: false });

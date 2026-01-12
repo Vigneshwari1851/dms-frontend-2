@@ -152,9 +152,7 @@ export default function AddReconciliation() {
 
     // Determine status based on difference
     let status = "Tallied";
-    if (!hasEnteredValues(closingData)) {
-        status = "In_Progress";
-    } else if (difference > 0) {
+    if (difference > 0) {
         status = "Excess";
     } else if (difference < 0) {
         status = "Short";
@@ -166,10 +164,7 @@ export default function AddReconciliation() {
     let varianceColor = "";
     let varianceIcon = balance;
 
-    if (status === "In_Progress") {
-        varianceColor = "#8B5CF6";   // violet
-        varianceIcon = balance;
-    } else if (status === "Tallied" || status === "Balance") {
+    if (status === "Tallied" || status === "Balance") {
         varianceColor = "#82E890";   // green
         varianceIcon = balance;
     } else if (status === "Excess" && isPositive) {
@@ -187,7 +182,6 @@ export default function AddReconciliation() {
         Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
         Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
         Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
-        In_Progress: "bg-[#8B5CF624] text-[#8B5CF6] border-[#8B5CF6]",
     };
 
     const handleCurrencyChange = (field, value) => {
