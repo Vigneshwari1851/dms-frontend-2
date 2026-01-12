@@ -124,19 +124,20 @@ export default function ViewCustomer() {
     const deal = item.raw;
     const isBuy = deal.deal_type === "Buy";
 
-    const receivedSource = isBuy ? deal.received_items : deal.paid_items;
-    const paidSource = isBuy ? deal.paid_items : deal.received_items;
+    // receivedItems = what customer received, paidItems = what customer paid
+    const receivedSource = isBuy ? deal.receivedItems : deal.paidItems;
+    const paidSource = isBuy ? deal.paidItems : deal.receivedItems;
 
     const receivedItems = (receivedSource || []).map((i) => ({
       denomination: `${i.currency.symbol}${i.price}`,
-      quantity: i.quantity,
-      total: Number(i.total).toLocaleString()
+      quantity: Number(i.quantity),
+      total: Number(i.total)  // keep as number
     }));
 
     const paidItems = (paidSource || []).map((i) => ({
       denomination: `${i.currency.symbol}${i.price}`,
-      quantity: i.quantity,
-      total: Number(i.total).toLocaleString()
+      quantity: Number(i.quantity),
+      total: Number(i.total) // keep as number
     }));
 
     setSelectedDeal({
@@ -147,8 +148,8 @@ export default function ViewCustomer() {
       buyCurrency: deal.buyCurrency,
       sellCurrency: deal.sellCurrency,
       rate: `${deal.exchange_rate || deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
-      buyAmt: item.buyAmt,
-      sellAmt: item.sellAmt,
+      buyAmt: Number(deal.buyAmount),
+      sellAmt: Number(deal.sellAmount),
       receivedItems,
       paidItems,
       notes: deal.remarks
@@ -170,10 +171,7 @@ export default function ViewCustomer() {
   );
 
   const DenominationTable = ({ title, items, currencyCode }) => {
-    const totalReceived = items.reduce(
-      (sum, item) => sum + Number(item.total.replace(/,/g, "")),
-      0
-    );
+    const totalAmount = items.reduce((sum, item) => sum + (item.total || 0), 0);
 
     return (
       <div className="bg-[#16191C] p-2 lg:p-2 rounded-lg space-y-2 shadow-md overflow-x-auto">
@@ -182,9 +180,7 @@ export default function ViewCustomer() {
             <h3 className="text-[#8F8F8F] text-xs lg:text-sm">
               {title}
               {currencyCode && (
-                <span className="ml-1 text-[#8F8F8F]">
-                  ({currencyCode})
-                </span>
+                <span className="ml-1 text-[#8F8F8F]">({currencyCode})</span>
               )}
             </h3>
           </div>
@@ -204,7 +200,7 @@ export default function ViewCustomer() {
                 <tr key={idx} className="text-white rounded-lg">
                   <td className="py-2 px-1 lg:px-2 rounded-l-lg">{i.denomination}</td>
                   <td className="text-center py-2 px-1 lg:px-2">{i.quantity}</td>
-                  <td className="text-right py-2 px-1 lg:px-2 rounded-r-lg">{i.total}</td>
+                  <td className="text-right py-2 px-1 lg:px-2 rounded-r-lg">{i.total.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -212,16 +208,9 @@ export default function ViewCustomer() {
         </div>
         <span className="text-xs lg:text-sm block">
           <span className="text-[#8F8F8F]">Total Received: </span>
-          <span className="text-white">
-            {totalReceived.toLocaleString()}
-          </span>
-          {currencyCode && (
-            <span className="text-[#8F8F8F] ml-1">
-              ({currencyCode})
-            </span>
-          )}
+          <span className="text-white">{totalAmount.toLocaleString()}</span>
+          {currencyCode && <span className="text-[#8F8F8F] ml-1">({currencyCode})</span>}
         </span>
-
       </div>
     );
   };
@@ -257,7 +246,7 @@ export default function ViewCustomer() {
           </div>
 
           {/* Mobile Only: Edit Icons (Pencil or Save/Cancel) */}
-          <div className="lg:hidden flex items-center gap-2 ml-3 flex-shrink-0">
+          <div className="lg:hidden flex items-center gap-2 ml-3 shrink-0">
             {!editMode && (
               <button
                 onClick={() => setEditMode(true)}
