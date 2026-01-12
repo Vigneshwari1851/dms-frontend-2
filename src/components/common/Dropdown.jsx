@@ -9,7 +9,7 @@ export default function Dropdown({
     onChange,
     className = "",
     renderOption,
-    disabled = false,,
+    disabled = false,
     buttonClassName = ""
 }) {
     const [open, setOpen] = useState(false);
@@ -49,8 +49,14 @@ export default function Dropdown({
                 }}
             >
                 <span className="truncate">{selected ? selected : label}</span>
-                <img src={down} alt="chevrondown" className={disabled ? "opacity-0" : ""} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-            </button>
+                <img
+                src={down}
+                alt="chevrondown"
+                className={`transition-transform duration-200 ${
+                    open ? "rotate-180" : ""
+                } ${disabled ? "opacity-0" : ""}`}
+                />
+                </button>
 
             {open && !disabled && (
                 <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-dark absolute">
