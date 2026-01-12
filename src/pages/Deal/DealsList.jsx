@@ -24,6 +24,11 @@ export default function DealsList() {
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
   const location = useLocation();
   const exportRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
+  const [exportOpen, setExportOpen] = useState(false);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (exportRef.current && !exportRef.current.contains(event.target)) {
@@ -47,9 +52,12 @@ export default function DealsList() {
     const loadDeals = async () => {
       try {
         setLoading(true);
-        const response = await fetchDeals({});
 
-        // Transform API response to match table structure
+        const response = await fetchDeals({
+          page: currentPage,
+          limit: itemsPerPage,
+        });
+
         const transformedData = response.data.map((deal) => {
           const buyAmtValue = Number(deal.buyAmount);
           const sellAmtValue = Number(deal.amount_to_be_paid);
@@ -70,11 +78,13 @@ export default function DealsList() {
         });
 
         setDeals(transformedData);
+        setTotalPages(response.pagination?.totalPages || 1); // ✅ REQUIRED
         setError(null);
       } catch (err) {
         console.error("Error loading deals:", err);
         setError("Failed to load deals");
         setDeals([]);
+        setTotalPages(1); // safety
       } finally {
         setLoading(false);
       }
@@ -83,20 +93,17 @@ export default function DealsList() {
     const loadCurrencies = async () => {
       try {
         const res = await fetchCurrencies();
-
         const currencies = Array.isArray(res) ? res : [];
-        const list = ["All Currencies", ...currencies.map(c => c.code)];
-
-        setCurrencyList(list);
+        setCurrencyList(["All Currencies", ...currencies.map(c => c.code)]);
       } catch (err) {
         console.error("Failed to load currencies", err);
         setCurrencyList(["All Currencies"]);
       }
     };
 
-    loadCurrencies();
     loadDeals();
-  }, []);
+    loadCurrencies();
+  }, [currentPage]);
 
   useEffect(() => {
     if (location.state?.toast) {
@@ -161,18 +168,6 @@ export default function DealsList() {
         : b.currency.localeCompare(a.currency)
     );
   }
-
-  // Pagination Logic
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [exportOpen, setExportOpen] = useState(false);
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-
-
-  const paginatedData = filteredAndSortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const handleRowClick = (deal) => {
     if (deal?.dealId) {
@@ -245,7 +240,7 @@ export default function DealsList() {
           className="
             flex items-center justify-center
             w-auto h-10 
-            bg-[#1D4CB5] hover:bg-blue-600 
+           bg-[#1D4CB5] hover:bg-[#173B8B]
             text-white font-medium text-sm
             px-4 py-2 
             gap-2
@@ -265,7 +260,7 @@ export default function DealsList() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
           {/* Left side: Deal Records + Search */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
-            <h2 className="text-white text-[16px] font-semibold flex-shrink-0">
+            <h2 className="text-white text-[16px] font-semibold shrink-0">
               Deal Records
             </h2>
 
@@ -307,7 +302,7 @@ export default function DealsList() {
             <div className="relative w-full lg:w-auto" ref={exportRef}>
               <button
                 onClick={() => setExportOpen(!exportOpen)}
-                className="w-full px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
+                className="w-full px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
               >
                 <img src={download} alt="download" className="w-6 h-6" /> Export
               </button>
@@ -422,7 +417,14 @@ export default function DealsList() {
             </thead>
 
             <tbody>
-              {paginatedData.map((item, index) => (
+            {filteredAndSortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-10 text-center text-gray-400">
+                    No deals found
+                  </td>
+                </tr>
+              ) : (
+              filteredAndSortedData.map((item, index) => (
                 <tr
                   key={index}
                   className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
@@ -484,32 +486,29 @@ export default function DealsList() {
                           className="fixed inset-0 z-10"
                           onClick={() => setOpenMenu(null)}
                         ></div>
-                        <div className="absolute right-10 mt-1 w-30 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
-                          <button
-                            onClick={() => handleRowClick(item.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] first:rounded-t-lg"
-                          >
-                            Review Deal
-                          </button>
-                          {/* <button
-                        onClick={() => handleViewSlip(item.id)}
+                        <div className="absolute right-10 mt-1 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                      <button
+                        onClick={() => handleRowClick(item)}
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
                       >
-                        View Deal Slip
-                      </button> */}
+                        View Deal
+                      </button>
 
-                          <button
-                            onClick={() => handleEdit(item.dealId)}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] last:rounded-b-lg"
-                          >
-                            Edit Deal
-                          </button>
-                        </div>
+                      {item.status === "Pending" && (
+                        <button
+                          onClick={() => handleEdit(item.dealId)}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] rounded-b-lg"
+                        >
+                          Edit Deal
+                        </button>
+                      )}
+                    </div>
                       </>
                     )}
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
             </tbody>
           </table>
         </div>

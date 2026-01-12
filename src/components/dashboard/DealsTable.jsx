@@ -381,7 +381,7 @@ export default function DealsTable() {
           <div className="relative w-full lg:w-auto" ref={exportRef}>
             <button
               onClick={() => setExportOpen(!exportOpen)}
-              className="w-full lg:px-5 py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
+              className="w-full lg:px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
             >
               <img src={download} alt="download" className="w-6 h-6" /> Export
             </button>

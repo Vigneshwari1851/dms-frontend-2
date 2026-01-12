@@ -16,6 +16,11 @@ export default function ReconciliationList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [exporting, setExporting] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    limit: 10,
+  });
 
   const location = useLocation();
 
@@ -25,21 +30,24 @@ export default function ReconciliationList() {
     type: "success",
   });
 
-  // Fetch reconciliations
-  const fetchReconciliations = async () => {
+  const fetchReconciliations = async (page = pagination.page, limit = pagination.limit) => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await fetchReconcoliation({
-        page: 1,
-        limit: 100 // Fetch all data for client-side filtering
-      });
+      const result = await fetchReconcoliation({ page, limit });
 
       if (result.data) {
         setReconciliations(result.data);
+        setPagination(prev => ({
+          ...prev,
+          page: result.pagination.page,
+          totalPages: result.pagination.totalPages,
+          limit: result.pagination.limit,
+        }));
       } else {
         setReconciliations([]);
+        setPagination(prev => ({ ...prev, totalPages: 1, page: 1 }));
       }
     } catch (err) {
       setError("Failed to fetch reconciliations. Please try again.");
@@ -67,6 +75,11 @@ export default function ReconciliationList() {
   useEffect(() => {
     fetchReconciliations();
   }, []);
+
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+    fetchReconciliations(newPage, pagination.limit);
+  };
 
   const handleAddUser = () => {
     navigate("/reconciliation/add-reconciliation");
@@ -214,6 +227,7 @@ export default function ReconciliationList() {
 
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
+    fetchReconciliations(1, pagination.limit);
   };
 
   const handleRowClick = (row) => {
@@ -280,6 +294,10 @@ export default function ReconciliationList() {
             onExport={handleExport}
             showExport={true}
           // sortableKeys={["date", "status", "totalTransactions"]}
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+
           />
         </div>
       )}

@@ -398,15 +398,7 @@ export default function ViewUser() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
-                                    navigate("/users", {
-                                        state: {
-                                            toast: {
-                                                show: true,
-                                                message: "Changes reverted",
-                                                type: "error",
-                                            },
-                                        },
-                                    });
+                                    navigate("/users");
                                 }}
                                 className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
                             >

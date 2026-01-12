@@ -18,7 +18,9 @@ export default function Denomination({
   currencySymbols = {},
   isEditable = true,
   receivedReadOnly = true,
-  paidReadOnly = false
+  paidReadOnly = false,
+  hideAddReceived = false,
+  hideAddPaid = false
 }) {
   const [activeTab, setActiveTab] = useState("received");
   // Use props if provided, otherwise use local state
@@ -125,13 +127,13 @@ export default function Denomination({
   ) => (
     <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
       {/* MOBILE HEADER */}
-      <div className="flex lg:hidden justify-between items-center mb-2 px-[12px]">
+      <div className="flex lg:hidden justify-between items-center mb-2 px-3">
         <h3 className="text-[14px] font-medium text-white">{title}</h3>
         <span className="text-[#939AF0] text-sm font-semibold">
           {currencySymbol || currency}
         </span>
       </div>
-      <hr className="block lg:hidden border-[#2A2F33] opacity-80 mb-3 mx-[12px]" />
+      <hr className="block lg:hidden border-[#2A2F33] opacity-80 mb-3 mx-3" />
 
       {/* DESKTOP HEADER */}
       <div className="hidden lg:flex justify-between items-center mb-4">
@@ -146,7 +148,7 @@ export default function Denomination({
       {/* MOBILE CONTENT (Compact Flex) */}
       <div className="lg:hidden">
         {!isReadOnly && (
-          <div className="flex justify-end mb-4 px-[12px]">
+          <div className="flex justify-end mb-4 px-3">
             <div className="flex items-center">
               <div className="w-[99px]"></div>
               <div className="w-[17px]"></div>
@@ -166,7 +168,7 @@ export default function Denomination({
         )}
 
         <div className="space-y-4">
-          <div className="flex items-center h-[15px] px-[12px] mb-4">
+          <div className="flex items-center h-[15px] px-3 mb-4">
             <label className="text-[#ABABAB] text-[12px] font-medium w-[99px]">Denomination</label>
             <div className="w-[17px]"></div>
             <label className="text-[#ABABAB] text-[12px] font-medium w-[59px]">Qty</label>
@@ -174,12 +176,12 @@ export default function Denomination({
             <label className="text-[#ABABAB] text-[12px] font-medium w-[93px]">Total</label>
           </div>
 
-          <div className="space-y-3 px-[12px]">
+          <div className="space-y-3 px-3">
             {list.map((row, i) => (
               <div key={i} className="flex items-center">
                 <div className="w-[99px]">
                   {isReadOnly ? (
-                    <div className="w-full h-[25px] bg-[#14171A] !border !border-[#4B5563] rounded-[4px] px-2 flex items-center text-white text-[10px]">
+                    <div className="w-full h-[25px] bg-[#14171A] border! border-[#4B5563]! rounded-sm px-2 flex items-center text-white text-[10px]">
                       {row.price || "0"}
                     </div>
                   ) : (
@@ -206,14 +208,14 @@ export default function Denomination({
                     type="number"
                     value={row.quantity || ""}
                     onChange={(e) => !isReadOnly && handleChange(list, setList, i, "quantity", e.target.value)}
-                    className={`w-full h-[25px] bg-[#14171A] !border !border-[#4B5563] rounded-[4px] px-2 text-white text-[10px] outline-none focus:border-[#4B5563] ${isReadOnly ? " cursor-not-allowed" : ""}`}
+                    className={`w-full h-[25px] bg-[#14171A] border! border-[#4B5563]! rounded-sm px-2 text-white text-[10px] outline-none focus:border-[#4B5563] ${isReadOnly ? " cursor-not-allowed" : ""}`}
                     placeholder="0"
                     readOnly={isReadOnly}
                   />
                 </div>
                 <div className="w-[11px]"></div>
                 <div className="w-[93px]">
-                  <div className="w-full h-[25px] bg-[#14171A] !border !border-[#4B5563] rounded-[4px] px-2 flex items-center text-white text-[10px] overflow-hidden">
+                  <div className="w-full h-[25px] bg-[#14171A] border! border-[#4B5563]! rounded-sm px-2 flex items-center text-white text-[10px] overflow-hidden">
                     <span className="truncate">{(Number(row.total) || 0).toLocaleString()}</span>
                   </div>
                 </div>
@@ -231,7 +233,7 @@ export default function Denomination({
             ))}
           </div>
 
-          <div className="pt-4 px-[12px]">
+          <div className="pt-4 px-3">
             <div className="bg-[#1B1E21]/80 flex justify-between items-center px-4 py-2 rounded-lg border border-[#1B1E21]">
               <span className="text-[#00C853] font-medium text-[12px] uppercase tracking-wide">Total</span>
               <span className="text-[#00C853]  text-[12px]">
@@ -278,7 +280,7 @@ export default function Denomination({
                   )}
                 </td>
                 <td className="py-2 px-2">
-                  <div className={`flex items-center bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 ${isReadOnly ? "opacity-70" : ""}`}>
+                  <div className={`flex items-center bg-[#16191C] h-9 rounded-md px-2 py-1 ${isReadOnly ? "opacity-70" : ""}`}>
                     <input
                       type="number"
                       value={row.quantity}
@@ -289,27 +291,17 @@ export default function Denomination({
                       readOnly={isReadOnly}
                       disabled={isReadOnly}
                     />
-                    {!isReadOnly && (
-                      <div className="flex flex-col ml-2">
-                        <button onClick={() => handleChange(list, setList, i, "quantity", Number(row.quantity || 0) + 1)} className="w-3 h-3 flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" stroke="#E3E3E3" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" /></svg>
-                        </button>
-                        <button onClick={() => handleChange(list, setList, i, "quantity", Math.max(0, Number(row.quantity || 0) - 1))} className="w-3 h-3 flex items-center justify-center">
-                          <svg className="w-3 h-3" fill="none" stroke="#E3E3E3" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 9l-6 6-6-6" /></svg>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </td>
                 <td className="py-2 pl-2">
-                  <input type="number" readOnly value={row.total} className="w-full bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed" />
+                  <input type="number" readOnly value={row.total} className="w-full h-9 bg-[#16191C] rounded-md px-2 py-1 text-[#ABABAB] cursor-not-allowed" />
                 </td>
                 <td className="py-2 pl-2">
                   {!isReadOnly && (
                     <button onClick={() => handleDeleteClick(listType, i)} className="text-sm flex items-center gap-2" disabled={list.length === 1}>
                       <img
                         src={trash}
-                        className="w-6 h-6"
+                        className="w-8 h-8"
                         alt="delete"
                         {...(list.length > 1 ? { onMouseEnter: (e) => (e.currentTarget.src = trashHover), onMouseLeave: (e) => (e.currentTarget.src = trash) } : {})}
                       />
@@ -320,14 +312,27 @@ export default function Denomination({
             ))}
           </tbody>
         </table>
-        {!isReadOnly && (
-          <div className="flex justify-end">
-            <button className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]" onClick={() => handleAdd(list, setList, isReadOnly)}>+ Add</button>
-          </div>
-        )}
+
+        {/* ADD BUTTON - Only show if not read-only */}
+        {!isReadOnly &&
+          !(
+            (listType === "received" && hideAddReceived) ||
+            (listType === "paid" && hideAddPaid)
+          ) && (
+            <div className="flex justify-end">
+              <button
+                className="mt-4 w-20 border border-[#ABABAB] bg-transparent py-2 rounded-lg text-[#ABABAB]"
+                onClick={() => handleAdd(list, setList, isReadOnly)}
+              >
+                + Add
+              </button>
+            </div>
+          )}
+
+        {/* TOTAL FIELD */}
         <div className="flex justify-between items-center mt-4">
           <h1 className="text-[#00C853] font-medium">Total</h1>
-          <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#1B1E21] border border-[#2A2F33] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />
+          <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#16191C] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />
         </div>
       </div>
     </div>

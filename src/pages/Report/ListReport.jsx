@@ -16,6 +16,12 @@ export default function ListReport() {
   const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
+  const statuses = ["All Status", "Pending", "Completed"];
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    limit: 10,
+  });
 
   const [dateRange, setDateRange] = useState("Today");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -71,41 +77,35 @@ export default function ListReport() {
     return `${year}-${month}-${day}`;
   };
 
+  const fetchReportData = async (page = pagination.page) => {
+    try {
+      const apiDateFilter = dateRange.toLowerCase().replace(" ", "");
+      const { data, pagination: pag } = await fetchDeals({
+        page,
+        limit: pagination.limit,
+        dateFilter: apiDateFilter === "custom" ? "custom" : apiDateFilter,
+        ...(apiDateFilter === "custom" && { startDate: customFrom, endDate: customTo }),
+        currency: currencyFilter !== "All Currencies" ? currencyFilter : undefined,
+      });
+
+      setReportRows(data || []);
+      setPagination((prev) => ({
+        ...prev,
+        page: pag.page || page,
+        totalPages: pag.totalPages || 1,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch report data:", error);
+    }
+  };
+
   const handleApplyFilters = async () => {
-    let apiDateFilter = "";
-    let finalStart = "";
-    let finalEnd = "";
-
-    const today = formatDate(new Date());
-
-    if (tempDateRange === "Today") {
-      apiDateFilter = "today";
-    }
-
-    else if (tempDateRange === "Last 7 days") apiDateFilter = "last7";
-    else if (tempDateRange === "Last 30 days") apiDateFilter = "last30";
-    else if (tempDateRange === "Last 90 days") apiDateFilter = "last90";
-
-    else if (tempDateRange === "Custom") {
-      apiDateFilter = "custom";
-      finalStart = customFrom;
-      finalEnd = customTo;
-    }
-
+    setPagination((prev) => ({ ...prev, page: 1 }));
     setDateRange(tempDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
-    setCurrentPage(1);
 
-    const { data } = await fetchDeals({
-      dateFilter: apiDateFilter,
-      ...(apiDateFilter === "custom" && {
-        startDate: finalStart,
-        endDate: finalEnd,
-      }),
-    });
-
-    setReportRows(data || []);
+    await fetchReportData(1);
   };
 
   const handleExport = async (format) => {
@@ -127,7 +127,12 @@ export default function ListReport() {
     }
   };
 
-  const sortedData = [...reportRows].sort((a, b) => {
+  const filteredData = reportRows.filter((item) => {
+    if (statusFilter === "All Status") return true;
+    return item.status === statusFilter;
+  });
+
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
     let valA = a[sortBy];
     let valB = b[sortBy];
@@ -172,7 +177,7 @@ export default function ListReport() {
         <div className="relative hidden lg:block" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="p-2 lg:px-5 lg:py-2 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
+            className="p-2 lg:px-5 lg:py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center gap-2 cursor-pointer"
           >
             <img src={download} alt="download" className="w-6 h-6" />
             <span className="hidden lg:inline">Export</span>
@@ -217,6 +222,15 @@ export default function ListReport() {
                 setTempDateRange(value);
                 if (value === "Custom") setShowCustomModal(true);
               }}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-300 mb-2 text-sm">Status</label>
+            <Dropdown
+              label={tempStatusFilter}
+              options={statuses}
+              onChange={(value) => setTempStatusFilter(value)}
             />
           </div>
 
@@ -326,7 +340,7 @@ export default function ListReport() {
 
       {/* Table */}
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
-        {reportRows.length === 0 ? (
+      {paginatedData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
           </div>
@@ -454,10 +468,14 @@ export default function ListReport() {
             </table>
 
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPrev={() => {
+                if (pagination.page > 1) fetchReportData(pagination.page - 1);
+              }}
+              onNext={() => {
+                if (pagination.page < pagination.totalPages) fetchReportData(pagination.page + 1);
+              }}
             />
           </>
         )}

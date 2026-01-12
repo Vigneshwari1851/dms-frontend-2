@@ -228,7 +228,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     const calculateConvertedSectionTotal = (section) => {
         const rawTotal = calculateRawSectionTotal(section);
         const rate = Number(section.exchangeRate || 1);
-        return rate > 0 ? rawTotal / rate : rawTotal;
+        return rate > 0 ? rawTotal * rate : rawTotal;
     };
 
     // Grand total (TZS only)
