@@ -13,11 +13,11 @@ export default function CalendarMini({
   const [currentYear, setCurrentYear] = useState(year ?? today.getFullYear());
 
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
   ];
 
-  const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   useEffect(() => {
     if (month !== undefined) setCurrentMonth(month);
@@ -37,22 +37,46 @@ export default function CalendarMini({
     );
   };
 
-  const handleDateClick = (day) => {
-    if (disabled) return;
-    const date = new Date(currentYear, currentMonth, day);
-    onDateSelect?.(date);
+  const handlePrevMonth = () => {
+    setCurrentMonth(m => {
+      if (m === 0) {
+        setCurrentYear(y => y - 1);
+        return 11;
+      }
+      return m - 1;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(m => {
+      if (m === 11) {
+        setCurrentYear(y => y + 1);
+        return 0;
+      }
+      return m + 1;
+    });
   };
 
   return (
-    <div className={`w-[280px] h-[260px] rounded-lg border border-[#2A2F33] p-3 text-white ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
+    <div className={`w-full max-w-[280px] h-auto min-h-[260px] rounded-lg border border-[#2A2F33] p-3 text-white ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
 
       {/* HEADER */}
-      <div className="flex justify-between mb-2">
-        <button onClick={() => setCurrentMonth(m => m === 0 ? 11 : m - 1)}>&lt;</button>
+      <div className="flex justify-between items-center mb-2 px-1">
+        <button
+          onClick={handlePrevMonth}
+          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2A2F33] transition-colors"
+        >
+          &lt;
+        </button>
         <span className="text-sm font-semibold">
           {monthNames[currentMonth]} {currentYear}
         </span>
-        <button onClick={() => setCurrentMonth(m => m === 11 ? 0 : m + 1)}>&gt;</button>
+        <button
+          onClick={handleNextMonth}
+          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2A2F33] transition-colors"
+        >
+          &gt;
+        </button>
       </div>
 
       {/* DAYS */}

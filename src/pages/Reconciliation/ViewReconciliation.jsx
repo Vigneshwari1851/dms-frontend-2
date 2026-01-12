@@ -514,8 +514,8 @@ export default function ViewReconciliation() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* EDIT ICON */}
-                    {editableData && (editableData.status === "Excess" || editableData.status === "Short" || editableData.status === "Tallied") && (
+                    {/* EDIT ICON - Only show if not Tallied/Balance */}
+                    {editableData && (editableData.status !== "Tallied" && editableData.status !== "Balance") && (
                         <img
                             src={edit}
                             alt="edit"
