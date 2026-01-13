@@ -591,7 +591,7 @@ export default function EditDeal() {
 
                     {/* Mobile Action Buttons (sticky at bottom, same line) */}
                     {editMode && (
-                        <div className="lg:hidden sticky bottom-4 flex justify-between items-center mt-6">
+                        <div className="lg:hidden bottom-4 flex justify-between items-center mt-6">
                             <button
                                 onClick={handleCancelEdit}
                                 className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
