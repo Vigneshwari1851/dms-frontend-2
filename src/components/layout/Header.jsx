@@ -206,8 +206,8 @@ export default function Header({ toggleSidebar }) {
 
             {avatarDropdownOpen && (
               <div className="fixed lg:absolute left-0 lg:left-auto right-0 top-[72px] lg:top-auto lg:mt-3 w-full lg:w-64 bg-[#1E2328] rounded-none lg:rounded-xl shadow-lg p-4 z-50 transition-all">
-                <p className="text-white text-lg font-semibold">{userName}</p>
-                <p className="text-gray-400 text-sm mb-4">{userRole}</p>
+                <p className="text-white text-lg font-semibold  mb-4">{userName}</p>
+                {/* <p className="text-gray-400 text-sm mb-4">{userRole}</p> */}
 
                 <button
                   onClick={() => {

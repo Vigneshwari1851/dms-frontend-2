@@ -229,7 +229,7 @@ function Login() {
             <img
               src={welcomeImg}
               alt="Logo"
-              className="mx-auto mb-15 mt-4 w-[188px] h-[58px]"
+              className="mx-auto mb-15 mt-4 w-[257px] h-[47px]"
             />
 
             {/* FORM */}

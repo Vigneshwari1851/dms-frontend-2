@@ -4,7 +4,7 @@ export default function StatCard({ title, value, change, icon }) {
   return (
     <div
       className="
-        w-full lg:w-[269px] h-[124px]
+        w-full h-[124px]
         bg-[#1E2328]
         rounded-lg
         p-4

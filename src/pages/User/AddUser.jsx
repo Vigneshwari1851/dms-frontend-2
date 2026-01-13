@@ -156,7 +156,7 @@ export default function AddUser() {
 
                     <Dropdown
                         label="Select Role"
-                        options={["Maker", "Checker"]}
+                        options={["Maker", "Admin"]}
                         selected={role}
                         onChange={setRole}
                         className="w-full lg:w-[580px] max-w-full"

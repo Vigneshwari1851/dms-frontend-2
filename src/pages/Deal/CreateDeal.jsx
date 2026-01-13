@@ -868,7 +868,7 @@ export default function CreateDeal() {
         </div>
 
         {/* Mobile Action Buttons (sticky at bottom, same line) */}
-        <div className="lg:hidden sticky bottom-4 flex justify-between items-center mt-6">
+        <div className="lg:hidden bottom-4 flex justify-between items-center mt-6">
           <button
             className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
             onClick={() => navigate("/deals")}
