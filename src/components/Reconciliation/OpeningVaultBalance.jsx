@@ -462,8 +462,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         >
                                             <span>
                                                 {row.denom
-                                                    ? currencySymbols[section.selectedCurrency] + row.denom
-                                                    : currencySymbols[section.selectedCurrency] + "0.00"}
+                                                    ? row.denom
+                                                    : "0.00"}
                                             </span>
                                             <img src={down} className="w-3" alt="dropdown" />
                                         </button>
@@ -483,7 +483,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                             onClick={() => selectDenomination(section.id, i, item)}
                                                             className="px-4 py-2 flex justify-between hover:bg-[#1E2328] text-white cursor-pointer"
                                                         >
-                                                            <span>{currencySymbols[section.selectedCurrency]}{item}</span>
+                                                            <span>{item}</span>
                                                             {row.denom === item && <img src={tick} className="w-4 h-4" alt="selected" />}
                                                         </li>
                                                     ))}

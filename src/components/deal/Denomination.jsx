@@ -71,7 +71,7 @@ export default function Denomination({
 
   // Get available denomination options excluding already selected ones
   const getAvailableOptions = (list, currentIndex) => {
-    const allOptions = ["100", "50", "20", "10", "5", "2", "1"];
+    const allOptions = ["1000", "500", "100", "50", "20", "10", "5", "2", "1"];
 
     // Get all selected prices except the current row's price
     const selectedPrices = list
@@ -277,11 +277,11 @@ export default function Denomination({
                 <td className="py-2 px-2">
                   {isReadOnly ? (
                     <div className="w-full h-10 bg-[#1B1E21] border border-[#2A2F33] rounded-md px-3 flex items-center">
-                      <span>{currencySymbol}{row.price || "0.00"}</span>
+                      <span>{row.price || "0.00"}</span>
                     </div>
                   ) : (
                     <Dropdown
-                      label={`${currencySymbol}0.00`}
+                      label={row.price || "0.00"}
                       options={getAvailableOptions(list, i)}
                       selected={row.price?.toString()}
                       onChange={(val) => {
@@ -292,7 +292,7 @@ export default function Denomination({
                         setList(updated);
                       }}
                       className="w-full"
-                      renderOption={(opt) => `${currencySymbol}${opt}`}
+                      renderOption={(opt) => `${opt}`}
                     />
                   )}
                 </td>

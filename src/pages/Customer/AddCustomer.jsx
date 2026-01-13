@@ -27,7 +27,7 @@ export default function AddCustomer() {
 
         const payload = {
             name: fullName,
-            email: email,
+            email: email || "",
             phone_number: phone,
             deal_type: deal_type,
         };
@@ -47,7 +47,7 @@ export default function AddCustomer() {
             navigate("/customer-info", {
                 state: {
                     toast: {
-                        message: "Failed to add user",
+                        message: "Failed to add customer",
                         type: "error",
                     },
                 },
