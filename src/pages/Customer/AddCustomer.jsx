@@ -134,7 +134,7 @@ export default function AddCustomer() {
                                 ""
                             }
                             onChange={(val) => setDealType(val.toLowerCase())}
-                            className="w-[580px]"
+                            className="w-full"
                         />
                         {errors.deal_type && (
                         <p className="text-red-400 text-xs mt-1">{errors.deal_type}</p>
