@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import { addCustomer } from "../../api/customers";
@@ -11,6 +11,9 @@ export default function AddCustomer() {
     const [phone, setPhone] = useState("");
     const [deal_type, setDealType] = useState("");
     const [errors, setErrors] = useState({});
+    const [phoneExists, setPhoneExists] = useState(false);
+    const [existingCustomerName, setExistingCustomerName] = useState("");
+
     const navigate = useNavigate();
 
     const validate = () => {
@@ -18,46 +21,94 @@ export default function AddCustomer() {
         if (!fullName.trim()) newErrors.fullName = "Full Name is required";
         if (!phone.trim()) newErrors.phone = "Phone number is required";
         if (!deal_type) newErrors.deal_type = "Deal type is required";
+
+        if (phoneExists) {
+            newErrors.phone = "Phone number already exists";
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+      useEffect(() => {
+        const digits = phone.replace(/\D/g, "");
+
+        if (digits.length < 10) {
+        setPhoneExists(false);
+        setExistingCustomerName("");
+        return;
+        }
+
+        const customers =
+        JSON.parse(localStorage.getItem("customers_local")) || [];
+
+        const found = customers.find((c) => c.phone === digits);
+
+        if (found) {
+        setPhoneExists(true);
+        setExistingCustomerName(found.name);
+        } else {
+        setPhoneExists(false);
+        setExistingCustomerName("");
+        }
+    }, [phone]);
+
+    const storeCustomerLocally = (name, phone) => {
+        const customers =
+        JSON.parse(localStorage.getItem("customers_local")) || [];
+
+        const exists = customers.some((c) => c.phone === phone);
+
+        if (!exists) {
+        customers.push({ name, phone });
+        localStorage.setItem(
+            "customers_local",
+            JSON.stringify(customers)
+        );
+        }
+    };
+
 
     const handleAddCustomer = async () => {
         if (!validate()) return;
 
         const payload = {
-            name: fullName,
-            email: email || "",
-            phone_number: phone,
-            deal_type: deal_type,
+        name: fullName,
+        email: email || "",
+        phone_number: phone,
+        deal_type,
         };
 
         const res = await addCustomer(payload);
 
         if (res.success) {
-            navigate("/customer-info", {
-                state: {
-                    toast: {
-                        message: "Customer added successfully",
-                        type: "success",
-                    },
-                },
-            });
+        storeCustomerLocally(fullName, phone.replace(/\D/g, ""));
+
+        navigate("/customer-info", {
+            state: {
+            toast: {
+                message: "Customer added successfully",
+                type: "success",
+            },
+            },
+        });
         } else {
-            navigate("/customer-info", {
-                state: {
-                    toast: {
-                        message: "Failed to add customer",
-                        type: "error",
-                    },
-                },
-            });
+        navigate("/customer-info", {
+            state: {
+            toast: {
+                message: "Failed to add customer",
+                type: "error",
+            },
+            },
+        });
         }
     };
 
     const handleCancel = () => {
         navigate("/customer-info");
     };
+
+    const digits = phone.replace(/\D/g, "");
+    const isPhoneValid = digits.length >= 10;
 
     return (
         <>
@@ -93,33 +144,33 @@ export default function AddCustomer() {
                         </label>
 
                         <input
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2`}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 border
+                                ${
+                                isPhoneValid && phoneExists
+                                    ? "border-red-500"
+                                    : "border-transparent"
+                                }`}
                             value={phone}
                             onChange={(e) => {
-                                let value = e.target.value;
-                                const digits = value.replace(/\D/g, "");
-                                if (digits.length > 15) return;
+                                const value = e.target.value;
+                                const digitsOnly = value.replace(/\D/g, "");
+                                if (digitsOnly.length > 15) return;
                                 setPhone(value);
                             }}
-                            onKeyDown={(e) => {
-                                const allowedControlKeys = [
-                                    "Backspace",
-                                    "Delete",
-                                    "ArrowLeft",
-                                    "ArrowRight",
-                                    "Tab",
-                                ];
-                                if (allowedControlKeys.includes(e.key)) return;
-                                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
-                                if (/^[0-9]$/.test(e.key)) {
-                                    const currentDigits = phone.replace(/\D/g, "");
-                                    if (currentDigits.length >= 15) e.preventDefault();
-                                    return;
-                                }
-                                e.preventDefault();
-                            }}
                         />
-                        {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
+                        {isPhoneValid && phoneExists && (
+                            <div className="flex items-center gap-2 mt-1">
+                                <p className="text-red-400 text-xs">
+                                Phone number already exists
+                                </p>
+                            </div>
+                            )}
+
+                            {errors.phone && !phoneExists && (
+                            <p className="text-red-400 text-xs mt-1">
+                                {errors.phone}
+                            </p>
+                            )}
                     </div>
                     <div>
                         <label className="block text-sm text-[#ABABAB] mt-2 mb-2">
