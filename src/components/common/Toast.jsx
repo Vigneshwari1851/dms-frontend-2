@@ -15,28 +15,29 @@ export default function Toast({ show, message, type }) {
 
     return (
         <>
-            
+
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
 
             {/* TOAST */}
             <div
                 className={`
-           fixed top-[100px] left-[1130px] z-50
-          flex items-center gap-4
-           w-auto   h-14
-          px-4 py-3 pr-10  
-          rounded-lg
-          text-white text-[16px] font-medium
-          bg-[#2E3439]
-          shadow-[0px_8px_10px_0px_#00000033,
-                  0px_6px_30px_0px_#0000001F,
-                  0px_16px_24px_0px_#00000024]
+           fixed top-[100px] z-50
+           left-1/2 -translate-x-1/2 lg:left-[1130px] lg:translate-x-0
+           flex items-center gap-4
+           w-[90%] lg:w-auto h-auto lg:h-14
+           px-4 py-2 lg:py-3 pr-10
+           rounded-lg
+           text-white text-[16px] font-medium
+           bg-[#2E3439]
+           shadow-[0px_8px_10px_0px_#00000033,
+                   0px_6px_30px_0px_#0000001F,
+                   0px_16px_24px_0px_#00000024]
 
-          backdrop-blur-xl
-          transition-all duration-300
+           backdrop-blur-xl
+           transition-all duration-300
         `}
             >
-                <img src={getIcon()} alt="icon" className="w-20 h-20" />
+                <img src={getIcon()} alt="icon" className="w-14 h-14 lg:w-20 lg:h-20" />
                 <span>
                     {message}
                 </span>

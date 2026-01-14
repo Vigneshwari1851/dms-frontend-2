@@ -71,12 +71,6 @@ export default function ListReport() {
     return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
-  const convertDMYtoYMD = (dmy) => {
-    if (!dmy) return "";
-    const [day, month, year] = dmy.split("-");
-    return `${year}-${month}-${day}`;
-  };
-
   const fetchReportData = async (page = pagination.page) => {
     try {
       const apiDateFilter = dateRange.toLowerCase().replace(" ", "");
@@ -84,7 +78,7 @@ export default function ListReport() {
         page,
         limit: pagination.limit,
         dateFilter: apiDateFilter === "custom" ? "custom" : apiDateFilter,
-        ...(apiDateFilter === "custom" && { startDate: customFrom, endDate: customTo }),
+        ...(apiDateFilter === "custom" && { startDate: formatDate(customFrom), endDate: formatDate(customTo) }),
         currency: currencyFilter !== "All Currencies" ? currencyFilter : undefined,
       });
 
@@ -212,9 +206,76 @@ export default function ListReport() {
 
       {/* Filters */}
       <div className="bg-[#1A1D23] p-4 lg:p-5 rounded-xl mt-4">
-        <div className="flex flex-row items-end gap-3 lg:grid lg:grid-cols-3 lg:gap-6">
-          <div className="flex flex-col flex-1 lg:flex-none">
-            <label className="text-gray-300 mb-2 text-sm">Date Range</label>
+
+        {/* MOBILE LAYOUT */}
+        <div className="flex flex-col gap-4 lg:hidden">
+
+          {/* Date + Status in same row */}
+          <div className="flex gap-3">
+            <div className="flex-1 flex flex-col gap-2">
+              <label className="text-gray-300 text-sm">Date Range</label>
+              <Dropdown
+                label={tempDateRange}
+                options={dateRanges}
+                onChange={(value) => {
+                  setTempDateRange(value);
+                  if (value === "Custom") setShowCustomModal(true);
+                }}
+              />
+            </div>
+
+            <div className="flex-1 flex flex-col gap-2">
+              <label className="text-gray-300 text-sm">Status</label>
+              <Dropdown
+                label={tempStatusFilter}
+                options={statuses}
+                onChange={(value) => setTempStatusFilter(value)}
+              />
+            </div>
+          </div>
+
+          {/* Apply */}
+          <button
+            className="w-full bg-[#1D4CB5] hover:bg-[#173B8B] text-white h-10 rounded-md text-sm font-medium"
+            onClick={handleApplyFilters}
+          >
+            Apply
+          </button>
+
+          {/* Export */}
+          <div className="relative" ref={mobileExportRef}>
+            <button
+              onClick={() => setExportOpen(!exportOpen)}
+              className="w-full bg-[#1D4CB5] hover:bg-[#173B8B] text-white h-10 rounded-md flex items-center justify-center gap-2"
+            >
+              <img src={download} className="w-5 h-5" />
+              Export
+            </button>
+
+            {exportOpen && (
+              <div className="absolute mt-2 w-full bg-[#2E3439] border border-[#2A2D31] rounded-lg z-20">
+                <button
+                  className="w-full px-4 py-2 text-sm text-white hover:bg-[#2A2F34] flex gap-2"
+                  onClick={() => handleExport("pdf")}
+                >
+                  <img src={pdf} className="w-4 h-4" /> PDF
+                </button>
+                <button
+                  className="w-full px-4 py-2 text-sm text-white hover:bg-[#2A2F34] flex gap-2"
+                  onClick={() => handleExport("excel")}
+                >
+                  <img src={excel} className="w-4 h-4" /> Excel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* DESKTOP LAYOUT – UNTOUCHED */}
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
+
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm">Date Range</label>
             <Dropdown
               label={tempDateRange}
               options={dateRanges}
@@ -225,8 +286,8 @@ export default function ListReport() {
             />
           </div>
 
-          <div className="flex flex-col">
-            <label className="text-gray-300 mb-2 text-sm">Status</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm">Status</label>
             <Dropdown
               label={tempStatusFilter}
               options={statuses}
@@ -234,47 +295,18 @@ export default function ListReport() {
             />
           </div>
 
-          <div className="flex lg:mt-6">
+          <div className="flex items-end">
             <button
-              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 h-10 rounded-md text-sm font-medium whitespace-nowrap"
+              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 h-10 rounded-md text-sm font-medium"
               onClick={handleApplyFilters}
             >
               Apply
             </button>
           </div>
 
-          {/* Mobile Export Button */}
-          <div className="relative lg:hidden" ref={mobileExportRef}>
-            <button
-              onClick={() => setExportOpen(!exportOpen)}
-              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white w-10 h-10 rounded-md flex items-center justify-center"
-            >
-              <img src={download} alt="download" className="w-5 h-5" />
-            </button>
-
-            {exportOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
-                  onClick={() => handleExport("pdf")}
-                  disabled={exporting}
-                >
-                  <img src={pdf} alt="pdf" className="w-4 h-4" />
-                  PDF
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                  onClick={() => handleExport("excel")}
-                  disabled={exporting}
-                >
-                  <img src={excel} alt="excel" className="w-4 h-4" />
-                  Excel
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
+
 
       {/* CUSTOM DATE MODAL */}
       {showCustomModal && (
@@ -291,9 +323,7 @@ export default function ListReport() {
                   selectedDate={customFrom}
                   onDateSelect={(date) => {
                     console.log("fromdate:", date);
-                    const formatted = convertDMYtoYMD(date);
-                    console.log("formattedFrom:", formatted);
-                    setCustomFrom(formatted);
+                    setCustomFrom(date);
                   }}
                 />
               </div>
@@ -304,9 +334,7 @@ export default function ListReport() {
                   selectedDate={customTo}
                   onDateSelect={(date) => {
                     console.log("todate:", date);
-                    const formatted = convertDMYtoYMD(date);
-                    console.log("formattedTo:", formatted);
-                    setCustomTo(formatted);
+                    setCustomTo(date);
                   }}
                   disabled={!customFrom}
                 />
@@ -326,9 +354,10 @@ export default function ListReport() {
 
               <button
                 className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md disabled:opacity-40"
-                onClick={() => {
+                onClick={async () => {
                   setShowCustomModal(false);
                   setTempDateRange("Custom");
+                  await handleApplyFilters();
                 }}
               >
                 Apply
@@ -342,7 +371,13 @@ export default function ListReport() {
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
         {paginatedData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <img src={bgIcon} alt="No Data" className="w-72 opacity-80" />
+            {/* <img src={bgIcon} alt="No Data" className="w-72 opacity-80" /> */}
+            <img
+              src={bgIcon}
+              alt="No Data"
+              className="max-w-full w-64 lg:w-72 opacity-80"
+            />
+
           </div>
         ) : (
           <>

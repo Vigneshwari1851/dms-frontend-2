@@ -71,9 +71,9 @@ export default function AddReconciliation() {
 
                             // Add row
                             byCurrency[currId].rows.push({
-                                denom: entry.denomination,
-                                qty: entry.quantity,
-                                total: entry.amount
+                                denom: entry.denomination || "",
+                                qty: (entry.quantity !== undefined && entry.quantity !== null) ? entry.quantity : "",
+                                total: entry.amount || 0
                             });
                         });
 
@@ -235,13 +235,14 @@ export default function AddReconciliation() {
 
     // Function to handle saving reconciliation with optional closing balance
     // Function to handle saving reconciliation with optional closing balance
+    // Function to handle saving reconciliation with optional closing balance
     const handleSaveReconciliation = async () => {
         try {
             // Prepare opening entries from all sections
-            const openingEntries = formatEntriesForApi(openingData);
+            const currentOpeningEntries = formatEntriesForApi(openingData);
 
             // Prepare closing entries (send empty if no values entered to imply In_Progress)
-            const closingEntries = hasEnteredValues(closingData) ? formatEntriesForApi(closingData) : [];
+            const currentClosingEntries = hasEnteredValues(closingData) ? formatEntriesForApi(closingData) : [];
 
             // Validation: Check if all opening sections have currency selected
             const openingHasCurrency = openingData.sections &&
@@ -258,7 +259,7 @@ export default function AddReconciliation() {
             }
 
             // Validation: Check for opening vault data
-            const openingHasData = openingEntries.some(entry =>
+            const openingHasData = currentOpeningEntries.some(entry =>
                 entry.quantity > 0 || entry.amount > 0
             );
 
@@ -272,9 +273,6 @@ export default function AddReconciliation() {
                 return;
             }
 
-            // No validation for closing - it's completely optional
-            // Users can have closing sections with or without data
-
             // Show pending toast
             setToast({
                 show: true,
@@ -282,20 +280,90 @@ export default function AddReconciliation() {
                 type: "pending",
             });
 
-            const reconciliationData = {
-                openingEntries,
-                closingEntries, // Can be empty array
-                notes: notes ? [notes] : [],
-                status: status || "Tallied" // Send calculated status
-            };
+            let payload = {};
 
-            console.log('Sending reconciliation data:', reconciliationData);
+            if (id && originalData) {
+                // --- UPDATE MODE (Differential) ---
+
+                // 1. Check Notes
+                const originalNotesText = originalData.notes
+                    ? (Array.isArray(originalData.notes)
+                        ? originalData.notes.map(n => typeof n === 'string' ? n : n.note || n.text).join('\n')
+                        : String(originalData.notes))
+                    : "";
+
+                if (notes !== originalNotesText) {
+                    payload.notes = notes ? [notes] : [];
+                }
+
+                // Helper to normalize and sort entries for comparison
+                const normalize = (entries) => {
+                    if (!entries) return [];
+                    return entries.map(e => ({
+                        currency_id: e.currency_id || e.currencyId,
+                        denomination: parseFloat(e.denomination || 0),
+                        quantity: parseInt(e.quantity || 0),
+                        amount: parseFloat(e.amount || 0),
+                        exchange_rate: parseFloat(e.exchange_rate || e.exchangeRate || 1)
+                    })).sort((a, b) =>
+                        a.currency_id - b.currency_id || b.denomination - a.denomination
+                    );
+                };
+
+                const areEntriesEqual = (a, b) => {
+                    const normA = normalize(a);
+                    const normB = normalize(b);
+                    return JSON.stringify(normA) === JSON.stringify(normB);
+                };
+
+                // 2. Check Opening Entries
+                // originalData.openingEntries might be undefined or empty array
+                const originalOpening = originalData.openingEntries || originalData.opening_entries || [];
+                if (!areEntriesEqual(currentOpeningEntries, originalOpening)) {
+                    payload.openingEntries = currentOpeningEntries;
+                }
+
+                // 3. Check Closing Entries
+                const originalClosing = originalData.closingEntries || originalData.closing_entries || [];
+                if (!areEntriesEqual(currentClosingEntries, originalClosing)) {
+                    payload.closingEntries = currentClosingEntries;
+                }
+
+                // 4. Check Status (calculated status vs saved status)
+                // If status changed locally due to calc, we should save it.
+                // originalData.status might be "Tallied", etc. 
+                // 'status' variable is calculated in render from 'difference'
+                if (status !== originalData.status) {
+                    payload.status = status;
+                }
+
+                if (Object.keys(payload).length === 0) {
+                    setToast({
+                        show: true,
+                        message: "No changes detected.",
+                        type: "info",
+                    });
+                    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
+                    return;
+                }
+
+            } else {
+                // --- CREATE MODE (Full Payload) ---
+                payload = {
+                    openingEntries: currentOpeningEntries,
+                    closingEntries: currentClosingEntries,
+                    notes: notes ? [notes] : [],
+                    status: status || "Tallied"
+                };
+            }
+
+            console.log('Sending reconciliation payload:', payload);
 
             let result;
             if (id) {
-                result = await updateReconciliation(id, reconciliationData);
+                result = await updateReconciliation(id, payload);
             } else {
-                result = await createReconciliation(reconciliationData);
+                result = await createReconciliation(payload);
             }
 
             if (result.success) {
@@ -319,6 +387,7 @@ export default function AddReconciliation() {
                 }, 3000);
             }
         } catch (error) {
+            console.error("Save error:", error);
             setToast({
                 show: true,
                 message: "Please try again.",

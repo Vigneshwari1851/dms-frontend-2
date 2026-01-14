@@ -5,6 +5,7 @@ import tick from "../../assets/Common/tick.svg";
 import { fetchCurrencies } from "../../api/currency/currency";
 import trashHover from "../../assets/reconciliation/trash_hover.svg";
 import NotificationCard from "../../components/common/Notification";
+import addDenomination from "../../assets/dashboard/adddeno.svg";
 
 export default function OpeningVaultBalance({ data, setData, type }) {
     const wrapperRef = useRef(null);
@@ -43,8 +44,14 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                 const defaultCurrency =
                     currencies.find(c => c.code === "USD") || currencies[0];
 
-                if (!data.sections || data.sections.length === 0) {
-                    setData(prev => ({
+                setData(prev => {
+                    // If we already have sections (e.g. populated by parent fetch), don't overwrite
+                    if (prev.sections && prev.sections.length > 0) {
+                        return prev;
+                    }
+
+                    // Otherwise initialize with default
+                    return {
                         ...prev,
                         sections: [{
                             id: Date.now(),
@@ -54,8 +61,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                             rows: [{ denom: "", qty: "", total: 0, open: false }],
                             currencyOpen: false
                         }]
-                    }));
-                }
+                    };
+                });
             }
         };
 
@@ -150,7 +157,11 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
     // Add a new currency section
     const addNewCurrencySection = () => {
-        const defaultCurrency = currencyOptions[0] || "USD";
+        // Find first unused currency to avoid duplicates
+        const usedCurrencies = data.sections.map(s => s.selectedCurrency);
+        const availableCurrency = currencyOptions.find(c => !usedCurrencies.includes(c));
+
+        const defaultCurrency = availableCurrency || currencyOptions[0] || "USD";
         const defaultCurrencyId = currencyMap[defaultCurrency] || 1;
 
         setData(prev => ({
@@ -319,7 +330,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     };
 
     // Common denomination options
-    const denominationOptions = ["100", "50", "20", "10", "5", "2", "1"];
+    const denominationOptions = ["1000", "500", "100", "50", "20", "10", "5", "2", "1"];
 
     // Show sections only if they exist
     if (!data.sections || data.sections.length === 0) {
@@ -354,8 +365,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                     <div className="bg-[#1E2328] border border-[#16191C] rounded-xl p-3 w-full">
 
                         {/* SECTION HEADER WITH CURRENCY DROPDOWN */}
-                        <div className="flex flex-row lg:flex-row justify-between items-center mb-4 gap-2">
-                            <div className="flex flex-row lg:flex-col items-center lg:items-start gap-2 lg:gap-2">
+                        <div className="flex flex-row lg:flex-row justify-between items-center mb-4 gap-2 flex-wrap">
+                            <div className="flex flex-row lg:flex-col items-center lg:items-start gap-2 lg:gap-2 min-w-0">
                                 <div className="relative">
                                     <button
                                         onClick={() => toggleCurrencyDropdown(section.id)}
@@ -369,25 +380,36 @@ export default function OpeningVaultBalance({ data, setData, type }) {
 
                                     {section.currencyOpen && (
                                         <ul className="absolute left-0 mt-2 w-auto min-w-[90px] bg-[#2E3439] border border-[#2A2F33] rounded-lg z-20 dropdown-menu">
-                                            {currencyOptions.map((item) => (
-                                                <li
-                                                    key={item}
-                                                    onClick={() => handleCurrencySelect(section.id, item)}
-                                                    className="px-4 py-2 flex items-center justify-between 
+                                            {currencyOptions
+                                                .filter(item => {
+                                                    // Always show the currently selected currency for this section
+                                                    if (item === section.selectedCurrency) return true;
+
+                                                    // Exclude currencies selected in OTHER sections
+                                                    const usedCurrencies = data.sections
+                                                        .filter(s => s.id !== section.id)
+                                                        .map(s => s.selectedCurrency);
+                                                    return !usedCurrencies.includes(item);
+                                                })
+                                                .map((item) => (
+                                                    <li
+                                                        key={item}
+                                                        onClick={() => handleCurrencySelect(section.id, item)}
+                                                        className="px-4 py-2 flex items-center justify-between 
                         hover:bg-[#1E2328] cursor-pointer text-white"
-                                                >
-                                                    <span className="truncate max-w-[200px]">{item}</span>
-                                                    {section.selectedCurrency === item && (
-                                                        <img src={tick} className="w-4 h-4 shrink-0" alt="selected" />
-                                                    )}
-                                                </li>
-                                            ))}
+                                                    >
+                                                        <span className="truncate max-w-[200px]">{item}</span>
+                                                        {section.selectedCurrency === item && (
+                                                            <img src={tick} className="w-4 h-4 shrink-0" alt="selected" />
+                                                        )}
+                                                    </li>
+                                                ))}
                                         </ul>
                                     )}
                                 </div>
 
                                 {/* EXCHANGE RATE INPUT */}
-                                <div className="flex items-center gap-1 lg:gap-3 lg:pl-4">
+                                <div className="hidden lg:flex items-center gap-1 lg:gap-3 lg:pl-4 min-w-0">
                                     <label className="text-gray-400 text-[18px] lg:text-sm font-medium">Rate:</label>
                                     <input
                                         type="number"
@@ -398,11 +420,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         className="bg-[#16191C] text-white rounded-lg px-2 py-1 w-20 lg:w-24 text-sm outline-none"
                                     />
                                 </div>
+                            </div>
 
-                                {/* MOBILE DELETE BUTTON */}
+                            {/* MOBILE DELETE BUTTON - Replaced with Desktop Style */}
+                            {data.sections.length > 1 && (
                                 <button
                                     onClick={() => {
-                                        if (data.sections.length === 1) return; // Prevent deleting last section
                                         setConfirmModal({
                                             open: true,
                                             actionType: "remove",
@@ -412,11 +435,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                             rowIndex: null,
                                         });
                                     }}
-                                    className={`lg:hidden bg-transparent text-white rounded-lg hover:opacity-90 transition-colors ml-10 ${data.sections.length === 1 ? "opacity-50" : ""}`}
+                                    className="lg:hidden bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50 px-2 py-1.5 transition-colors text-[11px] flex items-center gap-1"
                                 >
-                                    <img src={trash} className="w-7 h-7 shrink-0 brightness-0 invert" alt="delete" />
+                                    <img src={trash} className="w-3.5 h-3.5 shrink-0" alt="delete" />
+                                    <span>Remove Currency</span>
                                 </button>
-                            </div>
+                            )}
 
                             {/* DESKTOP DELETE BUTTON */}
                             <div className="hidden lg:flex flex-col items-end">
@@ -442,25 +466,66 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                         </div>
 
                         {/* INNER CARD */}
-                        <div className="bg-[#16191C] p-5 rounded-lg mx-auto">
+                        <div className="bg-[#16191C] p-5 rounded-lg mx-auto relative">
+                            {/* Mobile Add button row above labels (visible only on mobile) */}
+                            <div className="lg:hidden mb-3 flex justify-between items-center">
+                                {/* Mobile Rate Input */}
+                                <div className="flex items-center gap-2">
+                                    <label className="text-gray-400 text-[14px] font-medium">Rate:</label>
+                                    <input
+                                        type="number"
+                                        value={section.exchangeRate || ""}
+                                        onChange={(e) => handleRateChange(section.id, e.target.value)}
+                                        className="bg-[#14171A] border border-[#4B5563] rounded-[4px] px-2 text-white text-[12px] outline-none h-[25px] w-20"
+                                    // placeholder="Rate"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={() => addRow(section.id)}
+                                    className="text-[#ABABAB] p-2 rounded-md border-none hover:bg-[#1E2328]"
+                                >
+                                    <img src={addDenomination} alt="add" className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Mobile Separator Line */}
+                            <div className="w-full h-[1px] bg-[#2A2F33] mb-3 lg:hidden"></div>
+
                             {/* TABLE HEADER */}
-                            <div className="grid grid-cols-3 gap-2 sm:gap-6 text-[#ABABAB] text-[14px] mb-2">
-                                <p>Denomination</p>
-                                <p>Quantity</p>
+                            <div className="
+    grid 
+    grid-cols-[1.2fr_0.8fr_1fr_40px] 
+    md:grid-cols-3
+    gap-2 
+    sm:gap-6 
+    text-[#ABABAB] 
+    text-[14px] 
+    mb-2
+">
+                                <p className="hidden md:block"> Denomination</p>
+                                <p className="block md:hidden">Denom</p>
+
+                                {/* Web */}
+                                <p className="hidden md:block">Quantity</p>
+
+                                {/* Mobile */}
+                                <p className="block md:hidden">Qty</p>
+
                                 <p>Total</p>
                             </div>
 
                             {/* ROWS */}
                             {section.rows.map((row, i) => (
-                                <div key={i} className="grid grid-cols-[1.2fr_0.8fr_1fr] md:grid-cols-3 gap-2 sm:gap-6 mb-4 border-b border-[#1E2328] pb-4 relative">
+                                <div key={i} className="grid grid-cols-[1.2fr_0.8fr_1fr_40px] md:grid-cols-3 gap-2 sm:gap-6 mb- pb-4 relative">
 
-                                    {/* DENOMINATION DROPDOWN */}
-                                    <div className="relative">
+                                    {/* DENOMINATION DROPDOWN (mobile style by default, desktop overridden by md:) */}
+                                    <div className="relative min-w-0">
                                         <button
                                             onClick={() => toggleRowDropdown(section.id, i)}
-                                            className="w-full bg-[#1E2328] rounded-lg px-3 py-2 text-white flex justify-between items-center dropdown-toggle"
+                                            className="w-full h-[25px] bg-[#14171A] border border-[#4B5563] rounded-[4px] px-2 text-white flex justify-between items-center dropdown-toggle text-[12px] md:h-10 md:bg-[#1E2328] md:rounded-lg md:px-3 md:border-0 md:text-sm"
                                         >
-                                            <span>
+                                            <span className="truncate">
                                                 {row.denom
                                                     ? row.denom
                                                     : "0.00"}
@@ -492,8 +557,8 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         )}
                                     </div>
 
-                                    {/* QUANTITY */}
-                                    <div className="flex items-center bg-[#1E2328] rounded-lg px-2 py-1">
+                                    {/* QUANTITY (mobile style default) */}
+                                    <div className="min-w-0">
                                         <input
                                             type="number"
                                             value={row.qty}
@@ -501,25 +566,53 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                 handleRowChange(section.id, i, "qty", e.target.value)
                                             }
                                             onWheel={(e) => e.target.blur()}
-                                            className="bg-transparent outline-none text-white w-full"
+                                            className="w-full h-[25px] bg-[#14171A] border border-[#4B5563] rounded-[4px] px-2 text-white text-[12px] outline-none md:h-10 md:bg-[#1E2328] md:rounded-lg md:px-3 md:border-0 md:text-base"
                                             placeholder="0"
                                             min="0"
                                         />
                                     </div>
 
-                                    {/* TOTAL + DELETE */}
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={row.total}
-                                            className="w-full bg-[#1E2328] rounded-lg px-2 sm:px-3 py-2 text-[#ABABAB] text-sm sm:text-base truncate"
-                                        />
+                                    {/* TOTAL (mobile style default) */}
+                                    <div className="min-w-0 flex items-center gap-3">
+                                        <div className="flex-1">
+                                            <div className="w-full h-[25px] bg-[#14171A] border border-[#4B5563] md:border-0 rounded-[4px] px-2 flex items-center text-white text-[12px] overflow-hidden md:h-10 md:bg-[#1E2328] md:rounded-lg md:px-3 md:text-sm md:text-[#ABABAB]">
+                                                <span className="truncate">{row.total}</span>
+                                            </div>
+                                        </div>
 
-                                        {/* Show delete button only if there's more than one row */}
-                                        {section.rows.length > 1 && (
-                                            <img
-                                                src={trash}
+                                        {/* Desktop delete (visible md+) */}
+                                        <div className="hidden md:flex items-center">
+                                            {section.rows.length > 1 ? (
+                                                <img
+                                                    src={trash}
+                                                    onClick={() =>
+                                                        setConfirmModal({
+                                                            open: true,
+                                                            actionType: "remove",
+                                                            title: "Please Confirm: Delete This Denomination Entry Permanently",
+                                                            message: "Are you sure you want to delete this row?",
+                                                            sectionId: section.id,
+                                                            rowIndex: i,
+                                                        })
+                                                    }
+                                                    className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7 shrink-0 lg:brightness-100 lg:invert-0 brightness-0 invert"
+                                                    alt="delete"
+                                                    title="Delete row"
+                                                    onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
+                                                    onMouseLeave={(e) => (e.currentTarget.src = trash)}
+                                                />
+                                            ) : (
+                                                <div className="w-7 h-7 shrink-0 opacity-30 cursor-not-allowed" title="Cannot delete the last row">
+                                                    <img src={trash} className="w-7 h-7 brightness-0 invert lg:brightness-100 lg:invert-0" alt="delete disabled" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* DELETE (mobile column) - hidden on md+ */}
+                                    <div className="flex items-center justify-center md:hidden">
+                                        {section.rows.length > 1 ? (
+                                            <button
                                                 onClick={() =>
                                                     setConfirmModal({
                                                         open: true,
@@ -530,37 +623,46 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                                         rowIndex: i,
                                                     })
                                                 }
-                                                className="cursor-pointer opacity-70 hover:opacity-100 w-7 h-7 shrink-0 lg:brightness-100 lg:invert-0 brightness-0 invert"
-                                                alt="delete"
-                                                title="Delete row"
-                                                onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
-                                                onMouseLeave={(e) => (e.currentTarget.src = trash)}
-                                            />
-                                        )}
-                                        {/* For the last row, show a disabled or hidden delete button */}
-                                        {section.rows.length === 1 && (
-                                            <div className="w-7 h-7 shrink-0 opacity-30 cursor-not-allowed" title="Cannot delete the last row">
-                                                <img src={trash} className="w-7 h-7 brightness-0 invert lg:brightness-100 lg:invert-0" alt="delete disabled" />
-                                            </div>
+                                                className="flex items-center justify-center transition-all hover:scale-110 active:scale-90"
+                                            >
+                                                <img
+                                                    src={trash}
+                                                    className="w-7 h-7"
+                                                    alt="delete"
+                                                    title="Delete row"
+                                                    onMouseEnter={(e) => (e.currentTarget.src = trashHover)}
+                                                    onMouseLeave={(e) => (e.currentTarget.src = trash)}
+                                                />
+                                            </button>
+                                        ) : (
+                                            <div className="w-7 h-7 opacity-30" title="Cannot delete the last row" />
                                         )}
                                     </div>
                                 </div>
                             ))}
 
-                            {/* ADD Row - Always show the Add button */}
-                            <div className="flex justify-end">
+                            {/* ADD Row - desktop only (mobile shows icon at top-right) */}
+                            <div className="hidden lg:flex justify-end">
                                 <button
                                     onClick={() => addRow(section.id)}
-                                    className="mt-2 border border-[#ABABAB] text-[#ABABAB] 
-                                    px-3 py-1 rounded-lg hover:bg-[#1E2328] transition-colors font-medium text-[13px]"
+                                    className="mt-2 text-[#ABABAB] px-3 py-1 rounded-lg hover:bg-[#1E2328] transition-colors font-medium text-[13px] border lg:border-[#ABABAB]"
                                 >
-                                    <span className="lg:inline hidden">+ Add Row</span>
-                                    <span className="lg:hidden inline">+ Add</span>
+                                    <span className="lg:inline">+ Add Row</span>
                                 </button>
                             </div>
 
-                            {/* SECTION TOTAL */}
-                            <div className="flex justify-between items-center mt-4 pt-3">
+                            {/* SECTION TOTAL - Mobile */}
+                            <div className="pt-4 lg:hidden">
+                                <div className="bg-[#1B1E21]/80 flex justify-between items-center px-4 py-2 rounded-lg border border-[#1B1E21]">
+                                    <span className="text-[#00C853] font-medium text-[13px] uppercase tracking-wide">Total</span>
+                                    <span className="text-[#00C853] font-semibold text-[14px]">
+                                        {calculateRawSectionTotal(section).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* SECTION TOTAL - Desktop */}
+                            <div className="hidden lg:flex justify-between items-center mt-4 pt-3">
                                 <h1 className="text-[#2ACC80] font-medium text-[16px]">Total ({section.selectedCurrency})</h1>
 
                                 <input
@@ -580,7 +682,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                 title="Add a row with same values as last row"
                             >
                                 <span className="lg:inline hidden">+ Add Different Currency</span>
-                                <span className="lg:hidden inline">+ Add</span>
+                                <span className="lg:hidden inline">+ Add Different Currency</span>
                             </button>
                         </div>
 
@@ -610,7 +712,10 @@ export default function OpeningVaultBalance({ data, setData, type }) {
         flex items-center justify-between px-4 text-white 
         font-normal text-[14px]"
                 >
-                    <p>Total {type === "opening" ? "Opening" : "Closing"} Balance (TZS)</p>
+                    <p>
+                        <span className="lg:hidden">Total (TZS)</span>
+                        <span className="hidden lg:inline">Total {type === "opening" ? "Opening" : "Closing"} Balance (TZS)</span>
+                    </p>
                     <p>{calculateGrandTotal().toFixed(2)}</p>
                 </div>
             </div>

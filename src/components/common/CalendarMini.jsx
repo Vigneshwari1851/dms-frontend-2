@@ -37,6 +37,11 @@ export default function CalendarMini({
     );
   };
 
+  const handleDateClick = (day) => {
+    const dateObj = new Date(currentYear, currentMonth, day);
+    if (onDateSelect) onDateSelect(dateObj);
+  };
+
   const handlePrevMonth = () => {
     setCurrentMonth(m => {
       if (m === 0) {

@@ -71,8 +71,8 @@ export default function Header({ toggleSidebar }) {
     setConfirmModal({
       open: true,
       actionType: "logout",
-      title: "Securely Signing Out",
-      message: "Are you sure you want to securely end your session? Your data and funds will remain protected.",
+      title: "Signing Out",
+      message: "Are you sure you want to end your session? ",
       confirmText: "Logout",
       cancelText: "Cancel",
     });
