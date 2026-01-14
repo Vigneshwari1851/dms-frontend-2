@@ -67,19 +67,30 @@ export default function ListReport() {
   ];
 
   const formatDate = (date) => {
+    if (!date) return "";
     const d = new Date(date);
-    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+    if (isNaN(d.getTime())) return "";
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  const fetchReportData = async (page = pagination.page) => {
+  const fetchReportData = async (page = pagination.page, currentFilters = {}) => {
     try {
-      const apiDateFilter = dateRange.toLowerCase().replace(" ", "");
+      // Use overrides if provided (for immediate apply), otherwise fall back to state
+      const activeDateRange = currentFilters.dateRange !== undefined ? currentFilters.dateRange : dateRange;
+      const activeCurrency = currentFilters.currency !== undefined ? currentFilters.currency : currencyFilter;
+      const activeStatus = currentFilters.status !== undefined ? currentFilters.status : statusFilter;
+
+      const apiDateFilter = activeDateRange.toLowerCase().replace(" ", "");
       const { data, pagination: pag } = await fetchDeals({
         page,
         limit: pagination.limit,
         dateFilter: apiDateFilter === "custom" ? "custom" : apiDateFilter,
         ...(apiDateFilter === "custom" && { startDate: formatDate(customFrom), endDate: formatDate(customTo) }),
-        currency: currencyFilter !== "All Currencies" ? currencyFilter : undefined,
+        currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
+        status: activeStatus !== "All Status" ? activeStatus : undefined // Ensure status is also passed if needed
       });
 
       setReportRows(data || []);
@@ -93,13 +104,22 @@ export default function ListReport() {
     }
   };
 
-  const handleApplyFilters = async () => {
+  const handleApplyFilters = async (overrideDateRange = null) => {
     setPagination((prev) => ({ ...prev, page: 1 }));
-    setDateRange(tempDateRange);
+
+    // Use the override ONLY if it's a valid string (e.g. "Custom" from modal)
+    // Ignore if it's an Event object (from onClick) or null
+    const effectiveDateRange = (typeof overrideDateRange === 'string') ? overrideDateRange : tempDateRange;
+
+    setDateRange(effectiveDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
 
-    await fetchReportData(1);
+    await fetchReportData(1, {
+      dateRange: effectiveDateRange,
+      status: tempStatusFilter,
+      currency: tempCurrencyFilter
+    });
   };
 
   const handleExport = async (format) => {
@@ -357,7 +377,7 @@ export default function ListReport() {
                 onClick={async () => {
                   setShowCustomModal(false);
                   setTempDateRange("Custom");
-                  await handleApplyFilters();
+                  await handleApplyFilters("Custom");
                 }}
               >
                 Apply
