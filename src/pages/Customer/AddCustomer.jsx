@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import { addCustomer } from "../../api/customers";
 import Dropdown from "../../components/common/Dropdown";
+import { hashValue } from "../../utils/hash";
 
 export default function AddCustomer() {
 
@@ -29,7 +30,8 @@ export default function AddCustomer() {
         return Object.keys(newErrors).length === 0;
     };
 
-      useEffect(() => {
+    useEffect(() => {
+    const checkPhone = async () => {
         const digits = phone.replace(/\D/g, "");
 
         if (digits.length < 10) {
@@ -38,10 +40,14 @@ export default function AddCustomer() {
         return;
         }
 
+        const phoneHash = await hashValue(digits);
+
         const customers =
         JSON.parse(localStorage.getItem("customers_local")) || [];
 
-        const found = customers.find((c) => c.phone === digits);
+        const found = customers.find(
+        (c) => c.phoneHash === phoneHash
+        );
 
         if (found) {
         setPhoneExists(true);
@@ -50,6 +56,9 @@ export default function AddCustomer() {
         setPhoneExists(false);
         setExistingCustomerName("");
         }
+    };
+
+    checkPhone();
     }, [phone]);
 
     const storeCustomerLocally = (name, phone) => {
