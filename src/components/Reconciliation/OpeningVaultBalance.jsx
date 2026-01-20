@@ -330,7 +330,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     };
 
     // Common denomination options
-    const denominationOptions = ["1000", "500", "100", "50", "20", "10", "5", "2", "1"];
+    const denominationOptions = ["10000","5000","2000","1000", "500", "200", "100", "50"];
 
     // Show sections only if they exist
     if (!data.sections || data.sections.length === 0) {

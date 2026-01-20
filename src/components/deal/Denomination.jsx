@@ -71,7 +71,7 @@ export default function Denomination({
 
   // Get available denomination options excluding already selected ones
   const getAvailableOptions = (list, currentIndex) => {
-    const allOptions = ["1000", "500", "100", "50", "20", "10", "5", "2", "1"];
+    const allOptions = ["10000","5000","2000","1000", "500", "200", "100", "50"];
 
     // Get all selected prices except the current row's price
     const selectedPrices = list
