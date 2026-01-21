@@ -555,229 +555,165 @@ export default function CreateDeal() {
 
         {/* Row 2 - Transaction fields (Responsive Grid) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
-          {/* Transaction Type */}
-          <div className="w-full">
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Transaction Type <span className="text-red-500">*</span>
-            </label>
-            <div
-              className={`
-              className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 outline-none text-white"
-              `}
-            >
-              {txnType}
-            </div>
-            <div className="min-h-3.5 mt-1" />
+        {/* 1. Transaction Type */}
+        <div className="w-full">
+          <label className="text-[#ABABAB] text-sm mb-1 block">
+            Transaction Type <span className="text-red-500">*</span>
+          </label>
+          <div className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white">
+            {txnType}
           </div>
+          <div className="min-h-3.5 mt-1" />
+        </div>
 
-          {/* Transaction Mode */}
+        {/* 2. First Currency (Buy / Sell based on txnType) */}
+        {txnType.toLowerCase() === "sell" ? (
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Transaction Mode <span className="text-red-500">*</span>
+              Sell Currency Type <span className="text-red-500">*</span>
             </label>
             <Dropdown
-              label="Mode"
-              options={["Cash", "Credit"]}
-              selected={txnMode}
+              label="Sell Currency"
+              options={sellCurrencyOptions}
+              selected={sellCurrency}
               onChange={(val) => {
-                setTxnMode(val);
-                setErrors(prev => ({ ...prev, txnMode: "" }));
+                handleCurrencySelect(val, "sell");
+                setErrors(prev => ({ ...prev, sellCurrency: "" }));
               }}
               className="w-full"
             />
-            <div className="min-h-3.5 mt-1">
-              {errors.txnMode && (
-                <p className="text-red-400 text-[11px] leading-3.5">
-                  {errors.txnMode}
-                </p>
-              )}
-            </div>
+            <div className="h-3.5 mt-1" />
           </div>
+        ) : (
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Buy Currency Type <span className="text-red-500">*</span>
+            </label>
+            <Dropdown
+              label="Buy Currency"
+              options={buyCurrencyOptions}
+              selected={buyCurrency}
+              onChange={(val) => {
+                handleCurrencySelect(val, "buy");
+                setErrors(prev => ({ ...prev, buyCurrency: "" }));
+              }}
+              className="w-full"
+            />
+            <div className="h-3.5 mt-1" />
+          </div>
+        )}
 
-          {txnType.toLowerCase() === "sell" ? (
-            <>
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Sell Currency Type <span className="text-red-500">*</span>
-                </label>
-                <Dropdown
-                  label="Sell Currency"
-                  options={sellCurrencyOptions}
-                  selected={sellCurrency}
-                  onChange={(val) => {
-                    handleCurrencySelect(val, "sell");
-                    setErrors(prev => ({ ...prev, sellCurrency: "" }));
-                  }}
-                  className="w-full"
-                />
-                <div className="h-3.5 mt-1" />
-              </div>
-
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Amount <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
-                  placeholder="0.00"
-                  type="text"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^\d*\.?\d*$/.test(value)) {
-                      setAmount(value);
-                      setErrors(prev => ({ ...prev, amount: "" }));
-                    }
-                  }}
-                />
-                <div className="min-h-3.5 mt-1">
-                  {errors.amount && (
-                    <p className="text-red-400 text-[11px]">
-                      {errors.amount}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Buy Currency Type */}
-              <div className="lg:min-w-0">
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Buy Currency Type <span className="text-red-500">*</span>
-                </label>
-                <Dropdown
-                  label="Buy Currency"
-                  options={buyCurrencyOptions}
-                  selected={buyCurrency}
-                  onChange={(val) => {
-                    handleCurrencySelect(val, "buy");
-                    setErrors(prev => ({ ...prev, buyCurrency: "" }));
-                  }}
-                  className="w-full"
-                />
-                <div className="h-3.5 mt-1" />
-              </div>
-
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Rate <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className="w-[167px] h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
-                  placeholder="0.00"
-                  type="text"
-                  inputMode="decimal"
-                  value={rate}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^\d*\.?\d*$/.test(value)) {
-                      setRate(value);
-                      setErrors(prev => ({ ...prev, rate: "" }));
-                    }
-                  }}
-                />
-                <div className="min-h-3.5 mt-1">
-                  {errors.rate && (
-                    <p className="text-red-400 text-[11px]">
-                      {errors.rate}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="lg:min-w-0">
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Buy Currency Type <span className="text-red-500">*</span>
-                </label>
-                <Dropdown
-                  label="Buy Currency"
-                  options={buyCurrencyOptions}
-                  selected={buyCurrency}
-                  onChange={(val) => {
-                    handleCurrencySelect(val, "buy");
-                    setErrors(prev => ({ ...prev, buyCurrency: "" }));
-                  }}
-                  className="w-full"
-                />
-                <div className="h-3.5 mt-1" />
-              </div>
-
-              {/* Amount */}
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Amount <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-                  placeholder="0.00"
-                  type="text"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^\d*\.?\d*$/.test(value)) {
-                      setAmount(value);
-                      setErrors(prev => ({ ...prev, amount: "" }));
-                    }
-                  }}
-                />
-                <div className="min-h-3.5 mt-1">
-                  {errors.amount && (
-                    <p className="text-red-400 text-[11px]">
-                      {errors.amount}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Sell Currency Type */}
-              <div className="lg:min-w-0">
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Sell Currency Type <span className="text-red-500">*</span>
-                </label>
-                <Dropdown
-                  label="Sell Currency"
-                  options={sellCurrencyOptions}
-                  selected={sellCurrency}
-                  onChange={(val) => {
-                    handleCurrencySelect(val, "sell");
-                    setErrors(prev => ({ ...prev, sellCurrency: "" }));
-                  }}
-                  className="w-full"
-                />
-                <div className="h-3.5 mt-1" />
-              </div>
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  Rate <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-                  placeholder="0.00"
-                  type="text"
-                  inputMode="decimal"
-                  value={rate}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^\d*\.?\d*$/.test(value)) {
-                      setRate(value);
-                      setErrors(prev => ({ ...prev, rate: "" }));
-                    }
-                  }}
-                />
-                <div className="min-h-3.5 mt-1">
-                  {errors.rate && (
-                    <p className="text-red-400 text-[11px]">
-                      {errors.rate}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+        {/* 3. Transaction Mode */}
+        <div>
+          <label className="text-[#ABABAB] text-sm mb-1 block">
+            Transaction Mode <span className="text-red-500">*</span>
+          </label>
+          <Dropdown
+            label="Mode"
+            options={["Cash", "Credit"]}
+            selected={txnMode}
+            onChange={(val) => {
+              setTxnMode(val);
+              setErrors(prev => ({ ...prev, txnMode: "" }));
+            }}
+            className="w-full"
+          />
+          <div className="min-h-3.5 mt-1">
+            {errors.txnMode && (
+              <p className="text-red-400 text-[11px]">{errors.txnMode}</p>
+            )}
+          </div>
         </div>
+
+        {/* 4. Second Currency (Opposite) */}
+        {txnType.toLowerCase() === "sell" ? (
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Buy Currency Type <span className="text-red-500">*</span>
+            </label>
+            <Dropdown
+              label="Buy Currency"
+              options={buyCurrencyOptions}
+              selected={buyCurrency}
+              onChange={(val) => {
+                handleCurrencySelect(val, "buy");
+                setErrors(prev => ({ ...prev, buyCurrency: "" }));
+              }}
+              className="w-full"
+            />
+            <div className="h-3.5 mt-1" />
+          </div>
+        ) : (
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Sell Currency Type <span className="text-red-500">*</span>
+            </label>
+            <Dropdown
+              label="Sell Currency"
+              options={sellCurrencyOptions}
+              selected={sellCurrency}
+              onChange={(val) => {
+                handleCurrencySelect(val, "sell");
+                setErrors(prev => ({ ...prev, sellCurrency: "" }));
+              }}
+              className="w-full"
+            />
+            <div className="h-3.5 mt-1" />
+          </div>
+        )}
+
+        {/* 5. Amount */}
+        <div>
+          <label className="text-[#ABABAB] text-sm mb-1 block">
+            Amount <span className="text-red-500">*</span>
+          </label>
+          <input
+            className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+            placeholder="0.00"
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*\.?\d*$/.test(value)) {
+                setAmount(value);
+                setErrors(prev => ({ ...prev, amount: "" }));
+              }
+            }}
+          />
+          <div className="min-h-3.5 mt-1">
+            {errors.amount && (
+              <p className="text-red-400 text-[11px]">{errors.amount}</p>
+            )}
+          </div>
+        </div>
+
+        {/* 6. Rate */}
+        <div>
+          <label className="text-[#ABABAB] text-sm mb-1 block">
+            Rate <span className="text-red-500">*</span>
+          </label>
+          <input
+            className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+            placeholder="0.00"
+            type="text"
+            inputMode="decimal"
+            value={rate}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*\.?\d*$/.test(value)) {
+                setRate(value);
+                setErrors(prev => ({ ...prev, rate: "" }));
+              }
+            }}
+          />
+          <div className="min-h-3.5 mt-1">
+            {errors.rate && (
+              <p className="text-red-400 text-[11px]">{errors.rate}</p>
+            )}
+          </div>
+        </div>
+      </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
         <div className="">
