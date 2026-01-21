@@ -32,6 +32,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         activate: activateIcon,
         logout: logoutIcon,
         remove: trashIcon,
+        authError: deleteIcon,
     };
 
     const labelMap = {
@@ -59,11 +60,15 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         activate: "#1E902D",
         logout: "#BD404A",
         remove: "#BD404A",
+        authError: "#1D4CB5",
     };
 
     const iconToShow = iconMap[actionType] || confirmIcon;
     const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
     const confirmBtnColor = colorMap[actionType] || "#1E902D";
+
+    // Filter for blue cross icon if it's an auth error
+    const iconStyle = actionType === "authError" ? { filter: "invert(24%) sepia(91%) saturate(2251%) hue-rotate(212deg) brightness(95%) contrast(92%)" } : {};
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">
@@ -73,6 +78,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
                 <img
                     src={iconToShow}
                     alt="icon"
+                    style={iconStyle}
                     className="w-full max-w-[150px] sm:max-w-none h-auto sm:h-[150px]"
                 />
                 <div className="mt-3 w-full flex flex-col gap-3 sm:gap-4 text-center">

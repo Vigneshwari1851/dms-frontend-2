@@ -7,6 +7,7 @@ import failureIcon from "../../../assets/login/Failure.svg";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { loginUser } from "../../../api/auth/auth";
 import mobbg from "../../../assets/login/mobbg.png";
+import NotificationCard from "../../../components/common/Notification";
 
 function Login() {
   const navigate = useNavigate();
@@ -17,8 +18,7 @@ function Login() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [errorType, setErrorType] = useState("");
+  const [confirmModal, setConfirmModal] = useState({ open: false });
 
   // Load saved email on page load
   useEffect(() => {
@@ -77,7 +77,6 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
 
     // Weekend check
     // const today = new Date().getDay();
@@ -128,13 +127,22 @@ function Login() {
       const backendMsg =
         error?.data?.error || error?.data?.message || error?.message || "Login failed";
 
-      
+
       setErrors({
         email: "",
         password: "",
       });
 
-      setErrorMessage(backendMsg);
+      // Clean message (remove "Attempt X/3")
+      const displayMsg = backendMsg.split(". Attempt")[0];
+
+      setConfirmModal({
+        open: true,
+        actionType: "authError", // Blue theme
+        title: "Login Failed",
+        message: displayMsg,
+        confirmText: "Try Again",
+      });
     }
     setIsSubmitting(false);
   };
@@ -261,7 +269,7 @@ function Login() {
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder={window.innerWidth < 1024 ? "Enter your password" : "Enter the password received in your email"}
+                      placeholder={window.innerWidth < 1024 ? "Enter your password" : "Enter the password "}
                       value={formData.password}
                       onChange={handleInputChange}
                       autoComplete="current-password"
@@ -283,13 +291,6 @@ function Login() {
                     <p className="text-xs text-[#EB1D2E]">{errors.password}</p>
                   )}
                 </div>
-
-                {/* General Error Message */}
-                {errorMessage && (
-                  <div className="text-xs text-[#EB1D2E] text-center -mt-4">
-                    {errorMessage}
-                  </div>
-                )}
 
                 {/* Remember me */}
                 <div className="flex items-center justify-between text-sm">
@@ -353,6 +354,16 @@ function Login() {
           </div>
         </div>
       </div>
+      <NotificationCard
+        confirmModal={confirmModal}
+        onConfirm={() => {
+          if (confirmModal.actionType === "authError") {
+            setFormData({ email: "", password: "" });
+          }
+          setConfirmModal({ open: false });
+        }}
+        onCancel={() => setConfirmModal({ open: false })}
+      />
     </>
   );
 }
