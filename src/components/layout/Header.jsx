@@ -233,12 +233,12 @@ export default function Header({ toggleSidebar }) {
           </div>
         </div>
 
-        <NotificationCard
-          confirmModal={confirmModal}
-          onConfirm={handleConfirmLogout}
-          onCancel={() => setConfirmModal({ open: false })}
-        />
       </header>
+      <NotificationCard
+        confirmModal={confirmModal}
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setConfirmModal({ open: false })}
+      />
     </>
   );
 }

@@ -66,7 +66,7 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
     const confirmBtnColor = colorMap[actionType] || "#1E902D";
 
     return (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">
 
             <div className="w-full max-w-[470px] min-h-[374px] bg-[#1E2328] rounded-lg shadow-xl px-6 sm:px-10 pt-6 sm:pt-10 pb-6 flex flex-col items-center">
 
