@@ -125,14 +125,13 @@ function Login() {
         return;
       }
     } catch (error) {
-        const backendMsg =
+      const backendMsg =
         error?.data?.error || error?.data?.message || error?.message || "Login failed";
 
-      const lowerMsg = backendMsg.toLowerCase();
-
+      
       setErrors({
-        email: lowerMsg.includes("email") ? backendMsg : "",
-        password: lowerMsg.includes("password") ? backendMsg : "",
+        email: "",
+        password: "",
       });
 
       setErrorMessage(backendMsg);
@@ -284,6 +283,13 @@ function Login() {
                     <p className="text-xs text-[#EB1D2E]">{errors.password}</p>
                   )}
                 </div>
+
+                {/* General Error Message */}
+                {errorMessage && (
+                  <div className="text-xs text-[#EB1D2E] text-center -mt-4">
+                    {errorMessage}
+                  </div>
+                )}
 
                 {/* Remember me */}
                 <div className="flex items-center justify-between text-sm">

@@ -8,6 +8,7 @@ import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUsers, updateUserStatus, deleteUser } from "../../api/user/user.jsx";
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
+import userEmptyBg from "../../assets/Common/empty/user-bg.svg";
 
 export default function ListUser() {
   const navigate = useNavigate();
@@ -141,7 +142,7 @@ export default function ListUser() {
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-xl lg:text-2xl font-semibold">Users</h1>
+        <h1 className="text-white text-xl lg:text-[20px] font-semibold">Users</h1>
         <button
           onClick={handleAddUser}
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium">
@@ -164,6 +165,20 @@ export default function ListUser() {
           currentPage={currentPage}
           totalPages={pagination.totalPages}
           onPageChange={handlePageChange}
+          emptyStateProps={{
+            imageSrc: userEmptyBg,
+            message: "No users found",
+            description: "Register new users to manage system access and permissions",
+            action: (
+              <button
+                onClick={() => navigate("/users/add-user")}
+                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
+              >
+                <img src={add} alt="add" className="w-4 h-4" />
+                Add User
+              </button>
+            )
+          }}
         />
       </div>
       <Toast show={showToast} message={toastMessage} type={toastType} />

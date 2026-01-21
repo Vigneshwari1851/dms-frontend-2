@@ -10,6 +10,8 @@ import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import { fetchDeals, exportDeals } from "../../api/deals.jsx";
 import { useNavigate } from "react-router-dom";
+import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function ListReport() {
   const navigate = useNavigate();
@@ -187,7 +189,7 @@ export default function ListReport() {
   return (
     <>
       <div className="flex flex-row items-center justify-between gap-4">
-        <h1 className="text-white text-lg lg:text-2xl font-semibold">Reports & Analytics</h1>
+        <h1 className="text-white text-lg lg:text-[20px] font-semibold">Reports & Analytics</h1>
         <div className="relative hidden lg:block" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
@@ -390,15 +392,11 @@ export default function ListReport() {
       {/* Table */}
       <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
         {paginatedData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            {/* <img src={bgIcon} alt="No Data" className="w-72 opacity-80" /> */}
-            <img
-              src={bgIcon}
-              alt="No Data"
-              className="max-w-full w-64 lg:w-72 opacity-80"
-            />
-
-          </div>
+          <EmptyState
+            imageSrc={dealEmptyBg}
+            message="No report data found"
+            description="Adjust your filters or date range to view business analytics"
+          />
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">

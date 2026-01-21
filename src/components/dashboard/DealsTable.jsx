@@ -12,6 +12,9 @@ import excel from "../../assets/Common/excel.svg";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { useNavigate } from "react-router-dom";
 import { fetchCurrencies } from "../../api/currency/currency";
+import EmptyState from "../common/EmptyState";
+import todayDealBg from "../../assets/Common/empty/todaydeal.svg";
+import add from "../../assets/dashboard/add.svg";
 
 export default function DealsTable() {
   const navigate = useNavigate();
@@ -414,91 +417,97 @@ export default function DealsTable() {
 
       {/* Table Container with Overflow */}
       <div className="-mx-4 lg:-mx-5 overflow-x-auto scrollbar-grey">
-        <table className="min-w-[1000px] lg:min-w-full w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
-          <thead>
-            <tr className="text-[#FFFFFF] text-[12px] font-normal">
-              <th className="py-3 text-left pl-5">Deal ID</th>
-              <th>Date</th>
-
-              {/* TYPE SORT */}
-              <th
-                className="py-3  cursor-pointer select-none "
-                onClick={() => {
-                  if (sortBy === "type") setSortAsc(!sortAsc);
-                  else {
-                    setSortBy("type");
-                    setSortAsc(true);
-                  }
-                }}
+        {paginatedData.length === 0 ? (
+          <EmptyState
+            imageSrc={todayDealBg}
+            message="No deals found for today"
+            description="Get started by creating your first deal of the day"
+            action={
+              <button
+                onClick={() => navigate("/deals/create-deal")}
+                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
               >
-                <div className="flex items-center gap-1 ml-2 justify-center ">
-                  Type
-                  <span className="flex flex-col ">
-                    <img
-                      src={uparrowIcon}
-                      className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
-                        }`}
-                    />
-                    <img
-                      src={downarrowIcon}
-                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
-                        }`}
-                    />
-                  </span>
-                </div>
-              </th>
+                <img src={add} alt="add" className="w-5 h-5" />
+                Create New Deal
+              </button>
+            }
+          />
+        ) : (
+          <table className="min-w-[1000px] lg:min-w-full w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
+            <thead>
+              <tr className="text-[#FFFFFF] text-[12px] font-normal">
+                <th className="py-3 text-left pl-5">Deal ID</th>
+                <th>Date</th>
 
-              <th>Customer Name</th>
-              <th>Buy Amount</th>
-
-              {/* CURRENCY SORT */}
-              <th
-                className="py-3 cursor-pointer select-none"
-                onClick={() => {
-                  if (sortBy === "currency") setSortAsc(!sortAsc);
-                  else {
-                    setSortBy("currency");
-                    setSortAsc(true);
-                  }
-                }}
-
-              >
-                <div className="flex items-center gap-1 ml-5 justify-center">
-                  Currency
-                  <span className="flex flex-col">
-                    <img
-                      src={uparrowIcon}
-                      className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
-                        }`}
-                    />
-                    <img
-                      src={downarrowIcon}
-                      className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
-                        }`}
-                    />
-                  </span>
-                </div>
-              </th>
-
-              <th>Rate</th>
-              <th>Sell Amount</th>
-              <th >Currency</th>
-              <th className="pr-5">Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={10}
-                  className="py-10 text-center text-gray-400 text-sm"
+                {/* TYPE SORT */}
+                <th
+                  className="py-3  cursor-pointer select-none "
+                  onClick={() => {
+                    if (sortBy === "type") setSortAsc(!sortAsc);
+                    else {
+                      setSortBy("type");
+                      setSortAsc(true);
+                    }
+                  }}
                 >
-                  No deals available
-                </td>
+                  <div className="flex items-center gap-1 ml-2 justify-center ">
+                    Type
+                    <span className="flex flex-col ">
+                      <img
+                        src={uparrowIcon}
+                        className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
+                      />
+                      <img
+                        src={downarrowIcon}
+                        className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
+                      />
+                    </span>
+                  </div>
+                </th>
+
+                <th>Customer Name</th>
+                <th>Buy Amount</th>
+
+                {/* CURRENCY SORT */}
+                <th
+                  className="py-3 cursor-pointer select-none"
+                  onClick={() => {
+                    if (sortBy === "currency") setSortAsc(!sortAsc);
+                    else {
+                      setSortBy("currency");
+                      setSortAsc(true);
+                    }
+                  }}
+
+                >
+                  <div className="flex items-center gap-1 ml-5 justify-center">
+                    Currency
+                    <span className="flex flex-col">
+                      <img
+                        src={uparrowIcon}
+                        className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
+                      />
+                      <img
+                        src={downarrowIcon}
+                        className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
+                          }`}
+                      />
+                    </span>
+                  </div>
+                </th>
+
+                <th>Rate</th>
+                <th>Sell Amount</th>
+                <th >Currency</th>
+                <th className="pr-5">Status</th>
               </tr>
-            ) : (
-              paginatedData.map((item, index) => (
+            </thead>
+
+            <tbody>
+              {paginatedData.map((item, index) => (
                 <tr
                   key={index}
                   className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
@@ -536,10 +545,10 @@ export default function DealsTable() {
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* ------------ Pagination (Right-Aligned) ------------ */}

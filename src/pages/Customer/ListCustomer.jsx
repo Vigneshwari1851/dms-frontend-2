@@ -5,6 +5,7 @@ import { searchCustomers } from "../../api/customers";
 import add from "../../assets/Common/HPlus.svg";
 import Toast from "../../components/common/Toast";
 import { resetCustomersLocal } from "../../utils/customerLocalStore";
+import customerEmptyBg from "../../assets/Common/empty/customer-bg.svg";
 
 export default function ListCustomer() {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ export default function ListCustomer() {
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-xl lg:text-2xl font-semibold">Customer Ledger</h1>
+        <h1 className="text-white text-xl lg:text-[20px] font-semibold">Customer Ledger</h1>
         <button
           onClick={handleAddCustomer}
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
@@ -147,8 +148,22 @@ export default function ListCustomer() {
           onSearch={handleSearch}
           onRowClick={(row) =>
             navigate(`/customer-info/view/${row.id}`)
-          }          
+          }
           showRightSection={false}
+          emptyStateProps={{
+            imageSrc: customerEmptyBg,
+            message: "No customers found",
+            description: "Start by adding your first customer to the ledger",
+            action: (
+              <button
+                onClick={() => navigate("/customer-info/add-customer")}
+                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
+              >
+                <img src={add} alt="add" className="w-5 h-5 px-1" />
+                Add Customer
+              </button>
+            )
+          }}
         />
         {loading && <p className="text-white text-center mt-4">Searching...</p>}
       </div>

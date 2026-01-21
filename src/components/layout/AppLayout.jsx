@@ -1,10 +1,19 @@
 import { useState } from "react";
 import Header from "./Header";
 import Sider from "./Sider";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 export default function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { pathname } = useLocation();
+  const mainRef = useRef(null);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [pathname]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -29,6 +38,7 @@ export default function AppLayout() {
 
         {/* Main content */}
         <main
+          ref={mainRef}
           className="flex-1 overflow-y-scroll scrollbar-grey p-4 lg:p-8 bg-[#16191C] text-white"
           style={{ scrollbarGutter: "stable" }}
         >

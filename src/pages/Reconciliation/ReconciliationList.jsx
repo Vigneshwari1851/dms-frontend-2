@@ -6,6 +6,7 @@ import ActionDropdown from "../../components/common/ActionDropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
+import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
 
 export default function ReconciliationList() {
   const navigate = useNavigate();
@@ -247,7 +248,7 @@ export default function ReconciliationList() {
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-2xl font-semibold">Reconciliation</h1>
+        <h1 className="text-white text-xl font-semibold">Reconciliation</h1>
         <button
           onClick={handleAddUser}
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -281,32 +282,35 @@ export default function ReconciliationList() {
       )}
 
       {/* Table */}
-      {!loading && !error && reconciliations.length > 0 && (
+      {!loading && !error && (
         <div className="mt-8">
           <Table
             columns={columns}
             data={prepareTableData()}
             title="Reconciliation List"
-            // subtitle={`Total: ${reconciliations.length} reconciliations`}
             showRightSection={true}
             onRowClick={handleRowClick}
             onSearch={handleSearch}
             onExport={handleExport}
             showExport={true}
-            // sortableKeys={["date", "status", "totalTransactions"]}
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
             onPageChange={handlePageChange}
-
+            emptyStateProps={{
+              imageSrc: reconEmptyBg,
+              message: "No reconciliations found",
+              description: "Perform your first daily vault reconciliation to see records here",
+              action: (
+                <button
+                  onClick={() => navigate("/reconciliation/add-reconciliation")}
+                  className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
+                >
+                  <img src={add} alt="add" className="w-5 h-5" />
+                  Create Reconciliation
+                </button>
+              )
+            }}
           />
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && !error && reconciliations.length === 0 && (
-        <div className="text-center py-10">
-          <div className="text-gray-400 text-lg mb-4">No reconciliations found</div>
-
         </div>
       )}
 

@@ -62,7 +62,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="flex items-center justify-between mb-6 lg:mb-10">
-        <h1 className="text-white text-xl lg:text-2xl font-semibold">Welcome back!</h1>
+        <h1 className="text-white text-xl lg:text-[20px] font-semibold">Welcome back!</h1>
         <button
           className="
     flex items-center justify-center 

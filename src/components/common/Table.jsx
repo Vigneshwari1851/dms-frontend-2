@@ -7,6 +7,7 @@ import Dropdown from "../../components/common/Dropdown";
 import pdf from "../../assets/Common/pdf.svg";
 import excel from "../../assets/Common/excel.svg";
 import DateFilter from "./DateFilter";
+import EmptyState from "./EmptyState";
 
 export default function Table({
   columns = [],
@@ -26,9 +27,10 @@ export default function Table({
   currentPage,
   totalPages,
   onPageChange,
+  emptyStateProps = {},
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const statuses = ["All Status","In_Progress", "Tallied", "Excess", "Short"];
+  const statuses = ["All Status", "In_Progress", "Tallied", "Excess", "Short"];
   const exportOptions = ["pdf"];
 
   const [search, setSearch] = useState("");
@@ -285,56 +287,59 @@ export default function Table({
 
       {/* TABLE BODY */}
       <div className="bg-[#1A1F24] mt-[1.5px] py-4 overflow-x-auto">
-        <table className="w-full text-[#8F8F8F] font-normal text-[13px] min-w-[640px]">
-          <thead>
-            <tr className="text-[#FFFFFF] text-[12px] font-normal">
-              {columns.map((col, index) =>
-                sortableKeys.includes(col.key) ? (
-                  <SortableHeader
-                    key={index}
-                    label={col.label}
-                    columnKey={col.key}
-                    sortBy={sortConfig.key}
-                    sortAsc={sortConfig.asc}
-                    onSort={handleSort}
-                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
-                  />
-                ) : (
-                  <th
-                    key={index}
-                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
-                  >
-                    {col.label}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-
-          <tbody>
-            {sortedData.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                onClick={() => onRowClick && onRowClick(row)}   // <-- ADD THIS
-                className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
-              >
-
-                {columns.map((col, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
-                  >
-                    {col.key === "full_name" ? (
-                      <span className="text-white">{row[col.key]}</span>
-                    ) : (
-                      renderCell(col, row[col.key])
-                    )}
-                  </td>
-                ))}
+        {sortedData.length === 0 ? (
+          <EmptyState {...emptyStateProps} />
+        ) : (
+          <table className="w-full text-[#8F8F8F] font-normal text-[13px] min-w-[640px]">
+            <thead>
+              <tr className="text-[#FFFFFF] text-[12px] font-normal">
+                {columns.map((col, index) =>
+                  sortableKeys.includes(col.key) ? (
+                    <SortableHeader
+                      key={index}
+                      label={col.label}
+                      columnKey={col.key}
+                      sortBy={sortConfig.key}
+                      sortAsc={sortConfig.asc}
+                      onSort={handleSort}
+                      className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                    />
+                  ) : (
+                    <th
+                      key={index}
+                      className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                    >
+                      {col.label}
+                    </th>
+                  )
+                )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {sortedData.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  onClick={() => onRowClick && onRowClick(row)}
+                  className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                >
+                  {columns.map((col, colIndex) => (
+                    <td
+                      key={colIndex}
+                      className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                    >
+                      {col.key === "full_name" ? (
+                        <span className="text-white">{row[col.key]}</span>
+                      ) : (
+                        renderCell(col, row[col.key])
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* PAGINATION */}
