@@ -330,7 +330,7 @@ export default function OpeningVaultBalance({ data, setData, type }) {
     };
 
     // Common denomination options
-    const denominationOptions = ["10000","5000","2000","1000", "500", "200", "100", "50"];
+    const denominationOptions = ["10000", "5000", "2000", "1000", "500", "200", "100", "50"];
 
     // Show sections only if they exist
     if (!data.sections || data.sections.length === 0) {
@@ -415,7 +415,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                         type="number"
                                         // min="0"
                                         // step="0.0001"
-                                        value={section.exchangeRate || ""}
+                                        value={section.exchangeRate === 0 ? "" : section.exchangeRate || ""}
+                                        onFocus={(e) => {
+                                            if (section.exchangeRate === 0 || section.exchangeRate === "0") {
+                                                handleRateChange(section.id, "");
+                                            }
+                                        }}
                                         onChange={(e) => handleRateChange(section.id, e.target.value)}
                                         className="bg-[#16191C] text-white rounded-lg px-2 py-1 w-20 lg:w-24 text-sm outline-none"
                                     />
@@ -474,7 +479,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     <label className="text-gray-400 text-[14px] font-medium">Rate:</label>
                                     <input
                                         type="number"
-                                        value={section.exchangeRate || ""}
+                                        value={section.exchangeRate === 0 ? "" : section.exchangeRate || ""}
+                                        onFocus={(e) => {
+                                            if (section.exchangeRate === 0 || section.exchangeRate === "0") {
+                                                handleRateChange(section.id, "");
+                                            }
+                                        }}
                                         onChange={(e) => handleRateChange(section.id, e.target.value)}
                                         className="bg-[#14171A] border border-[#4B5563] rounded-[4px] px-2 text-white text-[12px] outline-none h-[25px] w-20"
                                     // placeholder="Rate"
@@ -561,7 +571,12 @@ export default function OpeningVaultBalance({ data, setData, type }) {
                                     <div className="min-w-0">
                                         <input
                                             type="number"
-                                            value={row.qty}
+                                            value={row.qty === 0 ? "" : row.qty}
+                                            onFocus={(e) => {
+                                                if (row.qty === 0 || row.qty === "0") {
+                                                    handleRowChange(section.id, i, "qty", "");
+                                                }
+                                            }}
                                             onChange={(e) =>
                                                 handleRowChange(section.id, i, "qty", e.target.value)
                                             }

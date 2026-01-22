@@ -357,9 +357,6 @@ function Login() {
       <NotificationCard
         confirmModal={confirmModal}
         onConfirm={() => {
-          if (confirmModal.actionType === "authError") {
-            setFormData({ email: "", password: "" });
-          }
           setConfirmModal({ open: false });
         }}
         onCancel={() => setConfirmModal({ open: false })}

@@ -60,15 +60,15 @@ function NotificationCard({ confirmModal, onConfirm, onCancel }) {
         activate: "#1E902D",
         logout: "#BD404A",
         remove: "#BD404A",
-        authError: "#1D4CB5",
+        authError: "#BD404A",
     };
 
     const iconToShow = iconMap[actionType] || confirmIcon;
     const finalConfirmLabel = confirmText || labelMap[actionType] || "Confirm";
     const confirmBtnColor = colorMap[actionType] || "#1E902D";
 
-    // Filter for blue cross icon if it's an auth error
-    const iconStyle = actionType === "authError" ? { filter: "invert(24%) sepia(91%) saturate(2251%) hue-rotate(212deg) brightness(95%) contrast(92%)" } : {};
+    // Filter for blue cross icon if it's an auth error - REMOVED for red theme
+    const iconStyle = {};
 
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">

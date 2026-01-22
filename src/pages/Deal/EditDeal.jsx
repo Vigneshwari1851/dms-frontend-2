@@ -44,6 +44,9 @@ export default function EditDeal() {
     const [rate, setRate] = useState("");
     const [amountToBePaid, setAmountToBePaid] = useState("");
     const [notes, setNotes] = useState("");
+    const [enableDenomination, setEnableDenomination] = useState(true);
+    const [manualReceivedTotal, setManualReceivedTotal] = useState("");
+    const [manualPaidTotal, setManualPaidTotal] = useState("");
     const [amountEdited, setAmountEdited] = useState(false);
     const [originalAmount, setOriginalAmount] = useState("");
 
@@ -81,21 +84,40 @@ export default function EditDeal() {
 
     const checkTally = () => {
         const tolerance = 0.01;
-        return (
-            Math.abs(totalReceived() - Number(amount)) <= tolerance &&
-            Math.abs(totalPaid() - Number(amountToBePaid)) <= tolerance
-        );
+        // For "Buy" transaction: Buy Amount is 'amount', Sell Amount is 'amountToBePaid'
+        // For "Sell" transaction: Sell Amount is 'amount', Buy Amount is 'amountToBePaid'
+        const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+        const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+
+        const currentReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
+        const currentPaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
+
+        const receivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= tolerance;
+        const paidMatches = Math.abs(currentPaidTotal - expectedPaid) <= tolerance;
+
+        // If Credit, received is optional. Otherwise, both must match.
+        if (txnMode?.toLowerCase() === "credit") {
+            return paidMatches;
+        }
+
+        return receivedMatches && paidMatches;
     };
 
     const tolerance = 0.01;
 
+    const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+    const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+
+    const effectiveReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
+    const effectivePaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
+
     const isReceivedTallied =
-    Number(amount) > 0 &&
-    Math.abs(totalReceived() - Number(amount)) <= tolerance;
+        expectedReceived > 0 &&
+        Math.abs(effectiveReceivedTotal - expectedReceived) <= tolerance;
 
     const isPaidTallied =
-    Number(amountToBePaid) > 0 &&
-    Math.abs(totalPaid() - Number(amountToBePaid)) <= tolerance;
+        expectedPaid > 0 &&
+        Math.abs(effectivePaidTotal - expectedPaid) <= tolerance;
 
     // Fetch currencies on component mount
     useEffect(() => {
@@ -136,10 +158,10 @@ export default function EditDeal() {
         // Set buy and sell currencies from the API response
         // Try to get from direct fields first, then from items
         const buyCurrencyFromResponse = dealData.buy_currency ||
-            (dealData.receivedItems?.[0]?.currency?.code || "");
+            (dealData.buyCurrency?.code || "");
 
         const sellCurrencyFromResponse = dealData.sell_currency ||
-            (dealData.paidItems?.[0]?.currency?.code || "");
+            (dealData.sellCurrency?.code || "");
 
         setBuyCurrency(buyCurrencyFromResponse);
         setSellCurrency(sellCurrencyFromResponse);
@@ -167,7 +189,7 @@ export default function EditDeal() {
                 currency_id: item.currency_id,
                 currency_name: item.currency?.name || ""
             }))
-            : [{ price: 0, quantity: 0, total: 0, currency_id: 1 }];
+            : [{ price: 0, quantity: 0, total: 0 }];
 
         const formattedPaid = paid.length > 0
             ? paid.map(item => ({
@@ -177,10 +199,14 @@ export default function EditDeal() {
                 currency_id: item.currency_id,
                 currency_name: item.currency?.name || ""
             }))
-            : [{ price: 0, quantity: 0, total: 0, currency_id: 1 }];
+            : [{ price: 0, quantity: 0, total: 0 }];
 
         setDenominationReceived(formattedReceived);
         setDenominationPaid(formattedPaid);
+
+        // Pre-fill manual totals from existing denominations
+        setManualReceivedTotal(formattedReceived.reduce((s, i) => s + (i.total || 0), 0));
+        setManualPaidTotal(formattedPaid.reduce((s, i) => s + (i.total || 0), 0));
     };
 
     useEffect(() => {
@@ -249,34 +275,48 @@ export default function EditDeal() {
     const handleSave = () => {
         if (!isEditable) return;
 
-        const tallied = checkTally();
+        const isSavable = checkTally();
+        const isFullyTallied = isReceivedTallied && isPaidTallied;
 
         setConfirmModal({
             open: true,
-            actionType: tallied ? "confirm" : "delete", // ✅ THIS FIXES ICON
-            title: tallied
-                ? "Deal Tallied Successfully"
-                : "Deal Not Tallied",
-            message: tallied
-                ? "The deal has been tallied. Do you want to proceed?"
-                : "The deal is not tallied. Please review before proceeding.",
-            confirmText: tallied ? "Confirm" : "Review",
+            actionType: isFullyTallied ? "confirm" : "delete",
+            title: isFullyTallied ? "Deal Tallied Successfully" : "Deal Not Tallied",
+            message: isFullyTallied
+                ? "The deal has been fully tallied and will be marked as Completed. Do you want to proceed?"
+                : isSavable
+                    ? "Since the received amount is missing/optional, the deal will be saved as Pending. Do you want to proceed?"
+                    : "The required denominations are not tallied. Please review before proceeding.",
+            confirmText: isSavable ? "Confirm" : "Review",
             cancelText: "No",
-            isTallied: tallied,
+            isTallied: isSavable,
         });
     };
 
 
     const updateDealTransaction = async (status) => {
         try {
+            const currentReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
+            const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+            const receivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= 0.01;
+
+            // In Credit mode: Perfectly balanced = Completed, otherwise Pending
+            const finalStatus = txnMode.toLowerCase() === "credit"
+                ? (receivedMatches ? "Completed" : "Pending")
+                : status;
+
             const dealData = {
                 deal_type: txnType.toLowerCase(),
                 transaction_mode: txnMode.toLowerCase(),
                 amount: Number(amount),
                 exchange_rate: Number(rate),
                 amount_to_be_paid: Number(amountToBePaid),
+                buy_currency: buyCurrency,
+                buy_currency_id: currencyMap[buyCurrency],
+                sell_currency: sellCurrency,
+                sell_currency_id: currencyMap[sellCurrency],
                 remarks: notes,
-                status,
+                status: finalStatus,
 
                 receivedItems: denominationReceived
                     .filter(i => i.price && i.quantity)
@@ -284,7 +324,7 @@ export default function EditDeal() {
                         price: String(i.price),
                         quantity: String(i.quantity),
                         total: String(i.total || (Number(i.price) * Number(i.quantity))),
-                        currency_id: i.currency_id || currencyMap[buyCurrency],
+                        currency_id: currencyMap[buyCurrency],
                     })),
 
                 paidItems: denominationPaid
@@ -293,7 +333,7 @@ export default function EditDeal() {
                         price: String(i.price),
                         quantity: String(i.quantity),
                         total: String(i.total || (Number(i.price) * Number(i.quantity))),
-                        currency_id: i.currency_id || currencyMap[sellCurrency],
+                        currency_id: currencyMap[sellCurrency],
                     })),
             };
 
@@ -302,10 +342,10 @@ export default function EditDeal() {
                 state: {
                     toast: {
                         message:
-                            status === "Completed"
+                            finalStatus === "Completed"
                                 ? "Deal completed successfully"
                                 : "Deal updated successfully",
-                        type: status === "Completed" ? "success" : "pending",
+                        type: finalStatus === "Completed" ? "success" : "pending",
                     },
                 },
             });
@@ -455,7 +495,7 @@ export default function EditDeal() {
                                 selected={txnMode}
                                 onChange={(val) => setTxnMode(val)}
                                 className="w-full"
-                                disabled={!isEditable}
+                                disabled={true}
                             />
                         </div>
 
@@ -468,28 +508,24 @@ export default function EditDeal() {
                                 label="Buy Currency"
                                 options={currencyOptions}
                                 selected={buyCurrency}
-                                onChange={() => {}}
-                                className={`w-[full ${dimOnEdit}`}
-                                disabled={true}      
-                       />
+                                onChange={() => { }}
+                                className="w-full"
+                                disabled={true}
+                            />
                         </div>
 
                         {/* Amount - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
-                                Amount <span className="text-red-500">*</span>
+                                {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
+                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none cursor-not-allowed opacity-70"
                                 placeholder="0.00"
                                 type="text"
                                 value={amount}
-                                readOnly={!isEditable}
-                                onChange={(e) => {
-                                    const newAmount = e.target.value;
-                                    setAmount(newAmount);
-                                    setAmountEdited(newAmount !== originalAmount);
-                                }}
+                                readOnly={true}
+                                disabled={true}
                             />
                         </div>
 
@@ -502,9 +538,9 @@ export default function EditDeal() {
                                 label="Sell Currency"
                                 options={currencyOptions}
                                 selected={sellCurrency}
-                                onChange={() => {}}
-                                className={`w-full ${dimOnEdit}`}
-                                disabled={true}      
+                                onChange={() => { }}
+                                className="w-full"
+                                disabled={true}
                             />
                         </div>
 
@@ -514,12 +550,10 @@ export default function EditDeal() {
                                 Rate <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none"
-                                placeholder="0.00"
-                                type="text"
-                                value={rate}
-                                readOnly={!isEditable}
-                                onChange={(e) => setRate(e.target.value)}
+                                readOnly={true}
+                                disabled={true}
+                                value={rate || ""}
+                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none cursor-not-allowed opacity-70"
                             />
                         </div>
                     </div>
@@ -541,18 +575,29 @@ export default function EditDeal() {
                     >
                         {/* Left side */}
                         <span className="text-[#FEFEFE] text-sm">
-                            Amount to be Paid
+                            {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount to be Paid"}
                         </span>
 
                         {/* Right side */}
                         <span className="text-white text-[14px]">
-                            {amountToBePaid || "0.00"}
+                            {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Math.floor(Number(amountToBePaid)).toLocaleString()}
                         </span>
                     </div>
-                    {/* Denomination Section */}
 
-                    <div className="mt-8">
-                        {/* <div className={!isEditable ? "pointer-events-none" : ""}> */}
+                    {/* Enable Denomination Toggle */}
+                    <div className="mt-6 flex items-center">
+                        <div className={`flex items-center gap-3 select-none ${!isEditable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => isEditable && setEnableDenomination(!enableDenomination)}>
+                            <div className={`w-10 h-5 rounded-full transition-colors relative ${enableDenomination ? 'bg-[#1D4CB5]' : 'bg-[#2A2F34]'}`}>
+                                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${enableDenomination ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </div>
+                            <span className="text-[#ABABAB] text-sm font-medium">Enable Denomination</span>
+                        </div>
+                    </div>
+
+                    {/* Denomination Section */}
+                    {enableDenomination ? (
+                        <div className="mt-8">
+                            {/* <div className={!isEditable ? "pointer-events-none" : ""}> */}
                             <Denomination
                                 denominationReceived={denominationReceived}
                                 setDenominationReceived={setDenominationReceived}
@@ -561,13 +606,71 @@ export default function EditDeal() {
                                 receivedCurrency={buyCurrency}
                                 paidCurrency={sellCurrency}
                                 currencySymbols={currencySymbols}
-                                receivedReadOnly={!amountEdited}
-                                paidReadOnly={!isEditable}
+                                receivedReadOnly={!isEditable}
+                                paidReadOnly={!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)}
                                 hideAddReceived={isReceivedTallied}
                                 hideAddPaid={isPaidTallied}
+                                receivedAmount={txnType?.toLowerCase() === "sell" ? amountToBePaid : amount}
+                                paidAmount={txnType?.toLowerCase() === "sell" ? amount : amountToBePaid}
+                                transactionType={txnType}
                             />
-                        {/* </div> */}
-                    </div>
+                            {/* </div> */}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                            {/* Manual Received Total Input */}
+                            <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-medium text-white">Denomination Received Total</h3>
+                                    <span className="text-[#939AF0] text-sm">
+                                        {currencySymbols[buyCurrency] || buyCurrency}
+                                    </span>
+                                </div>
+                                <div className="bg-[#1E2328] p-4 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className={`${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
+                                        <input
+                                            type="number"
+                                            value={manualReceivedTotal === 0 ? "" : manualReceivedTotal}
+                                            onChange={(e) => setManualReceivedTotal(e.target.value)}
+                                            onFocus={(e) => {
+                                                if (manualReceivedTotal === "0" || manualReceivedTotal === 0) setManualReceivedTotal("");
+                                            }}
+                                            onWheel={(e) => e.target.blur()}
+                                            readOnly={!isEditable}
+                                            className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${!isEditable ? 'cursor-not-allowed opacity-70' : ''}`}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Manual Paid Total Input */}
+                            <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-medium text-white">Denomination Paid Total</h3>
+                                    <span className="text-[#939AF0] text-sm">
+                                        {currencySymbols[sellCurrency] || sellCurrency}
+                                    </span>
+                                </div>
+                                <div className="bg-[#1E2328] p-4 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className={`${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
+                                        <input
+                                            type="number"
+                                            value={manualPaidTotal === 0 ? "" : manualPaidTotal}
+                                            onChange={(e) => setManualPaidTotal(e.target.value)}
+                                            onFocus={(e) => {
+                                                if (manualPaidTotal === "0" || manualPaidTotal === 0) setManualPaidTotal("");
+                                            }}
+                                            onWheel={(e) => e.target.blur()}
+                                            readOnly={!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)}
+                                            className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${(!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)) ? 'cursor-not-allowed opacity-70' : ''}`}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Notes - NOT editable */}
                     <div className="mt-8">
@@ -582,7 +685,7 @@ export default function EditDeal() {
                                 font-poppins
                                 cursor-not-allowed
                             `}
-                            placeholder="Add any additional notes..."
+                            // placeholder="Add any additional notes..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             disabled={true} // Always disabled

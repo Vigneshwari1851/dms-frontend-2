@@ -23,6 +23,7 @@ export default function Denomination({
   hideAddPaid = false,
   receivedAmount = 0,
   paidAmount = 0,
+  transactionType = "",
 }) {
   const [activeTab, setActiveTab] = useState("received");
   // Use props if provided, otherwise use local state
@@ -71,7 +72,7 @@ export default function Denomination({
 
   // Get available denomination options excluding already selected ones
   const getAvailableOptions = (list, currentIndex) => {
-    const allOptions = ["10000","5000","2000","1000", "500", "200", "100", "50"];
+    const allOptions = ["10000", "5000", "2000", "1000", "500", "200", "100", "50"];
 
     // Get all selected prices except the current row's price
     const selectedPrices = list
@@ -165,15 +166,15 @@ export default function Denomination({
       {/* MOBILE CONTENT (Compact Grid) */}
 
       {!isReadOnly && !shouldHideAddMobile(list, listType) && (
-  <div className="flex justify-end mb-2 lg:hidden">
-    <button
-      onClick={() => handleAdd(list, setList, isReadOnly)}
-      className="transition-all hover:scale-105 active:scale-95 p-1"
-    >
-      <img src={addDenomination} alt="add" className="h-7 w-7" />
-    </button>
-  </div>
-)}
+        <div className="flex justify-end mb-2 lg:hidden">
+          <button
+            onClick={() => handleAdd(list, setList, isReadOnly)}
+            className="transition-all hover:scale-105 active:scale-95 p-1"
+          >
+            <img src={addDenomination} alt="add" className="h-7 w-7" />
+          </button>
+        </div>
+      )}
 
 
 
@@ -217,10 +218,14 @@ export default function Denomination({
                 <div className="min-w-0">
                   <input
                     type="number"
-                    value={row.quantity || ""}
+                    value={row.quantity === 0 ? "" : row.quantity}
                     onChange={(e) => !isReadOnly && handleChange(list, setList, i, "quantity", e.target.value)}
+                    onFocus={(e) => {
+                      if (!isReadOnly && (row.quantity === 0 || row.quantity === "0")) {
+                        handleChange(list, setList, i, "quantity", "");
+                      }
+                    }}
                     className={`w-full h-[30px] bg-[#14171A] border! border-[#4B5563]! rounded-[4px] px-2 text-white text-[12px] outline-none focus:border-[#4B5563] ${isReadOnly ? " cursor-not-allowed" : ""}`}
-                    placeholder="0"
                     readOnly={isReadOnly}
                   />
                 </div>
@@ -251,8 +256,8 @@ export default function Denomination({
 
           <div className="pt-4">
             <div className="bg-[#1B1E21]/80 flex justify-between items-center px-4 py-2 rounded-lg border border-[#1B1E21]">
-              <span className="text-[#00C853] font-medium text-[13px] uppercase tracking-wide">Total</span>
-              <span className="text-[#00C853] font-semibold text-[14px]">
+              <span className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium text-[13px] uppercase tracking-wide`}>Total</span>
+              <span className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-semibold text-[14px]`}>
                 {calculateTotal(list).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -300,11 +305,15 @@ export default function Denomination({
                   <div className={`flex items-center bg-[#16191C] h-9 rounded-md px-2 py-1 ${isReadOnly ? "opacity-70" : ""}`}>
                     <input
                       type="number"
-                      value={row.quantity}
+                      value={row.quantity === 0 ? "" : row.quantity}
                       onChange={(e) => !isReadOnly && handleChange(list, setList, i, "quantity", e.target.value)}
+                      onFocus={(e) => {
+                        if (!isReadOnly && (row.quantity === 0 || row.quantity === "0")) {
+                          handleChange(list, setList, i, "quantity", "");
+                        }
+                      }}
                       onWheel={(e) => e.target.blur()}
                       className="bg-transparent outline-none text-white w-full"
-                      placeholder="0"
                       readOnly={isReadOnly}
                       disabled={isReadOnly}
                     />
@@ -348,8 +357,8 @@ export default function Denomination({
 
         {/* TOTAL FIELD */}
         <div className="flex justify-between items-center mt-4">
-          <h1 className="text-[#00C853] font-medium">Total</h1>
-          <input type="number" readOnly value={calculateTotal(list)} className="w-[140px] bg-[#16191C] rounded-md px-2 py-1 text-[#00C853] text-right cursor-not-allowed" />
+          <h1 className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</h1>
+          <input type="number" readOnly value={calculateTotal(list)} className={`w-[140px] bg-[#16191C] rounded-md px-2 py-1 ${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right cursor-not-allowed`} />
         </div>
       </div>
     </div>

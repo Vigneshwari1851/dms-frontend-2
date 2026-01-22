@@ -30,6 +30,9 @@ export default function CreateDeal() {
   const [rate, setRate] = useState("");
   const [amountToBePaid, setAmountToBePaid] = useState(0);
   const [remarks, setRemarks] = useState("");
+  const [enableDenomination, setEnableDenomination] = useState(true);
+  const [manualReceivedTotal, setManualReceivedTotal] = useState("");
+  const [manualPaidTotal, setManualPaidTotal] = useState("");
   const [errors, setErrors] = useState({});
 
   // Currencies list
@@ -39,10 +42,10 @@ export default function CreateDeal() {
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
 
   const [denominationReceived, setDenominationReceived] = useState([
-    { price: 0, quantity: 0, currency_id: 1 },
+    { price: 0, quantity: 0 },
   ]);
   const [denominationPaid, setDenominationPaid] = useState([
-    { price: 0, quantity: 0, total: 0, currency_id: 1 },
+    { price: 0, quantity: 0, total: 0 },
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -128,14 +131,23 @@ export default function CreateDeal() {
 
   // Check if denomination totals match
   const checkDenominationTally = () => {
-    const totalReceived = calculateTotalReceived();
-    const totalPaid = calculateTotalPaid();
-    const expectedAmount = parseFloat(amount) || 0;
-    const expectedPaidAmount = parseFloat(amountToBePaid) || 0;
+    const totalReceived = enableDenomination ? calculateTotalReceived() : parseFloat(manualReceivedTotal) || 0;
+    const totalPaid = enableDenomination ? calculateTotalPaid() : parseFloat(manualPaidTotal) || 0;
+
+    // For "Buy" transaction: Buy Amount is 'amount', Sell Amount is 'amountToBePaid'
+    // For "Sell" transaction: Sell Amount is 'amount', Buy Amount is 'amountToBePaid'
+    const expectedReceived = txnType?.toLowerCase() === "sell" ? parseFloat(amountToBePaid) : parseFloat(amount);
+    const expectedPaid = txnType?.toLowerCase() === "sell" ? parseFloat(amount) : parseFloat(amountToBePaid);
+
     const tolerance = 0.01;
 
-    const receivedMatches = Math.abs(totalReceived - expectedAmount) <= tolerance;
-    const paidMatches = Math.abs(totalPaid - expectedPaidAmount) <= tolerance;
+    const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= tolerance;
+    const paidMatches = Math.abs(totalPaid - (expectedPaid || 0)) <= tolerance;
+
+    // If Credit, received is optional. Otherwise, both must match.
+    if (txnMode?.toLowerCase() === "credit") {
+      return paidMatches;
+    }
 
     return receivedMatches && paidMatches;
   };
@@ -191,27 +203,35 @@ export default function CreateDeal() {
     return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
   }, 0);
 
+  const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+  const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+
+  const effectiveReceivedTotal = enableDenomination ? receivedTotal : Number(manualReceivedTotal);
+  const effectivePaidTotal = enableDenomination ? paidTotal : Number(manualPaidTotal);
+
   const isReceivedTallied =
-    Number(amount) > 0 && Math.abs(receivedTotal - Number(amount)) <= 0.01;
+    expectedReceived > 0 && Math.abs(effectiveReceivedTotal - expectedReceived) <= 0.01;
 
   const isPaidTallied =
-    Number(amountToBePaid) > 0 &&
-    Math.abs(paidTotal - Number(amountToBePaid)) <= 0.01;
+    expectedPaid > 0 &&
+    Math.abs(effectivePaidTotal - expectedPaid) <= 0.01;
 
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
 
     // Check if denomination totals tally
-    const isTallied = checkDenominationTally();
+    const isSavable = checkDenominationTally();
+    const isFullyTallied = isReceivedTallied && isPaidTallied;
 
-    if (isTallied) {
-      // Show success modal - tallied successfully
+    if (isSavable) {
       setConfirmModal({
         open: true,
-        actionType: 'confirm',
-        title: 'Deal Tallied Successfully',
-        message: 'The deal has been tallied. Do you want to proceed?',
-        confirmText: 'Confirm',
+        actionType: isFullyTallied ? 'confirm' : 'delete',
+        title: isFullyTallied ? 'Deal Tallied Successfully' : 'Deal Not Tallied',
+        message: isFullyTallied
+          ? 'The deal has been fully tallied and will be marked as Completed. Do you want to proceed?'
+          : 'Since the received amount is missing/optional, the deal will be saved as Pending. Do you want to proceed?',
+        confirmText: isFullyTallied ? 'Confirm' : 'Confirm',
         cancelText: 'No',
         isTallied: true
       });
@@ -221,7 +241,7 @@ export default function CreateDeal() {
         open: true,
         actionType: 'delete',
         title: 'Deal Not Tallied',
-        message: 'The deal is not tallied. Please review before proceeding.',
+        message: 'The required denominations are not tallied. Please review before proceeding.',
         confirmText: 'Review',
         cancelText: 'No',
         isTallied: false
@@ -289,7 +309,7 @@ export default function CreateDeal() {
             price: String(item.price),
             quantity: String(item.quantity),
             total: String(item.total),
-            currency_id: item.currency_id || currencyMap[sellCurrency],
+            currency_id: currencyMap[sellCurrency],
           }))
         : [
           {
@@ -300,23 +320,32 @@ export default function CreateDeal() {
           }
         ];
 
+      const totalReceived = enableDenomination ? calculateTotalReceived() : parseFloat(manualReceivedTotal) || 0;
+      const expectedReceived = txnType?.toLowerCase() === "sell" ? parseFloat(amountToBePaid) : parseFloat(amount);
+      const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= 0.01;
+
+      // In Credit mode: Perfectly balanced = Completed, otherwise Pending
+      const finalStatus = txnMode.toLowerCase() === "credit"
+        ? (receivedMatches ? "Completed" : "Pending")
+        : status;
+
       const dealData = {
         customer_id: selectedCustomer.id,
         deal_type: txnType.toLowerCase(),
         transaction_mode: txnMode.toLowerCase(),
 
         buy_currency: buyCurrency,
-        buy_currency_id: receivedItemsWithTotals[0]?.currency_id || currencyMap[buyCurrency],
+        buy_currency_id: currencyMap[buyCurrency],
 
         sell_currency: sellCurrency,
-        sell_currency_id: paidItemsWithTotals[0]?.currency_id || currencyMap[sellCurrency],
+        sell_currency_id: currencyMap[sellCurrency],
 
         amount: Number(amount),
         exchange_rate: Number(rate),
         amount_to_be_paid: Number(amountToBePaid),
 
         remarks: remarks,
-        status: status,
+        status: finalStatus,
 
         receivedItems: receivedItemsWithTotals
           .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
@@ -324,7 +353,7 @@ export default function CreateDeal() {
             price: String(item.price),
             quantity: String(item.quantity),
             total: String(item.total),
-            currency_id: item.currency_id || currencyMap[buyCurrency],
+            currency_id: currencyMap[buyCurrency],
           })),
 
         // ✅ final paid_items
@@ -338,10 +367,10 @@ export default function CreateDeal() {
           state: {
             toast: {
               message:
-                status === "Completed"
+                finalStatus === "Completed"
                   ? "Deal completed successfully"
                   : "Deal is pending.",
-              type: status === "Completed" ? "success" : "pending",
+              type: finalStatus === "Completed" ? "success" : "pending",
             },
           },
         });
@@ -555,165 +584,171 @@ export default function CreateDeal() {
 
         {/* Row 2 - Transaction fields (Responsive Grid) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
-        {/* 1. Transaction Type */}
-        <div className="w-full">
-          <label className="text-[#ABABAB] text-sm mb-1 block">
-            Transaction Type <span className="text-red-500">*</span>
-          </label>
-          <div className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white">
-            {txnType}
+          {/* 1. Transaction Type */}
+          <div className="w-full">
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Transaction Type <span className="text-red-500">*</span>
+            </label>
+            <div className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white">
+              {txnType}
+            </div>
+            <div className="min-h-3.5 mt-1" />
           </div>
-          <div className="min-h-3.5 mt-1" />
-        </div>
 
-        {/* 2. First Currency (Buy / Sell based on txnType) */}
-        {txnType.toLowerCase() === "sell" ? (
+          {/* 2. First Currency (Buy / Sell based on txnType) */}
+          {txnType.toLowerCase() === "sell" ? (
+            <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Sell Currency Type <span className="text-red-500">*</span>
+              </label>
+              <Dropdown
+                label="Sell Currency"
+                options={sellCurrencyOptions}
+                selected={sellCurrency}
+                onChange={(val) => {
+                  handleCurrencySelect(val, "sell");
+                  setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                }}
+                className="w-full"
+              />
+              <div className="h-3.5 mt-1" />
+            </div>
+          ) : (
+            <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Buy Currency Type <span className="text-red-500">*</span>
+              </label>
+              <Dropdown
+                label="Buy Currency"
+                options={buyCurrencyOptions}
+                selected={buyCurrency}
+                onChange={(val) => {
+                  handleCurrencySelect(val, "buy");
+                  setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                }}
+                className="w-full"
+              />
+              <div className="h-3.5 mt-1" />
+            </div>
+          )}
+
+          {/* 3. Transaction Mode */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Sell Currency Type <span className="text-red-500">*</span>
+              Transaction Mode <span className="text-red-500">*</span>
             </label>
             <Dropdown
-              label="Sell Currency"
-              options={sellCurrencyOptions}
-              selected={sellCurrency}
+              label="Mode"
+              options={["Cash", "Credit"]}
+              selected={txnMode}
               onChange={(val) => {
-                handleCurrencySelect(val, "sell");
-                setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                setTxnMode(val);
+                setErrors(prev => ({ ...prev, txnMode: "" }));
               }}
               className="w-full"
             />
-            <div className="h-3.5 mt-1" />
+            <div className="min-h-3.5 mt-1">
+              {errors.txnMode && (
+                <p className="text-red-400 text-[11px]">{errors.txnMode}</p>
+              )}
+            </div>
           </div>
-        ) : (
+
+          {/* 4. Second Currency (Opposite) */}
+          {txnType.toLowerCase() === "sell" ? (
+            <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Buy Currency Type <span className="text-red-500">*</span>
+              </label>
+              <Dropdown
+                label="Buy Currency"
+                options={buyCurrencyOptions}
+                selected={buyCurrency}
+                onChange={(val) => {
+                  handleCurrencySelect(val, "buy");
+                  setErrors(prev => ({ ...prev, buyCurrency: "" }));
+                }}
+                className="w-full"
+              />
+              <div className="h-3.5 mt-1" />
+            </div>
+          ) : (
+            <div>
+              <label className="text-[#ABABAB] text-sm mb-1 block">
+                Sell Currency Type <span className="text-red-500">*</span>
+              </label>
+              <Dropdown
+                label="Sell Currency"
+                options={sellCurrencyOptions}
+                selected={sellCurrency}
+                onChange={(val) => {
+                  handleCurrencySelect(val, "sell");
+                  setErrors(prev => ({ ...prev, sellCurrency: "" }));
+                }}
+                className="w-full"
+              />
+              <div className="h-3.5 mt-1" />
+            </div>
+          )}
+
+          {/* 5. Amount */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Currency Type <span className="text-red-500">*</span>
+              {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
             </label>
-            <Dropdown
-              label="Buy Currency"
-              options={buyCurrencyOptions}
-              selected={buyCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "buy");
-                setErrors(prev => ({ ...prev, buyCurrency: "" }));
+            <input
+              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+              // placeholder="0.00"
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onFocus={(e) => {
+                if (amount === "0") setAmount("");
               }}
-              className="w-full"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setAmount(value);
+                  setErrors(prev => ({ ...prev, amount: "" }));
+                }
+              }}
             />
-            <div className="h-3.5 mt-1" />
+            <div className="min-h-3.5 mt-1">
+              {errors.amount && (
+                <p className="text-red-400 text-[11px]">{errors.amount}</p>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* 3. Transaction Mode */}
-        <div>
-          <label className="text-[#ABABAB] text-sm mb-1 block">
-            Transaction Mode <span className="text-red-500">*</span>
-          </label>
-          <Dropdown
-            label="Mode"
-            options={["Cash", "Credit"]}
-            selected={txnMode}
-            onChange={(val) => {
-              setTxnMode(val);
-              setErrors(prev => ({ ...prev, txnMode: "" }));
-            }}
-            className="w-full"
-          />
-          <div className="min-h-3.5 mt-1">
-            {errors.txnMode && (
-              <p className="text-red-400 text-[11px]">{errors.txnMode}</p>
-            )}
-          </div>
-        </div>
-
-        {/* 4. Second Currency (Opposite) */}
-        {txnType.toLowerCase() === "sell" ? (
+          {/* 6. Rate */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Currency Type <span className="text-red-500">*</span>
+              Rate <span className="text-red-500">*</span>
             </label>
-            <Dropdown
-              label="Buy Currency"
-              options={buyCurrencyOptions}
-              selected={buyCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "buy");
-                setErrors(prev => ({ ...prev, buyCurrency: "" }));
+            <input
+              className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
+              // placeholder="0.00"
+              type="text"
+              inputMode="decimal"
+              value={rate}
+              onFocus={(e) => {
+                if (rate === "0") setRate("");
               }}
-              className="w-full"
-            />
-            <div className="h-3.5 mt-1" />
-          </div>
-        ) : (
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Sell Currency Type <span className="text-red-500">*</span>
-            </label>
-            <Dropdown
-              label="Sell Currency"
-              options={sellCurrencyOptions}
-              selected={sellCurrency}
-              onChange={(val) => {
-                handleCurrencySelect(val, "sell");
-                setErrors(prev => ({ ...prev, sellCurrency: "" }));
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setRate(value);
+                  setErrors(prev => ({ ...prev, rate: "" }));
+                }
               }}
-              className="w-full"
             />
-            <div className="h-3.5 mt-1" />
-          </div>
-        )}
-
-        {/* 5. Amount */}
-        <div>
-          <label className="text-[#ABABAB] text-sm mb-1 block">
-            Amount <span className="text-red-500">*</span>
-          </label>
-          <input
-            className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-            placeholder="0.00"
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*\.?\d*$/.test(value)) {
-                setAmount(value);
-                setErrors(prev => ({ ...prev, amount: "" }));
-              }
-            }}
-          />
-          <div className="min-h-3.5 mt-1">
-            {errors.amount && (
-              <p className="text-red-400 text-[11px]">{errors.amount}</p>
-            )}
+            <div className="min-h-3.5 mt-1">
+              {errors.rate && (
+                <p className="text-red-400 text-[11px]">{errors.rate}</p>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* 6. Rate */}
-        <div>
-          <label className="text-[#ABABAB] text-sm mb-1 block">
-            Rate <span className="text-red-500">*</span>
-          </label>
-          <input
-            className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
-            placeholder="0.00"
-            type="text"
-            inputMode="decimal"
-            value={rate}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*\.?\d*$/.test(value)) {
-                setRate(value);
-                setErrors(prev => ({ ...prev, rate: "" }));
-              }
-            }}
-          />
-          <div className="min-h-3.5 mt-1">
-            {errors.rate && (
-              <p className="text-red-400 text-[11px]">{errors.rate}</p>
-            )}
-          </div>
-        </div>
-      </div>
 
         {/* Row 3 - Amount to be Paid (full width) */}
         <div className="">
@@ -733,102 +768,166 @@ export default function CreateDeal() {
           >
             {/* Left side */}
             <span className="text-[#FEFEFE] text-sm">
-              Amount to be Paid
+              {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount "}
             </span>
 
             {/* Right side */}
             <span className="text-white text-[14px]">
-              {amountToBePaid || "0.00"}
+              {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Math.floor(Number(amountToBePaid)).toLocaleString()}
             </span>
+          </div>
+
+          {/* Enable Denomination Toggle */}
+          <div className="mt-6 flex items-center">
+            <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setEnableDenomination(!enableDenomination)}>
+              <div className={`w-10 h-5 rounded-full transition-colors relative ${enableDenomination ? 'bg-[#5761D7]' : 'bg-[#2A2F34]'}`}>
+                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${enableDenomination ? 'translate-x-5' : 'translate-x-0'}`} />
+              </div>
+              <span className="text-[#ABABAB] text-sm font-medium">Enable Denomination</span>
+            </div>
+          </div>
+
+          {/* Denomination Section */}
+          {enableDenomination ? (
+            <div className="">
+              <Denomination
+                denominationReceived={denominationReceived}
+                setDenominationReceived={setDenominationReceived}
+                denominationPaid={denominationPaid}
+                setDenominationPaid={setDenominationPaid}
+                receivedCurrency={buyCurrency}
+                paidCurrency={sellCurrency}
+                currencySymbols={currencySymbols}
+                receivedReadOnly={false}
+                paidReadOnly={txnMode?.toLowerCase() !== "credit" && !isReceivedTallied}
+                hideAddReceived={isReceivedTallied}
+                hideAddPaid={isPaidTallied}
+                receivedAmount={txnType?.toLowerCase() === "sell" ? amountToBePaid : amount}
+                paidAmount={txnType?.toLowerCase() === "sell" ? amount : amountToBePaid}
+                transactionType={txnType}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+              {/* Manual Received Total Input */}
+              <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium text-white">Denomination Received Total</h3>
+                  <span className="text-[#939AF0] text-sm">
+                    {currencySymbols[buyCurrency] || buyCurrency}
+                  </span>
+                </div>
+                <div className="bg-[#1E2328] p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className={`${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
+                    <input
+                      type="number"
+                      value={manualReceivedTotal === 0 ? "" : manualReceivedTotal}
+                      onChange={(e) => setManualReceivedTotal(e.target.value)}
+                      onFocus={(e) => {
+                        if (manualReceivedTotal === "0" || manualReceivedTotal === 0) setManualReceivedTotal("");
+                      }}
+                      onWheel={(e) => e.target.blur()}
+                      className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Manual Paid Total Input */}
+              <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium text-white">Denomination Paid Total</h3>
+                  <span className="text-[#939AF0] text-sm">
+                    {currencySymbols[sellCurrency] || sellCurrency}
+                  </span>
+                </div>
+                <div className="bg-[#1E2328] p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className={`${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
+                    <input
+                      type="number"
+                      value={manualPaidTotal === 0 ? "" : manualPaidTotal}
+                      onChange={(e) => setManualPaidTotal(e.target.value)}
+                      onFocus={(e) => {
+                        if (manualPaidTotal === "0" || manualPaidTotal === 0) setManualPaidTotal("");
+                      }}
+                      onWheel={(e) => e.target.blur()}
+                      readOnly={txnMode?.toLowerCase() !== "credit" && !isReceivedTallied}
+                      className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${txnMode?.toLowerCase() !== "credit" && !isReceivedTallied ? "opacity-50 cursor-not-allowed" : ""}`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="mt-8">
+            <label className="block text-[#ABABAB] text-[14px] mb-2">
+              Notes (Optional)
+            </label>
+            <textarea
+              className="
+              w-full bg-[#16191C] rounded-lg 
+              p-3 h-24 text-white
+              placeholder:text-[#D1D1D1]
+              font-poppins
+              focus:outline-none
+            "
+              // placeholder="Add any additional notes..."
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+          </div>
+
+          {/* Desktop Buttons */}
+          <div className="hidden lg:flex justify-end gap-3 mt-8">
+            <button
+              className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-[#2A2F34]"
+              onClick={() => navigate("/deals")}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="w-auto flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+              onClick={handleCreateDeal}
+              disabled={loading}
+            >
+              <img src={plus} className="w-5 h-5" />
+              {loading ? "Saving..." : "Save Deal"}
+            </button>
+          </div>
+
+          {/* Mobile Action Buttons (sticky at bottom, same line) */}
+          <div className="lg:hidden bottom-4 flex justify-between items-center mt-6">
+            <button
+              className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
+              onClick={() => navigate("/deals")}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-[#173B8B] transition-colors"
+              onClick={handleCreateDeal}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save"}
+            </button>
           </div>
 
         </div>
 
-        {/* Denomination Section */}
-        <div className="">
-          <Denomination
-            denominationReceived={denominationReceived}
-            setDenominationReceived={setDenominationReceived}
-            denominationPaid={denominationPaid}
-            setDenominationPaid={setDenominationPaid}
-            receivedCurrency={buyCurrency}
-            paidCurrency={sellCurrency}
-            currencySymbols={currencySymbols}
-            receivedReadOnly={false}
-            paidReadOnly={false}
-            hideAddReceived={isReceivedTallied}
-            hideAddPaid={isPaidTallied}
-            receivedAmount={amount}
-            paidAmount={amountToBePaid}
-
-          />
-        </div>
-
-        {/* Notes */}
-        <div className="mt-8">
-          <label className="block text-[#ABABAB] text-[14px] mb-2">
-            Notes (Optional)
-          </label>
-          <textarea
-            className="
-              w-full bg-[#16191C] rounded-lg 
-              p-3 h-24 text-white
-              placeholder:text-[#ABABAB]
-              font-poppins
-              focus:outline-none
-            "
-            placeholder="Add any additional notes..."
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-          />
-        </div>
-
-        {/* Desktop Buttons */}
-        <div className="hidden lg:flex justify-end gap-3 mt-8">
-          <button
-            className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-[#2A2F34]"
-            onClick={() => navigate("/deals")}
-            disabled={loading}
-          >
-            Cancel
-          </button>
-
-          <button
-            className="w-auto flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-            onClick={handleCreateDeal}
-            disabled={loading}
-          >
-            <img src={plus} className="w-5 h-5" />
-            {loading ? "Saving..." : "Save Deal"}
-          </button>
-        </div>
-
-        {/* Mobile Action Buttons (sticky at bottom, same line) */}
-        <div className="lg:hidden bottom-4 flex justify-between items-center mt-6">
-          <button
-            className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
-            onClick={() => navigate("/deals")}
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button
-            className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-[#173B8B] transition-colors"
-            onClick={handleCreateDeal}
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
-        </div>
-
+        {/* Notification Card for tally status */}
+        <NotificationCard
+          confirmModal={confirmModal}
+          onConfirm={handleModalConfirm}
+          onCancel={handleModalCancel}
+        />
       </div>
-
-      {/* Notification Card for tally status */}
-      <NotificationCard
-        confirmModal={confirmModal}
-        onConfirm={handleModalConfirm}
-        onCancel={handleModalCancel}
-      />
     </>
   );
 }
