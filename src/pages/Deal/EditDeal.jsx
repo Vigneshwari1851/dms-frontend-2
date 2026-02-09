@@ -9,7 +9,7 @@ import { fetchDealById, updateDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
 import Dropdown from "../../components/common/Dropdown";
-import { XMarkIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, PlusIcon, TrashIcon, BanknotesIcon } from "@heroicons/react/24/outline";
 
 const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols }) => {
     return (
@@ -33,7 +33,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                 {items.length === 0 ? (
                     <div className="bg-[#1A1F24] border border-dashed border-[#2A2F34] rounded-2xl p-4 text-center">
                         <div className="bg-[#2A2F34] w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <PlusIcon className="w-4 h-4 text-[#8F8F8F]" />
+                            <BanknotesIcon className="w-6 h-6 text-[#8F8F8F]" />
                         </div>
                         <p className="text-[#8F8F8F] font-medium">Ready to track installments</p>
                     </div>
