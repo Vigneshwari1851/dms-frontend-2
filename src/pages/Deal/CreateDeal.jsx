@@ -103,6 +103,34 @@ export default function CreateDeal() {
     loadCurrencies();
   }, []);
 
+  useEffect(() => {
+    if (txnType && currencyMap["TZS"] && currencyMap["USD"]) {
+      if (txnType.toLowerCase() === "buy") {
+        setBuyCurrency("USD");
+        setSellCurrency("TZS");
+        setDenominationReceived(prev => prev.map(item => ({
+          ...item,
+          currency_id: currencyMap["USD"]
+        })));
+        setDenominationPaid(prev => prev.map(item => ({
+          ...item,
+          currency_id: currencyMap["TZS"]
+        })));
+      } else if (txnType.toLowerCase() === "sell") {
+        setSellCurrency("USD");
+        setBuyCurrency("TZS");
+        setDenominationReceived(prev => prev.map(item => ({
+          ...item,
+          currency_id: currencyMap["TZS"]
+        })));
+        setDenominationPaid(prev => prev.map(item => ({
+          ...item,
+          currency_id: currencyMap["USD"]
+        })));
+      }
+    }
+  }, [txnType, currencyMap]);
+
   // Calculate amount to be paid when amount or rate changes
   useEffect(() => {
     if (amount && rate && amount > 0 && rate > 0) {
