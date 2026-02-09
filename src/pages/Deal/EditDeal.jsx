@@ -9,7 +9,89 @@ import { fetchDealById, updateDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
 import Dropdown from "../../components/common/Dropdown";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+
+const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols }) => {
+    return (
+        <div className="mt-8 pb-4">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h3 className="text-white font-semibold text-lg">{title}</h3>
+                    <p className="text-[#ABABAB] text-xs mt-1">Track installments and historical records</p>
+                </div>
+                {editable && (
+                    <button
+                        onClick={onAdd}
+                        className="flex items-center gap-2 bg-[#1D4CB5] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+                    >
+                        <PlusIcon className="w-4 h-4" /> Add Installment
+                    </button>
+                )}
+            </div>
+
+            <div className="space-y-4">
+                {items.map((item, index) => (
+                    <div
+                        key={index}
+                        className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
+                    >
+                        <div className="flex flex-col">
+                            <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Installment Amount</span>
+                            {editable && !item.id ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={item.price || ""}
+                                            onChange={(e) => onChange(index, "price", e.target.value)}
+                                            className="bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white w-44 focus:outline-none focus:border-[#1D4CB5] text-xl font-bold transition-all"
+                                        />
+                                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                            <span className="text-[#8F8F8F] font-bold text-sm tracking-tighter">{currency}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-white text-2xl font-black tracking-tight">
+                                        {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                    <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col sm:items-end">
+                            <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold sm:text-right">Time of Record</span>
+                            <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
+                                <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : 'bg-green-500 animate-pulse'}`}></div>
+                                <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
+                                    {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                    }) : "Pending sync..."}
+                                </span>
+                            </div>
+                        </div>
+
+                        {editable && !item.id && (
+                            <button
+                                onClick={() => onRemove(index)}
+                                className="absolute -top-2 -right-2 bg-[#FF4B4B] text-white p-1.5 rounded-full shadow-xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 hover:bg-red-600 active:scale-90"
+                            >
+                                <XMarkIcon className="w-4 h-4 stroke-[3]" />
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 
 export default function EditDeal() {
@@ -84,23 +166,18 @@ export default function EditDeal() {
 
     const checkTally = () => {
         const tolerance = 0.01;
-        // For "Buy" transaction: Buy Amount is 'amount', Sell Amount is 'amountToBePaid'
-        // For "Sell" transaction: Sell Amount is 'amount', Buy Amount is 'amountToBePaid'
-        const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
-        const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
-
         const currentReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
         const currentPaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
 
-        const receivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= tolerance;
-        const paidMatches = Math.abs(currentPaidTotal - expectedPaid) <= tolerance;
+        const receivedMatches = Math.abs(currentReceivedTotal - Number(amount)) <= tolerance;
+        const paidMatches = Math.abs(currentPaidTotal - Number(amountToBePaid)) <= tolerance;
 
-        // If Credit, received is optional. Otherwise, both must match.
-        if (txnMode?.toLowerCase() === "credit") {
-            return paidMatches;
-        }
+        // For Cash/Credit, we don't strictly require both sides if we are split tracking
+        // Just require the relevant side matches the target
+        const relevantMatch = txnType?.toLowerCase() === "buy" ? receivedMatches : paidMatches;
 
-        return receivedMatches && paidMatches;
+        if (txnMode?.toLowerCase() === "cash") return true;
+        return relevantMatch;
     };
 
     const tolerance = 0.01;
@@ -118,6 +195,8 @@ export default function EditDeal() {
     const isPaidTallied =
         expectedPaid > 0 &&
         Math.abs(effectivePaidTotal - expectedPaid) <= tolerance;
+
+    const isFullyTallied = txnType?.toLowerCase() === "buy" ? isPaidTallied : isReceivedTallied;
 
     // Fetch currencies on component mount
     useEffect(() => {
@@ -146,6 +225,40 @@ export default function EditDeal() {
 
         loadCurrencies();
     }, []);
+
+    const handleAddReceivedSplit = () => {
+        setDenominationReceived([...denominationReceived, { price: "", quantity: 1, total: 0, currency_id: currencyMap[buyCurrency] }]);
+    };
+
+    const handleRemoveReceivedSplit = (index) => {
+        setDenominationReceived(denominationReceived.filter((_, i) => i !== index));
+    };
+
+    const handleChangeReceivedSplit = (index, field, value) => {
+        const newItems = [...denominationReceived];
+        newItems[index][field] = value;
+        if (field === "price") {
+            newItems[index].total = Number(value);
+        }
+        setDenominationReceived(newItems);
+    };
+
+    const handleAddPaidSplit = () => {
+        setDenominationPaid([...denominationPaid, { price: "", quantity: 1, total: 0, currency_id: currencyMap[sellCurrency] }]);
+    };
+
+    const handleRemovePaidSplit = (index) => {
+        setDenominationPaid(denominationPaid.filter((_, i) => i !== index));
+    };
+
+    const handleChangePaidSplit = (index, field, value) => {
+        const newItems = [...denominationPaid];
+        newItems[index][field] = value;
+        if (field === "price") {
+            newItems[index].total = Number(value);
+        }
+        setDenominationPaid(newItems);
+    };
 
     const populateFormFromDeal = (dealData) => {
         console.log("Deal data received:", dealData); // For debugging
@@ -183,23 +296,27 @@ export default function EditDeal() {
 
         const formattedReceived = received.length > 0
             ? received.map(item => ({
+                id: item.id,
                 price: Number(item.price) || 0,
                 quantity: Number(item.quantity) || 0,
                 total: Number(item.total) || 0,
                 currency_id: item.currency_id,
-                currency_name: item.currency?.name || ""
+                currency_name: item.currency?.name || "",
+                created_at: item.created_at
             }))
-            : [{ price: 0, quantity: 0, total: 0 }];
+            : [];
 
         const formattedPaid = paid.length > 0
             ? paid.map(item => ({
+                id: item.id,
                 price: Number(item.price) || 0,
                 quantity: Number(item.quantity) || 0,
                 total: Number(item.total) || 0,
                 currency_id: item.currency_id,
-                currency_name: item.currency?.name || ""
+                currency_name: item.currency?.name || "",
+                created_at: item.created_at
             }))
-            : [{ price: 0, quantity: 0, total: 0 }];
+            : [];
 
         setDenominationReceived(formattedReceived);
         setDenominationPaid(formattedPaid);
@@ -258,6 +375,14 @@ export default function EditDeal() {
         }
     }, [id, currencyOptions]);
 
+    // Recalculate amount to be paid when amount or rate changes
+    useEffect(() => {
+        if (amount && rate) {
+            const calculated = (parseFloat(amount) * parseFloat(rate)).toFixed(2);
+            setAmountToBePaid(calculated);
+        }
+    }, [amount, rate]);
+
     const handleStartEdit = () => {
         if (isPending) {
             setEditMode(true);
@@ -274,6 +399,18 @@ export default function EditDeal() {
 
     const handleSave = () => {
         if (!isEditable) return;
+
+        // Automatic status logic: 
+        // Cash -> Completed
+        // Credit -> Pending
+        if (txnMode?.toLowerCase() === "cash") {
+            updateDealTransaction('Completed');
+            return;
+        }
+        if (txnMode?.toLowerCase() === "credit") {
+            updateDealTransaction('Pending');
+            return;
+        }
 
         const isSavable = checkTally();
         const isFullyTallied = isReceivedTallied && isPaidTallied;
@@ -297,13 +434,24 @@ export default function EditDeal() {
     const updateDealTransaction = async (status) => {
         try {
             const currentReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
-            const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
-            const receivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= 0.01;
+            const currentPaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
 
-            // In Credit mode: Perfectly balanced = Completed, otherwise Pending
-            const finalStatus = txnMode.toLowerCase() === "credit"
-                ? (receivedMatches ? "Completed" : "Pending")
-                : status;
+            const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+            const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+
+            const sideReceivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= 0.01;
+            const sidePaidMatches = Math.abs(currentPaidTotal - expectedPaid) <= 0.01;
+
+            let finalStatus = status;
+            const matchesRelevantSide = txnType?.toLowerCase() === "buy" ? sidePaidMatches : sideReceivedMatches;
+
+            if (matchesRelevantSide) {
+                finalStatus = "Completed";
+            } else if (txnMode.toLowerCase() === "cash") {
+                finalStatus = "Completed";
+            } else {
+                finalStatus = "Pending";
+            }
 
             const dealData = {
                 deal_type: txnType.toLowerCase(),
@@ -319,21 +467,23 @@ export default function EditDeal() {
                 status: finalStatus,
 
                 receivedItems: denominationReceived
-                    .filter(i => i.price && i.quantity)
+                    .filter(i => (i.price !== "" && i.price !== null && i.price !== undefined) && (i.quantity !== "" && i.quantity !== null && i.quantity !== undefined))
                     .map(i => ({
+                        id: i.id,
                         price: String(i.price),
                         quantity: String(i.quantity),
                         total: String(i.total || (Number(i.price) * Number(i.quantity))),
-                        currency_id: currencyMap[buyCurrency],
+                        currency_id: i.currency_id || currencyMap[buyCurrency],
                     })),
 
                 paidItems: denominationPaid
-                    .filter(i => i.price && i.quantity)
+                    .filter(i => (i.price !== "" && i.price !== null && i.price !== undefined) && (i.quantity !== "" && i.quantity !== null && i.quantity !== undefined))
                     .map(i => ({
+                        id: i.id,
                         price: String(i.price),
                         quantity: String(i.quantity),
                         total: String(i.total || (Number(i.price) * Number(i.quantity))),
-                        currency_id: currencyMap[sellCurrency],
+                        currency_id: i.currency_id || currencyMap[sellCurrency],
                     })),
             };
 
@@ -514,18 +664,18 @@ export default function EditDeal() {
                             />
                         </div>
 
-                        {/* Amount - NOT editable */}
+                        {/* Amount - EDITABLE if Pending */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
                             </label>
                             <input
-                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none cursor-not-allowed opacity-70"
+                                className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
                                 placeholder="0.00"
                                 type="text"
                                 value={amount}
-                                readOnly={true}
-                                disabled={true}
+                                onChange={(e) => setAmount(e.target.value)}
+                                readOnly={!isEditable}
                             />
                         </div>
 
@@ -544,16 +694,18 @@ export default function EditDeal() {
                             />
                         </div>
 
-                        {/* Rate - NOT editable */}
+                        {/* Rate - EDITABLE if Pending */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Rate <span className="text-red-500">*</span>
                             </label>
                             <input
-                                readOnly={true}
-                                disabled={true}
-                                value={rate || ""}
-                                className="w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none cursor-not-allowed opacity-70"
+                                className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
+                                placeholder="0.00"
+                                type="text"
+                                value={rate}
+                                onChange={(e) => setRate(e.target.value)}
+                                readOnly={!isEditable}
                             />
                         </div>
                     </div>
@@ -580,95 +732,40 @@ export default function EditDeal() {
 
                         {/* Right side */}
                         <span className="text-white text-[14px]">
-                            {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Math.floor(Number(amountToBePaid)).toLocaleString()}
+                            {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                     </div>
 
-                    {/* Enable Denomination Toggle */}
-                    <div className="mt-6 flex items-center">
-                        <div className={`flex items-center gap-3 select-none ${!isEditable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => isEditable && setEnableDenomination(!enableDenomination)}>
-                            <div className={`w-10 h-5 rounded-full transition-colors relative ${enableDenomination ? 'bg-[#1D4CB5]' : 'bg-[#2A2F34]'}`}>
-                                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${enableDenomination ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </div>
-                            <span className="text-[#ABABAB] text-sm font-medium">Enable Denomination</span>
-                        </div>
-                    </div>
-
-                    {/* Denomination Section */}
-                    {enableDenomination ? (
-                        <div className="mt-8">
-                            {/* <div className={!isEditable ? "pointer-events-none" : ""}> */}
-                            <Denomination
-                                denominationReceived={denominationReceived}
-                                setDenominationReceived={setDenominationReceived}
-                                denominationPaid={denominationPaid}
-                                setDenominationPaid={setDenominationPaid}
-                                receivedCurrency={buyCurrency}
-                                paidCurrency={sellCurrency}
-                                currencySymbols={currencySymbols}
-                                receivedReadOnly={!isEditable}
-                                paidReadOnly={!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)}
-                                hideAddReceived={isReceivedTallied}
-                                hideAddPaid={isPaidTallied}
-                                receivedAmount={txnType?.toLowerCase() === "sell" ? amountToBePaid : amount}
-                                paidAmount={txnType?.toLowerCase() === "sell" ? amount : amountToBePaid}
-                                transactionType={txnType}
-                            />
-                            {/* </div> */}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                            {/* Manual Received Total Input */}
-                            <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-medium text-white">Denomination Received Total</h3>
-                                    <span className="text-[#939AF0] text-sm">
-                                        {currencySymbols[buyCurrency] || buyCurrency}
-                                    </span>
-                                </div>
-                                <div className="bg-[#1E2328] p-4 rounded-lg">
-                                    <div className="flex justify-between items-center">
-                                        <span className={`${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
-                                        <input
-                                            type="number"
-                                            value={manualReceivedTotal === 0 ? "" : manualReceivedTotal}
-                                            onChange={(e) => setManualReceivedTotal(e.target.value)}
-                                            onFocus={(e) => {
-                                                if (manualReceivedTotal === "0" || manualReceivedTotal === 0) setManualReceivedTotal("");
-                                            }}
-                                            onWheel={(e) => e.target.blur()}
-                                            readOnly={!isEditable}
-                                            className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${!isEditable ? 'cursor-not-allowed opacity-70' : ''}`}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Manual Paid Total Input */}
-                            <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-medium text-white">Denomination Paid Total</h3>
-                                    <span className="text-[#939AF0] text-sm">
-                                        {currencySymbols[sellCurrency] || sellCurrency}
-                                    </span>
-                                </div>
-                                <div className="bg-[#1E2328] p-4 rounded-lg">
-                                    <div className="flex justify-between items-center">
-                                        <span className={`${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
-                                        <input
-                                            type="number"
-                                            value={manualPaidTotal === 0 ? "" : manualPaidTotal}
-                                            onChange={(e) => setManualPaidTotal(e.target.value)}
-                                            onFocus={(e) => {
-                                                if (manualPaidTotal === "0" || manualPaidTotal === 0) setManualPaidTotal("");
-                                            }}
-                                            onWheel={(e) => e.target.blur()}
-                                            readOnly={!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)}
-                                            className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${(!isEditable || (txnMode?.toLowerCase() !== "credit" && !isReceivedTallied)) ? 'cursor-not-allowed opacity-70' : ''}`}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                    {/* Split Payments History - Conditional */}
+                    {txnMode?.toLowerCase() !== "cash" && (
+                        <div className="mt-4 space-y-6">
+                            {/* 
+                                Buy: We PAY TZS to customer in portions. Show Paid History.
+                                Sell: Customer PAYS TZS to us in portions. Show Received History.
+                            */}
+                            {txnType?.toLowerCase() === "buy" ? (
+                                <PaymentHistory
+                                    title="Payments Paid History"
+                                    items={denominationPaid}
+                                    currency={sellCurrency}
+                                    editable={editMode}
+                                    onAdd={handleAddPaidSplit}
+                                    onRemove={handleRemovePaidSplit}
+                                    onChange={handleChangePaidSplit}
+                                    currencySymbols={currencySymbols}
+                                />
+                            ) : (
+                                <PaymentHistory
+                                    title="Payments Received History"
+                                    items={denominationReceived}
+                                    currency={buyCurrency}
+                                    editable={editMode}
+                                    onAdd={handleAddReceivedSplit}
+                                    onRemove={handleRemoveReceivedSplit}
+                                    onChange={handleChangeReceivedSplit}
+                                    currencySymbols={currencySymbols}
+                                />
+                            )}
                         </div>
                     )}
 

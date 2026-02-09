@@ -327,14 +327,7 @@ export default function CreateDeal() {
             total: String(item.total),
             currency_id: currencyMap[sellCurrency],
           }))
-        : [
-          {
-            price: "0",
-            quantity: "0",
-            total: "0",
-            currency_id: currencyMap[sellCurrency],
-          }
-        ];
+        : [];
 
       const totalReceived = enableDenomination ? calculateTotalReceived() : parseFloat(manualReceivedTotal) || 0;
       const totalPaid = enableDenomination ? calculateTotalPaid() : parseFloat(manualPaidTotal) || 0;
