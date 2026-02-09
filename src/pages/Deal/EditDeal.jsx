@@ -30,64 +30,73 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
             </div>
 
             <div className="space-y-4">
-                {items.map((item, index) => (
-                    <div
-                        key={index}
-                        className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
-                    >
-                        <div className="flex flex-col">
-                            <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Installment Amount</span>
-                            {editable && !item.id ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            value={item.price || ""}
-                                            onChange={(e) => onChange(index, "price", e.target.value)}
-                                            className="bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white w-44 focus:outline-none focus:border-[#1D4CB5] text-xl font-bold transition-all"
-                                        />
-                                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                            <span className="text-[#8F8F8F] font-bold text-sm tracking-tighter">{currency}</span>
+                {items.length === 0 ? (
+                    <div className="bg-[#1A1F24] border border-dashed border-[#2A2F34] rounded-2xl p-4 text-center">
+                        <div className="bg-[#2A2F34] w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <PlusIcon className="w-4 h-4 text-[#8F8F8F]" />
+                        </div>
+                        <p className="text-[#8F8F8F] font-medium">Ready to track installments</p>
+                    </div>
+                ) : (
+                    items.map((item, index) => (
+                        <div
+                            key={index}
+                            className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
+                        >
+                            <div className="flex flex-col">
+                                <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Installment Amount</span>
+                                {editable && !item.id ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={item.price || ""}
+                                                onChange={(e) => onChange(index, "price", e.target.value)}
+                                                className="bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white w-44 focus:outline-none focus:border-[#1D4CB5] text-xl font-bold transition-all"
+                                            />
+                                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                                <span className="text-[#8F8F8F] font-bold text-sm tracking-tighter">{currency}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-white text-2xl font-black tracking-tight">
-                                        {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                ) : (
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-white text-2xl font-black tracking-tight">
+                                            {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </span>
+                                        <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col sm:items-end">
+                                <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold sm:text-right">Time of Record</span>
+                                <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : 'bg-green-500 animate-pulse'}`}></div>
+                                    <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
+                                        {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: true
+                                        }) : "Pending sync..."}
                                     </span>
-                                    <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
                                 </div>
+                            </div>
+
+                            {editable && !item.id && (
+                                <button
+                                    onClick={() => onRemove(index)}
+                                    className="absolute -top-2 -right-2 bg-[#FF4B4B] text-white p-1.5 rounded-full shadow-xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 hover:bg-red-600 active:scale-90"
+                                >
+                                    <XMarkIcon className="w-4 h-4 stroke-[3]" />
+                                </button>
                             )}
                         </div>
-
-                        <div className="flex flex-col sm:items-end">
-                            <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold sm:text-right">Time of Record</span>
-                            <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
-                                <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : 'bg-green-500 animate-pulse'}`}></div>
-                                <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
-                                    {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: true
-                                    }) : "Pending sync..."}
-                                </span>
-                            </div>
-                        </div>
-
-                        {editable && !item.id && (
-                            <button
-                                onClick={() => onRemove(index)}
-                                className="absolute -top-2 -right-2 bg-[#FF4B4B] text-white p-1.5 rounded-full shadow-xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 hover:bg-red-600 active:scale-90"
-                            >
-                                <XMarkIcon className="w-4 h-4 stroke-[3]" />
-                            </button>
-                        )}
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );
