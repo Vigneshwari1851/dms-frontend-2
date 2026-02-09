@@ -62,6 +62,8 @@ export default function CreateDeal() {
     isTallied: false // Track if deal is tallied
   });
 
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
   // Fetch currencies on component mount
   useEffect(() => {
     const loadCurrencies = async () => {
@@ -136,20 +138,19 @@ export default function CreateDeal() {
 
     // For "Buy" transaction: Buy Amount is 'amount', Sell Amount is 'amountToBePaid'
     // For "Sell" transaction: Sell Amount is 'amount', Buy Amount is 'amountToBePaid'
-    const expectedReceived = txnType?.toLowerCase() === "sell" ? parseFloat(amountToBePaid) : parseFloat(amount);
-    const expectedPaid = txnType?.toLowerCase() === "sell" ? parseFloat(amount) : parseFloat(amountToBePaid);
+    const expectedReceived = txnType?.toLowerCase() === "sell" ? (parseFloat(amountToBePaid) || 0) : (parseFloat(amount) || 0);
+    const expectedPaid = txnType?.toLowerCase() === "sell" ? (parseFloat(amount) || 0) : (parseFloat(amountToBePaid) || 0);
 
     const tolerance = 0.01;
 
-    const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= tolerance;
-    const paidMatches = Math.abs(totalPaid - (expectedPaid || 0)) <= tolerance;
+    const receivedMatches = Math.abs(totalReceived - expectedReceived) <= tolerance;
+    const paidMatches = Math.abs(totalPaid - expectedPaid) <= tolerance;
 
-    // For Cash/Credit, we don't strictly require tallying based on the new user rules
-    if (txnMode?.toLowerCase() === "cash" || txnMode?.toLowerCase() === "credit") {
-      return true;
-    }
+    // For split tracking, we only strictly require the relevant side to match
+    const relevantMatch = txnType?.toLowerCase() === "buy" ? receivedMatches : paidMatches;
 
-    return receivedMatches && paidMatches;
+    if (txnMode?.toLowerCase() === "cash") return true;
+    return relevantMatch;
   };
 
   const showToast = (message, type = "success") => {
@@ -216,6 +217,8 @@ export default function CreateDeal() {
   const isPaidTallied =
     expectedPaid > 0 &&
     Math.abs(effectivePaidTotal - expectedPaid) <= 0.01;
+
+  const isFullyTallied = txnType?.toLowerCase() === "buy" ? isPaidTallied : isReceivedTallied;
 
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
@@ -334,21 +337,23 @@ export default function CreateDeal() {
         ];
 
       const totalReceived = enableDenomination ? calculateTotalReceived() : parseFloat(manualReceivedTotal) || 0;
-      const expectedReceived = txnType?.toLowerCase() === "sell" ? parseFloat(amountToBePaid) : parseFloat(amount);
-      const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= 0.01;
+      const totalPaid = enableDenomination ? calculateTotalPaid() : parseFloat(manualPaidTotal) || 0;
 
-      // New Status Logic:
-      // Cash -> Completed
-      // Credit -> Pending
-      // Others -> based on tally (status param)
+      const expectedReceived = txnType?.toLowerCase() === "sell" ? (parseFloat(amountToBePaid) || 0) : (parseFloat(amount) || 0);
+      const expectedPaid = txnType?.toLowerCase() === "sell" ? (parseFloat(amount) || 0) : (parseFloat(amountToBePaid) || 0);
+
+      const sideReceivedMatches = Math.abs(totalReceived - expectedReceived) <= 0.01;
+      const sidePaidMatches = Math.abs(totalPaid - expectedPaid) <= 0.01;
+
+      // Completion Logic:
+      // If the relevant split side matches, it's completed.
+      const matchesRelevantSide = txnType?.toLowerCase() === "buy" ? sidePaidMatches : sideReceivedMatches;
+
       let finalStatus = status;
-      if (txnMode.toLowerCase() === "cash") {
+      if (matchesRelevantSide || txnMode.toLowerCase() === "cash") {
         finalStatus = "Completed";
-      } else if (txnMode.toLowerCase() === "credit") {
-        finalStatus = "Pending";
       } else {
-        // Fallback for any other modes
-        finalStatus = (receivedMatches && isPaidTallied) ? "Completed" : "Pending";
+        finalStatus = "Pending";
       }
 
       const dealData = {
@@ -865,6 +870,14 @@ export default function CreateDeal() {
           onCancel={handleModalCancel}
         />
       </div>
+      {/* Toast Notification */}
+      {toast.show && (
+        <NotificationCard
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </>
   );
 }

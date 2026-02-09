@@ -57,20 +57,23 @@ export default function ViewCustomer() {
         is_active: customer.is_active ?? false,
       });
 
-      const deals = (customer.deals || []).map((deal) => ({
-        raw: deal,
-        dealId: deal.id,
-        id: deal.deal_number,
-        date: new Date(deal.created_at).toLocaleDateString("en-IN"),
-        type: deal.deal_type,
-        customer: customer.name,
-        buyAmt: Number(deal.buyAmount).toLocaleString(),
-        sellAmt: Number(deal.sellAmount).toLocaleString(),
-        currency: deal.buyCurrency || "---",
-        currency1: deal.sellCurrency || "---",
-        rate: deal.exchange_rate || deal.rate,
-        status: deal.status
-      }));
+      const deals = (customer.deals || []).map((deal) => {
+        const isBuy = (deal.deal_type || "").toLowerCase() === "buy";
+        return {
+          raw: deal,
+          dealId: deal.id,
+          id: deal.deal_number,
+          date: new Date(deal.created_at).toLocaleDateString("en-IN"),
+          type: deal.deal_type,
+          customer: customer.name,
+          buyAmt: (Number(isBuy ? deal.amount : deal.amount_to_be_paid) || 0).toLocaleString(),
+          sellAmt: (Number(isBuy ? deal.amount_to_be_paid : deal.amount) || 0).toLocaleString(),
+          currency: deal.buyCurrency || "---",
+          currency1: deal.sellCurrency || "---",
+          rate: deal.exchange_rate || deal.rate,
+          status: deal.status
+        };
+      });
 
       setCustomerDeals(deals);
     };
@@ -237,7 +240,7 @@ export default function ViewCustomer() {
     <div>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-3 lg:gap-0">
         <div className="flex items-center justify-between w-full lg:w-auto">
-        <div className="min-w-0 flex-1 lg:flex-initial">
+          <div className="min-w-0 flex-1 lg:flex-initial">
             <h2 className="text-white text-base lg:text-[16px] font-semibold truncate">
               {editMode ? "Edit Customer" : `Customer Name: ${formData.name}`}
             </h2>

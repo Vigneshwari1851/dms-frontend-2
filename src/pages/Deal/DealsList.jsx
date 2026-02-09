@@ -61,6 +61,9 @@ export default function DealsList() {
         });
 
         const transformedData = response.data.map((deal) => {
+          // const isBuy = deal.deal_type === "buy";
+          // const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
+          // const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
           const buyAmtValue = Number(deal.buyAmount);
           const sellAmtValue = Number(deal.amount_to_be_paid);
 
@@ -235,37 +238,37 @@ export default function DealsList() {
   return (
     <>
       {/* Page Header */}
-    <div className="flex items-center mb-6">
-      {/* Left content */}
-      <div>
-        <h1 className="text-white text-16px lg:text-[20px] font-semibold">
-          Deals Overview
-        </h1>
-        <p className="text-gray-400 text-sm mt-1 hidden lg:block">
-          Manage and review all deals
-        </p>
-      </div>
+      <div className="flex items-center mb-6">
+        {/* Left content */}
+        <div>
+          <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+            Deals Overview
+          </h1>
+          <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+            Manage and review all deals
+          </p>
+        </div>
 
-      {/* Right buttons */}
-      <div className="ml-auto flex items-center gap-3">
-        <button
-          onClick={handleAddCustomer}
-          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
-        >
-          <img src={add} alt="add" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
-          Add Customer
-        </button>
+        {/* Right buttons */}
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            onClick={handleAddCustomer}
+            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
+          >
+            <img src={add} alt="add" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
+            Add Customer
+          </button>
 
-        <button
-          onClick={() => navigate("/deals/create-deal")}
-          className="flex items-center justify-center h-10 bg-[#1D4CB5] hover:bg-[#173B8B] text-white font-medium text-sm px-4 py-2 gap-2 rounded-lg"
-        >
-          <img src={add} alt="add" className="w-5 h-5" />
-          <span className="lg:hidden">New Deal</span>
-          <span className="hidden lg:inline">Create New Deal</span>
-        </button>
+          <button
+            onClick={() => navigate("/deals/create-deal")}
+            className="flex items-center justify-center h-10 bg-[#1D4CB5] hover:bg-[#173B8B] text-white font-medium text-sm px-4 py-2 gap-2 rounded-lg"
+          >
+            <img src={add} alt="add" className="w-5 h-5" />
+            <span className="lg:hidden">New Deal</span>
+            <span className="hidden lg:inline">Create New Deal</span>
+          </button>
+        </div>
       </div>
-    </div>
 
       {/* Table Container */}
       <div className="bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
