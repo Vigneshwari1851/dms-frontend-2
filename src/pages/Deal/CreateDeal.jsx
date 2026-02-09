@@ -144,9 +144,9 @@ export default function CreateDeal() {
     const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= tolerance;
     const paidMatches = Math.abs(totalPaid - (expectedPaid || 0)) <= tolerance;
 
-    // If Credit, received is optional. Otherwise, both must match.
-    if (txnMode?.toLowerCase() === "credit") {
-      return paidMatches;
+    // For Cash/Credit, we don't strictly require tallying based on the new user rules
+    if (txnMode?.toLowerCase() === "cash" || txnMode?.toLowerCase() === "credit") {
+      return true;
     }
 
     return receivedMatches && paidMatches;
@@ -206,8 +206,9 @@ export default function CreateDeal() {
   const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
   const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
 
-  const effectiveReceivedTotal = enableDenomination ? receivedTotal : Number(manualReceivedTotal);
-  const effectivePaidTotal = enableDenomination ? paidTotal : Number(manualPaidTotal);
+  const isCashManual = !enableDenomination && txnMode?.toLowerCase() === "cash";
+  const effectiveReceivedTotal = isCashManual ? expectedReceived : (enableDenomination ? receivedTotal : Number(manualReceivedTotal));
+  const effectivePaidTotal = isCashManual ? expectedPaid : (enableDenomination ? paidTotal : Number(manualPaidTotal));
 
   const isReceivedTallied =
     expectedReceived > 0 && Math.abs(effectiveReceivedTotal - expectedReceived) <= 0.01;
@@ -219,7 +220,19 @@ export default function CreateDeal() {
   const handleCreateDeal = async () => {
     if (!validateForm()) return;
 
-    // Check if denomination totals tally
+    // Automatic status logic: 
+    // Cash -> Completed
+    // Credit -> Pending
+    if (txnMode?.toLowerCase() === "cash") {
+      await createDealTransaction('Completed');
+      return;
+    }
+    if (txnMode?.toLowerCase() === "credit") {
+      await createDealTransaction('Pending');
+      return;
+    }
+
+    // Check if denomination totals tally for other modes
     const isSavable = checkDenominationTally();
     const isFullyTallied = isReceivedTallied && isPaidTallied;
 
@@ -324,10 +337,19 @@ export default function CreateDeal() {
       const expectedReceived = txnType?.toLowerCase() === "sell" ? parseFloat(amountToBePaid) : parseFloat(amount);
       const receivedMatches = Math.abs(totalReceived - (expectedReceived || 0)) <= 0.01;
 
-      // In Credit mode: Perfectly balanced = Completed, otherwise Pending
-      const finalStatus = txnMode.toLowerCase() === "credit"
-        ? (receivedMatches ? "Completed" : "Pending")
-        : status;
+      // New Status Logic:
+      // Cash -> Completed
+      // Credit -> Pending
+      // Others -> based on tally (status param)
+      let finalStatus = status;
+      if (txnMode.toLowerCase() === "cash") {
+        finalStatus = "Completed";
+      } else if (txnMode.toLowerCase() === "credit") {
+        finalStatus = "Pending";
+      } else {
+        // Fallback for any other modes
+        finalStatus = (receivedMatches && isPaidTallied) ? "Completed" : "Pending";
+      }
 
       const dealData = {
         customer_id: selectedCustomer.id,
@@ -777,93 +799,8 @@ export default function CreateDeal() {
             </span>
           </div>
 
-          {/* Enable Denomination Toggle */}
-          <div className="mt-6 flex items-center">
-            <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setEnableDenomination(!enableDenomination)}>
-              <div className={`w-10 h-5 rounded-full transition-colors relative ${enableDenomination ? 'bg-[#5761D7]' : 'bg-[#2A2F34]'}`}>
-                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${enableDenomination ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-              <span className="text-[#ABABAB] text-sm font-medium">Enable Denomination</span>
-            </div>
-          </div>
-
-          {/* Denomination Section */}
-          {enableDenomination ? (
-            <div className="">
-              <Denomination
-                denominationReceived={denominationReceived}
-                setDenominationReceived={setDenominationReceived}
-                denominationPaid={denominationPaid}
-                setDenominationPaid={setDenominationPaid}
-                receivedCurrency={buyCurrency}
-                paidCurrency={sellCurrency}
-                currencySymbols={currencySymbols}
-                receivedReadOnly={false}
-                paidReadOnly={txnMode?.toLowerCase() !== "credit" && !isReceivedTallied}
-                hideAddReceived={isReceivedTallied}
-                hideAddPaid={isPaidTallied}
-                receivedAmount={txnType?.toLowerCase() === "sell" ? amountToBePaid : amount}
-                paidAmount={txnType?.toLowerCase() === "sell" ? amount : amountToBePaid}
-                transactionType={txnType}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-              {/* Manual Received Total Input */}
-              <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium text-white">Denomination Received Total</h3>
-                  <span className="text-[#939AF0] text-sm">
-                    {currencySymbols[buyCurrency] || buyCurrency}
-                  </span>
-                </div>
-                <div className="bg-[#1E2328] p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className={`${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
-                    <input
-                      type="number"
-                      value={manualReceivedTotal === 0 ? "" : manualReceivedTotal}
-                      onChange={(e) => setManualReceivedTotal(e.target.value)}
-                      onFocus={(e) => {
-                        if (manualReceivedTotal === "0" || manualReceivedTotal === 0) setManualReceivedTotal("");
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                      className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectiveReceivedTotal - expectedReceived) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Manual Paid Total Input */}
-              <div className="bg-[#16191C] px-3 py-4 lg:p-4 rounded-xl lg:rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium text-white">Denomination Paid Total</h3>
-                  <span className="text-[#939AF0] text-sm">
-                    {currencySymbols[sellCurrency] || sellCurrency}
-                  </span>
-                </div>
-                <div className="bg-[#1E2328] p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className={`${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium`}>Total</span>
-                    <input
-                      type="number"
-                      value={manualPaidTotal === 0 ? "" : manualPaidTotal}
-                      onChange={(e) => setManualPaidTotal(e.target.value)}
-                      onFocus={(e) => {
-                        if (manualPaidTotal === "0" || manualPaidTotal === 0) setManualPaidTotal("");
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                      readOnly={txnMode?.toLowerCase() !== "credit" && !isReceivedTallied}
-                      className={`w-[140px] bg-[#16191C] rounded-md px-3 py-1.5 ${Math.abs(effectivePaidTotal - expectedPaid) > 0.01 ? "text-red-500" : "text-[#00C853]"} text-right outline-none ${txnMode?.toLowerCase() !== "credit" && !isReceivedTallied ? "opacity-50 cursor-not-allowed" : ""}`}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Notes */}
-          <div className="mt-8">
+          <div className="mt-6">
             <label className="block text-[#ABABAB] text-[14px] mb-2">
               Notes (Optional)
             </label>
