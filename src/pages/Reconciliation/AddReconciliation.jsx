@@ -213,9 +213,12 @@ export default function AddReconciliation() {
                 }));
 
             const { diff } = calculateTotals();
-            let status = "Tallied";
-            if (diff > 0) status = "Excess";
-            else if (diff < 0) status = "Short";
+            let status = "In_Progress";
+            if (closingEntries.length > 0) {
+                if (diff === 0) status = "Tallied";
+                else if (diff > 0) status = "Excess";
+                else status = "Short";
+            }
 
             const payload = {
                 openingEntries,
