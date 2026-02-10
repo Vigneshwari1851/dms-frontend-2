@@ -46,14 +46,6 @@ export default function Dashboard() {
     loadDashboardStats();
   }, []);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
   const getChangeText = (percentage) => {
     if (percentage === 0) return "";
     return `${percentage >= 0 ? "+" : ""}${percentage}% from yesterday`;
@@ -95,13 +87,13 @@ export default function Dashboard() {
 
         <StatCard
           title="Total Buy Amount"
-          value={formatCurrency(stats.today?.buyAmount || 0)}
+          value={stats.today?.buyAmount || 0}
           icon={buyamount}
         />
 
         <StatCard
           title="Total Sell Amount"
-          value={formatCurrency(stats.today?.sellAmount || 0)}
+          value={stats.today?.sellAmount || 0}
           icon={sellamount}
         />
 
