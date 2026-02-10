@@ -54,7 +54,7 @@ export default function Table({
 
   const roleColors = {
     Maker: "text-[#33BAA6] bg-[#22998824] border-[#33BAA6] border",
-    Checker: "text-[#B47AF4] bg-[#9C4DF424] border-[#B47AF4] border",
+    Admin: "text-[#B47AF4] bg-[#9C4DF424] border-[#B47AF4] border",
   };
 
   const statusColors = {
