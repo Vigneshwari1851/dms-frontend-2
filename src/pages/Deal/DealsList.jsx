@@ -61,11 +61,11 @@ export default function DealsList() {
         });
 
         const transformedData = response.data.map((deal) => {
-          // const isBuy = deal.deal_type === "buy";
-          // const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
-          // const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
-          const buyAmtValue = Number(deal.buyAmount);
-          const sellAmtValue = Number(deal.amount_to_be_paid);
+          const isBuy = deal.deal_type === "buy";
+          const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
+          const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
+          // const buyAmtValue = Number(deal.buyAmount);
+          // const sellAmtValue = Number(deal.amount_to_be_paid);
 
           return {
             id: deal.deal_number,
