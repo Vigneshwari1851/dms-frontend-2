@@ -227,7 +227,7 @@ export default function AddReconciliation() {
                 status
             };
 
-            setToast({ show: true, message: id ? "Updating..." : "Saving...", type: "pending" });
+            setToast({ show: true, message: id ? "Reconciliation Updating..." : "Reconciliation Saving...", type: "pending" });
 
             let result;
             if (id) {
