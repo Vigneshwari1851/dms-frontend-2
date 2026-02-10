@@ -2,362 +2,229 @@ import { useState, useEffect } from "react";
 import balance from "../../assets/reconciliation/balance.svg";
 import high from "../../assets/reconciliation/high.svg";
 import save from "../../assets/Common/save.svg";
-import expandRight from "../../assets/Common/expandRight.svg";
-import OpeningVaultBalance from "../../components/Reconciliation/OpeningVaultBalance";
-import CurrencyForm from "../../components/common/CurrencyForm";
-import { createCurrency } from "../../api/currency/currency";
+import Dropdown from "../../components/common/Dropdown";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import { createReconciliation, fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
+import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
+import NotificationCard from "../../components/common/Notification";
+import CurrencyForm from "../../components/common/CurrencyForm";
 
 export default function AddReconciliation() {
-    const [activeTab, setActiveTab] = useState("summary");
-    const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-    const [notes, setNotes] = useState("");
-
     const navigate = useNavigate();
     const { id } = useParams();
-    const [originalData, setOriginalData] = useState(null);
-    const [activeSection, setActiveSection] = useState("summary");
 
-    const toggleSection = (section) => {
-        if (window.innerWidth < 1024) {
-            setActiveSection(activeSection === section ? null : section);
-        } else {
-            setActiveTab(section);
+    const [openingRows, setOpeningRows] = useState([
+        { id: Date.now(), currencyId: null, currencyCode: '', amount: '' }
+    ]);
+    const [closingRows, setClosingRows] = useState([
+        { id: Date.now() + 1, currencyId: null, currencyCode: '', amount: '' }
+    ]);
+
+    const [currencyOptions, setCurrencyOptions] = useState([]);
+    const [currencyMap, setCurrencyMap] = useState({});
+    const [notes, setNotes] = useState("");
+    const [showSaveButton, setShowSaveButton] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+    const [isAddingCurrency, setIsAddingCurrency] = useState(false);
+    const [newCurrency, setNewCurrency] = useState({ currencyName: "", isoCode: "", symbol: "" });
+
+    const [confirmModal, setConfirmModal] = useState({
+        open: false,
+        actionType: "remove",
+        title: "Delete Row",
+        message: "Are you sure you want to delete this row?",
+        target: null
+    });
+
+    const loadCurrencies = async () => {
+        try {
+            const currencies = await fetchCurrencies({ page: 1, limit: 100 });
+            const actualCurrencies = currencies?.data?.data || currencies?.data || currencies || [];
+
+            if (actualCurrencies.length > 0) {
+                const map = {};
+                actualCurrencies.forEach(c => map[c.code] = c.id);
+                setCurrencyMap(map);
+
+                const dropdownOpts = actualCurrencies.map(c => ({
+                    label: `${c.code} - ${c.name}`,
+                    value: c.code,
+                    id: c.id
+                }));
+                setCurrencyOptions(dropdownOpts);
+                return actualCurrencies;
+            }
+            return [];
+        } catch (error) {
+            console.error("Error loading currencies:", error);
+            return [];
         }
     };
 
-    // Fetch reconciliation data if editing
     useEffect(() => {
-        if (!id) return;
+        const initData = async () => {
+            const actualCurrencies = await loadCurrencies();
 
-        const fetchRecon = async () => {
-            try {
-                const result = await fetchReconciliationById(id);
-                if (result.success || result.data) {
+            if (actualCurrencies.length > 0 && id) {
+                try {
+                    const result = await fetchReconciliationById(id);
                     const data = result.data?.data || result.data || result;
+                    setNotes(data.notes?.[0]?.note || "");
 
-                    // Parse notes
-                    if (data.notes) {
-                        const notesText = Array.isArray(data.notes)
-                            ? data.notes.map(n => typeof n === 'string' ? n : n.note || n.text).join('\n')
-                            : String(data.notes);
-                        setNotes(notesText);
-                    }
+                    const opRows = (data.openingEntries || data.opening_entries || []).map(entry => ({
+                        id: Math.random(),
+                        currencyId: entry.currency_id,
+                        currencyCode: entry.currency?.code,
+                        amount: entry.amount || ""
+                    }));
 
-                    // Store original data to know what to update
-                    setOriginalData(data);
+                    const clRows = (data.closingEntries || data.closing_entries || []).map(entry => ({
+                        id: Math.random(),
+                        currencyId: entry.currency_id,
+                        currencyCode: entry.currency?.code,
+                        amount: entry.amount || ""
+                    }));
 
-                    // Helper to convert API entries back to section format
-                    const convertEntriesToSections = (entries) => {
-                        if (!entries || !entries.length) return [];
-
-                        // Group by currency
-                        const byCurrency = {};
-                        entries.forEach(entry => {
-                            const currId = entry.currency_id || entry.currencyId;
-                            if (!byCurrency[currId]) {
-                                byCurrency[currId] = {
-                                    id: currId, // Unique ID for the section (using currency ID)
-                                    currencyId: currId,
-                                    currency: entry.currency?.code || "USD", // Fallback, will need actual code
-                                    selectedCurrency: entry.currency?.code || "USD",
-                                    exchangeRate: entry.exchange_rate || 1, // Capture exchange rate from entry
-                                    rows: []
-                                };
-                            }
-
-                            // Add row
-                            byCurrency[currId].rows.push({
-                                denom: entry.denomination || "",
-                                qty: (entry.quantity !== undefined && entry.quantity !== null) ? entry.quantity : "",
-                                total: entry.amount || 0
-                            });
-                        });
-
-                        return Object.values(byCurrency);
-                    };
-
-                    // Set Opening Data
-                    const openingSections = convertEntriesToSections(data.openingEntries || data.opening_entries);
-                    setOpeningData({ sections: openingSections });
-
-                    // Set Closing Data
-                    const closingSections = convertEntriesToSections(data.closingEntries || data.closing_entries);
-                    if (closingSections.length > 0) {
-                        setClosingData({ sections: closingSections });
-                    }
+                    if (opRows.length > 0) setOpeningRows(opRows);
+                    if (clRows.length > 0) setClosingRows(clRows);
+                } catch (err) {
+                    console.error("Error fetching reconciliation:", err);
                 }
-            } catch (error) {
-                console.error("Failed to fetch reconciliation:", error);
-                setToast({
-                    show: true,
-                    message: "Failed to load reconciliation data",
-                    type: "error"
-                });
+            } else if (actualCurrencies.length > 0) {
+                const usd = actualCurrencies.find(c => c.code === "USD");
+                const tzs = actualCurrencies.find(c => c.code === "TZS");
+
+                if (usd && tzs) {
+                    const initialOp = [
+                        { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                        { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                    ];
+                    const initialCl = [
+                        { id: Date.now() + 2, currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                        { id: Date.now() + 3, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                    ];
+                    setOpeningRows(initialOp);
+                    setClosingRows(initialCl);
+                }
             }
         };
-
-        fetchRecon();
+        initData();
     }, [id]);
 
-    const [currencyData, setCurrencyData] = useState({
-        currencyName: "",
-        isoCode: "",
-        symbol: "",
-    });
+    useEffect(() => {
+        const hasOp = openingRows.some(row => row.amount);
+        const hasCl = closingRows.some(row => row.amount);
+        const hasNotes = notes.trim() !== "";
+        setShowSaveButton(hasOp || hasCl || hasNotes);
+    }, [openingRows, closingRows, notes]);
 
-    // Fixed state structure for both opening and closing
-    const [openingData, setOpeningData] = useState({
-        sections: [] // Will be initialized by OpeningVaultBalance component
-    });
-
-    const [closingData, setClosingData] = useState({
-        sections: [] // Will be initialized by OpeningVaultBalance component
-    });
-
-    // Helper to check if data has entered values
-    const hasEnteredValues = (data) => {
-        if (!data.sections) return false;
-
-        return data.sections.some(section =>
-            (section.rows || []).some(row =>
-                Number(row.qty) > 0 || Number(row.total) > 0
-            )
-        );
+    const handleRowChange = (section, rowId, field, value) => {
+        const setRows = section === "opening" ? setOpeningRows : setClosingRows;
+        setRows(prev => prev.map(row =>
+            row.id === rowId ? { ...row, [field]: value } : row
+        ));
     };
 
-    // Calculate totals for summary (sum across all sections)
-    const openingTotal = openingData.sections
-        ? openingData.sections.reduce((sum, section) => {
-            return sum + (section.rows || []).reduce((rowSum, row) =>
-                rowSum + (Number(row.total) || 0), 0);
-        }, 0)
-        : 0;
-
-    const closingTotal = closingData.sections
-        ? closingData.sections.reduce((sum, section) => {
-            return sum + (section.rows || []).reduce((rowSum, row) =>
-                rowSum + (Number(row.total) || 0), 0);
-        }, 0)
-        : 0;
-
-    const totalTransactions = 0;
-    const difference = closingTotal - openingTotal;
-
-    // Format variance value
-    const varianceValue = difference >= 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`;
-
-    // Determine status based on difference
-    let status = "Tallied";
-    if (difference > 0) {
-        status = "Excess";
-    } else if (difference < 0) {
-        status = "Short";
-    }
-
-    // ⭐ VARIANCE LOGIC
-    const isPositive = varianceValue.startsWith("+");
-
-    let varianceColor = "";
-    let varianceIcon = balance;
-
-    if (status === "Tallied" || status === "Balance") {
-        varianceColor = "#82E890";   // green
-        varianceIcon = balance;
-    } else if (status === "Excess" && isPositive) {
-        varianceColor = "#D8AD00";   // yellow
-        varianceIcon = high;
-    } else if (status === "Short" && !isPositive) {
-        varianceColor = "#FF6B6B";   // red
-        varianceIcon = balance;
-    }
-
-    // ⭐ STATUS BADGE COLOR
-    const statusStyle = {
-        Tallied: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
-        Balance: "bg-[#10B93524] text-[#82E890] border-[#82E890]",
-        Excess: "bg-[#302700] text-[#D8AD00] border-[#D8AD00]",
-        Short: "bg-[#FF6B6B24] text-[#FF6B6B] border-[#FF6B6B]",
-        Pending: "bg-[#374151] text-[#9CA3AF] border-[#6B7280]",
+    const handleCurrencyChange = (section, rowId, option) => {
+        const setRows = section === "opening" ? setOpeningRows : setClosingRows;
+        setRows(prev => prev.map(row =>
+            row.id === rowId ? { ...row, currencyCode: option.value, currencyId: option.id } : row
+        ));
     };
 
-    const handleCurrencyChange = (field, value) => {
-        setCurrencyData((prev) => ({ ...prev, [field]: value }));
+    const addRow = (section) => {
+        const setRows = section === "opening" ? setOpeningRows : setClosingRows;
+        setRows(prev => [
+            ...prev,
+            { id: Math.random(), currencyId: null, currencyCode: '', amount: '' }
+        ]);
     };
+    const handleCurrencySubmit = async () => {
+        if (!newCurrency.currencyName || !newCurrency.isoCode || !newCurrency.symbol) {
+            setToast({ show: true, message: "Please fill all fields", type: "error" });
+            return;
+        }
 
-    const handleSaveCurrency = async () => {
         try {
-            console.log("Saving currency:", currencyData);
+            setToast({ show: true, message: "Adding currency...", type: "pending" });
             const result = await createCurrency({
-                code: currencyData.isoCode,
-                name: currencyData.currencyName,
-                symbol: currencyData.symbol,
+                code: newCurrency.isoCode,
+                name: newCurrency.currencyName,
+                symbol: newCurrency.symbol
             });
 
             if (result) {
-                setCurrencyData({ currencyName: "", isoCode: "", symbol: "" });
-                setShowCurrencyModal(false);
+                setToast({ show: true, message: "Currency added successfully", type: "success" });
+                setIsAddingCurrency(false);
+                setNewCurrency({ currencyName: "", isoCode: "", symbol: "" });
+                await loadCurrencies();
+            } else {
+                setToast({ show: true, message: "Failed to add currency", type: "error" });
             }
         } catch (error) {
-            console.error("Error saving currency:", error);
+            console.error("Error adding currency:", error);
+            setToast({ show: true, message: "Error adding currency", type: "error" });
         }
     };
-
-    const [toast, setToast] = useState({
-        show: false,
-        message: "",
-        type: "success", // success | error | pending
-    });
-
-    // Function to format entries for API
-    const formatEntriesForApi = (data) => {
-        if (!data.sections) return [];
-
-        return data.sections.flatMap(section =>
-            (section.rows || []).map(row => ({
-                denomination: parseFloat(row.denom || 0),
-                quantity: parseInt(row.qty || 0),
-                amount: parseFloat(row.total || 0),
-                currency_id: section.currencyId,
-                exchange_rate: parseFloat(section.exchangeRate || 1) // Include exchange rate in API payload
-            }))
-        );
+    const removeRow = (section, rowId) => {
+        setConfirmModal({
+            ...confirmModal,
+            open: true,
+            target: { section, rowId }
+        });
     };
 
+    const confirmDelete = () => {
+        if (!confirmModal.target) return;
+        const { section, rowId } = confirmModal.target;
+        const setRows = section === "opening" ? setOpeningRows : setClosingRows;
+        setRows(prev => prev.filter(row => row.id !== rowId));
+        setConfirmModal({ ...confirmModal, open: false, target: null });
+    };
 
+    const calculateTotals = () => {
+        const opTotal = openingRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+        const clTotal = closingRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+        return { opTotal, clTotal, diff: clTotal - opTotal };
+    };
 
-    const showSaveButton =
-        hasEnteredValues(openingData) ||
-        hasEnteredValues(closingData);
-
-    // Function to handle saving reconciliation with optional closing balance
-    // Function to handle saving reconciliation with optional closing balance
-    // Function to handle saving reconciliation with optional closing balance
     const handleSaveReconciliation = async () => {
         try {
-            // Prepare opening entries from all sections
-            const currentOpeningEntries = formatEntriesForApi(openingData);
+            const openingEntries = openingRows
+                .filter(row => row.amount && row.currencyId)
+                .map(row => ({
+                    currency_id: row.currencyId,
+                    amount: Number(row.amount),
+                    exchange_rate: 1.0,
+                    denomination: Number(row.amount),
+                    quantity: 1
+                }));
 
-            // Prepare closing entries (send empty if no values entered to imply In_Progress)
-            const currentClosingEntries = hasEnteredValues(closingData) ? formatEntriesForApi(closingData) : [];
+            const closingEntries = closingRows
+                .filter(row => row.amount && row.currencyId)
+                .map(row => ({
+                    currency_id: row.currencyId,
+                    amount: Number(row.amount),
+                    exchange_rate: 1.0,
+                    denomination: Number(row.amount),
+                    quantity: 1
+                }));
 
-            // Validation: Check if all opening sections have currency selected
-            const openingHasCurrency = openingData.sections &&
-                openingData.sections.every(section => section.currencyId && section.selectedCurrency);
+            const { diff } = calculateTotals();
+            let status = "Tallied";
+            if (diff > 0) status = "Excess";
+            else if (diff < 0) status = "Short";
 
-            if (!openingHasCurrency || openingData.sections.length === 0) {
-                setToast({
-                    show: true,
-                    message: "Please add at least one opening vault entry with currency selected",
-                    type: "error",
-                });
-                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
-                return;
-            }
+            const payload = {
+                openingEntries,
+                closingEntries,
+                notes: notes ? [notes] : [],
+                status
+            };
 
-            // Validation: Check for opening vault data
-            const openingHasData = currentOpeningEntries.some(entry =>
-                entry.quantity > 0 || entry.amount > 0
-            );
-
-            if (!openingHasData) {
-                setToast({
-                    show: true,
-                    message: "Please add at least one opening vault entry with amount",
-                    type: "error",
-                });
-                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
-                return;
-            }
-
-            // Show pending toast
-            setToast({
-                show: true,
-                message: id ? "Updating reconciliation..." : "Saving reconciliation...",
-                type: "pending",
-            });
-
-            let payload = {};
-
-            if (id && originalData) {
-                // --- UPDATE MODE (Differential) ---
-
-                // 1. Check Notes
-                const originalNotesText = originalData.notes
-                    ? (Array.isArray(originalData.notes)
-                        ? originalData.notes.map(n => typeof n === 'string' ? n : n.note || n.text).join('\n')
-                        : String(originalData.notes))
-                    : "";
-
-                if (notes !== originalNotesText) {
-                    payload.notes = notes ? [notes] : [];
-                }
-
-                // Helper to normalize and sort entries for comparison
-                const normalize = (entries) => {
-                    if (!entries) return [];
-                    return entries.map(e => ({
-                        currency_id: e.currency_id || e.currencyId,
-                        denomination: parseFloat(e.denomination || 0),
-                        quantity: parseInt(e.quantity || 0),
-                        amount: parseFloat(e.amount || 0),
-                        exchange_rate: parseFloat(e.exchange_rate || e.exchangeRate || 1)
-                    })).sort((a, b) =>
-                        a.currency_id - b.currency_id || b.denomination - a.denomination
-                    );
-                };
-
-                const areEntriesEqual = (a, b) => {
-                    const normA = normalize(a);
-                    const normB = normalize(b);
-                    return JSON.stringify(normA) === JSON.stringify(normB);
-                };
-
-                // 2. Check Opening Entries
-                // originalData.openingEntries might be undefined or empty array
-                const originalOpening = originalData.openingEntries || originalData.opening_entries || [];
-                if (!areEntriesEqual(currentOpeningEntries, originalOpening)) {
-                    payload.openingEntries = currentOpeningEntries;
-                }
-
-                // 3. Check Closing Entries
-                const originalClosing = originalData.closingEntries || originalData.closing_entries || [];
-                if (!areEntriesEqual(currentClosingEntries, originalClosing)) {
-                    payload.closingEntries = currentClosingEntries;
-                }
-
-                // 4. Check Status (calculated status vs saved status)
-                // If status changed locally due to calc, we should save it.
-                // originalData.status might be "Tallied", etc. 
-                // 'status' variable is calculated in render from 'difference'
-                if (status !== originalData.status) {
-                    payload.status = status;
-                }
-
-                if (Object.keys(payload).length === 0) {
-                    setToast({
-                        show: true,
-                        message: "No changes detected.",
-                        type: "info",
-                    });
-                    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
-                    return;
-                }
-
-            } else {
-                // --- CREATE MODE (Full Payload) ---
-                payload = {
-                    openingEntries: currentOpeningEntries,
-                    closingEntries: currentClosingEntries,
-                    notes: notes ? [notes] : [],
-                    status: status || "Tallied"
-                };
-            }
-
-            console.log('Sending reconciliation payload:', payload);
+            setToast({ show: true, message: id ? "Updating..." : "Saving...", type: "pending" });
 
             let result;
             if (id) {
@@ -366,254 +233,192 @@ export default function AddReconciliation() {
                 result = await createReconciliation(payload);
             }
 
-            if (result.success) {
-                navigate("/reconciliation", {
-                    state: {
-                        toast: {
-                            message: id ? "Reconciliation Updated!" : "Reconciliation Saved!",
-                            type: "success",
-                        },
-                    },
-                });
+            if (result.success || result.data) {
+                navigate("/reconciliation");
             } else {
-                setToast({
-                    show: true,
-                    message: result.error?.message || (id ? "Failed to update" : "Failed to save"),
-                    type: "error",
-                });
-
-                setTimeout(() => {
-                    setToast(prev => ({ ...prev, show: false }));
-                }, 3000);
+                setToast({ show: true, message: "Failed to save", type: "error" });
             }
         } catch (error) {
             console.error("Save error:", error);
-            setToast({
-                show: true,
-                message: "Please try again.",
-                type: "error",
-            });
-
-            setTimeout(() => {
-                setToast(prev => ({ ...prev, show: false }));
-            }, 3000);
+            setToast({ show: true, message: "Error saving data", type: "error" });
         }
     };
 
-    // Function to handle currency refresh after adding new currency
-    const handleCurrencyAdded = async () => {
-        console.log("New currency added, refresh needed");
-    };
+    const { opTotal, clTotal, diff } = calculateTotals();
+    const varianceAbs = Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+    const renderTable = (section, rows) => (
+        <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 h-full">
+            <div className="p-4 border-b border-[#2A2F33]/50 flex justify-between items-center">
+                <h2 className="text-[16px] font-medium flex items-center gap-2 text-white">
+                    <div className={`w-1.5 h-4 rounded-full ${section === "opening" ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
+                    {section === "opening" ? "Opening Balance" : "Closing Balance"}
+                </h2>
+                <button
+                    onClick={() => addRow(section)}
+                    className="bg-[#1D4CB5]/10 text-[#1D4CB5] px-3 py-1.5 rounded-lg text-[12px] hover:bg-[#1D4CB5] hover:text-white transition-all border border-[#1D4CB5]/20"
+                >
+                    + Add Row
+                </button>
+            </div>
 
+            <div className="">
+                <table className="w-full text-left text-[14px]">
+                    <thead>
+                        <tr className="bg-[#1B1E21] text-[#8F8F8F] border-b border-[#2A2F33]/50">
+                            <th className="px-5 py-3">Currency</th>
+                            <th className="px-5 py-3 text-right">Amount</th>
+                            <th className="px-5 py-3 w-[60px] text-center"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#2A2F33]/30">
+                        {rows.map((row) => (
+                            <tr key={row.id} className="hover:bg-[#1E2328]/30 transition-colors">
+                                <td className="px-5 py-3 min-w-[180px]">
+                                    <Dropdown
+                                        label="Select Currency"
+                                        options={currencyOptions.filter(opt =>
+                                            !rows.some(r => r.id !== row.id && r.currencyCode === opt.value)
+                                        )}
+                                        selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
+                                        onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
+                                        buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2"
+                                    />
+                                </td>
+                                <td className="px-5 py-3">
+                                    <input
+                                        type="number"
+                                        value={row.amount}
+                                        onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium"
+                                    />
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                    <button
+                                        onClick={() => removeRow(section, row.id)}
+                                        disabled={rows.length <= 1}
+                                        className={`p-2 rounded-lg transition-all ${rows.length > 1 ? "hover:bg-red-500/10 text-[#FF6B6B]" : "text-gray-600 cursor-not-allowed opacity-30"}`}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 
     return (
-        <>
+        <div className="">
             {/* HEADER */}
-            <div className="flex justify-between items-start">
+            <div className="flex flex-row justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-[16px] font-medium text-white">{id ? "Edit Reconciliation" : "Daily Reconciliation"}</h2>
-                    <p className="text-gray-400 text-[12px] mb-6">
-                        Manually data entry for daily vault reconciliation
+                    <h1 className="text-[20px] lg:text-[24px] font-semibold text-white">
+                        {id ? "Edit Reconciliation" : "Add Reconciliation"}
+                    </h1>
+                    <p className="text-[#8F8F8F] text-[13px] lg:text-[14px]">
+                        Capture opening and closing vault balances separately
                     </p>
                 </div>
-                {(activeTab === "opening" || activeTab === "closing") && (
+                {!id && (
                     <button
-                        onClick={() => setShowCurrencyModal(true)}
-                        className="px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] h-9 hover:bg-[#2A5BD7] transition-colors"
+                        onClick={() => setIsAddingCurrency(true)}
+                        className="bg-[#1D4CB5] text-white px-5 py-2 rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
                     >
                         + Add Currency
                     </button>
                 )}
             </div>
 
-            <div className="mt-4 bg-[#16191C] rounded-xl p-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {renderTable("opening", openingRows)}
+                {renderTable("closing", closingRows)}
+            </div>
 
-                {/* TABS / ACCORDION HEADERS */}
-                <div className="hidden lg:flex gap-6 mb-6">
-                    {["summary", "opening", "closing", "notes"].map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`pb-3 text-[14px] font-medium transition-all relative
-                                ${activeTab === tab
-                                    ? "text-white"
-                                    : "text-[#4F575E] hover:text-[#9CA3AF]"
-                                }
-                            `}
-                        >
-                            {tab === "summary" && "Summary"}
-                            {tab === "opening" && "Opening Vault Balance"}
-                            {tab === "closing" && "Closing Vault Balance"}
-                            {tab === "notes" && "Notes"}
-                            {activeTab === tab && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1D4CB5]"></div>
-                            )}
-                        </button>
-                    ))}
+            {/* BOTTOM SECTION */}
+            <div className="mt-6 pb-12 space-y-4">
+                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
+                    <h3 className="text-white text-[14px] font-medium mb-3">Notes</h3>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Add any additional observations..."
+                        className="w-full bg-[#1A1F24] text-white p-4 rounded-lg border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[120px] resize-none text-[13px] transition-all"
+                    />
                 </div>
 
-                {/* MOBILE ACCORDION STRUCTURE */}
-                <div className="flex flex-col gap-4 lg:gap-0">
-                    {/* SUMMARY SECTION */}
-                    <div className="lg:contents">
-                        <div
-                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
-                            onClick={() => toggleSection("summary")}
-                        >
-                            <h3 className="text-white text-[15px] font-medium">Summary</h3>
-                            <img
-                                src={expandRight}
-                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "summary" ? "rotate-90" : ""}`}
-                                alt="expand"
-                            />
-                        </div>
-
-                        {/* SUMMARY TAB CONTENT */}
-                        <div className={`${activeTab === "summary" ? "lg:block" : "lg:hidden"} ${activeSection === "summary" ? "block" : "hidden"} mt-2 lg:mt-0`}>
-                            {activeTab === "summary" || activeSection === "summary" ? (
-                                <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
-                                    <div
-                                        className="bg-[#16191C] p-10 rounded-xl flex flex-col items-center justify-center h-[300px] lg:h-[400px]"
-                                        style={{
-                                            borderWidth: "1px",
-                                            borderStyle: "dashed",
-                                            borderColor: "#155DFC",
-                                            borderRadius: "10px",
-                                        }}
-                                    >
-                                        <img src={bgIcon} alt="No Data" className="w-48 lg:w-64 opacity-90" />
-                                        <p className="text-[#8F8F8F] mt-6 lg:mt-10 text-sm font-medium text-center w-[80%] lg:w-[60%]">
-                                            The summary hasn’t been generated yet.
-                                        </p>
-                                    </div>
+                {id && (
+                    <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
+                        <div className="space-y-4">
+                            <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="flex flex-col">
+                                    <span className="text-[#8F8F8F] text-[12px]">Total Opening</span>
+                                    <span className="text-white font-medium text-[16px]">{opTotal.toFixed(2)}</span>
                                 </div>
-                            ) : null}
-
-                            {(activeTab === "summary" || activeSection === "summary") && showSaveButton && (
-                                <div className="flex justify-end mt-4 lg:mt-0">
-                                    <button
-                                        onClick={handleSaveReconciliation}
-                                        className="w-full lg:w-auto mt-0 lg:mt-2 px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center justify-center gap-2 hover:bg-[#2A5BD7] transition-colors"
-                                    >
-                                        <img src={save} alt="save" />
-                                        {id ? "Update Reconciliation" : "Save Reconciliation"}
-                                    </button>
+                                <div className="flex flex-col">
+                                    <span className="text-[#8F8F8F] text-[12px]">Total Closing</span>
+                                    <span className="text-white font-medium text-[16px]">{clTotal.toFixed(2)}</span>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* OPENING SECTION */}
-                    <div className="lg:contents">
-                        <div
-                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
-                            onClick={() => toggleSection("opening")}
-                        >
-                            <h3 className="text-white text-[15px] font-medium">Opening Vault Balance</h3>
-                            <img
-                                src={expandRight}
-                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "opening" ? "rotate-90" : ""}`}
-                                alt="expand"
-                            />
-                        </div>
-
-                        {/* OPENING TAB CONTENT */}
-                        <div className={`${activeTab === "opening" ? "lg:block" : "lg:hidden"} ${activeSection === "opening" ? "block" : "hidden"} mt-2 lg:mt-0`}>
-                            <OpeningVaultBalance
-                                data={openingData}
-                                setData={setOpeningData}
-                                type="opening"
-                            />
-                        </div>
-                    </div>
-
-                    {/* CLOSING SECTION */}
-                    <div className="lg:contents">
-                        <div
-                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer"
-                            onClick={() => toggleSection("closing")}
-                        >
-                            <h3 className="text-white text-[15px] font-medium">Closing Vault Balance</h3>
-                            <img
-                                src={expandRight}
-                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "closing" ? "rotate-90" : ""}`}
-                                alt="expand"
-                            />
-                        </div>
-
-                        {/* CLOSING TAB CONTENT */}
-                        <div className={`${activeTab === "closing" ? "lg:block" : "lg:hidden"} ${activeSection === "closing" ? "block" : "hidden"} mt-2 lg:mt-0`}>
-                            <OpeningVaultBalance
-                                data={closingData}
-                                setData={setClosingData}
-                                type="closing"
-                            />
-                        </div>
-                    </div>
-
-                    {/* NOTES SECTION */}
-                    <div className="lg:contents">
-                        <div
-                            className="lg:hidden flex justify-between items-center bg-[#1E2328] p-4 rounded-xl border border-[#16191C] cursor-pointer mt-4"
-                            onClick={() => toggleSection("notes")}
-                        >
-                            <h3 className="text-white text-[15px] font-medium">Notes </h3>
-                            <img
-                                src={expandRight}
-                                className={`w-3 h-3 transition-transform duration-200 ${activeSection === "notes" ? "rotate-90" : ""}`}
-                                alt="expand"
-                            />
-                        </div>
-
-                        {/* NOTES TAB CONTENT */}
-                        <div className={`${activeTab === "notes" ? "lg:block" : "lg:hidden"} ${activeSection === "notes" ? "block" : "hidden"} mt-2 lg:mt-0`}>
-                            <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl">
-                                <textarea
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="Add any additional notes or remarks here..."
-                                    className="w-full bg-[#16191C] text-white p-4 rounded-xl border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[150px] resize-none text-sm"
-                                />
+                                <div className="flex flex-col">
+                                    <span className="text-[#8F8F8F] text-[12px]">Net Variance</span>
+                                    <span className={`font-bold text-[18px] ${diff >= 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
+                                        {diff >= 0 ? "+" : "-"}{varianceAbs}
+                                    </span>
+                                </div>
                             </div>
-
-                            {(activeTab === "notes" || activeSection === "notes") && showSaveButton && (
-                                <div className="flex justify-end mt-4">
-                                    <button
-                                        onClick={handleSaveReconciliation}
-                                        className="w-full lg:w-auto mt-0 lg:mt-2 px-4 py-2 bg-[#1D4CB5] text-white rounded-lg text-[13px] flex items-center justify-center gap-2 hover:bg-[#2A5BD7] transition-colors"
-                                    >
-                                        <img src={save} alt="save" />
-                                        {id ? "Update Reconciliation" : "Save Reconciliation"}
-                                    </button>
-                                </div>
-                            )}
                         </div>
-                    </div>
-                </div>
-
-                {showCurrencyModal && (
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40  flex justify-center items-center">
-                        <CurrencyForm
-                            currencyName={currencyData.currencyName}
-                            isoCode={currencyData.isoCode}
-                            symbol={currencyData.symbol}
-                            onChange={handleCurrencyChange}
-                            onCancel={() => setShowCurrencyModal(false)}
-                            onSubmit={async () => {
-                                await handleSaveCurrency();
-                                await handleCurrencyAdded();
-                            }}
-                        />
                     </div>
                 )}
 
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={() => navigate("/reconciliation")}
+                        className="text-[#8F8F8F] hover:text-white transition-colors bg-[#1E2328] px-4 py-2 rounded-lg text-sm border border-[#2A2F33]"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSaveReconciliation}
+                        disabled={!showSaveButton}
+                        className={`w-full lg:w-auto lg:min-w-[280px] py-3.5 px-8 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-3 transition-all shadow-lg
+                            ${showSaveButton
+                                ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-[#1D4CB5]/20 hover:translate-y-[-1px]"
+                                : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed shadow-none border border-[#2A2F33]"}
+                        `}
+                    >
+                        <img src={save} alt="save" className={`w-4 h-4 ${!showSaveButton && "opacity-20"}`} />
+                        {id ? "Update Reconciliation" : "Save Reconciliation"}
+                    </button>
+                </div>
             </div>
-            <Toast
-                show={toast.show}
-                message={toast.message}
-                type={toast.type}
-            />
-        </>
+
+            <Toast show={toast.show} message={toast.message} type={toast.type} onHide={() => setToast({ ...toast, show: false })} />
+            {confirmModal.open && (
+                <NotificationCard
+                    confirmModal={confirmModal}
+                    onConfirm={confirmDelete}
+                    onCancel={() => setConfirmModal({ ...confirmModal, open: false, target: null })}
+                />
+            )}
+
+            {isAddingCurrency && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">
+                    <CurrencyForm
+                        currencyName={newCurrency.currencyName}
+                        isoCode={newCurrency.isoCode}
+                        symbol={newCurrency.symbol}
+                        onChange={(field, val) => setNewCurrency(prev => ({ ...prev, [field]: val }))}
+                        onCancel={() => setIsAddingCurrency(false)}
+                        onSubmit={handleCurrencySubmit}
+                    />
+                </div>
+            )}
+        </div>
     );
 }

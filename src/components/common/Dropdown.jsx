@@ -16,6 +16,23 @@ export default function Dropdown({
     const dropdownRef = useRef(null);
     const hasValue = Boolean(selected);
 
+    const [dropUp, setDropUp] = useState(false);
+
+    useEffect(() => {
+        if (open && dropdownRef.current) {
+            const rect = dropdownRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const menuHeight = 200; // estimated max height (max-h-48 is ~192px + margin)
+
+            if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+                setDropUp(true);
+            } else {
+                setDropUp(false);
+            }
+        }
+    }, [open]);
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -50,16 +67,15 @@ export default function Dropdown({
             >
                 <span className="truncate">{selected ? selected : label}</span>
                 <img
-                src={down}
-                alt="chevrondown"
-                className={`transition-transform duration-200 ${
-                    open ? "rotate-180" : ""
-                } ${disabled ? "opacity-0" : ""}`}
+                    src={down}
+                    alt="chevrondown"
+                    className={`transition-transform duration-200 ${open ? "rotate-180" : ""
+                        } ${disabled ? "opacity-0" : ""}`}
                 />
-                </button>
+            </button>
 
             {open && !disabled && (
-                <ul className="w-full mt-2 bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-dark absolute">
+                <ul className={`w-full bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-grey absolute ${dropUp ? "bottom-full mb-2" : "mt-2"}`}>
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;
 
