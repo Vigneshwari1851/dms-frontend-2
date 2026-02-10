@@ -86,19 +86,19 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Total Buy Amount"
-          value={stats.today?.buyAmount || 0}
+          title="Total Buy Amount (TZS)"
+          value={Number(stats.today?.sellAmount || 0).toLocaleString()}
           icon={buyamount}
         />
 
         <StatCard
-          title="Total Sell Amount"
-          value={stats.today?.sellAmount || 0}
+          title="Total Sell Amount (TZS)"
+          value={Number(stats.today?.buyAmount || 0).toLocaleString()}
           icon={sellamount}
         />
 
         <StatCard
-          title="Total Profit (TZS)"
+          title="Total Profit / Loss (TZS)"
           value={Number(stats.today?.profit || 0).toLocaleString()}
           icon={profit}
         />
