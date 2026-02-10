@@ -325,8 +325,16 @@ export default function DealsTable() {
 
       // Pass "today" as a string
       const blob = await exportDeals(format, "today");
-
       if (!blob) return;
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `today_deals_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
 
 

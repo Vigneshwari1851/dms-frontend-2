@@ -209,9 +209,19 @@ export default function DealsList() {
 
       // Pass "today" as a string
       const blob = await exportDeals(format);
+      if (!blob) {
+        setToast({ show: true, message: "Export failed", type: "error" });
+        return;
+      }
 
-      if (!blob) return;
-
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `deals_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
 
     } catch (e) {
