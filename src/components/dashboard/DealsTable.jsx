@@ -46,8 +46,9 @@ export default function DealsTable() {
 
         // Transform API response to match table structure (use backend-provided amounts)
         const transformedData = response.data.map((deal) => {
-          const buyAmtValue = Number(deal.buyAmount);
-          const sellAmtValue = Number(deal.sellAmount);
+          const isBuy = deal.deal_type === "buy";
+          const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
+          const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
 
           return {
             id: deal.deal_number,

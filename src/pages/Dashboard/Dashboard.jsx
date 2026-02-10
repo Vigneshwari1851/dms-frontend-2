@@ -90,28 +90,24 @@ export default function Dashboard() {
         <StatCard
           title="Total Deals Today"
           value={stats.today?.dealCount || 0}
-          change={getChangeText(stats.yesterdayPercentage?.dealCount)}
           icon={dealstoday}
         />
 
         <StatCard
           title="Total Buy Amount"
           value={formatCurrency(stats.today?.buyAmount || 0)}
-          change={getChangeText(stats.yesterdayPercentage?.buyAmount)}
           icon={buyamount}
         />
 
         <StatCard
           title="Total Sell Amount"
           value={formatCurrency(stats.today?.sellAmount || 0)}
-          change={getChangeText(stats.yesterdayPercentage?.sellAmount)}
           icon={sellamount}
         />
 
         <StatCard
           title="Total Profit (TZS)"
           value={Number(stats.today?.profit || 0).toLocaleString()}
-          change={getChangeText(stats.yesterdayPercentage?.profit)}
           icon={profit}
         />
       </div>
