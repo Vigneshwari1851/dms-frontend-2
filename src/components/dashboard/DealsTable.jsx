@@ -23,6 +23,11 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   const [error, setError] = useState(null);
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
 
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  const userRole = user.role;
+  const showExportByRole = userRole === "Admin";
+
   const exportRef = useRef(null);
 
   useEffect(() => {
@@ -146,7 +151,6 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
     );
   }
 
-
   // -------- Pagination Logic --------
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -240,7 +244,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
                 className="w-full lg:w-[180px]"
               />
 
-              {!hideExport && (
+              {!hideExport && showExportByRole && (
                 <div className="relative w-full lg:w-auto" ref={exportRef}>
                   <button
                     onClick={() => setExportOpen(!exportOpen)}

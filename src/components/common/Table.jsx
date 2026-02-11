@@ -38,6 +38,10 @@ export default function Table({
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef(null);
 
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  const userRole = user.role;
+  const showExportByRole = userRole === "Admin";
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (exportRef.current && !exportRef.current.contains(event.target)) {
@@ -224,7 +228,7 @@ export default function Table({
                 </div>
 
                 {/* Export */}
-                {showExport && onExport && (
+                {showExport && showExportByRole && onExport && (
                   <div className="flex-1 lg:flex-none">
                     {exportOptions.length === 1 ? (
                       <button

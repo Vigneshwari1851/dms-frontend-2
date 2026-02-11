@@ -25,6 +25,12 @@ export default function DealsList() {
   const [error, setError] = useState(null);
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
   const location = useLocation();
+
+  // Role discovery for export visibility
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  const userRole = user.role;
+  const showExportByRole = userRole === "Admin";
   const exportRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -325,35 +331,37 @@ export default function DealsList() {
               className="w-full sm:w-[180px]"
             />
 
-            <div className="relative w-full lg:w-auto" ref={exportRef}>
-              <button
-                onClick={() => setExportOpen(!exportOpen)}
-                className="w-full px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
-              >
-                <img src={download} alt="download" className="w-6 h-6" /> Export
-              </button>
+            {showExportByRole && (
+              <div className="relative w-full lg:w-auto" ref={exportRef}>
+                <button
+                  onClick={() => setExportOpen(!exportOpen)}
+                  className="w-full px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
+                >
+                  <img src={download} alt="download" className="w-6 h-6" /> Export
+                </button>
 
-              {exportOpen && (
-                <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
-                  <button
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
-                    onClick={() => handleExport("pdf")}
-                    disabled={exporting}
-                  >
-                    <img src={pdf} alt="pdf" className="w-4 h-4" />
-                    PDF
-                  </button>
-                  <button
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                    onClick={() => handleExport("excel")}
-                    disabled={exporting}
-                  >
-                    <img src={excel} alt="excel" className="w-4 h-4" />
-                    Excel
-                  </button>
-                </div>
-              )}
-            </div>
+                {exportOpen && (
+                  <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                      onClick={() => handleExport("pdf")}
+                      disabled={exporting}
+                    >
+                      <img src={pdf} alt="pdf" className="w-4 h-4" />
+                      PDF
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                      onClick={() => handleExport("excel")}
+                      disabled={exporting}
+                    >
+                      <img src={excel} alt="excel" className="w-4 h-4" />
+                      Excel
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
