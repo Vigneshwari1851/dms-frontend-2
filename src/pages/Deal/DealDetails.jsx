@@ -152,8 +152,8 @@ export default function DealDetails() {
             <label className="text-[#ABABAB] text-sm mb-1 block">Status</label>
             <span
               className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${deal.status === "Pending"
-                  ? "bg-[#D8AD0024] text-[#D8AD00]"
-                  : "bg-[#1D4CB53D] text-[#88ACFC]"
+                ? "bg-[#D8AD0024] text-[#D8AD00]"
+                : "bg-[#1D4CB53D] text-[#88ACFC]"
                 }`}
             >
               {deal.status}
@@ -206,9 +206,19 @@ export default function DealDetails() {
         {/* Received Items */}
         {deal.received_items && deal.received_items.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-white text-lg font-semibold mb-4">
-              Received Items
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">
+                Received Items
+              </h3>
+              {deal.deal_type === 'sell' && (
+                <div className="bg-[#2A2F33] border border-[#3E4348] rounded-lg px-3 py-1.5 flex items-center gap-2">
+                  <span className="text-[#ABABAB] text-xs font-semibold uppercase tracking-wider">Remaining Balance</span>
+                  <span className={`text-sm font-bold ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                    {deal.buyCurrency} {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-gray-300">
                 <thead className="border-b border-[#2A2F33]">
@@ -253,9 +263,19 @@ export default function DealDetails() {
         {/* Paid Items */}
         {deal.paid_items && deal.paid_items.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-white text-lg font-semibold mb-4">
-              Paid Items
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">
+                Paid Items
+              </h3>
+              {deal.deal_type === 'buy' && (
+                <div className="bg-[#2A2F33] border border-[#3E4348] rounded-lg px-3 py-1.5 flex items-center gap-2">
+                  <span className="text-[#ABABAB] text-xs font-semibold uppercase tracking-wider">Remaining Balance</span>
+                  <span className={`text-sm font-bold ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                    {deal.sellCurrency} {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-gray-300">
                 <thead className="border-b border-[#2A2F33]">
