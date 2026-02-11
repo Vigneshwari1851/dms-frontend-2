@@ -44,7 +44,9 @@ export default function ViewReconciliation() {
                     variance: closingTotal - openingTotal,
                     openingRows: opEntries,
                     closingRows: clEntries,
-                    deals: data.deals || []
+                    deals: data.deals || [],
+                    totalBuy: data.totalBuy || 0,
+                    totalSell: data.totalSell || 0
                 });
             } catch (err) {
                 console.error("View error:", err);
@@ -111,25 +113,64 @@ export default function ViewReconciliation() {
     return (
         <div className="">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <div>
-                        <h1 className="text-[20px] lg:text-[24px] font-semibold">Reconciliation - {reconData.date}</h1>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
-                                {reconData.status}
-                            </span>
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <div>
+                            <h1 className="text-[20px] lg:text-[24px] font-semibold">Reconciliation - {reconData.date}</h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
+                                    {reconData.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {reconData.status !== "Tallied" && (
+                        <button
+                            onClick={() => navigate(`/reconciliation/edit/${id}`)}
+                            className="bg-[#1D4CB5] text-white rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
+                        >
+                            <img src={edit} className="w-10 h-10" alt="edit" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Total Buy and Sell Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Total Buy Card */}
+                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy</p>
+                                <p className="text-[#82E890] text-[20px] lg:text-[24px] font-bold">
+                                    TZS {reconData.totalSell.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-[#82E89020] rounded-lg flex items-center justify-center">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82E890" strokeWidth="2">
+                                    <path d="M12 5v14M5 12l7-7 7 7" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Total Sell Card */}
+                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell</p>
+                                <p className="text-[#FF6B6B] text-[20px] lg:text-[24px] font-bold">
+                                    TZS {reconData.totalBuy.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-[#FF6B6B20] rounded-lg flex items-center justify-center">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2">
+                                    <path d="M12 19V5M5 12l7 7 7-7" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
-                {reconData.status !== "Tallied" && (
-                    <button
-                        onClick={() => navigate(`/reconciliation/edit/${id}`)}
-                        className="bg-[#1D4CB5] text-white rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
-                    >
-                        <img src={edit} className="w-10 h-10" alt="edit" />
-                    </button>
-                )}
             </div>
 
             <div className="space-y-6">
