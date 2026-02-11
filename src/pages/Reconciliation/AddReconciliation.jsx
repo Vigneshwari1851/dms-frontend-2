@@ -8,6 +8,7 @@ import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation } from "../../api/reconcoliation";
 import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
+import { fetchDeals } from "../../api/deals";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
 
@@ -31,6 +32,7 @@ export default function AddReconciliation() {
     const [isAddingCurrency, setIsAddingCurrency] = useState(false);
     const [newCurrency, setNewCurrency] = useState({ currencyName: "", isoCode: "", symbol: "" });
     const [step, setStep] = useState(1);
+    const [todayDeals, setTodayDeals] = useState([]);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -117,6 +119,15 @@ export default function AddReconciliation() {
                     setClosingRows(initialCl);
                 }
             }
+            if (actualCurrencies.length > 0) {
+                // Fetch today's deals for expected balance calculation
+                try {
+                    const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
+                    setTodayDeals(dealsRes.data || []);
+                } catch (err) {
+                    console.error("Error fetching deals:", err);
+                }
+            }
         };
         initData();
     }, [id]);
@@ -196,9 +207,92 @@ export default function AddReconciliation() {
     };
 
     const calculateTotals = () => {
-        const opTotal = openingRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const clTotal = closingRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        return { opTotal, clTotal, diff: clTotal - opTotal };
+        const currencyData = {};
+
+        // 1. Opening
+        openingRows.forEach(row => {
+            if (!row.currencyId) return;
+            if (!currencyData[row.currencyId]) {
+                currencyData[row.currencyId] = { code: row.currencyCode, opening: 0, received: 0, paid: 0, closing: 0 };
+            }
+            currencyData[row.currencyId].opening += Number(row.amount || 0);
+        });
+
+        // 2. Deals (Received/Paid)
+        todayDeals.forEach(deal => {
+            const hasItems = (deal.receivedItems?.length > 0 || deal.paidItems?.length > 0);
+
+            if (hasItems) {
+                (deal.receivedItems || []).forEach(item => {
+                    const cid = item.currency_id;
+                    if (!currencyData[cid]) {
+                        const c = currencyOptions.find(o => o.id === cid);
+                        currencyData[cid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                    }
+                    currencyData[cid].received += Number(item.total || 0);
+                });
+                (deal.paidItems || []).forEach(item => {
+                    const cid = item.currency_id;
+                    if (!currencyData[cid]) {
+                        const c = currencyOptions.find(o => o.id === cid);
+                        currencyData[cid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                    }
+                    currencyData[cid].paid += Number(item.total || 0);
+                });
+            } else {
+                // Fallback to deal type and amount/amount_to_be_paid
+                const buyCid = deal.buy_currency_id;
+                const sellCid = deal.sell_currency_id;
+                const amount = Number(deal.amount || 0);
+                const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+                if (deal.deal_type === "buy" && amount > 0) {
+                    if (buyCid) {
+                        if (!currencyData[buyCid]) {
+                            const c = currencyOptions.find(o => o.id === buyCid);
+                            currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        }
+                        currencyData[buyCid].received += amount;
+                    }
+                    if (sellCid) {
+                        if (!currencyData[sellCid]) {
+                            const c = currencyOptions.find(o => o.id === sellCid);
+                            currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        }
+                        currencyData[sellCid].paid += amountToBePaid;
+                    }
+                } else if (deal.deal_type === "sell" && amount > 0) {
+                    if (buyCid) {
+                        if (!currencyData[buyCid]) {
+                            const c = currencyOptions.find(o => o.id === buyCid);
+                            currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        }
+                        currencyData[buyCid].received += amountToBePaid;
+                    }
+                    if (sellCid) {
+                        if (!currencyData[sellCid]) {
+                            const c = currencyOptions.find(o => o.id === sellCid);
+                            currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        }
+                        currencyData[sellCid].paid += amount;
+                    }
+                }
+            }
+        });
+
+        // 3. Actual Closing
+        closingRows.forEach(row => {
+            if (!row.currencyId) return;
+            if (!currencyData[row.currencyId]) {
+                currencyData[row.currencyId] = { code: row.currencyCode, opening: 0, received: 0, paid: 0, closing: 0 };
+            }
+            currencyData[row.currencyId].closing += Number(row.amount || 0);
+        });
+
+        const opTotal = Object.values(currencyData).reduce((sum, d) => sum + d.opening, 0);
+        const clTotal = Object.values(currencyData).reduce((sum, d) => sum + d.closing, 0);
+
+        return { opTotal, clTotal, currencyData };
     };
 
     const handleSaveReconciliation = async () => {
@@ -240,12 +334,27 @@ export default function AddReconciliation() {
                     quantity: 1
                 }));
 
-            const { diff } = calculateTotals();
+            const { currencyData } = calculateTotals();
             let status = "In_Progress";
+
             if (closingEntries.length > 0) {
-                if (diff === 0) status = "Tallied";
-                else if (diff > 0) status = "Excess";
-                else status = "Short";
+                let hasExcess = false;
+                let hasShort = false;
+                let tallied = true;
+
+                Object.values(currencyData).forEach(data => {
+                    const expected = data.opening + data.received - data.paid;
+                    const v = data.closing - expected;
+                    if (Math.abs(v) >= 0.01) {
+                        tallied = false;
+                        if (v > 0) hasExcess = true;
+                        else hasShort = true;
+                    }
+                });
+
+                if (tallied) status = "Tallied";
+                else if (hasShort) status = "Short";
+                else status = "Excess";
             }
             const payload = {
                 openingEntries,
@@ -278,8 +387,7 @@ export default function AddReconciliation() {
         }
     };
 
-    const { opTotal, clTotal, diff } = calculateTotals();
-    const varianceAbs = Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const { opTotal, clTotal, currencyData } = calculateTotals();
 
     const renderTable = (section, rows) => (
         <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 h-full">
@@ -381,8 +489,8 @@ export default function AddReconciliation() {
                         onClick={handleSaveReconciliation}
                         disabled={step !== 3}
                         className={`px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold ${step === 3
-                                ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
-                                : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed border border-[#2A2F33]"
+                            ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
+                            : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed border border-[#2A2F33]"
                             }`}
                     >
                         Start Reconciliation
@@ -419,22 +527,40 @@ export default function AddReconciliation() {
                 {(step > 1 || id) && (
                     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
                         <div className="space-y-4">
-                            <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="flex flex-col">
-                                    <span className="text-[#8F8F8F] text-[12px]">Total Opening</span>
-                                    <span className="text-white font-medium text-[16px]">{opTotal.toFixed(2)}</span>
-                                </div>
-                                <div className={`flex flex-col ${step === 1 && "opacity-30"}`}>
-                                    <span className="text-[#8F8F8F] text-[12px]">Total Closing</span>
-                                    <span className="text-white font-medium text-[16px]">{clTotal.toFixed(2)}</span>
-                                </div>
-                                <div className={`flex flex-col ${step === 1 && "opacity-30"}`}>
-                                    <span className="text-[#8F8F8F] text-[12px]">Net Variance</span>
-                                    <span className={`font-bold text-[18px] ${diff >= 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
-                                        {diff >= 0 ? "+" : "-"}{varianceAbs}
-                                    </span>
-                                </div>
+                            <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-[13px]">
+                                    <thead>
+                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+                                            <th className="py-2">Currency</th>
+                                            <th className="py-2 text-right">Opening</th>
+                                            <th className="py-2 text-right">Inflow (+)</th>
+                                            <th className="py-2 text-right">Outflow (-)</th>
+                                            <th className="py-2 text-right">Expected</th>
+                                            <th className="py-2 text-right">Actual</th>
+                                            <th className="py-2 text-right">Variance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2A2F33]/20">
+                                        {Object.entries(currencyData).map(([cid, data]) => {
+                                            const expected = data.opening + data.received - data.paid;
+                                            const v = data.closing - expected;
+                                            return (
+                                                <tr key={cid} className="text-white">
+                                                    <td className="py-2 font-medium">{data.code}</td>
+                                                    <td className="py-2 text-right">{data.opening.toLocaleString()}</td>
+                                                    <td className="py-2 text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : '0'}</td>
+                                                    <td className="py-2 text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : '0'}</td>
+                                                    <td className="py-2 text-right">{expected.toLocaleString()}</td>
+                                                    <td className="py-2 text-right font-semibold">{data.closing.toLocaleString()}</td>
+                                                    <td className={`py-2 text-right font-bold ${Math.abs(v) < 0.01 ? "text-gray-500" : v > 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
+                                                        {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "+" : ""}${v.toLocaleString()}`}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

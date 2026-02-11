@@ -145,6 +145,7 @@ export default function ViewCustomer() {
     }));
 
     setSelectedDeal({
+      dealId: item.dealId,
       type: deal.deal_type,
       date: item.date,
       id: item.id,
@@ -420,15 +421,25 @@ export default function ViewCustomer() {
               <span className="text-gray-400 text-center">Click a row to see details</span>
             ) : (
               <div className="space-y-3 lg:space-y-4 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-white font-semibold text-base lg:text-lg truncate">
+                <div
+                  className="flex items-center justify-between gap-2 cursor-pointer group"
+                  onClick={() => navigate(`/deals/edit-deal/${selectedDeal.dealId}`)}
+                  title="Click to view full deal details"
+                >
+                  <h3 className="text-white font-semibold text-base lg:text-lg truncate group-hover:text-[#7B8CFF] transition-colors">
                     Deal Detail
                   </h3>
-                  <span
-                    className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
-                  >
-                    {selectedDeal.type}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
+                    >
+                      {selectedDeal.type}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 group-hover:text-[#7B8CFF] transition-all group-hover:translate-x-0.5">
+                      <path d="M5 12h14"></path>
+                      <path d="M12 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
                 </div>
 
 
