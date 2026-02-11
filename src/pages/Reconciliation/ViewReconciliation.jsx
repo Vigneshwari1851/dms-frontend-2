@@ -32,6 +32,62 @@ export default function ViewReconciliation() {
                     amount: entry.amount || 0
                 }));
 
+                const currencyData = {};
+
+                // 1. Opening
+                opEntries.forEach(row => {
+                    const code = row.code;
+                    if (!code) return;
+                    if (!currencyData[code]) {
+                        currencyData[code] = { code, opening: 0, received: 0, paid: 0, closing: 0 };
+                    }
+                    currencyData[code].opening += Number(row.amount || 0);
+                });
+
+                // 2. Deals (Inflow/Outflow)
+                (data.deals || []).forEach(d => {
+                    const deal = d.deal;
+                    const buyCode = deal.buyCurrency?.code;
+                    const sellCode = deal.sellCurrency?.code;
+
+                    // Amounts
+                    const amount = Number(deal.amount || 0);
+                    const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+                    let inflow = 0;
+                    let outflow = 0;
+
+                    if (deal.deal_type === "buy") {
+                        inflow = amount;
+                        outflow = amountToBePaid;
+                    } else {
+                        inflow = amountToBePaid;
+                        outflow = amount;
+                    }
+
+                    // Inflow (Buy Side)
+                    if (buyCode) {
+                        if (!currencyData[buyCode]) currencyData[buyCode] = { code: buyCode, opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[buyCode].received += inflow;
+                    }
+
+                    // Outflow (Sell Side)
+                    if (sellCode) {
+                        if (!currencyData[sellCode]) currencyData[sellCode] = { code: sellCode, opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[sellCode].paid += outflow;
+                    }
+                });
+
+                // 3. Closing
+                clEntries.forEach(row => {
+                    const code = row.code;
+                    if (!code) return;
+                    if (!currencyData[code]) {
+                        currencyData[code] = { code, opening: 0, received: 0, paid: 0, closing: 0 };
+                    }
+                    currencyData[code].closing += Number(row.amount || 0);
+                });
+
                 const openingTotal = opEntries.reduce((sum, r) => sum + r.amount, 0);
                 const closingTotal = clEntries.reduce((sum, r) => sum + r.amount, 0);
 
@@ -46,7 +102,8 @@ export default function ViewReconciliation() {
                     closingRows: clEntries,
                     deals: data.deals || [],
                     totalBuy: data.totalBuy || 0,
-                    totalSell: data.totalSell || 0
+                    totalSell: data.totalSell || 0,
+                    currencyData
                 });
             } catch (err) {
                 console.error("View error:", err);
@@ -178,25 +235,40 @@ export default function ViewReconciliation() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* SUMMARY */}
                     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-fit">
-                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Summary</h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between text-[14px]">
-                                <span className="text-[#8F8F8F]">Opening Total:</span>
-                                <span className="text-white font-medium">{reconData.openingTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between text-[14px]">
-                                <span className="text-[#8F8F8F]">Closing Total:</span>
-                                <span className="text-white font-medium">{reconData.closingTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[16px] pt-4 border-t border-[#2A2F33]">
-                                <span className="text-[#8F8F8F]">Net Variance:</span>
-                                <div className="flex items-center gap-2">
-                                    <img src={reconData.variance >= 0 ? balance : high} className="w-5 h-5" alt="variance" />
-                                    <span className={`font-bold text-[18px] lg:text-[20px] ${reconData.variance >= 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
-                                        {reconData.variance >= 0 ? "+" : "-"}{Math.abs(reconData.variance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                            </div>
+                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
+                        <div className="space-y-6">
+                            {Object.values(reconData.currencyData || {}).map((data, idx) => {
+                                const expected = data.opening + data.received - data.paid;
+                                const v = data.closing - expected;
+                                const isTallied = Math.abs(v) < 0.01;
+
+                                return (
+                                    <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-semibold text-white">{data.code}</span>
+                                            <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full border ${isTallied ? "border-gray-600 text-gray-400" : v > 0 ? "border-[#82E890] text-[#82E890]" : "border-[#FF6B6B] text-[#FF6B6B]"}`}>
+                                                {isTallied ? "Tallied" : `${v > 0 ? "+" : ""}${Math.abs(v).toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
+                                            <div className="text-[#8F8F8F]">Opening:</div>
+                                            <div className="text-right text-white">{data.opening.toLocaleString()}</div>
+
+                                            <div className="text-[#8F8F8F]">Inflow:</div>
+                                            <div className="text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : "0"}</div>
+
+                                            <div className="text-[#8F8F8F]">Outflow:</div>
+                                            <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : "0"}</div>
+
+                                            <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Closing:</div>
+                                            <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">{data.closing.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {Object.keys(reconData.currencyData || {}).length === 0 && (
+                                <div className="text-center text-[#8F8F8F] py-4">No currency data available</div>
+                            )}
                         </div>
                     </div>
 
