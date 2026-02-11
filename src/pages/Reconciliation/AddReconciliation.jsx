@@ -240,13 +240,12 @@ export default function AddReconciliation() {
                     currencyData[cid].paid += Number(item.total || 0);
                 });
             } else {
-                // Fallback to deal type and amount/amount_to_be_paid
                 const buyCid = deal.buy_currency_id;
                 const sellCid = deal.sell_currency_id;
                 const amount = Number(deal.amount || 0);
                 const amountToBePaid = Number(deal.amount_to_be_paid || 0);
 
-                if (deal.deal_type === "buy" && amount > 0) {
+                if (deal.deal_type === "buy") {
                     if (buyCid) {
                         if (!currencyData[buyCid]) {
                             const c = currencyOptions.find(o => o.id === buyCid);
@@ -261,7 +260,7 @@ export default function AddReconciliation() {
                         }
                         currencyData[sellCid].paid += amountToBePaid;
                     }
-                } else if (deal.deal_type === "sell" && amount > 0) {
+                } else if (deal.deal_type === "sell") {
                     if (buyCid) {
                         if (!currencyData[buyCid]) {
                             const c = currencyOptions.find(o => o.id === buyCid);
@@ -536,6 +535,7 @@ export default function AddReconciliation() {
                                             <th className="py-2 text-right">Opening</th>
                                             <th className="py-2 text-right">Inflow (+)</th>
                                             <th className="py-2 text-right">Outflow (-)</th>
+                                            <th className="py-2 text-right">Actual Closing</th>
                                             <th className="py-2 text-right">Variance</th>
                                         </tr>
                                     </thead>
@@ -549,8 +549,9 @@ export default function AddReconciliation() {
                                                     <td className="py-2 text-right">{data.opening.toLocaleString()}</td>
                                                     <td className="py-2 text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : '0'}</td>
                                                     <td className="py-2 text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : '0'}</td>
+                                                    <td className="py-2 text-right text-white font-medium">{data.closing.toLocaleString()}</td>
                                                     <td className={`py-2 text-right font-bold ${Math.abs(v) < 0.01 ? "text-gray-500" : v > 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
-                                                        {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "+" : ""}${v.toLocaleString()}`}
+                                                        {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "Excess: " : "Short: "}${v.toLocaleString()}`}
                                                     </td>
                                                 </tr>
                                             );

@@ -50,19 +50,15 @@ export default function ViewReconciliation() {
                     const buyCode = deal.buyCurrency?.code;
                     const sellCode = deal.sellCurrency?.code;
 
-                    // Amounts
-                    const amount = Number(deal.amount || 0);
-                    const amountToBePaid = Number(deal.amount_to_be_paid || 0);
-
                     let inflow = 0;
                     let outflow = 0;
 
                     if (deal.deal_type === "buy") {
-                        inflow = amount;
-                        outflow = amountToBePaid;
+                        inflow = Number(deal.amount || 0);
+                        outflow = Number(deal.amount_to_be_paid || 0);
                     } else {
-                        inflow = amountToBePaid;
-                        outflow = amount;
+                        inflow = Number(deal.amount_to_be_paid || 0);
+                        outflow = Number(deal.amount || 0);
                     }
 
                     // Inflow (Buy Side)
@@ -260,7 +256,7 @@ export default function ViewReconciliation() {
                                             <div className="text-[#8F8F8F]">Outflow:</div>
                                             <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : "0"}</div>
 
-                                            <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Closing:</div>
+                                            <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Actual Closing:</div>
                                             <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">{data.closing.toLocaleString()}</div>
                                         </div>
                                     </div>
