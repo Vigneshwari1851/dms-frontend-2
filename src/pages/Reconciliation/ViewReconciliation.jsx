@@ -211,7 +211,7 @@ export default function ViewReconciliation() {
                         <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
                         Associated Deals
                     </h2>
-                    <DealsTable />
+                    <DealsTable externalDeals={reconData.deals.map(d => d.deal)} hideTitle={true} hideExport={true} />
                 </div>
 
                 {/* NOTES SECTION */}
