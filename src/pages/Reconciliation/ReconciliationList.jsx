@@ -126,41 +126,7 @@ export default function ReconciliationList() {
       totalTransactions: reconciliation.total_transactions || 0,
       closingVault: formatCurrency(reconciliation.closing_total),
       variance: formatVariance(reconciliation.difference),
-      status: reconciliation.status, // Your Table component will render the status badge
-      // actions: (
-      //   <ActionDropdown
-      //     options={[
-      //       { 
-      //         label: "View Details", 
-      //         onClick: (e) => {
-      //           e.stopPropagation(); // Prevent row click when clicking dropdown
-      //           navigate(`/reconciliation/details/${reconciliation.id}`);
-      //         }
-      //       },
-      //       { 
-      //         label: "Edit", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           navigate(`/reconciliation/edit/${reconciliation.id}`);
-      //         }
-      //       },
-      //       { 
-      //         label: "Delete", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           handleDeleteClick(reconciliation.id, reconciliation.created_at);
-      //         }
-      //       },
-      //       { 
-      //         label: reconciliation.status === "Tallied" ? "Mark as Pending" : "Mark as Tallied", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           handleStatusToggle(reconciliation.id, reconciliation.status);
-      //         }
-      //       },
-      //     ]}
-      //   />
-      // )
+      status: reconciliation.status, 
     }));
   };
 
@@ -206,32 +172,13 @@ export default function ReconciliationList() {
     }
   };
 
-  // const handleStatusToggle = (id, currentStatus) => {
-  //   const newStatus = currentStatus === "Tallied" ? "Pending" : "Tallied";
-  //   setConfirmModal({
-  //     open: true,
-  //     actionType: "statusToggle",
-  //     title: "Change Status",
-  //     message: `Are you sure you want to change status from ${currentStatus} to ${newStatus}?`,
-  //     id: id,
-  //     currentStatus,
-  //     newStatus
-  //   });
-  // };
-
   const handleConfirm = () => {
     const { actionType, id } = confirmModal;
 
     if (actionType === "delete") {
-      // Call delete API here
       console.log(`Deleting reconciliation ${id}`);
-      // After successful deletion, refresh the list
       fetchReconciliations();
     } else if (actionType === "statusToggle") {
-      // // Call update status API here
-      // console.log(`Toggling status for reconciliation ${id}`);
-      // // After successful update, refresh the list
-      // fetchReconciliations();
     }
 
     setConfirmModal({ open: false });
