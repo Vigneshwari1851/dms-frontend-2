@@ -247,12 +247,12 @@ export default function ReconciliationList() {
   };
 
   const columns = [
-    { label: "Date", key: "date" },
-    { label: "Opening Vault", key: "openingVault" },
-    { label: "Total Transactions", key: "totalTransactions" },
-    { label: "Closing Vault", key: "closingVault" },
-    { label: "Difference / Variance", key: "variance" },
-    { label: "Status", key: "status" },
+    { label: "Date", key: "date", align: "left" },
+    { label: "Opening Vault", key: "openingVault", align: "left" },
+    { label: "Total Transactions", key: "totalTransactions", align: "left" },
+    { label: "Closing Vault", key: "closingVault", align: "left" },
+    { label: "Difference / Variance", key: "variance", align: "left" },
+    { label: "Status", key: "status", align: "left" },
 
   ];
 
