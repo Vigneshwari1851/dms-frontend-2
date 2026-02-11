@@ -146,19 +146,14 @@ export default function CreateDeal() {
   //   }
   // }, [amount, rate, txnType]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (amount && rate && amount > 0 && rate > 0) {
-      let calculatedAmount = 0;
-      if (txnType?.toLowerCase() === "sell") {
-        calculatedAmount = parseFloat(amount) / parseFloat(rate);
-      } else {
-        calculatedAmount = parseFloat(amount) * parseFloat(rate);
-      }
+      const calculatedAmount = parseFloat(amount) * parseFloat(rate);
       setAmountToBePaid(calculatedAmount.toFixed(2));
     } else {
       setAmountToBePaid(0);
     }
-  }, [amount, rate, txnType]);
+  }, [amount, rate]);
 
   // Calculate total received denominations
   const calculateTotalReceived = () => {
@@ -185,8 +180,8 @@ export default function CreateDeal() {
 
     // For "Buy" transaction: Buy Amount is 'amount', Sell Amount is 'amountToBePaid'
     // For "Sell" transaction: Sell Amount is 'amount', Buy Amount is 'amountToBePaid'
-    const expectedReceived = (parseFloat(amount) || 0);
-    const expectedPaid = (parseFloat(amountToBePaid) || 0);
+    const expectedReceived = txnType?.toLowerCase() === "sell" ? (parseFloat(amountToBePaid) || 0) : (parseFloat(amount) || 0);
+    const expectedPaid = txnType?.toLowerCase() === "sell" ? (parseFloat(amount) || 0) : (parseFloat(amountToBePaid) || 0);
 
     const tolerance = 0.01;
 
@@ -251,8 +246,8 @@ export default function CreateDeal() {
     return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
   }, 0);
 
-  const expectedReceived = Number(amount);
-  const expectedPaid = Number(amountToBePaid);
+  const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
+  const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
 
   const isCashManual = !enableDenomination && txnMode?.toLowerCase() === "cash";
   const effectiveReceivedTotal = isCashManual ? expectedReceived : (enableDenomination ? receivedTotal : Number(manualReceivedTotal));
@@ -379,8 +374,8 @@ export default function CreateDeal() {
       const totalReceived = enableDenomination ? calculateTotalReceived() : parseFloat(manualReceivedTotal) || 0;
       const totalPaid = enableDenomination ? calculateTotalPaid() : parseFloat(manualPaidTotal) || 0;
 
-      const expectedReceived = (parseFloat(amount) || 0);
-      const expectedPaid = (parseFloat(amountToBePaid) || 0);
+      const expectedReceived = txnType?.toLowerCase() === "sell" ? (parseFloat(amountToBePaid) || 0) : (parseFloat(amount) || 0);
+      const expectedPaid = txnType?.toLowerCase() === "sell" ? (parseFloat(amount) || 0) : (parseFloat(amountToBePaid) || 0);
 
       const sideReceivedMatches = Math.abs(totalReceived - expectedReceived) <= 0.01;
       const sidePaidMatches = Math.abs(totalPaid - expectedPaid) <= 0.01;
@@ -552,8 +547,6 @@ export default function CreateDeal() {
   };
   const buyCurrencyOptions = currencyOptions;
   const sellCurrencyOptions = currencyOptions;
-  const buySymbol = currencySymbols[buyCurrency] || buyCurrency || "";
-  const sellSymbol = currencySymbols[sellCurrency] || sellCurrency || "";
 
   return (
     <>
@@ -753,7 +746,7 @@ export default function CreateDeal() {
           {/* 5. Amount */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Amount <span className="text-red-500">*</span>
+              {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
             </label>
             <input
               className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none"
@@ -827,12 +820,12 @@ export default function CreateDeal() {
           >
             {/* Left side */}
             <span className="text-[#FEFEFE] text-sm">
-              Sell Amount
+              {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount "}
             </span>
 
             {/* Right side */}
             <span className="text-white text-[14px]">
-              {sellSymbol} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Math.floor(Number(amountToBePaid)).toLocaleString()}
             </span>
           </div>
 
