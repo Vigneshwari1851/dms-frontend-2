@@ -181,4 +181,23 @@ export async function deleteReconciliation(id) {
     return { success: false, error };
   }
 }
+export async function startReconcoliation(id) {
+  try {
+    const response = await fetch(`${API_URL}/reconciliation/${id}/start`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
 
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(`Failed to start reconciliation with ID ${id}:`, result);
+      return { success: false, error: result };
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(`Error starting reconciliation with ID ${id}:`, error);
+    return { success: false, error };
+  }
+}

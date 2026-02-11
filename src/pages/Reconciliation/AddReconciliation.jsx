@@ -6,14 +6,15 @@ import Dropdown from "../../components/common/Dropdown";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
-import { createReconciliation, fetchReconciliationById, updateReconciliation } from "../../api/reconcoliation";
+import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation } from "../../api/reconcoliation";
 import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
 
 export default function AddReconciliation() {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const { id: paramId } = useParams();
+    const [id, setId] = useState(paramId);
 
     const [openingRows, setOpeningRows] = useState([
         { id: Date.now(), currencyId: null, currencyCode: '', amount: '' }
@@ -29,6 +30,7 @@ export default function AddReconciliation() {
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
     const [isAddingCurrency, setIsAddingCurrency] = useState(false);
     const [newCurrency, setNewCurrency] = useState({ currencyName: "", isoCode: "", symbol: "" });
+    const [step, setStep] = useState(1);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -89,6 +91,12 @@ export default function AddReconciliation() {
 
                     if (opRows.length > 0) setOpeningRows(opRows);
                     if (clRows.length > 0) setClosingRows(clRows);
+
+                    if (clRows.length > 0) {
+                        setStep(3);
+                    } else {
+                        setStep(2);
+                    }
                 } catch (err) {
                     console.error("Error fetching reconciliation:", err);
                 }
@@ -117,8 +125,11 @@ export default function AddReconciliation() {
         const hasOp = openingRows.some(row => row.amount);
         const hasCl = closingRows.some(row => row.amount);
         const hasNotes = notes.trim() !== "";
-        setShowSaveButton(hasOp || hasCl || hasNotes);
-    }, [openingRows, closingRows, notes]);
+
+        if (step === 1) setShowSaveButton(hasOp);
+        else if (step === 2) setShowSaveButton(hasCl);
+        else setShowSaveButton(true);
+    }, [openingRows, closingRows, notes, step]);
 
     const handleRowChange = (section, rowId, field, value) => {
         const setRows = section === "opening" ? setOpeningRows : setClosingRows;
@@ -192,6 +203,18 @@ export default function AddReconciliation() {
 
     const handleSaveReconciliation = async () => {
         try {
+            if (step === 3) {
+                setToast({ show: true, message: "Starting Reconciliation...", type: "pending" });
+                const result = await startReconcoliation(id);
+                if (result.success) {
+                    setToast({ show: true, message: "Reconciliation Started Successfully", type: "success" });
+                    setTimeout(() => navigate("/reconciliation"), 1500);
+                } else {
+                    setToast({ show: true, message: "Failed to start reconciliation", type: "error" });
+                }
+                return;
+            }
+
             const openingEntries = openingRows
                 .filter(row => row.amount && row.currencyId)
                 .map(row => ({
@@ -222,12 +245,10 @@ export default function AddReconciliation() {
 
             const payload = {
                 openingEntries,
-                closingEntries,
+                closingEntries: step === 2 ? closingEntries : [],
                 notes: notes ? [notes] : [],
                 status
             };
-
-            setToast({ show: true, message: id ? "Reconciliation Updating..." : "Reconciliation Saving...", type: "pending" });
 
             let result;
             if (id) {
@@ -237,7 +258,9 @@ export default function AddReconciliation() {
             }
 
             if (result.success || result.data) {
-                navigate("/reconciliation");
+                const newId = id || result.data?.id || result.data?.data?.id;
+                setId(newId);
+                setStep(step + 1);
             } else {
                 setToast({ show: true, message: "Failed to save", type: "error" });
             }
@@ -259,7 +282,8 @@ export default function AddReconciliation() {
                 </h2>
                 <button
                     onClick={() => addRow(section)}
-                    className="bg-[#1D4CB5]/10 text-[#1D4CB5] px-3 py-1.5 rounded-lg text-[12px] hover:bg-[#1D4CB5] hover:text-white transition-all border border-[#1D4CB5]/20"
+                    disabled={step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)}
+                    className={`bg-[#1D4CB5]/10 text-[#1D4CB5] px-3 py-1.5 rounded-lg text-[12px] transition-all border border-[#1D4CB5]/20 ${(step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)) ? "opacity-30 cursor-not-allowed" : "hover:bg-[#1D4CB5] hover:text-white"}`}
                 >
                     + Add Row
                 </button>
@@ -286,6 +310,7 @@ export default function AddReconciliation() {
                                         selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
                                         onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
                                         buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2"
+                                        disabled={step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)}
                                     />
                                 </td>
                                 <td className="px-5 py-3">
@@ -294,14 +319,15 @@ export default function AddReconciliation() {
                                         value={row.amount}
                                         onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
                                         placeholder="0.00"
-                                        className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium"
+                                        className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50"
+                                        disabled={step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)}
                                     />
                                 </td>
                                 <td className="px-5 py-3 text-center">
                                     <button
                                         onClick={() => removeRow(section, row.id)}
-                                        disabled={rows.length <= 1}
-                                        className={`p-2 rounded-lg transition-all ${rows.length > 1 ? "hover:bg-red-500/10 text-[#FF6B6B]" : "text-gray-600 cursor-not-allowed opacity-30"}`}
+                                        disabled={rows.length <= 1 || step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)}
+                                        className={`p-2 rounded-lg transition-all ${rows.length > 1 && !(step === 3 || (section === "opening" && step > 1) || (section === "closing" && step === 1)) ? "hover:bg-red-500/10 text-[#FF6B6B]" : "text-gray-600 cursor-not-allowed opacity-30"}`}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -313,6 +339,21 @@ export default function AddReconciliation() {
                     </tbody>
                 </table>
             </div>
+
+            <div className="p-2 flex justify-end">
+                <button
+                    onClick={handleSaveReconciliation}
+                    disabled={(section === "opening" ? step !== 1 : step !== 2) || !rows.some(r => r.amount)}
+                    className={`py-2 px-6 rounded-lg text-[13px] font-semibold flex items-center gap-2 transition-all
+                        ${(section === "opening" ? step === 1 : step === 2) && rows.some(r => r.amount)
+                            ? (section === "opening" ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7]" : "bg-[#82E890] text-[#16191C] hover:bg-[#9EF7AB]")
+                            : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed border border-[#2A2F33]"}
+                    `}
+                >
+                    <img src={save} alt="save" className={`w-3.5 h-3.5 ${section === "closing" && "brightness-0"}`} />
+                    {id ? `Update ${section === "opening" ? "Opening" : "Closing"} Vault` : `Save ${section === "opening" ? "Opening" : "Closing"} Vault`}
+                </button>
+            </div>
         </div>
     );
 
@@ -322,40 +363,67 @@ export default function AddReconciliation() {
             <div className="flex flex-row justify-between items-center mb-6">
                 <div>
                     <h1 className="text-[20px] lg:text-[24px] font-semibold text-white">
-                        {id ? "Edit Reconciliation" : "Add Reconciliation"}
+                        {id ? "Resume Reconciliation" : "Add Reconciliation"}
                     </h1>
                     <p className="text-[#8F8F8F] text-[13px] lg:text-[14px]">
-                        Capture opening and closing vault balances separately
+                        Step {step}: {step === 1 ? "Capture opening vault balances" : step === 2 ? "Capture closing vault balances" : "Settle associated deals"}
                     </p>
                 </div>
-                {!id && (
+                <div className="flex items-center gap-3">
+                    {!id && step === 1 && (
+                        <button
+                            onClick={() => setIsAddingCurrency(true)}
+                            className="bg-[#1D4CB5] text-white px-5 py-2 rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
+                        >
+                            + Add Currency
+                        </button>
+                    )}
                     <button
-                        onClick={() => setIsAddingCurrency(true)}
-                        className="bg-[#1D4CB5] text-white px-5 py-2 rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
+                        onClick={() => navigate("/reconciliation")}
+                        className="text-[#8F8F8F] hover:text-white transition-colors bg-[#1E2328] px-4 py-2 rounded-lg text-sm border border-[#2A2F33]"
                     >
-                        + Add Currency
+                        Back to List
                     </button>
-                )}
+                </div>
+            </div>
+
+            <div className="flex items-center gap-4 mb-8">
+                {[1, 2, 3].map((s) => (
+                    <div key={s} className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === s ? "bg-[#1D4CB5] text-white" : step > s ? "bg-[#82E890] text-[#16191C]" : "bg-[#252A2E] text-[#4F575E]"}`}>
+                            {step > s ? "✓" : s}
+                        </div>
+                        <div className={`text-sm ${step === s ? "text-white font-medium" : "text-[#4F575E]"}`}>
+                            {s === 1 ? "Opening" : s === 2 ? "Closing" : "Start"}
+                        </div>
+                        {s < 3 && <div className={`w-12 h-0.5 ${step > s ? "bg-[#82E890]" : "bg-[#252A2E]"}`} />}
+                    </div>
+                ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {renderTable("opening", openingRows)}
-                {renderTable("closing", closingRows)}
+                <div className={`${step !== 1 && "opacity-50 pointer-events-none"}`}>
+                    {renderTable("opening", openingRows)}
+                </div>
+                <div className={`${step !== 2 && "opacity-50 pointer-events-none"}`}>
+                    {renderTable("closing", closingRows)}
+                </div>
             </div>
 
             {/* BOTTOM SECTION */}
             <div className="mt-6 pb-12 space-y-4">
-                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
+                <div className={`bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 ${step === 3 && "opacity-50 pointer-events-none"}`}>
                     <h3 className="text-white text-[14px] font-medium mb-3">Notes</h3>
                     <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Add any additional observations..."
                         className="w-full bg-[#1A1F24] text-white p-4 rounded-lg border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[120px] resize-none text-[13px] transition-all"
+                        disabled={step === 3}
                     />
                 </div>
 
-                {id && (
+                {(step > 1 || id) && (
                     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
                         <div className="space-y-4">
                             <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary</h3>
@@ -364,11 +432,11 @@ export default function AddReconciliation() {
                                     <span className="text-[#8F8F8F] text-[12px]">Total Opening</span>
                                     <span className="text-white font-medium text-[16px]">{opTotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex flex-col">
+                                <div className={`flex flex-col ${step === 1 && "opacity-30"}`}>
                                     <span className="text-[#8F8F8F] text-[12px]">Total Closing</span>
                                     <span className="text-white font-medium text-[16px]">{clTotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex flex-col">
+                                <div className={`flex flex-col ${step === 1 && "opacity-30"}`}>
                                     <span className="text-[#8F8F8F] text-[12px]">Net Variance</span>
                                     <span className={`font-bold text-[18px] ${diff >= 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
                                         {diff >= 0 ? "+" : "-"}{varianceAbs}
@@ -379,25 +447,21 @@ export default function AddReconciliation() {
                     </div>
                 )}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3 pt-4">
                     <button
                         onClick={() => navigate("/reconciliation")}
-                        className="text-[#8F8F8F] hover:text-white transition-colors bg-[#1E2328] px-4 py-2 rounded-lg text-sm border border-[#2A2F33]"
+                        className="text-[#8F8F8F] hover:text-white transition-colors bg-[#1E2328] px-5 py-2.5 rounded-lg text-sm border border-[#2A2F33] font-medium"
                     >
                         Cancel
                     </button>
-                    <button
-                        onClick={handleSaveReconciliation}
-                        disabled={!showSaveButton}
-                        className={`w-full lg:w-auto lg:min-w-[280px] py-3.5 px-8 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-3 transition-all shadow-lg
-                            ${showSaveButton
-                                ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-[#1D4CB5]/20 hover:translate-y-[-1px]"
-                                : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed shadow-none border border-[#2A2F33]"}
-                        `}
-                    >
-                        <img src={save} alt="save" className={`w-4 h-4 ${!showSaveButton && "opacity-20"}`} />
-                        {id ? "Update Reconciliation" : "Save Reconciliation"}
-                    </button>
+                    {step === 3 && (
+                        <button
+                            onClick={handleSaveReconciliation}
+                            className="bg-[#1D4CB5] text-white py-2.5 px-8 rounded-lg text-[14px] font-semibold hover:bg-[#2A5BD7] transition-all shadow-lg shadow-[#1D4CB5]/20"
+                        >
+                            Start Reconciliation
+                        </button>
+                    )}
                 </div>
             </div>
 
