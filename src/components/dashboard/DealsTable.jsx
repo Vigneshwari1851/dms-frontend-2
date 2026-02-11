@@ -367,66 +367,70 @@ export default function DealsTable() {
 
   return (
     <div className="mt-6 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
-      {/* Header Row */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
-        <h2 className="text-white text-[16px] font-semibold">
-          Today’s Deals
-        </h2>
+      {deals.length > 0 && (
+        <>
+          {/* Header Row */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
+            <h2 className="text-white text-[16px] font-semibold">
+              Today's Deals
+            </h2>
 
-        <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
-          <Dropdown
-            label="All Status"
-            options={statuses}
-            selected={statusFilter}
-            onChange={(value) => setStatusFilter(value)}
-            className="w-full lg:w-[150px]"
-          />
+            <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
+              <Dropdown
+                label="All Status"
+                options={statuses}
+                selected={statusFilter}
+                onChange={(value) => setStatusFilter(value)}
+                className="w-full lg:w-[150px]"
+              />
 
-          <Dropdown
-            label="All Currencies"
-            options={currencyList}
-            selected={currencyFilter}
-            onChange={(value) => setCurrencyFilter(value)}
-            className="w-full lg:w-[180px]"
-          />
+              <Dropdown
+                label="All Currencies"
+                options={currencyList}
+                selected={currencyFilter}
+                onChange={(value) => setCurrencyFilter(value)}
+                className="w-full lg:w-[180px]"
+              />
 
-          <div className="relative w-full lg:w-auto" ref={exportRef}>
-            <button
-              onClick={() => setExportOpen(!exportOpen)}
-              className="w-full lg:px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
-            >
-              <img src={download} alt="download" className="w-6 h-6" /> Export
-            </button>
-
-            {exportOpen && (
-              <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
+              <div className="relative w-full lg:w-auto" ref={exportRef}>
                 <button
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
-                  onClick={() => handleExport("pdf")}
-                  disabled={exporting}
+                  onClick={() => setExportOpen(!exportOpen)}
+                  className="w-full lg:px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
                 >
-                  <img src={pdf} alt="pdf" className="w-4 h-4" />
-                  PDF
+                  <img src={download} alt="download" className="w-6 h-6" /> Export
                 </button>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                  onClick={() => handleExport("excel")}
-                  disabled={exporting}
-                >
-                  <img src={excel} alt="excel" className="w-4 h-4" />
-                  Excel
-                </button>
+
+                {exportOpen && (
+                  <div className="absolute right-0 mt-2 w-full lg:w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 ">
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34] "
+                      onClick={() => handleExport("pdf")}
+                      disabled={exporting}
+                    >
+                      <img src={pdf} alt="pdf" className="w-4 h-4" />
+                      PDF
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
+                      onClick={() => handleExport("excel")}
+                      disabled={exporting}
+                    >
+                      <img src={excel} alt="excel" className="w-4 h-4" />
+                      Excel
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
+          <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
+        </>
+      )}
 
       {/* Table Container with Overflow */}
       <div className="-mx-4 lg:-mx-5 overflow-x-auto scrollbar-grey">
-        {paginatedData.length === 0 ? (
+        {deals.length === 0 ? (
           <EmptyState
             imageSrc={todayDealBg}
             message="No deals found for today"
@@ -516,59 +520,73 @@ export default function DealsTable() {
             </thead>
 
             <tbody>
-              {paginatedData.map((item, index) => (
-                <tr
-                  key={index}
-                  className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
-                  onClick={() => handleRowClick(item)}
-                >
-                  <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
-                    {item.id}
-                  </td>
-                  <td>{item.date}</td>
-
-                  <td>
-                    <div className="flex justify-center items-center">
-                      <span
-                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
-                      >
-                        {item.type}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td>{item.customer}</td>
-                  <td>{item.buyAmt}</td>
-                  <td>{item.currency}</td>
-                  <td>{item.exchange_rate}</td>
-                  <td>{item.sellAmt}</td>
-                  <td>{item.currency1}</td>
-
-                  <td>
-                    <div className="flex justify-center items-center">
-                      <span
-                        className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan="11" className="py-10">
+                    <EmptyState
+                      imageSrc={todayDealBg}
+                      message="No deals match your filters"
+                      description="Try adjusting your search criteria"
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedData.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
+                    onClick={() => handleRowClick(item)}
+                  >
+                    <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                      {item.id}
+                    </td>
+                    <td>{item.date}</td>
+
+                    <td>
+                      <div className="flex justify-center items-center">
+                        <span
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}
+                        >
+                          {item.type}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>{item.customer}</td>
+                    <td>{item.buyAmt}</td>
+                    <td>{item.currency}</td>
+                    <td>{item.exchange_rate}</td>
+                    <td>{item.sellAmt}</td>
+                    <td>{item.currency1}</td>
+
+                    <td>
+                      <div className="flex justify-center items-center">
+                        <span
+                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         )}
       </div>
 
       {/* ------------ Pagination (Right-Aligned) ------------ */}
-      <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-        />
-      </div>
+      {deals.length > 0 && (
+        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          />
+        </div>
+      )}
 
       {/* ------------------------------------------------------ */}
     </div>
