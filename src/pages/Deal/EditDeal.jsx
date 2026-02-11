@@ -192,8 +192,8 @@ export default function EditDeal() {
 
     const tolerance = 0.01;
 
-    const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
-    const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+    const expectedReceived = Number(amount);
+    const expectedPaid = Number(amountToBePaid);
 
     const effectiveReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
     const effectivePaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
@@ -385,13 +385,17 @@ export default function EditDeal() {
         }
     }, [id, currencyOptions]);
 
-    // Recalculate amount to be paid when amount or rate changes
     useEffect(() => {
         if (amount && rate) {
-            const calculated = (parseFloat(amount) * parseFloat(rate)).toFixed(2);
-            setAmountToBePaid(calculated);
+            let calculated = 0;
+            if (txnType?.toLowerCase() === "sell") {
+                calculated = parseFloat(amount) / parseFloat(rate);
+            } else {
+                calculated = parseFloat(amount) * parseFloat(rate);
+            }
+            setAmountToBePaid(calculated.toFixed(2));
         }
-    }, [amount, rate]);
+    }, [amount, rate, txnType]);
 
     const handleStartEdit = () => {
         if (isPending) {
@@ -446,8 +450,8 @@ export default function EditDeal() {
             const currentReceivedTotal = enableDenomination ? totalReceived() : Number(manualReceivedTotal);
             const currentPaidTotal = enableDenomination ? totalPaid() : Number(manualPaidTotal);
 
-            const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
-            const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
+            const expectedReceived = Number(amount);
+            const expectedPaid = Number(amountToBePaid);
 
             const sideReceivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= 0.01;
             const sidePaidMatches = Math.abs(currentPaidTotal - expectedPaid) <= 0.01;
@@ -677,7 +681,7 @@ export default function EditDeal() {
                         {/* Amount - EDITABLE if Pending */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
-                                {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
+                                Buy Amount <span className="text-red-500">*</span>
                             </label>
                             <input
                                 className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
@@ -737,12 +741,12 @@ export default function EditDeal() {
                     >
                         {/* Left side */}
                         <span className="text-[#FEFEFE] text-sm">
-                            {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount to be Paid"}
+                            Sell Amount
                         </span>
 
                         {/* Right side */}
                         <span className="text-white text-[14px]">
-                            {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {currencySymbols[sellCurrency] || sellCurrency} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                     </div>
 
