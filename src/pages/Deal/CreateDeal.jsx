@@ -132,7 +132,21 @@ export default function CreateDeal() {
   }, [txnType, currencyMap]);
 
   // Calculate amount to be paid when amount or rate changes
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (amount && rate && amount > 0 && rate > 0) {
+  //     let calculatedAmount = 0;
+  //     if (txnType?.toLowerCase() === "sell") {
+  //       calculatedAmount = parseFloat(amount) / parseFloat(rate);
+  //     } else {
+  //       calculatedAmount = parseFloat(amount) * parseFloat(rate);
+  //     }
+  //     setAmountToBePaid(calculatedAmount.toFixed(2));
+  //   } else {
+  //     setAmountToBePaid(0);
+  //   }
+  // }, [amount, rate, txnType]);
+
+    useEffect(() => {
     if (amount && rate && amount > 0 && rate > 0) {
       const calculatedAmount = parseFloat(amount) * parseFloat(rate);
       setAmountToBePaid(calculatedAmount.toFixed(2));
