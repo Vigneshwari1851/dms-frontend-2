@@ -708,15 +708,10 @@ export default function CreateDeal() {
               <label className="text-[#ABABAB] text-sm mb-1 block">
                 Buy Currency Type <span className="text-red-500">*</span>
               </label>
-              <Dropdown
-                label="Buy Currency"
-                options={buyCurrencyOptions}
-                selected={buyCurrency}
-                onChange={(val) => {
-                  handleCurrencySelect(val, "buy");
-                  setErrors(prev => ({ ...prev, buyCurrency: "" }));
-                }}
-                className="w-full"
+              <input
+                className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed opacity-70"
+                value={buyCurrency}
+                readOnly
               />
               <div className="h-3.5 mt-1" />
             </div>
@@ -725,15 +720,10 @@ export default function CreateDeal() {
               <label className="text-[#ABABAB] text-sm mb-1 block">
                 Sell Currency Type <span className="text-red-500">*</span>
               </label>
-              <Dropdown
-                label="Sell Currency"
-                options={sellCurrencyOptions}
-                selected={sellCurrency}
-                onChange={(val) => {
-                  handleCurrencySelect(val, "sell");
-                  setErrors(prev => ({ ...prev, sellCurrency: "" }));
-                }}
-                className="w-full"
+              <input
+                className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed opacity-70"
+                value={sellCurrency}
+                readOnly
               />
               <div className="h-3.5 mt-1" />
             </div>
