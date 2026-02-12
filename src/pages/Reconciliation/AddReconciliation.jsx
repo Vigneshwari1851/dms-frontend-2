@@ -522,49 +522,6 @@ export default function AddReconciliation() {
 
             {/* BOTTOM SECTION */}
             <div className="mt-6 pb-12 space-y-4">
-
-                {(step > 1 || id) && (
-                    <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
-                        <div className="space-y-4">
-                            <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-[13px]">
-                                    <thead>
-                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-                                            <th className="py-2">Currency</th>
-                                            <th className="py-2 text-right">Opening</th>
-                                            <th className="py-2 text-right">Inflow (+)</th>
-                                            <th className="py-2 text-right">Outflow (-)</th>
-                                            {/* <th className="py-2 text-right">Expected</th>
-                                            <th className="py-2 text-right">Actual Closing</th> */}
-                                            <th className="py-2 text-right">Variance</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-[#2A2F33]/20">
-                                        {Object.entries(currencyData).map(([cid, data]) => {
-                                            const expected = data.opening + data.received - data.paid;
-                                            const v = data.closing - expected;
-                                            return (
-                                                <tr key={cid} className="text-white">
-                                                    <td className="py-2 font-medium">{data.code}</td>
-                                                    <td className="py-2 text-right">{data.opening.toLocaleString()}</td>
-                                                    <td className="py-2 text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : '0'}</td>
-                                                    <td className="py-2 text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : '0'}</td>
-                                                    {/* <td className="py-2 text-right text-[#B0B0B0]">{expected.toLocaleString()}</td>
-                                                    <td className="py-2 text-right text-white font-medium">{data.closing.toLocaleString()}</td> */}
-                                                    <td className={`py-2 text-right font-bold ${Math.abs(v) < 0.01 ? "text-gray-500" : v > 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
-                                                        {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "Excess: " : "Short: "}${v.toLocaleString()}`}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 <div className={`bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50`}>
                     <h3 className="text-white text-[14px] font-medium mb-3">Notes</h3>
                     <textarea
@@ -607,5 +564,47 @@ export default function AddReconciliation() {
                 </div>
             )}
         </div>
+        // summary as per currency
+        // {(step > 1 || id) && (
+        //     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
+        //         <div className="space-y-4">
+        //             <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
+        //             <div className="overflow-x-auto">
+        //                 <table className="w-full text-left text-[13px]">
+        //                     <thead>
+        //                         <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+        //                             <th className="py-2">Currency</th>
+        //                             <th className="py-2 text-right">Opening</th>
+        //                             <th className="py-2 text-right">Inflow (+)</th>
+        //                             <th className="py-2 text-right">Outflow (-)</th>
+        //                             {/* <th className="py-2 text-right">Expected</th>
+        //                             <th className="py-2 text-right">Actual Closing</th> */}
+        //                             <th className="py-2 text-right">Variance</th>
+        //                         </tr>
+        //                     </thead>
+        //                     <tbody className="divide-y divide-[#2A2F33]/20">
+        //                         {Object.entries(currencyData).map(([cid, data]) => {
+        //                             const expected = data.opening + data.received - data.paid;
+        //                             const v = data.closing - expected;
+        //                             return (
+        //                                 <tr key={cid} className="text-white">
+        //                                     <td className="py-2 font-medium">{data.code}</td>
+        //                                     <td className="py-2 text-right">{data.opening.toLocaleString()}</td>
+        //                                     <td className="py-2 text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : '0'}</td>
+        //                                     <td className="py-2 text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : '0'}</td>
+        //                                     {/* <td className="py-2 text-right text-[#B0B0B0]">{expected.toLocaleString()}</td>
+        //                                     <td className="py-2 text-right text-white font-medium">{data.closing.toLocaleString()}</td> */}
+        //                                     <td className={`py-2 text-right font-bold ${Math.abs(v) < 0.01 ? "text-gray-500" : v > 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
+        //                                         {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "Excess: " : "Short: "}${v.toLocaleString()}`}
+        //                                     </td>
+        //                                 </tr>
+        //                             );
+        //                         })}
+        //                     </tbody>
+        //                 </table>
+        //             </div>
+        //         </div>
+        //     </div>
+        // )}
     );
 }
