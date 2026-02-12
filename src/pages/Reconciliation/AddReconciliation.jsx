@@ -36,6 +36,8 @@ export default function AddReconciliation() {
     const [step, setStep] = useState(1);
     const [status, setStatus] = useState(null); // Track reconciliation status
     const [todayDeals, setTodayDeals] = useState([]);
+    const [dealsSummaryGenerated, setDealsSummaryGenerated] = useState(false);
+    const [showClosingVault, setShowClosingVault] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -127,7 +129,14 @@ export default function AddReconciliation() {
                         setTodayDeals(deals);
                     } else {
                         const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
-                        setTodayDeals(dealsRes.data || []);
+                        const dealsData = dealsRes.data?.data || dealsRes.data || [];
+                        setTodayDeals(dealsData);
+                    }
+
+                    if (["Tallied", "Short", "Excess"].includes(data.status)) {
+                        setDealsSummaryGenerated(true);
+                        setShowClosingVault(true);
+                        setStep(3);
                     }
 
                 } catch (err) {
@@ -350,6 +359,10 @@ export default function AddReconciliation() {
                 const newId = id || result.data?.id || result.data?.data?.id;
                 setId(newId);
                 setStep(2);
+                setToast({ show: true, message: "Opening Balance Saved.", type: "success" });
+                setTimeout(() => {
+                    setToast(prev => ({ ...prev, show: false }));
+                }, 1000);
             } else {
                 setToast({ show: true, message: "Failed to save Opening Balance", type: "error" });
             }
@@ -427,11 +440,14 @@ export default function AddReconciliation() {
             const result = await updateReconciliation(id, payload);
 
             if (result.success || result.data) {
+                setToast({ show: true, message: isFinalizing ? "Reconciliation Saved Successfully" : "Closing Balance Saved", type: "success" });
+                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 1000);
+
                 if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
                     setStatus(newStatus);
                     setTimeout(() => navigate("/reconciliation"), 1500);
                 } else {
-                    setStatus(newStatus);
+                    setStatus(newStatus || status);
                 }
             } else {
                 setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
@@ -540,7 +556,7 @@ export default function AddReconciliation() {
                             + Add Row
                         </button>
                     )}
-                    {isOpening && !isDisabled && step === 1 && (
+                    {isOpening && !isDisabled && (
                         <button
                             onClick={handleSaveOpening}
                             disabled={!rows.some(r => r.amount)}
@@ -549,20 +565,15 @@ export default function AddReconciliation() {
                             {id ? "Update" : "Save"}
                         </button>
                     )}
-                    {/* Allow Saving Closing even if not started? User's scenario 3 implies data exists. 
-                        If we Lock Closing when data exists, we can't save it again.
-                        So this buttons only shows if !isDisabled */}
                     {!isOpening && !isDisabled && (
                         <div className="flex gap-2">
-                            {status === "In_Progress" && (
-                                <button
-                                    onClick={() => handleSaveClosing(true)}
-                                    disabled={isDisabled}
-                                    className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB] mr-16"
-                                >
-                                    Save
-                                </button>
-                            )}
+                            <button
+                                onClick={() => handleSaveClosing(status === "In_Progress")}
+                                disabled={isDisabled}
+                                className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB] mr-16"
+                            >
+                                Save
+                            </button>
                         </div>
                     )}
                 </div>
@@ -583,12 +594,11 @@ export default function AddReconciliation() {
                     </p>
                 </div>
 
-                {/* Main Action Button - Available in Step 2 or if Closing Exists but not Started */}
                 <div className="flex items-center gap-3">
-                    {!["Tallied"].includes(status) && id && (
+                    {id && status !== "Tallied" && (openingRows.some(r => r.amount) && closingRows.some(r => r.amount)) && (
                         <button
                             onClick={handleStartReconciliation}
-                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
+                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20 animate-in fade-in zoom-in-95 duration-300"
                         >
                             Start Reconciliation
                         </button>
@@ -596,8 +606,7 @@ export default function AddReconciliation() {
                 </div>
             </div>
 
-            {/* Total Buy and Sell Cards */}
-            {id && (
+            {dealsSummaryGenerated && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
                         <div className="flex items-center justify-between">
@@ -628,45 +637,76 @@ export default function AddReconciliation() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="transition-all">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Column 1: Opening Balance */}
+                <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
                 </div>
 
-                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-fit">
-                    <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Ledger Summary</h3>
-                    <div className="space-y-6">
-                        {Object.values(currencyData).map((data, idx) => {
-                            const expected = data.opening + data.received - data.paid;
-                            return (
-                                <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="font-semibold text-white">{data.code}</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
-                                        <div className="text-[#8F8F8F]">Opening:</div>
-                                        <div className="text-right text-white">{data.opening.toLocaleString()}</div>
+                <div className="flex flex-col gap-4">
+                    {id && !dealsSummaryGenerated ? (
+                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl border-2 border-dashed border-[#2A2F33] animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
+                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Opening balance saved. Generate your deals summary.</p>
+                            <button
+                                onClick={() => setDealsSummaryGenerated(true)}
+                                className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
+                            >
+                                Generate Deals Summary
+                            </button>
+                        </div>
+                    ) : dealsSummaryGenerated ? (
+                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Ledger Summary</h3>
+                            <div className="space-y-6 flex-grow overflow-y-auto pr-1">
+                                {Object.values(currencyData).map((data, idx) => {
+                                    const expected = data.opening + data.received - data.paid;
+                                    return (
+                                        <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-semibold text-white">{data.code}</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
+                                                <div className="text-[#8F8F8F]">Opening:</div>
+                                                <div className="text-right text-white font-medium">{data.opening.toLocaleString()}</div>
 
-                                        <div className="text-[#8F8F8F]">Inflow:</div>
-                                        <div className="text-right text-[#82E890]">{data.received > 0 ? `${data.received.toLocaleString()}` : "0"}</div>
+                                                <div className="text-[#8F8F8F]">Inflow:</div>
+                                                <div className="text-right text-[#82E890]">{data.received > 0 ? `${data.received.toLocaleString()}` : "0"}</div>
 
-                                        <div className="text-[#8F8F8F]">Outflow:</div>
-                                        <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
+                                                <div className="text-[#8F8F8F]">Outflow:</div>
+                                                <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
 
-                                        <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Expected Closing:</div>
-                                        <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {Object.keys(currencyData).length === 0 && (
-                            <div className="text-center text-[#8F8F8F] py-4">No currency data available</div>
-                        )}
-                    </div>
+                                                <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Expected Closing:</div>
+                                                <div className="text-right text-white font-bold pt-1 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {Object.keys(currencyData).length === 0 && (
+                                    <div className="text-center text-[#8F8F8F] py-4">No currency data available</div>
+                                )}
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
 
-                <div className="transition-all">
-                    {renderTable("closing", closingRows)}
+                <div className="flex flex-col gap-4">
+                    {dealsSummaryGenerated && !showClosingVault && (
+                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl border-2 border-dashed border-[#2A2F33] animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
+                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Summary generated. Enter your closing vault.</p>
+                            <button
+                                onClick={() => setShowClosingVault(true)}
+                                className="px-8 py-4 bg-[#82E890] text-[#16191C] rounded-xl font-bold hover:bg-[#9EF7AB] shadow-xl hover:shadow-[#82E890]/20 transition-all transform hover:-translate-y-1"
+                            >
+                                Enter Closing Vault
+                            </button>
+                        </div>
+                    )}
+
+                    {(showClosingVault || ["Tallied", "Short", "Excess"].includes(status)) && (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-500 h-full">
+                            {renderTable("closing", closingRows)}
+                        </div>
+                    )}
                 </div>
             </div>
 
