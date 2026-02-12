@@ -217,8 +217,6 @@ export default function ReconciliationList() {
         </button>
       </div>
 
-      <p className="text-gray-400 mb-6">Manually data entry for daily vault reconciliation</p>
-
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center py-10">

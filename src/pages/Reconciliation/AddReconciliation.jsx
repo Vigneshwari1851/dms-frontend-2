@@ -54,7 +54,7 @@ export default function AddReconciliation() {
                 setCurrencyMap(map);
 
                 const dropdownOpts = actualCurrencies.map(c => ({
-                    label: `${c.code} - ${c.name}`,
+                    label: `${c.code}`,
                     value: c.code,
                     id: c.id
                 }));
@@ -94,19 +94,25 @@ export default function AddReconciliation() {
                     }));
 
                     if (opRows.length > 0) setOpeningRows(opRows);
-                    if (clRows.length > 0) setClosingRows(clRows);
 
-                    // Determine Step based on Status
-                    // Statuses: null/undefined (New), "Pending" (Opened?), "In_Progress" (Started), "Tallied"/"Short"/"Excess" (Final)
+                    if (clRows.length > 0) {
+                        setClosingRows(clRows);
+                    } else {
+                        const usd = actualCurrencies.find(c => c.code === "USD");
+                        const tzs = actualCurrencies.find(c => c.code === "TZS");
+                        if (usd && tzs) {
+                            setClosingRows([
+                                { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                                { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                            ]);
+                        }
+                    }
 
                     if (["Tallied", "Short", "Excess", "In_Progress"].includes(data.status)) {
                         setStep(3);
                     } else if (id) {
-                        // Opening Saved but NOT Started
-                        // If Closing also exists (Scenario 3 - Saved Closing but didn't Start)
                         if (clRows.length > 0) {
-                            // We are technically in Step 3 but awaiting Start
-                            setStep(2); // Or stay in a state where Start is prominent
+                            setStep(2);
                         } else {
                             setStep(2);
                         }
@@ -416,17 +422,14 @@ export default function AddReconciliation() {
                 status: newStatus
             };
 
-            setToast({ show: true, message: isFinalizing ? "Finalizing..." : "Saving Draft...", type: "pending" });
             const result = await updateReconciliation(id, payload);
 
             if (result.success || result.data) {
                 if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
                     setStatus(newStatus);
-                    setToast({ show: true, message: `Reconciliation Finalized: ${newStatus}`, type: "success" });
                     setTimeout(() => navigate("/reconciliation"), 1500);
                 } else {
-                    setStatus(newStatus); // Update status if changed (e.g. initial save)
-                    setToast({ show: true, message: "Closing Balance Saved.", type: "success" });
+                    setStatus(newStatus);
                 }
             } else {
                 setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
@@ -467,6 +470,66 @@ export default function AddReconciliation() {
                         <div className={`w-1.5 h-4 rounded-full ${isOpening ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
                         {isOpening ? "Opening Balance" : "Closing Balance"}
                     </h2>
+
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[14px]">
+                        <thead>
+                            <tr className="bg-[#1B1E21] text-[#8F8F8F] border-b border-[#2A2F33]/50">
+                                <th className="px-3 py-3 w-[35%]">Currency</th>
+                                <th className={`px-3 py-3 ${isDisabled ? 'w-[65%]' : 'w-[50%]'}`}>Amount</th>
+                                {!isDisabled && <th className="px-3 py-3 w-[15%] text-center"></th>}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#2A2F33]/30">
+                            {rows.map((row) => (
+                                <tr key={row.id} className="hover:bg-[#1E2328]/30 transition-colors">
+                                    <td className="px-3 py-3">
+                                        <Dropdown
+                                            label="Select Currency"
+                                            options={currencyOptions.filter(opt =>
+                                                !rows.some(r => r.id !== row.id && r.currencyCode === opt.value)
+                                            )}
+                                            selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
+                                            onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
+                                            buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2 !text-sm"
+                                            disabled={isDisabled}
+                                        />
+                                    </td>
+                                    <td className="px-3 py-3">
+                                        <input
+                                            type="number"
+                                            value={row.amount}
+                                            onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
+                                            placeholder="0.00"
+                                            className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-3 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50 text-sm"
+                                            disabled={isDisabled}
+                                        />
+                                    </td>
+                                    {!isDisabled && (
+                                        <td className="px-2 py-3 text-center">
+                                            {rows.length > 1 && (
+                                                <button
+                                                    onClick={() => removeRow(section, row.id)}
+                                                    className="p-1.5 rounded-lg transition-all hover:bg-red-500/10 text-[#FF6B6B]"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+                <div className="p-4 flex justify-between">
                     {!isDisabled && (
                         <button
                             onClick={() => addRow(section)}
@@ -475,69 +538,13 @@ export default function AddReconciliation() {
                             + Add Row
                         </button>
                     )}
-                </div>
-
-                <div className="">
-                    <table className="w-full text-left text-[14px]">
-                        <thead>
-                            <tr className="bg-[#1B1E21] text-[#8F8F8F] border-b border-[#2A2F33]/50">
-                                <th className="px-5 py-3">Currency</th>
-                                <th className="px-5 py-3 text-right">Amount</th>
-                                <th className="px-5 py-3 w-[60px] text-center"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#2A2F33]/30">
-                            {rows.map((row) => (
-                                <tr key={row.id} className="hover:bg-[#1E2328]/30 transition-colors">
-                                    <td className="px-5 py-3 min-w-[180px]">
-                                        <Dropdown
-                                            label="Select Currency"
-                                            options={currencyOptions.filter(opt =>
-                                                !rows.some(r => r.id !== row.id && r.currencyCode === opt.value)
-                                            )}
-                                            selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
-                                            onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
-                                            buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2"
-                                            disabled={isDisabled}
-                                        />
-                                    </td>
-                                    <td className="px-5 py-3">
-                                        <input
-                                            type="number"
-                                            value={row.amount}
-                                            onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
-                                            placeholder="0.00"
-                                            className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50"
-                                            disabled={isDisabled}
-                                        />
-                                    </td>
-                                    <td className="px-5 py-3 text-center">
-                                        {!isDisabled && rows.length > 1 && (
-                                            <button
-                                                onClick={() => removeRow(section, row.id)}
-                                                className={`p-2 rounded-lg transition-all hover:bg-red-500/10 text-[#FF6B6B]`}
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="p-2 flex justify-end">
-                    {/* Save Buttons */}
                     {isOpening && !isDisabled && step === 1 && (
                         <button
                             onClick={handleSaveOpening}
                             disabled={!rows.some(r => r.amount)}
                             className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2A5BD7]"
                         >
-                            {id ? "Update Opening" : "Save Opening"}
+                            {id ? "Update" : "Save"}
                         </button>
                     )}
                     {/* Allow Saving Closing even if not started? User's scenario 3 implies data exists. 
@@ -549,9 +556,9 @@ export default function AddReconciliation() {
                                 <button
                                     onClick={() => handleSaveClosing(true)}
                                     disabled={isDisabled}
-                                    className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB]"
+                                    className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB] mr-16"
                                 >
-                                    Save Closing
+                                    Save
                                 </button>
                             )}
                         </div>
@@ -567,7 +574,7 @@ export default function AddReconciliation() {
             <div className="flex flex-row justify-between items-center mb-6">
                 <div>
                     <h1 className="text-[20px] lg:text-[24px] font-semibold text-white">
-                        {id ? "Resume Reconciliation" : "Add Reconciliation"}
+                        {id ? "Reconciliation" : "Add Reconciliation"}
                     </h1>
                     <p className="text-[#8F8F8F] text-[13px] lg:text-[14px]">
                         Step {step}: {step === 1 ? "Capture opening vault balances" : step === 2 ? "Start Reconciliation" : "Capture closing vault balances"}
@@ -587,81 +594,45 @@ export default function AddReconciliation() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className={`transition-all`}>
-                    {/* Step 1: Opening Table. Step 3: Summary Table (Replacing Opening) */}
-                    {(step >= 2 || closingRows.some(r => r.amount)) ? (
-                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
-                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-[14px]">
-                                    <thead>
-                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-                                            <th className="py-2 px-4">Currency</th>
-                                            <th className="py-2 px-4 text-right">Opening</th>
-                                            <th className="py-2 px-4 text-right">Inflow (+)</th>
-                                            <th className="py-2 px-4 text-right">Outflow (-)</th>
-                                            <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-[#2A2F33]/20">
-                                        {Object.values(currencyData).map((data, idx) => {
-                                            const expected = data.opening + data.received - data.paid;
-                                            return (
-                                                <tr key={idx} className="hover:bg-[#1E2328]/30">
-                                                    <td className="py-3 px-4 font-medium text-white">{data.code}</td>
-                                                    <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    ) : (
-                        renderTable("opening", openingRows)
-                    )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="transition-all">
+                    {renderTable("opening", openingRows)}
                 </div>
 
-                <div className={`transition-all`}>
-                    {/* Step 1: Summary Table. Step 3: Closing Table */}
-                    {(step >= 2 || closingRows.some(r => r.amount)) ? (
-                        renderTable("closing", closingRows)
-                    ) : (
-                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
-                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-[14px]">
-                                    <thead>
-                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-                                            <th className="py-2 px-4">Currency</th>
-                                            <th className="py-2 px-4 text-right">Opening</th>
-                                            <th className="py-2 px-4 text-right">Inflow (+)</th>
-                                            <th className="py-2 px-4 text-right">Outflow (-)</th>
-                                            <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-[#2A2F33]/20">
-                                        {Object.values(currencyData).map((data, idx) => {
-                                            const expected = data.opening + data.received - data.paid;
-                                            return (
-                                                <tr key={idx} className="hover:bg-[#1E2328]/30">
-                                                    <td className="py-3 px-4 font-medium text-white">{data.code}</td>
-                                                    <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
-                                                    <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
+                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-fit">
+                    <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Ledger Summary</h3>
+                    <div className="space-y-6">
+                        {Object.values(currencyData).map((data, idx) => {
+                            const expected = data.opening + data.received - data.paid;
+                            return (
+                                <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="font-semibold text-white">{data.code}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
+                                        <div className="text-[#8F8F8F]">Opening:</div>
+                                        <div className="text-right text-white">{data.opening.toLocaleString()}</div>
+
+                                        <div className="text-[#8F8F8F]">Inflow:</div>
+                                        <div className="text-right text-[#82E890]">{data.received > 0 ? `${data.received.toLocaleString()}` : "0"}</div>
+
+                                        <div className="text-[#8F8F8F]">Outflow:</div>
+                                        <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
+
+                                        <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Expected Closing:</div>
+                                        <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {Object.keys(currencyData).length === 0 && (
+                            <div className="text-center text-[#8F8F8F] py-4">No currency data available</div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="transition-all">
+                    {renderTable("closing", closingRows)}
                 </div>
             </div>
 

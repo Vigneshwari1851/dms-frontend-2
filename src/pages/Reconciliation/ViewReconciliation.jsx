@@ -193,13 +193,13 @@ export default function ViewReconciliation() {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
                         <div>
-                            <h1 className="text-[20px] lg:text-[24px] font-semibold">Reconciliation - {reconData.date}</h1>
+                            <h1 className="text-[20px] lg:text-[24px] font-semibold">Reconciliation - {reconData.date}  <span className={`px-3 py-0.5 mt-4 ml-4 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}> {reconData.status}</span></h1>
                         </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                        <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
+                        {/* <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
                             {reconData.status}
-                        </span>
+                        </span> */}
                         {reconData.status !== "Tallied" && (
                             <button
                                 onClick={handleStartReconciliation}
@@ -244,14 +244,12 @@ export default function ViewReconciliation() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* TABLES */}
                     {renderTable("Opening Balance", "bg-[#1D4CB5]", reconData.openingRows)}
-                    {renderTable("Closing Balance", "bg-[#82E890]", reconData.closingRows)}
                     {/* SUMMARY */}
                     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-fit">
-                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Summary</h3>
+                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Ledger Summary</h3>
                         <div className="space-y-6">
                             {Object.values(reconData.currencyData || {}).map((data, idx) => {
                                 const expected = data.opening + data.received - data.paid;
-                                console.log("data.paid", data.paid)
                                 const v = data.closing - expected;
                                 const isTallied = Math.abs(v) < 0.01;
 
@@ -282,6 +280,7 @@ export default function ViewReconciliation() {
                             )}
                         </div>
                     </div>
+                    {renderTable("Closing Balance", "bg-[#82E890]", reconData.closingRows)}
 
                 </div>
 
