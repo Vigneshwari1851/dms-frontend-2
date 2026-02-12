@@ -181,12 +181,12 @@ export default function ViewReconciliation() {
                             </div>
                         </div>
                     </div>
-                    {reconData.status !== "Tallied" && (
+                    {reconData.status === "In_Progress" && (
                         <button
                             onClick={() => navigate(`/reconciliation/edit/${id}`)}
-                            className="bg-[#1D4CB5] text-white rounded-lg text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
+                            className="bg-[#1D4CB5] text-white rounded-lg px-4 py-2 text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
                         >
-                            <img src={edit} className="w-10 h-10" alt="edit" />
+                            <span>Start Reconciliation</span>
                         </button>
                     )}
                 </div>
@@ -198,14 +198,9 @@ export default function ViewReconciliation() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy</p>
-                                <p className="text-[#82E890] text-[20px] lg:text-[24px] font-bold">
+                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
                                     TZS {reconData.totalSell.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </p>
-                            </div>
-                            <div className="w-10 h-10 bg-[#82E89020] rounded-lg flex items-center justify-center">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82E890" strokeWidth="2">
-                                    <path d="M12 5v14M5 12l7-7 7 7" />
-                                </svg>
                             </div>
                         </div>
                     </div>
@@ -215,14 +210,9 @@ export default function ViewReconciliation() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell</p>
-                                <p className="text-[#FF6B6B] text-[20px] lg:text-[24px] font-bold">
+                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
                                     TZS {reconData.totalBuy.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </p>
-                            </div>
-                            <div className="w-10 h-10 bg-[#FF6B6B20] rounded-lg flex items-center justify-center">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2">
-                                    <path d="M12 19V5M5 12l7 7 7-7" />
-                                </svg>
                             </div>
                         </div>
                     </div>
@@ -241,7 +231,7 @@ export default function ViewReconciliation() {
                         <div className="space-y-6">
                             {Object.values(reconData.currencyData || {}).map((data, idx) => {
                                 const expected = data.opening + data.received - data.paid;
-                                console.log("data.paid",data.paid )
+                                console.log("data.paid", data.paid)
                                 const v = data.closing - expected;
                                 const isTallied = Math.abs(v) < 0.01;
 
@@ -249,7 +239,7 @@ export default function ViewReconciliation() {
                                     <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="font-semibold text-white">{data.code}</span>
-                                            
+
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
                                             <div className="text-[#8F8F8F]">Opening:</div>
@@ -262,7 +252,7 @@ export default function ViewReconciliation() {
                                             <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
 
                                             <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Actual Closing:</div>
-                                            <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">  {(data.opening + data.received- data.paid).toLocaleString()}</div>
+                                            <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">  {(data.opening + data.received - data.paid).toLocaleString()}</div>
                                         </div>
                                     </div>
                                 );
