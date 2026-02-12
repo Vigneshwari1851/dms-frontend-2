@@ -19,6 +19,8 @@ export default function Dashboard() {
       sellUSD: 0,
       buyTZS: 0,
       sellTZS: 0,
+      openingUSD: 0,
+      openingTZS: 0,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -103,8 +105,8 @@ export default function Dashboard() {
         <StatCard
           title="Current Balance"
           subValues={[
-            { label: "USD", value: formatValue((stats.today?.buyUSD || 0) - (stats.today?.sellUSD || 0)) },
-            { label: "TZS", value: formatValue((stats.today?.buyTZS || 0) - (stats.today?.sellTZS || 0)) },
+            { label: "USD", value: formatValue((stats.today?.openingUSD || 0) + (stats.today?.buyUSD || 0) - (stats.today?.sellUSD || 0)) },
+            { label: "TZS", value: formatValue((stats.today?.openingTZS || 0) + (stats.today?.buyTZS || 0) - (stats.today?.sellTZS || 0)) },
           ]}
           icon={profit}
         />
