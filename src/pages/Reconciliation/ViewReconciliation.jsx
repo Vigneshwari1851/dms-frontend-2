@@ -61,6 +61,9 @@ export default function ViewReconciliation() {
                         outflow = Number(deal.amount || 0);
                     }
 
+                    // console.log("inflow", inflow, "dealtype", deal.deal_type, "buycode", buyCode, "sellcode", sellCode);
+                    console.log("outflow", outflow, "dealtype", deal.deal_type, "buycode", buyCode, "sellcode", sellCode);
+
                     // Inflow (Buy Side)
                     if (buyCode) {
                         if (!currencyData[buyCode]) currencyData[buyCode] = { code: buyCode, opening: 0, received: 0, paid: 0, closing: 0 };
@@ -229,12 +232,16 @@ export default function ViewReconciliation() {
             <div className="space-y-6">
                 {/* TOP SECTION: SUMMARY + TABLES */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* TABLES */}
+                    {renderTable("Opening Balance", "bg-[#1D4CB5]", reconData.openingRows)}
+                    {renderTable("Closing Balance", "bg-[#82E890]", reconData.closingRows)}
                     {/* SUMMARY */}
                     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-fit">
-                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
+                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Summary</h3>
                         <div className="space-y-6">
                             {Object.values(reconData.currencyData || {}).map((data, idx) => {
                                 const expected = data.opening + data.received - data.paid;
+                                console.log("data.paid",data.paid )
                                 const v = data.closing - expected;
                                 const isTallied = Math.abs(v) < 0.01;
 
@@ -242,22 +249,20 @@ export default function ViewReconciliation() {
                                     <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="font-semibold text-white">{data.code}</span>
-                                            <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full border ${isTallied ? "border-gray-600 text-gray-400" : v > 0 ? "border-[#82E890] text-[#82E890]" : "border-[#FF6B6B] text-[#FF6B6B]"}`}>
-                                                {isTallied ? "Tallied" : `${v > 0 ? "+" : ""}${Math.abs(v).toLocaleString()}`}
-                                            </span>
+                                            
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
                                             <div className="text-[#8F8F8F]">Opening:</div>
                                             <div className="text-right text-white">{data.opening.toLocaleString()}</div>
 
                                             <div className="text-[#8F8F8F]">Inflow:</div>
-                                            <div className="text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : "0"}</div>
+                                            <div className="text-right text-[#82E890]">{data.received > 0 ? `${data.received.toLocaleString()}` : "0"}</div>
 
                                             <div className="text-[#8F8F8F]">Outflow:</div>
-                                            <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : "0"}</div>
+                                            <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
 
                                             <div className="text-[#8F8F8F] pt-1 border-t border-[#2A2F33]/30 mt-1">Actual Closing:</div>
-                                            <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">{data.closing.toLocaleString()}</div>
+                                            <div className="text-right text-white font-medium pt-1 border-t border-[#2A2F33]/30 mt-1">  {(data.opening + data.received- data.paid).toLocaleString()}</div>
                                         </div>
                                     </div>
                                 );
@@ -268,9 +273,6 @@ export default function ViewReconciliation() {
                         </div>
                     </div>
 
-                    {/* TABLES */}
-                    {renderTable("Opening Balance", "bg-[#1D4CB5]", reconData.openingRows)}
-                    {renderTable("Closing Balance", "bg-[#82E890]", reconData.closingRows)}
                 </div>
 
                 {/* DEALS SECTION */}
