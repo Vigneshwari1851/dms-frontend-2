@@ -545,20 +545,13 @@ export default function AddReconciliation() {
                         So this buttons only shows if !isDisabled */}
                     {!isOpening && !isDisabled && (
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => handleSaveClosing(false)}
-                                disabled={isDisabled}
-                                className="bg-[#2A2F33] text-white border border-[#4B5563] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#32383E]"
-                            >
-                                Save Draft
-                            </button>
                             {status === "In_Progress" && (
                                 <button
                                     onClick={() => handleSaveClosing(true)}
                                     disabled={isDisabled}
                                     className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB]"
                                 >
-                                    Finalize
+                                    Save Closing
                                 </button>
                             )}
                         </div>
@@ -596,102 +589,79 @@ export default function AddReconciliation() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className={`transition-all`}>
-                    {renderTable("opening", openingRows)}
-                </div>
-
-                {/* Closing Table visible if we have ID (Opening Saved) */}
-                {(step >= 2 || closingRows.some(r => r.amount)) ? (
-                    <div className={`transition-all`}>
-                        {renderTable("closing", closingRows)}
-                    </div>
-                ) : (
-                    // In Step 1 (or when Closing is hidden), show Summary here in the second column
-                    <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
-                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-[14px]">
-                                <thead>
-                                    <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-                                        <th className="py-2 px-4">Currency</th>
-                                        <th className="py-2 px-4 text-right">Opening</th>
-                                        <th className="py-2 px-4 text-right">Inflow (+)</th>
-                                        <th className="py-2 px-4 text-right">Outflow (-)</th>
-                                        <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#2A2F33]/20">
-                                    {Object.values(currencyData).map((data, idx) => {
-                                        const expected = data.opening + data.received - data.paid;
-                                        return (
-                                            <tr key={idx} className="hover:bg-[#1E2328]/30">
-                                                <td className="py-3 px-4 font-medium text-white">{data.code}</td>
-                                                <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
-                                                <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
-                                                <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
-                                                <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Summary View - Visible in Step 3 (at the bottom) */}
-            {(step >= 2 || closingRows.some(r => r.amount)) && (
-                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 mt-6">
-                    <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-[14px]">
-                            <thead>
-                                <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-                                    <th className="py-2 px-4">Currency</th>
-                                    <th className="py-2 px-4 text-right">Opening</th>
-                                    <th className="py-2 px-4 text-right">Inflow (+)</th>
-                                    <th className="py-2 px-4 text-right">Outflow (-)</th>
-                                    <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#2A2F33]/20">
-                                {Object.values(currencyData).map((data, idx) => {
-                                    const expected = data.opening + data.received - data.paid;
-                                    return (
-                                        <tr key={idx} className="hover:bg-[#1E2328]/30">
-                                            <td className="py-3 px-4 font-medium text-white">{data.code}</td>
-                                            <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
-                                            <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
-                                            <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
-                                            <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
+                    {/* Step 1: Opening Table. Step 3: Summary Table (Replacing Opening) */}
+                    {(step >= 2 || closingRows.some(r => r.amount)) ? (
+                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-[14px]">
+                                    <thead>
+                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+                                            <th className="py-2 px-4">Currency</th>
+                                            <th className="py-2 px-4 text-right">Opening</th>
+                                            <th className="py-2 px-4 text-right">Inflow (+)</th>
+                                            <th className="py-2 px-4 text-right">Outflow (-)</th>
+                                            <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
                                         </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2A2F33]/20">
+                                        {Object.values(currencyData).map((data, idx) => {
+                                            const expected = data.opening + data.received - data.paid;
+                                            return (
+                                                <tr key={idx} className="hover:bg-[#1E2328]/30">
+                                                    <td className="py-3 px-4 font-medium text-white">{data.code}</td>
+                                                    <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        renderTable("opening", openingRows)
+                    )}
                 </div>
-            )}
 
-            {/* BOTTOM SECTION */}
-            <div className="mt-6 pb-12 space-y-4">
-                {/* <div className={`bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50`}>
-                    <h3 className="text-white text-[14px] font-medium mb-3">Notes</h3>
-                    <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add any additional observations..."
-                        className="w-full bg-[#1A1F24] text-white p-4 rounded-lg border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[120px] resize-none text-[13px] transition-all"
-                    />
-                </div> */}
-
-                <div className="flex justify-end pt-4">
-                    <button
-                        onClick={() => navigate("/reconciliation")}
-                        className="text-[#8F8F8F] hover:text-white transition-colors bg-[#1E2328] px-5 py-2.5 rounded-lg text-sm border border-[#2A2F33] font-medium"
-                    >
-                        Cancel
-                    </button>
+                <div className={`transition-all`}>
+                    {/* Step 1: Summary Table. Step 3: Closing Table */}
+                    {(step >= 2 || closingRows.some(r => r.amount)) ? (
+                        renderTable("closing", closingRows)
+                    ) : (
+                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-[14px]">
+                                    <thead>
+                                        <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+                                            <th className="py-2 px-4">Currency</th>
+                                            <th className="py-2 px-4 text-right">Opening</th>
+                                            <th className="py-2 px-4 text-right">Inflow (+)</th>
+                                            <th className="py-2 px-4 text-right">Outflow (-)</th>
+                                            <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2A2F33]/20">
+                                        {Object.values(currencyData).map((data, idx) => {
+                                            const expected = data.opening + data.received - data.paid;
+                                            return (
+                                                <tr key={idx} className="hover:bg-[#1E2328]/30">
+                                                    <td className="py-3 px-4 font-medium text-white">{data.code}</td>
+                                                    <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
+                                                    <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
