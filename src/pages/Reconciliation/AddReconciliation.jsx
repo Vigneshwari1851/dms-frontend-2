@@ -11,6 +11,8 @@ import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
 import { fetchDeals } from "../../api/deals";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
+import DealsTable from "../../components/dashboard/DealsTable";
+
 
 export default function AddReconciliation() {
     const navigate = useNavigate();
@@ -583,7 +585,7 @@ export default function AddReconciliation() {
 
                 {/* Main Action Button - Available in Step 2 or if Closing Exists but not Started */}
                 <div className="flex items-center gap-3">
-                    {!["In_Progress", "Tallied", "Short", "Excess"].includes(status) && id && (
+                    {!["Tallied"].includes(status) && id && (
                         <button
                             onClick={handleStartReconciliation}
                             className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
@@ -593,6 +595,38 @@ export default function AddReconciliation() {
                     )}
                 </div>
             </div>
+
+            {/* Total Buy and Sell Cards */}
+            {id && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy</p>
+                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
+                                    TZS {todayDeals.reduce((sum, d) => {
+                                        if (d.deal_type === "buy") return sum + Number(d.amount_to_be_paid || 0);
+                                        return sum + Number(d.amount || 0);
+                                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell</p>
+                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
+                                    TZS {todayDeals.reduce((sum, d) => {
+                                        if (d.deal_type === "sell") return sum + Number(d.amount_to_be_paid || 0);
+                                        return sum + Number(d.amount || 0);
+                                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="transition-all">
@@ -635,6 +669,17 @@ export default function AddReconciliation() {
                     {renderTable("closing", closingRows)}
                 </div>
             </div>
+
+            {/* Associated Deals Section */}
+            {id && todayDeals.length > 0 && (
+                <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
+                    <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
+                        <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
+                        Associated Deals
+                    </h2>
+                    <DealsTable externalDeals={todayDeals} hideTitle={true} hideExport={true} />
+                </div>
+            )}
 
             <Toast show={toast.show} message={toast.message} type={toast.type} onHide={() => setToast({ ...toast, show: false })} />
             {confirmModal.open && (
