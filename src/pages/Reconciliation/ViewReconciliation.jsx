@@ -194,21 +194,21 @@ export default function ViewReconciliation() {
                     <div className="flex items-center gap-4">
                         <div>
                             <h1 className="text-[20px] lg:text-[24px] font-semibold">Reconciliation - {reconData.date}</h1>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
-                                    {reconData.status}
-                                </span>
-                            </div>
                         </div>
                     </div>
-                    {reconData.status !== "Tallied" && (
-                        <button
-                            onClick={handleStartReconciliation}
-                            className="bg-[#1D4CB5] text-white rounded-lg px-4 py-2 text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
-                        >
-                            <span>Start Reconciliation</span>
-                        </button>
-                    )}
+                    <div className="flex flex-col items-end gap-2">
+                        <span className={`px-3 py-0.5 rounded-full text-[12px] border ${statusStyle[reconData.status] || "border-gray-700 text-gray-400"}`}>
+                            {reconData.status}
+                        </span>
+                        {reconData.status !== "Tallied" && (
+                            <button
+                                onClick={handleStartReconciliation}
+                                className="bg-[#1D4CB5] text-white rounded-lg px-4 py-2 text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
+                            >
+                                <span>Start Reconciliation</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Total Buy and Sell Cards */}
