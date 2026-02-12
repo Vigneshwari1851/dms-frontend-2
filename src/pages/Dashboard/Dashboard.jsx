@@ -14,16 +14,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     today: {
-      dealCount: 0,
-      buyAmount: 0,
-      sellAmount: 0,
-      profit: 0,
-    },
-    yesterdayPercentage: {
-      dealCount: 0,
-      buyAmount: 0,
-      sellAmount: 0,
-      profit: 0,
+      count: 0,
+      buyUSD: 0,
+      sellUSD: 0,
+      buyTZS: 0,
+      sellTZS: 0,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -50,6 +45,8 @@ export default function Dashboard() {
     if (percentage === 0) return "";
     return `${percentage >= 0 ? "+" : ""}${percentage}% from yesterday`;
   };
+
+  const formatValue = (val) => Number(val || 0).toLocaleString();
 
   return (
     <>
@@ -80,26 +77,35 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-10">
         <StatCard
-          title="Total Deals Today"
+          title="Today's Deals"
           value={stats.today?.count || 0}
           icon={dealstoday}
         />
 
         <StatCard
-          title="Total Buy Amount (TZS)"
-          value={Number(stats.today?.sellAmount || 0).toLocaleString()}
+          title="Buy Amount"
+          subValues={[
+            { label: "USD", value: formatValue(stats.today?.buyUSD) },
+            { label: "TZS", value: formatValue(stats.today?.buyTZS) },
+          ]}
           icon={buyamount}
         />
 
         <StatCard
-          title="Total Sell Amount (TZS)"
-          value={Number(stats.today?.buyAmount || 0).toLocaleString()}
+          title="Sell Amount"
+          subValues={[
+            { label: "USD", value: formatValue(stats.today?.sellUSD) },
+            { label: "TZS", value: formatValue(stats.today?.sellTZS) },
+          ]}
           icon={sellamount}
         />
 
         <StatCard
-          title="Total Profit / Loss (TZS)"
-          value={Number(stats.today?.profit || 0).toLocaleString()}
+          title="Current Balance"
+          subValues={[
+            { label: "USD", value: formatValue((stats.today?.buyUSD || 0) - (stats.today?.sellUSD || 0)) },
+            { label: "TZS", value: formatValue((stats.today?.buyTZS || 0) - (stats.today?.sellTZS || 0)) },
+          ]}
           icon={profit}
         />
       </div>
