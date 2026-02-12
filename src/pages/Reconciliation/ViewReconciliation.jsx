@@ -118,6 +118,12 @@ export default function ViewReconciliation() {
         try {
             const result = await startReconcoliation(id);
             if (result.success) {
+                const hasClosingData = reconData.closingTotal > 0 || reconData.closingRows.some(r => r.amount > 0);
+                if (hasClosingData) {
+                    window.location.reload();
+                } else {
+                    navigate(`/reconciliation/edit/${id}`);
+                }
             } else {
                 console.error("Failed to start reconciliation:", result.error);
                 alert("Failed to start reconciliation. Please try again.");
@@ -286,14 +292,6 @@ export default function ViewReconciliation() {
                         Associated Deals
                     </h2>
                     <DealsTable externalDeals={reconData.deals.map(d => d.deal)} hideTitle={true} hideExport={true} />
-                </div>
-
-                {/* NOTES SECTION */}
-                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 pb-12">
-                    <h3 className="text-white text-[15px] font-semibold mb-3">Notes</h3>
-                    <div className="bg-[#1A1F24] p-4 rounded-lg border border-[#2A2F33] min-h-[100px] text-[13px] text-[#E3E3E3] leading-relaxed whitespace-pre-wrap">
-                        {reconData.notes || "No notes available for this reconciliation."}
-                    </div>
                 </div>
             </div>
         </div>

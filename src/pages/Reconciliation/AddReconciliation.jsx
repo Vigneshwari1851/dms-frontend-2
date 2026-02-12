@@ -32,6 +32,7 @@ export default function AddReconciliation() {
     const [isAddingCurrency, setIsAddingCurrency] = useState(false);
     const [newCurrency, setNewCurrency] = useState({ currencyName: "", isoCode: "", symbol: "" });
     const [step, setStep] = useState(1);
+    const [status, setStatus] = useState(null); // Track reconciliation status
     const [todayDeals, setTodayDeals] = useState([]);
 
     const [confirmModal, setConfirmModal] = useState({
@@ -76,6 +77,7 @@ export default function AddReconciliation() {
                     const result = await fetchReconciliationById(id);
                     const data = result.data?.data || result.data || result;
                     setNotes(data.notes?.[0]?.note || "");
+                    setStatus(data.status); // Set status
 
                     const opRows = (data.openingEntries || data.opening_entries || []).map(entry => ({
                         id: Math.random(),
@@ -94,15 +96,38 @@ export default function AddReconciliation() {
                     if (opRows.length > 0) setOpeningRows(opRows);
                     if (clRows.length > 0) setClosingRows(clRows);
 
-                    if (clRows.length > 0) {
+                    // Determine Step based on Status
+                    // Statuses: null/undefined (New), "Pending" (Opened?), "In_Progress" (Started), "Tallied"/"Short"/"Excess" (Final)
+
+                    if (["Tallied", "Short", "Excess", "In_Progress"].includes(data.status)) {
                         setStep(3);
+                    } else if (id) {
+                        // Opening Saved but NOT Started
+                        // If Closing also exists (Scenario 3 - Saved Closing but didn't Start)
+                        if (clRows.length > 0) {
+                            // We are technically in Step 3 but awaiting Start
+                            setStep(2); // Or stay in a state where Start is prominent
+                        } else {
+                            setStep(2);
+                        }
                     } else {
-                        setStep(2);
+                        setStep(1);
                     }
+
+                    if (data.deals && data.deals.length > 0) {
+                        const deals = data.deals.map(d => d.deal);
+                        setTodayDeals(deals);
+                    } else {
+                        const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
+                        setTodayDeals(dealsRes.data || []);
+                    }
+
                 } catch (err) {
                     console.error("Error fetching reconciliation:", err);
                 }
             } else if (actualCurrencies.length > 0) {
+                // New Reconciliation
+                setStep(1);
                 const usd = actualCurrencies.find(c => c.code === "USD");
                 const tzs = actualCurrencies.find(c => c.code === "TZS");
 
@@ -118,15 +143,8 @@ export default function AddReconciliation() {
                     setOpeningRows(initialOp);
                     setClosingRows(initialCl);
                 }
-            }
-            if (actualCurrencies.length > 0) {
-                // Fetch today's deals for expected balance calculation
-                try {
-                    const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
-                    setTodayDeals(dealsRes.data || []);
-                } catch (err) {
-                    console.error("Error fetching deals:", err);
-                }
+                const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
+                setTodayDeals(dealsRes.data || []);
             }
         };
         initData();
@@ -135,11 +153,7 @@ export default function AddReconciliation() {
     useEffect(() => {
         const hasOp = openingRows.some(row => row.amount);
         const hasCl = closingRows.some(row => row.amount);
-        const hasNotes = notes.trim() !== "";
-
-        if (step === 1) setShowSaveButton(hasOp);
-        else if (step === 2) setShowSaveButton(hasCl);
-        else setShowSaveButton(true);
+        // showSaveButton logic can be simplified or removed if we rely on step buttons
     }, [openingRows, closingRows, notes, step]);
 
     const handleRowChange = (section, rowId, field, value) => {
@@ -163,6 +177,7 @@ export default function AddReconciliation() {
             { id: Math.random(), currencyId: null, currencyCode: '', amount: '' }
         ]);
     };
+
     const handleCurrencySubmit = async () => {
         if (!newCurrency.currencyName || !newCurrency.isoCode || !newCurrency.symbol) {
             setToast({ show: true, message: "Please fill all fields", type: "error" });
@@ -190,6 +205,7 @@ export default function AddReconciliation() {
             setToast({ show: true, message: "Error adding currency", type: "error" });
         }
     };
+
     const removeRow = (section, rowId) => {
         setConfirmModal({
             ...confirmModal,
@@ -294,20 +310,8 @@ export default function AddReconciliation() {
         return { opTotal, clTotal, currencyData };
     };
 
-    const handleSaveReconciliation = async () => {
+    const handleSaveOpening = async () => {
         try {
-            if (step === 3 && id) {
-                setToast({ show: true, message: "Starting Reconciliation...", type: "pending" });
-                const result = await startReconcoliation(id);
-                if (result.success) {
-                    setToast({ show: true, message: "Reconciliation Started Successfully", type: "success" });
-                    setTimeout(() => navigate("/reconciliation"), 1500);
-                } else {
-                    setToast({ show: true, message: "Failed to start reconciliation", type: "error" });
-                }
-                return;
-            }
-
             const openingEntries = openingRows
                 .filter(row => row.amount && row.currencyId)
                 .map(row => ({
@@ -318,11 +322,54 @@ export default function AddReconciliation() {
                     quantity: 1
                 }));
 
-            if (!id && openingEntries.length === 0) {
-                setToast({ show: true, message: "Opening Vault balance is required to start a reconciliation.", type: "error" });
+            if (openingEntries.length === 0) {
+                setToast({ show: true, message: "Opening Vault balance is required.", type: "error" });
                 return;
             }
 
+            const payload = {
+                openingEntries,
+                notes: notes ? [notes] : [],
+            };
+            let result;
+            if (id) {
+                result = await updateReconciliation(id, payload);
+            } else {
+                result = await createReconciliation(payload);
+            }
+
+            if (result.success || result.data) {
+                const newId = id || result.data?.id || result.data?.data?.id;
+                setId(newId);
+                setStep(2);
+            } else {
+                setToast({ show: true, message: "Failed to save Opening Balance", type: "error" });
+            }
+
+        } catch (error) {
+            console.error("Save error:", error);
+            setToast({ show: true, message: "Error saving data", type: "error" });
+        }
+    };
+
+    const handleStartReconciliation = async () => {
+        if (!id) return;
+        try {
+            const result = await startReconcoliation(id);
+            if (result.success) {
+                setStatus("In_Progress");
+                setStep(3);
+            } else {
+                setToast({ show: true, message: "Failed to start reconciliation", type: "error" });
+            }
+        } catch (error) {
+            console.error("Error starting reconciliation:", error);
+            setToast({ show: true, message: "An error occurred. Please try again.", type: "error" });
+        }
+    };
+
+    const handleSaveClosing = async (isFinalizing = false) => {
+        try {
             const closingEntries = closingRows
                 .filter(row => row.amount && row.currencyId)
                 .map(row => ({
@@ -334,52 +381,57 @@ export default function AddReconciliation() {
                 }));
 
             const { currencyData } = calculateTotals();
-            let status = "In_Progress";
+            let newStatus = status;
 
-            if (closingEntries.length > 0) {
-                let hasExcess = false;
-                let hasShort = false;
-                let tallied = true;
+            // Only calculate new status if finalizing
+            if (isFinalizing) {
+                if (closingEntries.length > 0) {
+                    let hasExcess = false;
+                    let hasShort = false;
+                    let tallied = true;
 
-                Object.values(currencyData).forEach(data => {
-                    const expected = data.opening + data.received - data.paid;
-                    const v = data.closing - expected;
-                    if (Math.abs(v) >= 0.01) {
-                        tallied = false;
-                        if (v > 0) hasExcess = true;
-                        else hasShort = true;
-                    }
-                });
+                    Object.values(currencyData).forEach(data => {
+                        const expected = data.opening + data.received - data.paid;
+                        const v = data.closing - expected;
+                        if (Math.abs(v) >= 0.01) {
+                            tallied = false;
+                            if (v > 0) hasExcess = true;
+                            else hasShort = true;
+                        }
+                    });
 
-                if (tallied) status = "Tallied";
-                else if (hasShort) status = "Short";
-                else status = "Excess";
-            }
-            const payload = {
-                openingEntries,
-                closingEntries,
-                notes: notes ? [notes] : [],
-                status
-            };
-
-            let result;
-            if (id) {
-                result = await updateReconciliation(id, payload);
-            } else {
-                result = await createReconciliation(payload);
-            }
-
-            if (result.success || result.data) {
-                const newId = id || result.data?.id || result.data?.data?.id;
-                setId(newId);
-                if (openingEntries.length > 0 && closingEntries.length > 0) {
-                    setStep(3);
-                } else if (openingEntries.length > 0) {
-                    setStep(2);
+                    if (tallied) newStatus = "Tallied";
+                    else if (hasShort) newStatus = "Short";
+                    else newStatus = "Excess";
                 }
             } else {
-                setToast({ show: true, message: "Failed to save", type: "error" });
+                // Ensure we stay in In_Progress (or current status) if just saving draft
+                // If status is not set yet (unlikely here if started), default to In_Progress? 
+                // Actually relying on current 'status' is safest.
             }
+
+            const payload = {
+                closingEntries,
+                notes: notes ? [notes] : [],
+                status: newStatus
+            };
+
+            setToast({ show: true, message: isFinalizing ? "Finalizing..." : "Saving Draft...", type: "pending" });
+            const result = await updateReconciliation(id, payload);
+
+            if (result.success || result.data) {
+                if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
+                    setStatus(newStatus);
+                    setToast({ show: true, message: `Reconciliation Finalized: ${newStatus}`, type: "success" });
+                    setTimeout(() => navigate("/reconciliation"), 1500);
+                } else {
+                    setStatus(newStatus); // Update status if changed (e.g. initial save)
+                    setToast({ show: true, message: "Closing Balance Saved.", type: "success" });
+                }
+            } else {
+                setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
+            }
+
         } catch (error) {
             console.error("Save error:", error);
             setToast({ show: true, message: "Error saving data", type: "error" });
@@ -388,88 +440,133 @@ export default function AddReconciliation() {
 
     const { opTotal, clTotal, currencyData } = calculateTotals();
 
-    const renderTable = (section, rows) => (
-        <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 h-full">
-            <div className="p-4 border-b border-[#2A2F33]/50 flex justify-between items-center">
-                <h2 className="text-[16px] font-medium flex items-center gap-2 text-white">
-                    <div className={`w-1.5 h-4 rounded-full ${section === "opening" ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
-                    {section === "opening" ? "Opening Balance" : "Closing Balance"}
-                </h2>
-                <button
-                    onClick={() => addRow(section)}
-                    className="bg-[#1D4CB5]/10 text-[#1D4CB5] px-3 py-1.5 rounded-lg text-[12px] transition-all border border-[#1D4CB5]/20 hover:bg-[#1D4CB5] hover:text-white"
-                >
-                    + Add Row
-                </button>
-            </div>
+    const renderTable = (section, rows) => {
+        const isOpening = section === "opening";
 
-            <div className="">
-                <table className="w-full text-left text-[14px]">
-                    <thead>
-                        <tr className="bg-[#1B1E21] text-[#8F8F8F] border-b border-[#2A2F33]/50">
-                            <th className="px-5 py-3">Currency</th>
-                            <th className="px-5 py-3 text-right">Amount</th>
-                            <th className="px-5 py-3 w-[60px] text-center"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#2A2F33]/30">
-                        {rows.map((row) => (
-                            <tr key={row.id} className="hover:bg-[#1E2328]/30 transition-colors">
-                                <td className="px-5 py-3 min-w-[180px]">
-                                    <Dropdown
-                                        label="Select Currency"
-                                        options={currencyOptions.filter(opt =>
-                                            !rows.some(r => r.id !== row.id && r.currencyCode === opt.value)
-                                        )}
-                                        selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
-                                        onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
-                                        buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2"
-                                        disabled={step === 3}
-                                    />
-                                </td>
-                                <td className="px-5 py-3">
-                                    <input
-                                        type="number"
-                                        value={row.amount}
-                                        onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50"
-                                        disabled={step === 3}
-                                    />
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                    <button
-                                        onClick={() => removeRow(section, row.id)}
-                                        disabled={rows.length <= 1 || step === 3}
-                                        className={`p-2 rounded-lg transition-all ${rows.length > 1 && step !== 3 ? "hover:bg-red-500/10 text-[#FF6B6B]" : "text-gray-600 cursor-not-allowed opacity-30"}`}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </td>
+        // Locking Logic
+        let isDisabled = false;
+
+        const isReconStarted = status === "In_Progress";
+        const isReconFinal = ["Tallied", "Short", "Excess"].includes(status);
+        const hasSavedOpening = !!id;
+
+        if (isOpening) {
+            if (hasSavedOpening) isDisabled = true;
+        } else {
+            // Closing
+            if (isReconFinal) isDisabled = true;
+            else if (!isReconStarted && rows.some(r => r.amount && r.amount != '')) {
+                isDisabled = true;
+            }
+        }
+
+        return (
+            <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 h-full">
+                <div className="p-4 border-b border-[#2A2F33]/50 flex justify-between items-center">
+                    <h2 className="text-[16px] font-medium flex items-center gap-2 text-white">
+                        <div className={`w-1.5 h-4 rounded-full ${isOpening ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
+                        {isOpening ? "Opening Balance" : "Closing Balance"}
+                    </h2>
+                    {!isDisabled && (
+                        <button
+                            onClick={() => addRow(section)}
+                            className="bg-[#1D4CB5]/10 text-[#1D4CB5] px-3 py-1.5 rounded-lg text-[12px] transition-all border border-[#1D4CB5]/20 hover:bg-[#1D4CB5] hover:text-white"
+                        >
+                            + Add Row
+                        </button>
+                    )}
+                </div>
+
+                <div className="">
+                    <table className="w-full text-left text-[14px]">
+                        <thead>
+                            <tr className="bg-[#1B1E21] text-[#8F8F8F] border-b border-[#2A2F33]/50">
+                                <th className="px-5 py-3">Currency</th>
+                                <th className="px-5 py-3 text-right">Amount</th>
+                                <th className="px-5 py-3 w-[60px] text-center"></th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-[#2A2F33]/30">
+                            {rows.map((row) => (
+                                <tr key={row.id} className="hover:bg-[#1E2328]/30 transition-colors">
+                                    <td className="px-5 py-3 min-w-[180px]">
+                                        <Dropdown
+                                            label="Select Currency"
+                                            options={currencyOptions.filter(opt =>
+                                                !rows.some(r => r.id !== row.id && r.currencyCode === opt.value)
+                                            )}
+                                            selected={row.currencyCode ? currencyOptions.find(o => o.value === row.currencyCode)?.label : ""}
+                                            onChange={(opt) => handleCurrencyChange(section, row.id, opt)}
+                                            buttonClassName="!bg-[#1A1F24] !border-[#4B5563]/30 !py-2"
+                                            disabled={isDisabled}
+                                        />
+                                    </td>
+                                    <td className="px-5 py-3">
+                                        <input
+                                            type="number"
+                                            value={row.amount}
+                                            onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
+                                            placeholder="0.00"
+                                            className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50"
+                                            disabled={isDisabled}
+                                        />
+                                    </td>
+                                    <td className="px-5 py-3 text-center">
+                                        {!isDisabled && rows.length > 1 && (
+                                            <button
+                                                onClick={() => removeRow(section, row.id)}
+                                                className={`p-2 rounded-lg transition-all hover:bg-red-500/10 text-[#FF6B6B]`}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-            <div className="p-2 flex justify-end">
-                <button
-                    onClick={handleSaveReconciliation}
-                    disabled={step === 3 || !rows.some(r => r.amount)}
-                    className={`py-2 px-6 rounded-lg text-[13px] font-semibold flex items-center gap-2 transition-all
-                    ${step < 3 && rows.some(r => r.amount)
-                            ? (section === "opening" ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7]" : "bg-[#82E890] text-[#16191C] hover:bg-[#9EF7AB]")
-                            : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed border border-[#2A2F33]"}
-                `}
-                >
-                    <img src={save} alt="save" className={`w-3.5 h-3.5 ${section === "closing" && "brightness-0"}`} />
-                    {id ? `Update ${section === "opening" ? "Opening" : "Closing"} Vault` : `Save ${section === "opening" ? "Opening" : "Closing"} Vault`}
-                </button>
+                <div className="p-2 flex justify-end">
+                    {/* Save Buttons */}
+                    {isOpening && !isDisabled && step === 1 && (
+                        <button
+                            onClick={handleSaveOpening}
+                            disabled={!rows.some(r => r.amount)}
+                            className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2A5BD7]"
+                        >
+                            {id ? "Update Opening" : "Save Opening"}
+                        </button>
+                    )}
+                    {/* Allow Saving Closing even if not started? User's scenario 3 implies data exists. 
+                        If we Lock Closing when data exists, we can't save it again.
+                        So this buttons only shows if !isDisabled */}
+                    {!isOpening && !isDisabled && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleSaveClosing(false)}
+                                disabled={isDisabled}
+                                className="bg-[#2A2F33] text-white border border-[#4B5563] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#32383E]"
+                            >
+                                Save Draft
+                            </button>
+                            {status === "In_Progress" && (
+                                <button
+                                    onClick={() => handleSaveClosing(true)}
+                                    disabled={isDisabled}
+                                    className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB]"
+                                >
+                                    Finalize
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="">
@@ -480,49 +577,105 @@ export default function AddReconciliation() {
                         {id ? "Resume Reconciliation" : "Add Reconciliation"}
                     </h1>
                     <p className="text-[#8F8F8F] text-[13px] lg:text-[14px]">
-                        Step {step}: {step === 1 ? "Capture opening vault balances" : step === 2 ? "Capture closing vault balances" : "Settle associated deals"}
+                        Step {step}: {step === 1 ? "Capture opening vault balances" : step === 2 ? "Start Reconciliation" : "Capture closing vault balances"}
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleSaveReconciliation}
-                        disabled={step !== 3}
-                        className={`px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold ${step === 3
-                            ? "bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
-                            : "bg-[#252A2E] text-[#4F575E] cursor-not-allowed border border-[#2A2F33]"
-                            }`}
-                    >
-                        Start Reconciliation
-                    </button>
-                </div>
-            </div>
 
-            <div className="flex items-center gap-4 mb-8">
-                {[1, 2, 3].map((s) => (
-                    <div key={s} className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === s ? "bg-[#1D4CB5] text-white" : step > s ? "bg-[#82E890] text-[#16191C]" : "bg-[#252A2E] text-[#4F575E]"}`}>
-                            {step > s ? "✓" : s}
-                        </div>
-                        <div className={`text-sm ${step === s ? "text-white font-medium" : "text-[#4F575E]"}`}>
-                            {s === 1 ? "Opening" : s === 2 ? "Closing" : "Start"}
-                        </div>
-                        {s < 3 && <div className={`w-12 h-0.5 ${step > s ? "bg-[#82E890]" : "bg-[#252A2E]"}`} />}
-                    </div>
-                ))}
+                {/* Main Action Button - Available in Step 2 or if Closing Exists but not Started */}
+                <div className="flex items-center gap-3">
+                    {!["In_Progress", "Tallied", "Short", "Excess"].includes(status) && id && (
+                        <button
+                            onClick={handleStartReconciliation}
+                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
+                        >
+                            Start Reconciliation
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className={`transition-all`}>
                     {renderTable("opening", openingRows)}
                 </div>
-                <div className={`transition-all`}>
-                    {renderTable("closing", closingRows)}
-                </div>
+
+                {/* Closing Table visible if we have ID (Opening Saved) */}
+                {(step >= 2 || closingRows.some(r => r.amount)) ? (
+                    <div className={`transition-all`}>
+                        {renderTable("closing", closingRows)}
+                    </div>
+                ) : (
+                    // In Step 1 (or when Closing is hidden), show Summary here in the second column
+                    <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full">
+                        <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-[14px]">
+                                <thead>
+                                    <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+                                        <th className="py-2 px-4">Currency</th>
+                                        <th className="py-2 px-4 text-right">Opening</th>
+                                        <th className="py-2 px-4 text-right">Inflow (+)</th>
+                                        <th className="py-2 px-4 text-right">Outflow (-)</th>
+                                        <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#2A2F33]/20">
+                                    {Object.values(currencyData).map((data, idx) => {
+                                        const expected = data.opening + data.received - data.paid;
+                                        return (
+                                            <tr key={idx} className="hover:bg-[#1E2328]/30">
+                                                <td className="py-3 px-4 font-medium text-white">{data.code}</td>
+                                                <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
+                                                <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
+                                                <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
+                                                <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Summary View - Visible in Step 3 (at the bottom) */}
+            {(step >= 2 || closingRows.some(r => r.amount)) && (
+                <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 mt-6">
+                    <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Reconciliation Summary</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-[14px]">
+                            <thead>
+                                <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
+                                    <th className="py-2 px-4">Currency</th>
+                                    <th className="py-2 px-4 text-right">Opening</th>
+                                    <th className="py-2 px-4 text-right">Inflow (+)</th>
+                                    <th className="py-2 px-4 text-right">Outflow (-)</th>
+                                    <th className="py-2 px-4 text-right font-semibold text-white">Expected Closing</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#2A2F33]/20">
+                                {Object.values(currencyData).map((data, idx) => {
+                                    const expected = data.opening + data.received - data.paid;
+                                    return (
+                                        <tr key={idx} className="hover:bg-[#1E2328]/30">
+                                            <td className="py-3 px-4 font-medium text-white">{data.code}</td>
+                                            <td className="py-3 px-4 text-right text-[#A0A0A0]">{data.opening.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-right text-[#82E890]">{data.received.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-right text-[#FF6B6B]">{data.paid.toLocaleString()}</td>
+                                            <td className="py-3 px-4 text-right text-white font-bold">{expected.toLocaleString()}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* BOTTOM SECTION */}
             <div className="mt-6 pb-12 space-y-4">
-                <div className={`bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50`}>
+                {/* <div className={`bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50`}>
                     <h3 className="text-white text-[14px] font-medium mb-3">Notes</h3>
                     <textarea
                         value={notes}
@@ -530,7 +683,7 @@ export default function AddReconciliation() {
                         placeholder="Add any additional observations..."
                         className="w-full bg-[#1A1F24] text-white p-4 rounded-lg border border-[#2A2F33] focus:border-[#1D4CB5] outline-none min-h-[120px] resize-none text-[13px] transition-all"
                     />
-                </div>
+                </div> */}
 
                 <div className="flex justify-end pt-4">
                     <button
@@ -564,47 +717,5 @@ export default function AddReconciliation() {
                 </div>
             )}
         </div>
-        // summary as per currency
-        // {(step > 1 || id) && (
-        //     <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50">
-        //         <div className="space-y-4">
-        //             <h3 className="text-white text-[14px] font-medium border-b border-[#2A2F33] pb-2">Summary per Currency</h3>
-        //             <div className="overflow-x-auto">
-        //                 <table className="w-full text-left text-[13px]">
-        //                     <thead>
-        //                         <tr className="text-[#8F8F8F] border-b border-[#2A2F33]/30">
-        //                             <th className="py-2">Currency</th>
-        //                             <th className="py-2 text-right">Opening</th>
-        //                             <th className="py-2 text-right">Inflow (+)</th>
-        //                             <th className="py-2 text-right">Outflow (-)</th>
-        //                             {/* <th className="py-2 text-right">Expected</th>
-        //                             <th className="py-2 text-right">Actual Closing</th> */}
-        //                             <th className="py-2 text-right">Variance</th>
-        //                         </tr>
-        //                     </thead>
-        //                     <tbody className="divide-y divide-[#2A2F33]/20">
-        //                         {Object.entries(currencyData).map(([cid, data]) => {
-        //                             const expected = data.opening + data.received - data.paid;
-        //                             const v = data.closing - expected;
-        //                             return (
-        //                                 <tr key={cid} className="text-white">
-        //                                     <td className="py-2 font-medium">{data.code}</td>
-        //                                     <td className="py-2 text-right">{data.opening.toLocaleString()}</td>
-        //                                     <td className="py-2 text-right text-[#82E890]">{data.received > 0 ? `+${data.received.toLocaleString()}` : '0'}</td>
-        //                                     <td className="py-2 text-right text-[#FF6B6B]">{data.paid > 0 ? `-${data.paid.toLocaleString()}` : '0'}</td>
-        //                                     {/* <td className="py-2 text-right text-[#B0B0B0]">{expected.toLocaleString()}</td>
-        //                                     <td className="py-2 text-right text-white font-medium">{data.closing.toLocaleString()}</td> */}
-        //                                     <td className={`py-2 text-right font-bold ${Math.abs(v) < 0.01 ? "text-gray-500" : v > 0 ? "text-[#82E890]" : "text-[#FF6B6B]"}`}>
-        //                                         {Math.abs(v) < 0.01 ? "Tallied" : `${v > 0 ? "Excess: " : "Short: "}${v.toLocaleString()}`}
-        //                                     </td>
-        //                                 </tr>
-        //                             );
-        //                         })}
-        //                     </tbody>
-        //                 </table>
-        //             </div>
-        //         </div>
-        //     </div>
-        // )}
     );
 }
