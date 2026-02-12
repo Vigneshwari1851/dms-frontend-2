@@ -10,7 +10,7 @@ function getAuthHeaders() {
   };
 }
 
-export async function fetchUsers({ page = 1, limit = 10, orderBy = "full_name", direction = "asc" } = {}) {
+export async function fetchUsers({ page = 1, limit = 10, orderBy = "created_at", direction = "desc" } = {}) {
   try {
     const params = { page, limit, orderBy, direction };
     const queryString = new URLSearchParams(params).toString();
