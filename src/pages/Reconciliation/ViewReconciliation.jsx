@@ -4,7 +4,7 @@ import high from "../../assets/reconciliation/high.svg";
 import edit from "../../assets/Common/edit.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import DealsTable from "../../components/dashboard/DealsTable";
-import { fetchReconciliationById } from "../../api/reconcoliation";
+import { fetchReconciliationById, startReconcoliation } from "../../api/reconcoliation";
 
 export default function ViewReconciliation() {
     const { id } = useParams();
@@ -114,6 +114,20 @@ export default function ViewReconciliation() {
         fetchData();
     }, [id]);
 
+    const handleStartReconciliation = async () => {
+        try {
+            const result = await startReconcoliation(id);
+            if (result.success) {
+            } else {
+                console.error("Failed to start reconciliation:", result.error);
+                alert("Failed to start reconciliation. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error starting reconciliation:", error);
+            alert("An error occurred. Please try again.");
+        }
+    };
+
     if (loading) return <div className="text-white p-10 text-center">Loading...</div>;
     if (error) return <div className="text-red-500 p-10 text-center">{error}</div>;
     if (!reconData) return null;
@@ -181,9 +195,9 @@ export default function ViewReconciliation() {
                             </div>
                         </div>
                     </div>
-                    {reconData.status === "In_Progress" && (
+                    {reconData.status !== "Tallied" && (
                         <button
-                            onClick={() => navigate(`/reconciliation/edit/${id}`)}
+                            onClick={handleStartReconciliation}
                             className="bg-[#1D4CB5] text-white rounded-lg px-4 py-2 text-sm hover:bg-[#2A5BD7] transition-all flex items-center gap-2"
                         >
                             <span>Start Reconciliation</span>
