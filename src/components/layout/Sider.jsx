@@ -12,7 +12,6 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 export default function Sidebar({ isOpen, closeSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
-
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
     { name: "User Management", icon: usermanagement, path: "/users" },
@@ -21,6 +20,12 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reporting", icon: reporting, path: "/reports" },
   ];
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.name === "User Management" && user.role === "Maker") return false;
+    return true;
+  });
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -43,8 +48,13 @@ export default function Sidebar({ isOpen, closeSidebar }) {
       </div>
 
       <nav className="flex flex-col gap-2">
-        {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
+        {filteredMenuItems.map((item) => {
+          let isActive = location.pathname.startsWith(item.path);
+
+          // Highlight Dashboard when on My Profile page
+          if (item.name === "Dashboard" && location.pathname === "/users/my-profile") {
+            isActive = true;
+          }
 
           return (
             <button
