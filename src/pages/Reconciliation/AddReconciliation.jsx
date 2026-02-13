@@ -449,7 +449,15 @@ export default function AddReconciliation() {
             const result = await updateReconciliation(id, payload);
 
             if (result.success || result.data) {
-                setToast({ show: true, message: isFinalizing ? "Reconciliation Saved Successfully" : "Closing Balance Saved", type: "success" });
+                let toastMsg = "Closing Balance Saved";
+                if (isFinalizing) {
+                    if (newStatus === "Tallied") {
+                        toastMsg = "Reconciliation Saved Successfully";
+                    } else if (["Short", "Excess"].includes(newStatus)) {
+                        toastMsg = `Reconciliation saved with ${newStatus}`;
+                    }
+                }
+                setToast({ show: true, message: toastMsg, type: "success" });
                 setTimeout(() => setToast(prev => ({ ...prev, show: false })), 1000);
 
                 if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
@@ -483,9 +491,8 @@ export default function AddReconciliation() {
         if (isOpening) {
             if (hasSavedOpening) isDisabled = true;
         } else {
-            // Closing
-            if (isReconFinal) isDisabled = true;
-            else if (!isReconStarted && rows.some(r => r.amount && r.amount != '')) {
+            // Closing - Lock only if status is a terminal final state (Tallied, Short, Excess)
+            if (isReconFinal) {
                 isDisabled = true;
             }
         }
@@ -604,7 +611,7 @@ export default function AddReconciliation() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {id && status !== "Tallied" && (openingRows.some(r => r.amount) && closingRows.some(r => r.amount)) && (
+                    {id && ["Short", "Excess"].includes(status) && (
                         <button
                             onClick={handleStartReconciliation}
                             className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20 animate-in fade-in zoom-in-95 duration-300"
