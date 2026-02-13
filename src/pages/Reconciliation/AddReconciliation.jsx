@@ -37,6 +37,7 @@ export default function AddReconciliation() {
     const [status, setStatus] = useState(null); // Track reconciliation status
     const [todayDeals, setTodayDeals] = useState([]);
     const [dealsSummaryGenerated, setDealsSummaryGenerated] = useState(false);
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [showClosingVault, setShowClosingVault] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState({
@@ -373,6 +374,14 @@ export default function AddReconciliation() {
         }
     };
 
+    const handleGenerateSummary = () => {
+        setIsGeneratingSummary(true);
+        setTimeout(() => {
+            setIsGeneratingSummary(false);
+            setDealsSummaryGenerated(true);
+        }, 2000);
+    };
+
     const handleStartReconciliation = async () => {
         if (!id) return;
         try {
@@ -637,7 +646,7 @@ export default function AddReconciliation() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 ${dealsSummaryGenerated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Column 1: Opening Balance */}
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
@@ -648,7 +657,7 @@ export default function AddReconciliation() {
                         <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
                             <p className="text-[#8F8F8F] text-sm mb-6 text-center">Opening balance saved.</p>
                             <button
-                                onClick={() => setDealsSummaryGenerated(true)}
+                                onClick={handleGenerateSummary}
                                 className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
                             >
                                 Generate Deals Summary
@@ -711,7 +720,7 @@ export default function AddReconciliation() {
             </div>
 
             {/* Associated Deals Section */}
-            {id && todayDeals.length > 0 && (
+            {id && dealsSummaryGenerated && todayDeals.length > 0 && (
                 <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
                     <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
                         <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
@@ -740,6 +749,23 @@ export default function AddReconciliation() {
                         onCancel={() => setIsAddingCurrency(false)}
                         onSubmit={handleCurrencySubmit}
                     />
+                </div>
+            )}
+
+            {isGeneratingSummary && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[2000] p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#16191C] border border-[#2A2F33] p-8 rounded-2xl flex flex-col items-center gap-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-[#1D4CB5]/20 border-t-[#1D4CB5] rounded-full animate-spin"></div>
+                            <div className="absolute inset-x-0 -bottom-1 flex justify-center">
+                                <div className="w-2 h-2 bg-[#1D4CB5] rounded-full animate-bounce"></div>
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <h3 className="text-white text-lg font-bold mb-2">Generating Summary</h3>
+                            <p className="text-[#8F8F8F] text-sm tracking-wide">Analysing daily deals and calculations...</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
