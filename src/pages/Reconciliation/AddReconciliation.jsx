@@ -570,9 +570,9 @@ export default function AddReconciliation() {
                             <button
                                 onClick={() => handleSaveClosing(status === "In_Progress")}
                                 disabled={isDisabled}
-                                className="bg-[#82E890] text-[#16191C] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#9EF7AB] mr-16"
+                                className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2A5BD7]"
                             >
-                                Save
+                                Save & Reconcile
                             </button>
                         </div>
                     )}
@@ -645,8 +645,8 @@ export default function AddReconciliation() {
 
                 <div className="flex flex-col gap-4">
                     {id && !dealsSummaryGenerated ? (
-                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl border-2 border-dashed border-[#2A2F33] animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
-                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Opening balance saved. Generate your deals summary.</p>
+                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
+                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Opening balance saved.</p>
                             <button
                                 onClick={() => setDealsSummaryGenerated(true)}
                                 className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
@@ -656,7 +656,7 @@ export default function AddReconciliation() {
                         </div>
                     ) : dealsSummaryGenerated ? (
                         <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
-                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Ledger Summary</h3>
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Daily Deal Summary</h3>
                             <div className="space-y-6 flex-grow overflow-y-auto pr-1">
                                 {Object.values(currencyData).map((data, idx) => {
                                     const expected = data.opening + data.received - data.paid;
@@ -691,11 +691,11 @@ export default function AddReconciliation() {
 
                 <div className="flex flex-col gap-4">
                     {dealsSummaryGenerated && !showClosingVault && (
-                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl border-2 border-dashed border-[#2A2F33] animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
+                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
                             <p className="text-[#8F8F8F] text-sm mb-6 text-center">Summary generated. Enter your closing vault.</p>
                             <button
                                 onClick={() => setShowClosingVault(true)}
-                                className="px-8 py-4 bg-[#82E890] text-[#16191C] rounded-xl font-bold hover:bg-[#9EF7AB] shadow-xl hover:shadow-[#82E890]/20 transition-all transform hover:-translate-y-1"
+                                className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
                             >
                                 Enter Closing Vault
                             </button>
