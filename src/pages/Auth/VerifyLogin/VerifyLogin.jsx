@@ -156,9 +156,15 @@ function VerifyOtp() {
 
             {/* OTP INPUT */}
             <input
+              autoFocus
               type="text"
               value={formatOtp(otp)}
               onChange={(e) => setOtp(getRawOtp(e.target.value))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && otp.length === 4) {
+                  handleVerify();
+                }
+              }}
               maxLength={7}
               className={`w-full max-w-[420px] h-[47px] rounded-[10px] px-4 py-[3px] border text-black lg:text-white bg-white lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none ${error ? "border-[#EB1D2E]" : "border-[#155DFC] lg:border-[#B7BAC0]"} `}
               style={{ letterSpacing: otp ? "8px" : "normal" }}

@@ -126,25 +126,9 @@ export default function ViewCustomer() {
 
   const handleRowClick = (item) => {
     const deal = item.raw;
-    const isBuy = deal.deal_type === "Buy";
-
-    // receivedItems = what customer received, paidItems = what customer paid
-    const receivedSource = isBuy ? deal.receivedItems : deal.paidItems;
-    const paidSource = isBuy ? deal.paidItems : deal.receivedItems;
-
-    const receivedItems = (receivedSource || []).map((i) => ({
-      denomination: `${i.currency.symbol}${i.price}`,
-      quantity: Number(i.quantity),
-      total: Number(i.total)  // keep as number
-    }));
-
-    const paidItems = (paidSource || []).map((i) => ({
-      denomination: `${i.currency.symbol}${i.price}`,
-      quantity: Number(i.quantity),
-      total: Number(i.total) // keep as number
-    }));
 
     setSelectedDeal({
+      dealId: item.dealId,
       type: deal.deal_type,
       date: item.date,
       id: item.id,
@@ -154,8 +138,6 @@ export default function ViewCustomer() {
       rate: `${deal.exchange_rate || deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
       buyAmt: Number(deal.buyAmount),
       sellAmt: Number(deal.sellAmount),
-      receivedItems,
-      paidItems,
       notes: deal.remarks
     });
   };
@@ -174,50 +156,6 @@ export default function ViewCustomer() {
     </div>
   );
 
-  const DenominationTable = ({ title, items, currencyCode }) => {
-    const totalAmount = items.reduce((sum, item) => sum + (item.total || 0), 0);
-
-    return (
-      <div className="bg-[#16191C] p-2 lg:p-2 rounded-lg space-y-2 shadow-md overflow-x-auto">
-        {title && (
-          <div className="flex justify-between items-center">
-            <h3 className="text-[#8F8F8F] text-xs lg:text-sm">
-              {title}
-              {currencyCode && (
-                <span className="ml-1 text-[#8F8F8F]">({currencyCode})</span>
-              )}
-            </h3>
-          </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs min-w-[200px]">
-            <thead>
-              <tr className="text-gray-400">
-                <th className="text-left px-1 lg:px-2">Denomination</th>
-                <th className="text-center px-1 lg:px-2">Qty</th>
-                <th className="text-right px-1 lg:px-2">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((i, idx) => (
-                <tr key={idx} className="text-white rounded-lg">
-                  <td className="py-2 px-1 lg:px-2 rounded-l-lg">{i.denomination}</td>
-                  <td className="text-center py-2 px-1 lg:px-2">{i.quantity}</td>
-                  <td className="text-right py-2 px-1 lg:px-2 rounded-r-lg">{i.total.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <span className="text-xs lg:text-sm block">
-          <span className="text-[#8F8F8F]">Total Received: </span>
-          <span className="text-white">{totalAmount.toLocaleString()}</span>
-          {currencyCode && <span className="text-[#8F8F8F] ml-1">({currencyCode})</span>}
-        </span>
-      </div>
-    );
-  };
 
   let filteredData = customerDeals.filter(
     (d) =>
@@ -420,15 +358,25 @@ export default function ViewCustomer() {
               <span className="text-gray-400 text-center">Click a row to see details</span>
             ) : (
               <div className="space-y-3 lg:space-y-4 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-white font-semibold text-base lg:text-lg truncate">
+                <div
+                  className="flex items-center justify-between gap-2 cursor-pointer group"
+                  onClick={() => navigate(`/deals/edit-deal/${selectedDeal.dealId}`)}
+                  title="Click to view full deal details"
+                >
+                  <h3 className="text-white font-semibold text-base lg:text-lg truncate group-hover:text-[#7B8CFF] transition-colors">
                     Deal Detail
                   </h3>
-                  <span
-                    className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
-                  >
-                    {selectedDeal.type}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
+                    >
+                      {selectedDeal.type}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 group-hover:text-[#7B8CFF] transition-all group-hover:translate-x-0.5">
+                      <path d="M5 12h14"></path>
+                      <path d="M12 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
                 </div>
 
 
@@ -443,22 +391,12 @@ export default function ViewCustomer() {
                   <Row label="Buy Currency" value={selectedDeal.buyCurrency} />
                   <Row label="Sell Currency" value={selectedDeal.sellCurrency} />
                   <Row label="Exchange Rate" value={selectedDeal.rate} />
-                  <Row label="Amount (Buy)" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
                 </Section>
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 
-                <Section title="Denomination Details">
-                  <DenominationTable title="Denomination Received" items={selectedDeal.receivedItems} currencyCode={selectedDeal.buyCurrency} />
-                </Section>
-
-                <Section title="">
-                  <DenominationTable title="Denomination Paid" items={selectedDeal.paidItems} currencyCode={selectedDeal.sellCurrency} />
-                </Section>
-                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
-
-                <Section title="Final Summary">
-                  <Row label="Total Buy Amount" value={`${selectedDeal.buyAmt} ${selectedDeal.buyCurrency}`} />
-                  <Row label="Total Sell Amount" value={`${selectedDeal.sellAmt} ${selectedDeal.sellCurrency}`} />
+                <Section title="Amount Details">
+                  <Row label="Buy Amount" value={`${selectedDeal.buyAmt.toLocaleString()} ${selectedDeal.buyCurrency}`} />
+                  <Row label="Sell Amount" value={`${selectedDeal.sellAmt.toLocaleString()} ${selectedDeal.sellCurrency}`} />
                 </Section>
                 <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
 

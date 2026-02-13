@@ -126,41 +126,7 @@ export default function ReconciliationList() {
       totalTransactions: reconciliation.total_transactions || 0,
       closingVault: formatCurrency(reconciliation.closing_total),
       variance: formatVariance(reconciliation.difference),
-      status: reconciliation.status, // Your Table component will render the status badge
-      // actions: (
-      //   <ActionDropdown
-      //     options={[
-      //       { 
-      //         label: "View Details", 
-      //         onClick: (e) => {
-      //           e.stopPropagation(); // Prevent row click when clicking dropdown
-      //           navigate(`/reconciliation/details/${reconciliation.id}`);
-      //         }
-      //       },
-      //       { 
-      //         label: "Edit", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           navigate(`/reconciliation/edit/${reconciliation.id}`);
-      //         }
-      //       },
-      //       { 
-      //         label: "Delete", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           handleDeleteClick(reconciliation.id, reconciliation.created_at);
-      //         }
-      //       },
-      //       { 
-      //         label: reconciliation.status === "Tallied" ? "Mark as Pending" : "Mark as Tallied", 
-      //         onClick: (e) => {
-      //           e.stopPropagation();
-      //           handleStatusToggle(reconciliation.id, reconciliation.status);
-      //         }
-      //       },
-      //     ]}
-      //   />
-      // )
+      status: reconciliation.status, 
     }));
   };
 
@@ -206,32 +172,13 @@ export default function ReconciliationList() {
     }
   };
 
-  // const handleStatusToggle = (id, currentStatus) => {
-  //   const newStatus = currentStatus === "Tallied" ? "Pending" : "Tallied";
-  //   setConfirmModal({
-  //     open: true,
-  //     actionType: "statusToggle",
-  //     title: "Change Status",
-  //     message: `Are you sure you want to change status from ${currentStatus} to ${newStatus}?`,
-  //     id: id,
-  //     currentStatus,
-  //     newStatus
-  //   });
-  // };
-
   const handleConfirm = () => {
     const { actionType, id } = confirmModal;
 
     if (actionType === "delete") {
-      // Call delete API here
       console.log(`Deleting reconciliation ${id}`);
-      // After successful deletion, refresh the list
       fetchReconciliations();
     } else if (actionType === "statusToggle") {
-      // // Call update status API here
-      // console.log(`Toggling status for reconciliation ${id}`);
-      // // After successful update, refresh the list
-      // fetchReconciliations();
     }
 
     setConfirmModal({ open: false });
@@ -247,12 +194,12 @@ export default function ReconciliationList() {
   };
 
   const columns = [
-    { label: "Date", key: "date" },
-    { label: "Opening Vault", key: "openingVault" },
-    { label: "Total Transactions", key: "totalTransactions" },
-    { label: "Closing Vault", key: "closingVault" },
-    { label: "Difference / Variance", key: "variance" },
-    { label: "Status", key: "status" },
+    { label: "Date", key: "date", align: "left" },
+    { label: "Opening Vault", key: "openingVault", align: "left" },
+    { label: "Total Transactions", key: "totalTransactions", align: "left" },
+    { label: "Closing Vault", key: "closingVault", align: "left" },
+    { label: "Difference / Variance", key: "variance", align: "left" },
+    { label: "Status", key: "status", align: "left" },
 
   ];
 
@@ -269,8 +216,6 @@ export default function ReconciliationList() {
           <span className="hidden lg:inline text-[14px]">Create Reconciliation</span>
         </button>
       </div>
-
-      <p className="text-gray-400 mb-6">Manually data entry for daily vault reconciliation</p>
 
       {/* Loading State */}
       {loading && (

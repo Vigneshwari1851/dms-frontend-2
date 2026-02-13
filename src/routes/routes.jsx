@@ -20,7 +20,6 @@ import EditDeal from "../pages/Deal/EditDeal";
 import ReconciliationList from "../pages/Reconciliation/ReconciliationList";
 import ListReport from "../pages/Report/ListReport";
 import AddReconciliation from "../pages/Reconciliation/AddReconciliation";
-import ViewReconciliation from "../pages/Reconciliation/ViewReconciliation";
 import ListCustomer from "../pages/Customer/ListCustomer";
 import AddCustomer from "../pages/Customer/AddCustomer";
 import ViewCustomer from "../pages/Customer/ViewCustomer";
@@ -51,12 +50,12 @@ export default function AppRoutes() {
         <Route path="reports" element={<ListReport />} />
         {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
         <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
-        <Route path="reconciliation/details/:id" element={<ViewReconciliation />} />
+        <Route path="reconciliation/details/:id" element={<AddReconciliation />} />
         <Route path="customer-info" element={<ListCustomer />} />
         <Route path="customer-info/add-customer" element={<AddCustomer />} />
         <Route path="customer-info/view/:id" element={<ViewCustomer />} />
         <Route path="users/my-profile" element={<MyProfile />} />
-        <Route path="/reconciliation/edit/:id" element={<AddReconciliation />} />
+        <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
       </Route>
     </Routes>
   );

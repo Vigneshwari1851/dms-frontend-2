@@ -749,6 +749,14 @@ export default function EditDeal() {
                     {/* Split Payments History - Conditional */}
                     {txnMode?.toLowerCase() !== "cash" && (
                         <div className="mt-4 space-y-6">
+                            {/* Balance Display */}
+                            <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-xl p-4 flex justify-between items-center">
+                                <span className="text-[#ABABAB] text-sm">Remaining Balance</span>
+                                <span className={`text-lg font-bold ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                                    {currencySymbols[txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency]} {Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                            </div>
+
                             {txnType?.toLowerCase() === "buy" ? (
                                 <PaymentHistory
                                     title="Payments Paid History"

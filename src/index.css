@@ -6,6 +6,7 @@
 
 .scrollbar-grey::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .scrollbar-grey::-webkit-scrollbar-thumb {
