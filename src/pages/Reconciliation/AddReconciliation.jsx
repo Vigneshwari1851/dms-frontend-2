@@ -6,7 +6,7 @@ import Dropdown from "../../components/common/Dropdown";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
-import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation } from "../../api/reconcoliation";
+import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation, fetchReconcoliation } from "../../api/reconcoliation";
 import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
 import { fetchDeals } from "../../api/deals";
 import NotificationCard from "../../components/common/Notification";
@@ -18,6 +18,7 @@ export default function AddReconciliation() {
     const navigate = useNavigate();
     const { id: paramId } = useParams();
     const [id, setId] = useState(paramId);
+    const [yesterdayAvgRate, setYesterdayAvgRate] = useState(null);
 
     const [openingRows, setOpeningRows] = useState([
         { id: Date.now(), currencyId: null, currencyCode: '', amount: '' }
@@ -163,6 +164,12 @@ export default function AddReconciliation() {
                 }
                 const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
                 setTodayDeals(dealsRes.data || []);
+
+                // Fetch previous reconciliation for "Yesterday's Avg"
+                const prevRecons = await fetchReconcoliation({ limit: 1 });
+                if (prevRecons?.data?.length > 0) {
+                    setYesterdayAvgRate(prevRecons.data[0].total_avg || prevRecons.data[0].totalAvg || 0);
+                }
             }
         };
         initData();
@@ -243,6 +250,33 @@ export default function AddReconciliation() {
     const calculateTotals = () => {
         const currencyData = {};
 
+        const usdBuyRates = [];
+        const usdSellRates = [];
+        let totalBuyTZS = 0;
+        let totalSellTZS = 0;
+
+        todayDeals.forEach(deal => {
+            const buyCode = currencyOptions.find(o => o.id === deal.buy_currency_id)?.value;
+            const sellCode = currencyOptions.find(o => o.id === deal.sell_currency_id)?.value;
+            const rate = Number(deal.exchange_rate || 0);
+            const amount = Number(deal.amount || 0);
+
+            if (deal.deal_type === "buy" && buyCode === "USD") {
+                usdBuyRates.push(rate);
+                totalBuyTZS += (Number(deal.amount_to_be_paid || 0));
+            } else if (deal.deal_type === "sell" && sellCode === "USD") {
+                usdSellRates.push(rate);
+                totalSellTZS += (Number(deal.amount_to_be_paid || 0));
+            }
+        });
+
+        const buyDealsRate = usdBuyRates.length > 0 ? (usdBuyRates.reduce((a, b) => a + b, 0) / usdBuyRates.length) : 0;
+        const sellDealsRate = usdSellRates.length > 0 ? (usdSellRates.reduce((a, b) => a + b, 0) / usdSellRates.length) : 0;
+        // Total Avg is the midpoint of these simple averages
+        const totalAvg = (buyDealsRate > 0 && sellDealsRate > 0)
+            ? ((buyDealsRate + sellDealsRate) / 2)
+            : (buyDealsRate || sellDealsRate || 0);
+
         // 1. Opening
         openingRows.forEach(row => {
             if (!row.currencyId) return;
@@ -254,66 +288,44 @@ export default function AddReconciliation() {
 
         // 2. Deals (Received/Paid)
         todayDeals.forEach(deal => {
-            const hasItems = (deal.receivedItems?.length > 0 || deal.paidItems?.length > 0);
+            const buyCid = deal.buy_currency_id;
+            const sellCid = deal.sell_currency_id;
+            const amount = Number(deal.amount || 0);
+            const amountToBePaid = Number(deal.amount_to_be_paid || 0);
 
-            if (hasItems) {
-                (deal.receivedItems || []).forEach(item => {
-                    const cid = item.currency_id;
-                    if (!currencyData[cid]) {
-                        const c = currencyOptions.find(o => o.id === cid);
-                        currencyData[cid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+            if (deal.deal_type === "buy") {
+                if (buyCid) {
+                    if (!currencyData[buyCid]) {
+                        const c = currencyOptions.find(o => o.id === buyCid);
+                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
                     }
-                    currencyData[cid].received += Number(item.total || 0);
-                });
-                (deal.paidItems || []).forEach(item => {
-                    const cid = item.currency_id;
-                    if (!currencyData[cid]) {
-                        const c = currencyOptions.find(o => o.id === cid);
-                        currencyData[cid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                    currencyData[buyCid].received += amount;
+                }
+                if (sellCid) {
+                    if (!currencyData[sellCid]) {
+                        const c = currencyOptions.find(o => o.id === sellCid);
+                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
                     }
-                    currencyData[cid].paid += Number(item.total || 0);
-                });
-            } else {
-                const buyCid = deal.buy_currency_id;
-                const sellCid = deal.sell_currency_id;
-                const amount = Number(deal.amount || 0);
-                const amountToBePaid = Number(deal.amount_to_be_paid || 0);
-
-                if (deal.deal_type === "buy") {
-                    if (buyCid) {
-                        if (!currencyData[buyCid]) {
-                            const c = currencyOptions.find(o => o.id === buyCid);
-                            currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
-                        }
-                        currencyData[buyCid].received += amount;
+                    currencyData[sellCid].paid += amountToBePaid;
+                }
+            } else if (deal.deal_type === "sell") {
+                if (buyCid) {
+                    if (!currencyData[buyCid]) {
+                        const c = currencyOptions.find(o => o.id === buyCid);
+                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
                     }
-                    if (sellCid) {
-                        if (!currencyData[sellCid]) {
-                            const c = currencyOptions.find(o => o.id === sellCid);
-                            currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
-                        }
-                        currencyData[sellCid].paid += amountToBePaid;
+                    currencyData[buyCid].received += amountToBePaid;
+                }
+                if (sellCid) {
+                    if (!currencyData[sellCid]) {
+                        const c = currencyOptions.find(o => o.id === sellCid);
+                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
                     }
-                } else if (deal.deal_type === "sell") {
-                    if (buyCid) {
-                        if (!currencyData[buyCid]) {
-                            const c = currencyOptions.find(o => o.id === buyCid);
-                            currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
-                        }
-                        currencyData[buyCid].received += amountToBePaid;
-                    }
-                    if (sellCid) {
-                        if (!currencyData[sellCid]) {
-                            const c = currencyOptions.find(o => o.id === sellCid);
-                            currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
-                        }
-                        currencyData[sellCid].paid += amount;
-                    }
+                    currencyData[sellCid].paid += amount;
                 }
             }
         });
 
-        // 3. Actual Closing
         closingRows.forEach(row => {
             if (!row.currencyId) return;
             if (!currencyData[row.currencyId]) {
@@ -322,10 +334,48 @@ export default function AddReconciliation() {
             currencyData[row.currencyId].closing += Number(row.amount || 0);
         });
 
-        const opTotal = Object.values(currencyData).reduce((sum, d) => sum + d.opening, 0);
-        const clTotal = Object.values(currencyData).reduce((sum, d) => sum + d.closing, 0);
+        // 4. Valuation Calculations
+        let totalOpeningValue = 0;
+        let totalClosingValue = 0;
 
-        return { opTotal, clTotal, currencyData };
+        Object.values(currencyData).forEach(data => {
+            if (data.code === "USD") {
+                totalOpeningValue += (data.opening * (yesterdayAvgRate || totalAvg));
+                totalClosingValue += (data.closing * totalAvg);
+            } else if (data.code === "TZS") {
+                totalOpeningValue += data.opening;
+                totalClosingValue += data.closing;
+            } else {
+                totalOpeningValue += (data.opening * totalAvg);
+                totalClosingValue += (data.closing * totalAvg);
+            }
+        });
+
+        const profitLoss =  totalOpeningValue - totalClosingValue;
+
+        console.log("Reconciliation Valuation Debug:", {
+            yesterdayAvgRate,
+            buyDealsRate,
+            sellDealsRate,
+            totalAvg,
+            totalOpeningValue,
+            totalClosingValue,
+            profitLoss,
+            totalBuyTZS,
+            totalSellTZS
+        });
+
+        return {
+            currencyData,
+            buyDealsRate,
+            sellDealsRate,
+            totalAvg,
+            totalOpeningValue,
+            totalClosingValue,
+            profitLoss,
+            totalBuyTZS,
+            totalSellTZS
+        };
     };
 
     const handleSaveOpening = async () => {
@@ -622,36 +672,45 @@ export default function AddReconciliation() {
                 </div>
             </div>
 
-            {dealsSummaryGenerated && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
-                        <div className="flex items-center justify-between">
+            {dealsSummaryGenerated && (() => {
+                const totals = calculateTotals();
+                return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
                             <div>
-                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy</p>
-                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
-                                    TZS {todayDeals.reduce((sum, d) => {
-                                        if (d.deal_type === "buy") return sum + Number(d.amount_to_be_paid || 0);
-                                        return sum + Number(d.amount || 0);
-                                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy (TZS)</p>
+                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
+                                    TZS {totals.totalBuyTZS.toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
+                            <div>
+                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell (TZS)</p>
+                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
+                                    TZS {totals.totalSellTZS.toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        {/* <div className="bg-blue-900/20 rounded-xl p-4 border border-blue-500/30">
+                            <div>
+                                <p className="text-blue-300 text-[13px] mb-1 font-semibold">Avg Valuation</p>
+                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
+                                    {totals.totalAvg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                </p>
+                            </div>
+                        </div> */}
+                        <div className={`rounded-xl p-4 border ${totals.profitLoss >= 0 ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"}`}>
+                            <div>
+                                <p className={`${totals.profitLoss >= 0 ? "text-green-300" : "text-red-300"} text-[13px] mb-1 font-semibold`}>Total Profit / Loss</p>
+                                <p className={`text-white text-[18px] lg:text-[20px] font-bold`}>
+                                    TZS {totals.profitLoss.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell</p>
-                                <p className="text-white text-[20px] lg:text-[24px] font-bold">
-                                    TZS {todayDeals.reduce((sum, d) => {
-                                        if (d.deal_type === "sell") return sum + Number(d.amount_to_be_paid || 0);
-                                        return sum + Number(d.amount || 0);
-                                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                );
+            })()}
 
             <div className={`grid grid-cols-1 ${dealsSummaryGenerated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Column 1: Opening Balance */}
@@ -674,7 +733,7 @@ export default function AddReconciliation() {
                         <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
                             <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Daily Deal Summary</h3>
                             <div className="space-y-6 flex-grow overflow-y-auto pr-1">
-                                {Object.values(currencyData).map((data, idx) => {
+                                {Object.values(calculateTotals().currencyData).map((data, idx) => {
                                     const expected = data.opening + data.received - data.paid;
                                     return (
                                         <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
