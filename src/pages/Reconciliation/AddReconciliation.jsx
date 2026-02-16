@@ -40,6 +40,7 @@ export default function AddReconciliation() {
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [showClosingVault, setShowClosingVault] = useState(false);
     const [hasSavedClosing, setHasSavedClosing] = useState(false);
+    const [backendStats, setBackendStats] = useState(null);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -82,7 +83,7 @@ export default function AddReconciliation() {
                 const result = await fetchReconciliationById(id);
                 const data = result.data?.data || result.data || result;
                 setNotes(data.notes?.[0]?.note || "");
-                setStatus(data.status); 
+                setStatus(data.status);
                 const opRows = (data.openingEntries || data.opening_entries || []).map(entry => ({
                     id: Math.random(),
                     currencyId: entry.currency_id,
@@ -139,6 +140,18 @@ export default function AddReconciliation() {
                     setShowClosingVault(true);
                     setStep(3);
                 }
+
+                setBackendStats({
+                    totalTzsPaid: data.totalTzsPaid,
+                    totalTzsReceived: data.totalTzsReceived,
+                    totalForeignBought: data.totalForeignBought,
+                    totalForeignSold: data.totalForeignSold,
+                    totalWeightedAvgRate: data.totalWeightedAvgRate,
+                    valuationRate: data.valuationRate,
+                    totalOpeningValue: data.totalOpeningValue,
+                    totalClosingValue: data.totalClosingValue,
+                    profitLoss: data.profitLoss
+                });
 
             } catch (err) {
                 console.error("Error fetching reconciliation:", err);
@@ -485,10 +498,6 @@ export default function AddReconciliation() {
                     else if (hasShort) newStatus = "Short";
                     else newStatus = "Excess";
                 }
-            } else {
-                // Ensure we stay in In_Progress (or current status) if just saving draft
-                // If status is not set yet (unlikely here if started), default to In_Progress? 
-                // Actually relying on current 'status' is safest.
             }
 
             const payload = {
@@ -543,7 +552,6 @@ export default function AddReconciliation() {
         if (isOpening) {
             if (hasSavedOpening) isDisabled = true;
         } else {
-            // Closing - Lock only if status is a terminal final state (Tallied, Short, Excess)
             if (hasSavedClosing || isReconFinal) {
                 isDisabled = true;
             }
@@ -676,46 +684,127 @@ export default function AddReconciliation() {
 
             {dealsSummaryGenerated && (() => {
                 const totals = calculateTotals();
+                const openingUSD = openingRows.reduce((acc, r) => r.currencyCode === "USD" ? acc + Number(r.amount || 0) : acc, 0);
+                const openingTZS = openingRows.reduce((acc, r) => r.currencyCode === "TZS" ? acc + Number(r.amount || 0) : acc, 0);
+                const closingUSD = closingRows.reduce((acc, r) => r.currencyCode === "USD" ? acc + Number(r.amount || 0) : acc, 0);
+                const closingTZS = closingRows.reduce((acc, r) => r.currencyCode === "TZS" ? acc + Number(r.amount || 0) : acc, 0);
+
+                const stats = {
+                    buyTZS: backendStats?.totalTzsPaid ?? totals.totalBuyTZS,
+                    sellTZS: backendStats?.totalTzsReceived ?? totals.totalSellTZS,
+                    buyVol: backendStats?.totalForeignBought ?? 0,
+                    sellVol: backendStats?.totalForeignSold ?? 0,
+                    valRate: backendStats?.valuationRate ?? totals.totalAvg,
+                    opVal: backendStats?.totalOpeningValue ?? totals.totalOpeningValue,
+                    clVal: backendStats?.totalClosingValue ?? totals.totalClosingValue,
+                    pl: backendStats?.profitLoss ?? totals.profitLoss,
+                    opUSD: openingUSD,
+                    opTZS: openingTZS,
+                    clUSD: closingUSD,
+                    clTZS: closingTZS
+                };
+
                 return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
-                            <div>
-                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Buy (TZS)</p>
-                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
-                                    TZS {totals.totalBuyTZS.toLocaleString()}
-                                </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 mb-6">
+                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50">
+                            {/* Header with TOTAL */}
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[#8F8F8F] text-[11px]">Opening Balance</span>
+                                <span className="text-[12px] font-semibold">
+                                    {(stats.opVal ?? 0).toLocaleString(undefined, {
+                                        maximumFractionDigits: 0
+                                    })}
+                                </span>
+                            </div>
+
+                            {/* Breakdown */}
+                            <div className="space-y-0.5 text-[12px]">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-white/60">
+                                        USD: ${ (stats.opUSD ?? 0).toLocaleString() }
+                                    </span>
+                                    <span className="text-white">
+                                        → {((stats.opUSD ?? 0) * (stats.valRate ?? 0)).toLocaleString(undefined, {
+                                            maximumFractionDigits: 0
+                                        })}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <span className="text-white/60">TZS:</span>
+                                    <span className="text-white">
+                                        {(stats.opTZS ?? 0).toLocaleString()}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-[#16191C] rounded-xl p-4 border border-[#2A2F33]/50">
-                            <div>
-                                <p className="text-[#8F8F8F] text-[13px] mb-1">Total Sell (TZS)</p>
-                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
-                                    TZS {totals.totalSellTZS.toLocaleString()}
-                                </p>
+
+                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50">
+                            {/* Header with TOTAL */}
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[#8F8F8F] text-[11px]">Closing Balance</span>
+                                <span className="text-[12px] font-semibold">
+                                    {(stats.clVal ?? 0).toLocaleString(undefined, {
+                                        maximumFractionDigits: 0
+                                    })}
+                                </span>
+                            </div>
+
+                            {/* Breakdown */}
+                            <div className="space-y-0.5 text-[12px]">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-white/60">
+                                        USD: ${(stats.clUSD ?? 0).toLocaleString()}
+                                    </span>
+                                    <span className="text-white">
+                                        → {((stats.clUSD ?? 0) * (stats.valRate ?? 0)).toLocaleString(undefined, {
+                                            maximumFractionDigits: 0
+                                        })}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <span className="text-white/60">TZS:</span>
+                                    <span className="text-white">
+                                        {(stats.clTZS ?? 0).toLocaleString()}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        {/* <div className="bg-blue-900/20 rounded-xl p-4 border border-blue-500/30">
-                            <div>
-                                <p className="text-blue-300 text-[13px] mb-1 font-semibold">Avg Valuation</p>
-                                <p className="text-white text-[18px] lg:text-[20px] font-bold">
-                                    {totals.totalAvg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                                </p>
-                            </div>
-                        </div> */}
-                        <div className={`rounded-xl p-4 border ${totals.profitLoss >= 0 ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"}`}>
-                            <div>
-                                <p className={`${totals.profitLoss >= 0 ? "text-green-300" : "text-red-300"} text-[13px] mb-1 font-semibold`}>Total Profit / Loss</p>
-                                <p className={`text-white text-[18px] lg:text-[20px] font-bold`}>
-                                    TZS {totals.profitLoss.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                </p>
-                            </div>
-                        </div>
+
+                        {/* <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
+                            <p className="text-white text-[12px] mb-1">Total Buying</p>
+                            <p className="text-white text-[14px] font-bold">${stats.buyVol.toLocaleString()}</p>
+                            <p className="text-white text-[14px] font-bold mt-2">
+                                TZS {stats.buyTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </p>
+                        </div>  */}
+                        {/* <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
+                            <p className="text-white text-[12px] mb-1">Total Selling</p>
+                            <p className="text-white text-[14px] font-bold">${stats.sellVol.toLocaleString()}</p>
+                            <p className="text-white text-[14px] font-bold mt-2">
+                                TZS {stats.sellTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </p>
+                        </div>  */}
+
+                      <div className={`rounded-xl p-3 border ${
+                        stats.pl >= 0
+                            ? "bg-green-900/20 border-green-500/30"
+                            : "bg-red-900/20 border-red-500/30"
+                    } text-center`}>
+                        <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
+                            Today's Profit / Loss (TZS)
+                        </p>
+                        <p className="text-white text-[14px] font-bold mt-4">
+                            {stats.pl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </p>
+                    </div>
+
                     </div>
                 );
             })()}
 
             <div className={`grid grid-cols-1 ${dealsSummaryGenerated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
-                {/* Column 1: Opening Balance */}
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
                 </div>
