@@ -832,7 +832,7 @@ export default function CreateDeal() {
           </div>
 
           {/* Notes */}
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <label className="block text-[#ABABAB] text-[14px] mb-2">
               Notes (Optional)
             </label>
@@ -848,7 +848,7 @@ export default function CreateDeal() {
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
             />
-          </div>
+          </div> */}
 
           {/* Desktop Buttons */}
           <div className="hidden lg:flex justify-end gap-3 mt-8">

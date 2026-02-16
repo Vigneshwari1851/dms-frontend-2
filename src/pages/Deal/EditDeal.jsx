@@ -838,7 +838,7 @@ export default function EditDeal() {
                     )}
 
                     {/* Notes - NOT editable */}
-                    <div className="mt-6">
+                    {/* <div className="mt-6">
                         <label className="block text-[#ABABAB] text-[14px] mb-2">
                             Notes (Optional)
                         </label>
@@ -855,7 +855,7 @@ export default function EditDeal() {
                             onChange={(e) => setNotes(e.target.value)}
                             disabled={true} // Always disabled
                         />
-                    </div>
+                    </div> */}
 
                     {/* Mobile Action Buttons (sticky at bottom, same line) */}
                     {editMode && (
