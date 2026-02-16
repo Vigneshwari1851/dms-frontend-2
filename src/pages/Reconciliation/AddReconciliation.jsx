@@ -40,6 +40,7 @@ export default function AddReconciliation() {
     const [dealsSummaryGenerated, setDealsSummaryGenerated] = useState(false);
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [showClosingVault, setShowClosingVault] = useState(false);
+    const [hasSavedClosing, setHasSavedClosing] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -99,6 +100,9 @@ export default function AddReconciliation() {
                         amount: entry.amount || ""
                     }));
 
+                    if (clRows.length > 0) {
+                        setHasSavedClosing(true);
+                    }
                     if (opRows.length > 0) setOpeningRows(opRows);
 
                     if (clRows.length > 0) {
@@ -508,6 +512,7 @@ export default function AddReconciliation() {
                     }
                 }
                 setToast({ show: true, message: toastMsg, type: "success" });
+                setHasSavedClosing(true);
                 setTimeout(() => setToast(prev => ({ ...prev, show: false })), 1000);
 
                 if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
@@ -542,7 +547,7 @@ export default function AddReconciliation() {
             if (hasSavedOpening) isDisabled = true;
         } else {
             // Closing - Lock only if status is a terminal final state (Tallied, Short, Excess)
-            if (isReconFinal) {
+            if (hasSavedClosing || isReconFinal) {
                 isDisabled = true;
             }
         }
