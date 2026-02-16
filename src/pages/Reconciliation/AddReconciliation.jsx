@@ -8,7 +8,6 @@ import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation, fetchReconcoliation } from "../../api/reconcoliation";
 import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
-import { fetchDeals } from "../../api/deals";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import DealsTable from "../../components/dashboard/DealsTable";
@@ -134,9 +133,7 @@ export default function AddReconciliation() {
                         const deals = data.deals.map(d => d.deal);
                         setTodayDeals(deals);
                     } else {
-                        const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
-                        const dealsData = dealsRes.data?.data || dealsRes.data || [];
-                        setTodayDeals(dealsData);
+                        setTodayDeals([]);
                     }
 
                     if (["Tallied", "Short", "Excess"].includes(data.status)) {
@@ -166,8 +163,7 @@ export default function AddReconciliation() {
                     setOpeningRows(initialOp);
                     setClosingRows(initialCl);
                 }
-                const dealsRes = await fetchDeals({ dateFilter: "today", limit: 1000 });
-                setTodayDeals(dealsRes.data || []);
+                setTodayDeals([]);
 
                 // Fetch previous reconciliation for "Yesterday's Avg"
                 const prevRecons = await fetchReconcoliation({ limit: 1 });
@@ -355,7 +351,7 @@ export default function AddReconciliation() {
             }
         });
 
-        const profitLoss =  totalOpeningValue - totalClosingValue;
+        const profitLoss = totalOpeningValue - totalClosingValue;
 
         console.log("Reconciliation Valuation Debug:", {
             yesterdayAvgRate,
@@ -791,7 +787,7 @@ export default function AddReconciliation() {
             </div>
 
             {/* Associated Deals Section */}
-            {id && dealsSummaryGenerated && todayDeals.length > 0 && (
+            {id && dealsSummaryGenerated && todayDeals && todayDeals.length > 0 && (
                 <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
                     <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
                         <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
