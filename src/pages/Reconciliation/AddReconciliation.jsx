@@ -141,6 +141,8 @@ export default function AddReconciliation() {
                     setStep(3);
                 }
 
+                const usdStats = data.currencyStats ? Object.values(data.currencyStats).find(s => s.code === "USD") : null;
+
                 setBackendStats({
                     totalTzsPaid: data.totalTzsPaid,
                     totalTzsReceived: data.totalTzsReceived,
@@ -150,7 +152,9 @@ export default function AddReconciliation() {
                     valuationRate: data.valuationRate,
                     totalOpeningValue: data.totalOpeningValue,
                     totalClosingValue: data.totalClosingValue,
-                    profitLoss: data.profitLoss
+                    profitLoss: data.profitLoss,
+                    avgBuyRate: usdStats?.avgBuyRate,
+                    avgSellRate: usdStats?.avgSellRate
                 });
 
             } catch (err) {
@@ -778,14 +782,15 @@ export default function AddReconciliation() {
                         stats.pl >= 0
                             ? "bg-green-900/20 border-green-500/30"
                             : "bg-red-900/20 border-red-500/30"
-                    } text-center`}>
-                        <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
-                            Today's Profit / Loss (TZS)
-                        </p>
-                        <p className="text-white text-[14px] font-bold mt-4">
-                            {stats.pl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                        </p>
-                    </div>
+                            } text-center`}>
+                            <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
+                            Today's Profit / Loss
+                            </p>
+                            <p className="text-white text-[16px] font-bold mt-2">
+                                <span className="text-[16px] mr-1 opacity-60 font-medium">TZS </span>
+                                {stats.pl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </p>
+                        </div>
 
                     </div>
                 );
