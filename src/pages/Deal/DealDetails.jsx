@@ -114,16 +114,28 @@ export default function DealDetails() {
           </div>
         </div>
 
-        {/* Deal Type & Mode */}
+        {/* Deal Type & Currency Pair */}
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
-              Deal Type
+              Transaction Type
             </label>
             <p className="text-white text-lg capitalize">
               {deal.deal_type === "buy" ? "Buy" : "Sell"}
             </p>
           </div>
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Currency Pair
+            </label>
+            <p className="text-white text-lg">
+              {deal.buyCurrency === "TZS" ? `${deal.sellCurrency}/TZS` : `${deal.buyCurrency}/TZS`}
+            </p>
+          </div>
+        </div>
+
+        {/* Transaction Mode & Amount */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Mode
@@ -132,22 +144,18 @@ export default function DealDetails() {
               {deal.transaction_mode}
             </p>
           </div>
-        </div>
-
-        {/* Amount & Rate */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">Amount</label>
             <p className="text-white text-lg">{formatCurrency(deal.amount)}</p>
           </div>
+        </div>
+
+        {/* Rate, Status & Dates */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">Rate</label>
             <p className="text-white text-lg">{formatCurrency(deal.exchange_rate)}</p>
           </div>
-        </div>
-
-        {/* Status & Dates */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">Status</label>
             <span

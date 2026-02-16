@@ -33,6 +33,8 @@ export default function CreateDeal() {
   const [enableDenomination, setEnableDenomination] = useState(true);
   const [manualReceivedTotal, setManualReceivedTotal] = useState("");
   const [manualPaidTotal, setManualPaidTotal] = useState("");
+  const [currencyPair, setCurrencyPair] = useState("");
+  const [currencyPairOptions, setCurrencyPairOptions] = useState([]);
   const [errors, setErrors] = useState({});
 
   // Currencies list
@@ -83,13 +85,18 @@ export default function CreateDeal() {
           setCurrencyOptions(codes);
           setCurrencyMap(map);
           setCurrencySymbols(symbols);
+          const pairs = [];
+          codes.forEach(code => {
+            if (code !== "TZS") {
+              pairs.push(`${code}/TZS`);
+            }
+          });
+          setCurrencyPairOptions(pairs);
 
-          if (!buyCurrency && map["USD"]) {
-            setBuyCurrency("USD");
-          }
-
-          if (!sellCurrency && map["TZS"]) {
-            setSellCurrency("TZS");
+          if (map["USD"] && map["TZS"]) {
+            setCurrencyPair("USD/TZS");
+          } else if (pairs.length > 0) {
+            setCurrencyPair(pairs[0]);
           }
         }
       } catch (error) {
@@ -103,50 +110,52 @@ export default function CreateDeal() {
     loadCurrencies();
   }, []);
 
-  useEffect(() => {
-    if (txnType && currencyMap["TZS"] && currencyMap["USD"]) {
-      if (txnType.toLowerCase() === "buy") {
-        setBuyCurrency("USD");
-        setSellCurrency("TZS");
-        setDenominationReceived(prev => prev.map(item => ({
-          ...item,
-          currency_id: currencyMap["USD"]
-        })));
-        setDenominationPaid(prev => prev.map(item => ({
-          ...item,
-          currency_id: currencyMap["TZS"]
-        })));
-      } else if (txnType.toLowerCase() === "sell") {
-        setSellCurrency("USD");
-        setBuyCurrency("TZS");
-        setDenominationReceived(prev => prev.map(item => ({
-          ...item,
-          currency_id: currencyMap["TZS"]
-        })));
-        setDenominationPaid(prev => prev.map(item => ({
-          ...item,
-          currency_id: currencyMap["USD"]
-        })));
-      }
+  const handleUpdateTransaction = (pair = currencyPair, type = txnType) => {
+    setCurrencyPair(pair);
+    setTxnType(type);
+
+    if (!type) {
+      setBuyCurrency("");
+      setSellCurrency("");
+      return;
     }
-  }, [txnType, currencyMap]);
 
-  // Calculate amount to be paid when amount or rate changes
-  // useEffect(() => {
-  //   if (amount && rate && amount > 0 && rate > 0) {
-  //     let calculatedAmount = 0;
-  //     if (txnType?.toLowerCase() === "sell") {
-  //       calculatedAmount = parseFloat(amount) / parseFloat(rate);
-  //     } else {
-  //       calculatedAmount = parseFloat(amount) * parseFloat(rate);
-  //     }
-  //     setAmountToBePaid(calculatedAmount.toFixed(2));
-  //   } else {
-  //     setAmountToBePaid(0);
-  //   }
-  // }, [amount, rate, txnType]);
+    let bCurr = "";
+    let sCurr = "";
 
-    useEffect(() => {
+    if (type === "Buy") {
+      bCurr = foreign;
+      sCurr = local;
+    } else {
+      bCurr = local;
+      sCurr = foreign;
+    }
+
+    setBuyCurrency(bCurr);
+    setSellCurrency(sCurr);
+
+    // Update denominations
+    const buyId = currencyMap[bCurr];
+    const sellId = currencyMap[sCurr];
+    if (buyId) {
+      setDenominationReceived(prev => prev.map(item => ({ ...item, currency_id: buyId })));
+    }
+    if (sellId) {
+      setDenominationPaid(prev => prev.map(item => ({ ...item, currency_id: sellId })));
+    }
+
+    setErrors(prev => ({ ...prev, currencyPair: "", txnType: "" }));
+  };
+
+  const handlePairSelect = (pair) => {
+    handleUpdateTransaction(pair, txnType);
+  };
+
+  const handleTxnTypeChange = (type) => {
+    handleUpdateTransaction(currencyPair, type);
+  };
+
+  useEffect(() => {
     if (amount && rate && amount > 0 && rate > 0) {
       const calculatedAmount = parseFloat(amount) * parseFloat(rate);
       setAmountToBePaid(calculatedAmount.toFixed(2));
@@ -218,8 +227,8 @@ export default function CreateDeal() {
       newErrors.txnMode = "Transaction mode is required";
     }
 
-    if (!buyCurrency) {
-      newErrors.buyCurrency = "Buy currency type is required";
+    if (!currencyPair) {
+      newErrors.currencyPair = "Currency pair is required";
     }
 
     if (!sellCurrency) {
@@ -462,6 +471,9 @@ export default function CreateDeal() {
       setSelectedCustomer(null);
       setPhone("");
       setTxnType("");
+      setBuyCurrency("");
+      setSellCurrency("");
+      setCurrencyPair("");
     }
 
     if (searchTimeoutRef.current) {
@@ -508,9 +520,34 @@ export default function CreateDeal() {
     setPhone(displayPhone);
     setCustomerDropdownOpen(false);
 
-    setTxnType(
-      customer?.deal_type === "sell" ? "Sell" : "Buy"
-    );
+    const defaultTxnType = customer?.deal_type?.toLowerCase() === "sell" ? "Sell" : "Buy";
+    setTxnType(defaultTxnType);
+
+    if (currencyMap["USD"] && currencyMap["TZS"]) {
+      const pair = "USD/TZS";
+      setCurrencyPair(pair);
+
+      let bCurr = "USD";
+      let sCurr = "TZS";
+
+      if (defaultTxnType === "Sell") {
+        bCurr = "TZS";
+        sCurr = "USD";
+      }
+
+      setBuyCurrency(bCurr);
+      setSellCurrency(sCurr);
+
+      // Update denominations
+      const buyId = currencyMap[bCurr];
+      const sellId = currencyMap[sCurr];
+      if (buyId) {
+        setDenominationReceived(prev => prev.map(item => ({ ...item, currency_id: buyId })));
+      }
+      if (sellId) {
+        setDenominationPaid(prev => prev.map(item => ({ ...item, currency_id: sellId })));
+      }
+    }
 
     setErrors(prev => ({ ...prev, customer: "" }));
   };
@@ -523,6 +560,7 @@ export default function CreateDeal() {
   );
 
   const handleCurrencySelect = (currency, type) => {
+    // This function is now superseded by handlePairSelect but kept for backward compatibility if needed in other parts
     if (type === 'buy') {
       setBuyCurrency(currency);
       setBuyCurrencyOpen(false);
@@ -645,56 +683,28 @@ export default function CreateDeal() {
         </div>
 
         {/* Row 2 - Transaction fields (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mt-6">
           {/* 1. Transaction Type */}
-          <div className="w-full">
+          <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-            <div className="w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white">
-              {txnType}
+            <Dropdown
+              label="Type"
+              options={["Buy", "Sell"]}
+              selected={txnType}
+              onChange={(val) => {
+                handleTxnTypeChange(val);
+              }}
+              className="w-full"
+            />
+            <div className="min-h-3.5 mt-1">
+              {errors.txnType && (
+                <p className="text-red-400 text-[11px]">{errors.txnType}</p>
+              )}
             </div>
-            <div className="min-h-3.5 mt-1" />
           </div>
 
-          {/* 2. First Currency (Buy / Sell based on txnType) */}
-          {txnType.toLowerCase() === "sell" ? (
-            <div>
-              <label className="text-[#ABABAB] text-sm mb-1 block">
-                Sell Currency Type <span className="text-red-500">*</span>
-              </label>
-              <Dropdown
-                label="Sell Currency"
-                options={sellCurrencyOptions}
-                selected={sellCurrency}
-                onChange={(val) => {
-                  handleCurrencySelect(val, "sell");
-                  setErrors(prev => ({ ...prev, sellCurrency: "" }));
-                }}
-                className="w-full"
-              />
-              <div className="h-3.5 mt-1" />
-            </div>
-          ) : (
-            <div>
-              <label className="text-[#ABABAB] text-sm mb-1 block">
-                Buy Currency Type <span className="text-red-500">*</span>
-              </label>
-              <Dropdown
-                label="Buy Currency"
-                options={buyCurrencyOptions}
-                selected={buyCurrency}
-                onChange={(val) => {
-                  handleCurrencySelect(val, "buy");
-                  setErrors(prev => ({ ...prev, buyCurrency: "" }));
-                }}
-                className="w-full"
-              />
-              <div className="h-3.5 mt-1" />
-            </div>
-          )}
-
-          {/* 3. Transaction Mode */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Mode <span className="text-red-500">*</span>
@@ -716,34 +726,26 @@ export default function CreateDeal() {
             </div>
           </div>
 
-          {/* 4. Second Currency (Opposite) */}
-          {txnType.toLowerCase() === "sell" ? (
-            <div>
-              <label className="text-[#ABABAB] text-sm mb-1 block">
-                Buy Currency Type <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed opacity-70"
-                value={buyCurrency}
-                readOnly
-              />
-              <div className="h-3.5 mt-1" />
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Currency Pair <span className="text-red-500">*</span>
+            </label>
+            <Dropdown
+              label="Select Pair"
+              options={currencyPairOptions}
+              selected={currencyPair}
+              onChange={(val) => {
+                handlePairSelect(val);
+              }}
+              className="w-full"
+            />
+            <div className="min-h-3.5 mt-1">
+              {errors.currencyPair && (
+                <p className="text-red-400 text-[11px]">{errors.currencyPair}</p>
+              )}
             </div>
-          ) : (
-            <div>
-              <label className="text-[#ABABAB] text-sm mb-1 block">
-                Sell Currency Type <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full h-10 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed opacity-70"
-                value={sellCurrency}
-                readOnly
-              />
-              <div className="h-3.5 mt-1" />
-            </div>
-          )}
+          </div>
 
-          {/* 5. Amount */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
@@ -772,7 +774,7 @@ export default function CreateDeal() {
             </div>
           </div>
 
-          {/* 6. Rate */}
+          {/* 4. Rate */}
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Rate <span className="text-red-500">*</span>

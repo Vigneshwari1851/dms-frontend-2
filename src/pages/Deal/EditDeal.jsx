@@ -141,6 +141,8 @@ export default function EditDeal() {
     const [manualPaidTotal, setManualPaidTotal] = useState("");
     const [amountEdited, setAmountEdited] = useState(false);
     const [originalAmount, setOriginalAmount] = useState("");
+    const [currencyPair, setCurrencyPair] = useState("");
+    const [currencyPairOptions, setCurrencyPairOptions] = useState([]);
 
     // Currencies data
     const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -225,6 +227,22 @@ export default function EditDeal() {
                     setCurrencyOptions(data.map((c) => c.code));
                     setCurrencyMap(map);
                     setCurrencySymbols(symbols);
+
+                    // Generate currency pairs (Always Foreign/TZS)
+                    const codes = data.map(c => c.code);
+                    const pairs = [];
+                    codes.forEach(code => {
+                        if (code !== "TZS") {
+                            pairs.push(`${code}/TZS`);
+                        }
+                    });
+                    setCurrencyPairOptions(pairs);
+
+                    if (map["USD"] && map["TZS"]) {
+                        setCurrencyPair("USD/TZS");
+                    } else if (pairs.length > 0) {
+                        setCurrencyPair(pairs[0]);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching currencies:", error);
@@ -235,6 +253,52 @@ export default function EditDeal() {
 
         loadCurrencies();
     }, []);
+
+    const handleUpdateTransaction = (pair = currencyPair, type = txnType) => {
+        setCurrencyPair(pair);
+        setTxnType(type);
+
+        if (!type) {
+            setBuyCurrency("");
+            setSellCurrency("");
+            return;
+        }
+
+        const [foreign] = pair.split("/");
+        const local = "TZS";
+
+        let bCurr = "";
+        let sCurr = "";
+
+        if (type === "Buy") {
+            bCurr = foreign;
+            sCurr = local;
+        } else {
+            bCurr = local;
+            sCurr = foreign;
+        }
+
+        setBuyCurrency(bCurr);
+        setSellCurrency(sCurr);
+
+        // Update denominations
+        const buyId = currencyMap[bCurr];
+        const sellId = currencyMap[sCurr];
+        if (buyId) {
+            setDenominationReceived(prev => prev.map(item => ({ ...item, currency_id: buyId })));
+        }
+        if (sellId) {
+            setDenominationPaid(prev => prev.map(item => ({ ...item, currency_id: sellId })));
+        }
+    };
+
+    const handlePairSelect = (pair) => {
+        handleUpdateTransaction(pair, txnType);
+    };
+
+    const handleTxnTypeChange = (type) => {
+        handleUpdateTransaction(currencyPair, type);
+    };
 
     const handleAddReceivedSplit = () => {
         setDenominationReceived([...denominationReceived, { price: "", quantity: 1, total: 0, currency_id: currencyMap[buyCurrency] }]);
@@ -288,6 +352,12 @@ export default function EditDeal() {
 
         setBuyCurrency(buyCurrencyFromResponse);
         setSellCurrency(sellCurrencyFromResponse);
+
+        // Deduce currency pair
+        if (buyCurrencyFromResponse && sellCurrencyFromResponse) {
+            const foreign = buyCurrencyFromResponse === "TZS" ? sellCurrencyFromResponse : buyCurrencyFromResponse;
+            setCurrencyPair(`${foreign}/TZS`);
+        }
 
         console.log("Buy currency set to:", buyCurrencyFromResponse);
         console.log("Sell currency set to:", sellCurrencyFromResponse);
@@ -633,9 +703,9 @@ export default function EditDeal() {
                     </div>
 
                     {/* Row 2 - Transaction fields (Responsive Grid) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mt-6">
-                        {/* Transaction Type - NOT editable */}
-                        <div className="w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mt-6">
+                        {/* 1. Transaction Type */}
+                        <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Type <span className="text-red-500">*</span>
                             </label>
@@ -644,7 +714,7 @@ export default function EditDeal() {
                             </div>
                         </div>
 
-                        {/* Transaction Mode - EDITABLE */}
+                        {/* 2. Currency Pair */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Transaction Mode <span className="text-red-500">*</span>
@@ -659,22 +729,21 @@ export default function EditDeal() {
                             />
                         </div>
 
-                        {/* Buy Currency Type - NOT editable */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
-                                Buy Currency Type <span className="text-red-500">*</span>
+                                Currency Pair <span className="text-red-500">*</span>
                             </label>
                             <Dropdown
-                                label="Buy Currency"
-                                options={currencyOptions}
-                                selected={buyCurrency}
-                                onChange={() => { }}
+                                label="Select Pair"
+                                options={currencyPairOptions}
+                                selected={currencyPair}
+                                onChange={(val) => handlePairSelect(val)}
                                 className="w-full"
                                 disabled={true}
                             />
                         </div>
 
-                        {/* Amount - EDITABLE if Pending */}
+                        {/* 4. Amount */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
@@ -689,22 +758,7 @@ export default function EditDeal() {
                             />
                         </div>
 
-                        {/* Sell Currency Type - NOT editable */}
-                        <div>
-                            <label className="text-[#ABABAB] text-sm mb-1 block">
-                                Sell Currency Type <span className="text-red-500">*</span>
-                            </label>
-                            <Dropdown
-                                label="Sell Currency"
-                                options={currencyOptions}
-                                selected={sellCurrency}
-                                onChange={() => { }}
-                                className="w-full"
-                                disabled={true}
-                            />
-                        </div>
-
-                        {/* Rate - EDITABLE if Pending */}
+                        {/* 5. Rate */}
                         <div>
                             <label className="text-[#ABABAB] text-sm mb-1 block">
                                 Rate <span className="text-red-500">*</span>
