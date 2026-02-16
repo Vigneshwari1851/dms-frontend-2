@@ -365,19 +365,6 @@ export default function AddReconciliation() {
         });
 
         const profitLoss = totalOpeningValue - totalClosingValue;
-
-        console.log("Reconciliation Valuation Debug:", {
-            yesterdayAvgRate,
-            buyDealsRate,
-            sellDealsRate,
-            totalAvg,
-            totalOpeningValue,
-            totalClosingValue,
-            profitLoss,
-            totalBuyTZS,
-            totalSellTZS
-        });
-
         return {
             currencyData,
             buyDealsRate,
