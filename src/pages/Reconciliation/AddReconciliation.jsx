@@ -74,105 +74,105 @@ export default function AddReconciliation() {
         }
     };
 
-    useEffect(() => {
-        const initData = async () => {
-            const actualCurrencies = await loadCurrencies();
+    const fetchReconciliationDetails = async () => {
+        const actualCurrencies = await loadCurrencies();
 
-            if (actualCurrencies.length > 0 && id) {
-                try {
-                    const result = await fetchReconciliationById(id);
-                    const data = result.data?.data || result.data || result;
-                    setNotes(data.notes?.[0]?.note || "");
-                    setStatus(data.status); // Set status
+        if (actualCurrencies.length > 0 && id) {
+            try {
+                const result = await fetchReconciliationById(id);
+                const data = result.data?.data || result.data || result;
+                setNotes(data.notes?.[0]?.note || "");
+                setStatus(data.status); 
+                const opRows = (data.openingEntries || data.opening_entries || []).map(entry => ({
+                    id: Math.random(),
+                    currencyId: entry.currency_id,
+                    currencyCode: entry.currency?.code,
+                    amount: entry.amount || ""
+                }));
 
-                    const opRows = (data.openingEntries || data.opening_entries || []).map(entry => ({
-                        id: Math.random(),
-                        currencyId: entry.currency_id,
-                        currencyCode: entry.currency?.code,
-                        amount: entry.amount || ""
-                    }));
+                const clRows = (data.closingEntries || data.closing_entries || []).map(entry => ({
+                    id: Math.random(),
+                    currencyId: entry.currency_id,
+                    currencyCode: entry.currency?.code,
+                    amount: entry.amount || ""
+                }));
 
-                    const clRows = (data.closingEntries || data.closing_entries || []).map(entry => ({
-                        id: Math.random(),
-                        currencyId: entry.currency_id,
-                        currencyCode: entry.currency?.code,
-                        amount: entry.amount || ""
-                    }));
+                if (clRows.length > 0) {
+                    setHasSavedClosing(true);
+                }
+                if (opRows.length > 0) setOpeningRows(opRows);
 
+                if (clRows.length > 0) {
+                    setClosingRows(clRows);
+                } else {
+                    const usd = actualCurrencies.find(c => c.code === "USD");
+                    const tzs = actualCurrencies.find(c => c.code === "TZS");
+                    if (usd && tzs) {
+                        setClosingRows([
+                            { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                            { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                        ]);
+                    }
+                }
+
+                if (["Tallied", "Short", "Excess", "In_Progress"].includes(data.status)) {
+                    setStep(3);
+                } else if (id) {
                     if (clRows.length > 0) {
-                        setHasSavedClosing(true);
-                    }
-                    if (opRows.length > 0) setOpeningRows(opRows);
-
-                    if (clRows.length > 0) {
-                        setClosingRows(clRows);
+                        setStep(2);
                     } else {
-                        const usd = actualCurrencies.find(c => c.code === "USD");
-                        const tzs = actualCurrencies.find(c => c.code === "TZS");
-                        if (usd && tzs) {
-                            setClosingRows([
-                                { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
-                                { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
-                            ]);
-                        }
+                        setStep(2);
                     }
-
-                    if (["Tallied", "Short", "Excess", "In_Progress"].includes(data.status)) {
-                        setStep(3);
-                    } else if (id) {
-                        if (clRows.length > 0) {
-                            setStep(2);
-                        } else {
-                            setStep(2);
-                        }
-                    } else {
-                        setStep(1);
-                    }
-
-                    if (data.deals && data.deals.length > 0) {
-                        const deals = data.deals.map(d => d.deal);
-                        setTodayDeals(deals);
-                    } else {
-                        setTodayDeals([]);
-                    }
-
-                    if (["Tallied", "Short", "Excess"].includes(data.status)) {
-                        setDealsSummaryGenerated(true);
-                        setShowClosingVault(true);
-                        setStep(3);
-                    }
-
-                } catch (err) {
-                    console.error("Error fetching reconciliation:", err);
+                } else {
+                    setStep(1);
                 }
-            } else if (actualCurrencies.length > 0) {
-                // New Reconciliation
-                setStep(1);
-                const usd = actualCurrencies.find(c => c.code === "USD");
-                const tzs = actualCurrencies.find(c => c.code === "TZS");
 
-                if (usd && tzs) {
-                    const initialOp = [
-                        { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
-                        { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
-                    ];
-                    const initialCl = [
-                        { id: Date.now() + 2, currencyId: usd.id, currencyCode: usd.code, amount: '' },
-                        { id: Date.now() + 3, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
-                    ];
-                    setOpeningRows(initialOp);
-                    setClosingRows(initialCl);
+                if (data.deals && data.deals.length > 0) {
+                    const deals = data.deals.map(d => d.deal);
+                    setTodayDeals(deals);
+                } else {
+                    setTodayDeals([]);
                 }
-                setTodayDeals([]);
 
-                // Fetch previous reconciliation for "Yesterday's Avg"
-                const prevRecons = await fetchReconcoliation({ limit: 1 });
-                if (prevRecons?.data?.length > 0) {
-                    setYesterdayAvgRate(prevRecons.data[0].total_avg || prevRecons.data[0].totalAvg || 0);
+                if (["Tallied", "Short", "Excess"].includes(data.status)) {
+                    setDealsSummaryGenerated(true);
+                    setShowClosingVault(true);
+                    setStep(3);
                 }
+
+            } catch (err) {
+                console.error("Error fetching reconciliation:", err);
             }
-        };
-        initData();
+        } else if (actualCurrencies.length > 0) {
+            // New Reconciliation
+            setStep(1);
+            const usd = actualCurrencies.find(c => c.code === "USD");
+            const tzs = actualCurrencies.find(c => c.code === "TZS");
+
+            if (usd && tzs) {
+                const initialOp = [
+                    { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                    { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                ];
+                const initialCl = [
+                    { id: Date.now() + 2, currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                    { id: Date.now() + 3, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                ];
+                setOpeningRows(initialOp);
+                setClosingRows(initialCl);
+            }
+            setTodayDeals([]);
+
+            // Fetch previous reconciliation for "Yesterday's Avg"
+            const prevRecons = await fetchReconcoliation({ limit: 1 });
+            if (prevRecons?.data?.length > 0) {
+                setYesterdayAvgRate(prevRecons.data[0].total_avg || prevRecons.data[0].totalAvg || 0);
+            }
+        }
+    };
+
+    useEffect(() => {
+        fetchReconciliationDetails();
     }, [id]);
 
     useEffect(() => {
@@ -439,6 +439,7 @@ export default function AddReconciliation() {
             if (result.success) {
                 setStatus("In_Progress");
                 setStep(3);
+                await fetchReconciliationDetails();
             } else {
                 setToast({ show: true, message: "Failed to start reconciliation", type: "error" });
             }
