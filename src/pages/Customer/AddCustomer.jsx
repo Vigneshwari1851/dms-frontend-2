@@ -19,8 +19,25 @@ export default function AddCustomer() {
 
     const validate = () => {
         const newErrors = {};
-        if (!fullName.trim()) newErrors.fullName = "Full Name is required";
-        if (!phone.trim()) newErrors.phone = "Phone number is required";
+        if (!fullName.trim()) {
+            newErrors.fullName = "Full Name is required";
+        } else if (!/^[a-zA-Z\s]+$/.test(fullName)) {
+            newErrors.fullName = "Name should only contain letters and spaces";
+        }
+
+        if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            newErrors.email = "Invalid email format";
+        }
+
+        if (!phone.trim()) {
+            newErrors.phone = "Phone number is required";
+        } else {
+            const digits = phone.replace(/\D/g, "");
+            if (digits.length < 10) {
+                newErrors.phone = "Phone number must be at least 10 digits";
+            }
+        }
+
         if (!deal_type) newErrors.deal_type = "Deal type is required";
 
         if (phoneExists) {
@@ -31,48 +48,48 @@ export default function AddCustomer() {
     };
 
     useEffect(() => {
-    const checkPhone = async () => {
-        const digits = phone.replace(/\D/g, "");
+        const checkPhone = async () => {
+            const digits = phone.replace(/\D/g, "");
 
-        if (digits.length < 10) {
-        setPhoneExists(false);
-        setExistingCustomerName("");
-        return;
-        }
+            if (digits.length < 10) {
+                setPhoneExists(false);
+                setExistingCustomerName("");
+                return;
+            }
 
-        const phoneHash = await hashValue(digits);
+            const phoneHash = await hashValue(digits);
 
-        const customers =
-        JSON.parse(localStorage.getItem("customers_local")) || [];
+            const customers =
+                JSON.parse(localStorage.getItem("customers_local")) || [];
 
-        const found = customers.find(
-        (c) => c.phoneHash === phoneHash
-        );
+            const found = customers.find(
+                (c) => c.phoneHash === phoneHash
+            );
 
-        if (found) {
-        setPhoneExists(true);
-        setExistingCustomerName(found.name);
-        } else {
-        setPhoneExists(false);
-        setExistingCustomerName("");
-        }
-    };
+            if (found) {
+                setPhoneExists(true);
+                setExistingCustomerName(found.name);
+            } else {
+                setPhoneExists(false);
+                setExistingCustomerName("");
+            }
+        };
 
-    checkPhone();
+        checkPhone();
     }, [phone]);
 
     const storeCustomerLocally = (name, phone) => {
         const customers =
-        JSON.parse(localStorage.getItem("customers_local")) || [];
+            JSON.parse(localStorage.getItem("customers_local")) || [];
 
         const exists = customers.some((c) => c.phone === phone);
 
         if (!exists) {
-        customers.push({ name, phone });
-        localStorage.setItem(
-            "customers_local",
-            JSON.stringify(customers)
-        );
+            customers.push({ name, phone });
+            localStorage.setItem(
+                "customers_local",
+                JSON.stringify(customers)
+            );
         }
     };
 
@@ -81,34 +98,34 @@ export default function AddCustomer() {
         if (!validate()) return;
 
         const payload = {
-        name: fullName,
-        email: email || "",
-        phone_number: phone,
-        deal_type,
+            name: fullName,
+            email: email || "",
+            phone_number: phone,
+            deal_type,
         };
 
         const res = await addCustomer(payload);
 
         if (res.success) {
-        storeCustomerLocally(fullName, phone.replace(/\D/g, ""));
+            storeCustomerLocally(fullName, phone.replace(/\D/g, ""));
 
-        navigate("/customer-info", {
-            state: {
-            toast: {
-                message: "Customer added successfully",
-                type: "success",
-            },
-            },
-        });
+            navigate("/customer-info", {
+                state: {
+                    toast: {
+                        message: "Customer added successfully",
+                        type: "success",
+                    },
+                },
+            });
         } else {
-        navigate("/customer-info", {
-            state: {
-            toast: {
-                message: "Failed to add customer",
-                type: "error",
-            },
-            },
-        });
+            navigate("/customer-info", {
+                state: {
+                    toast: {
+                        message: "Failed to add customer",
+                        type: "error",
+                    },
+                },
+            });
         }
     };
 
@@ -131,18 +148,20 @@ export default function AddCustomer() {
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
-                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2`}
+                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${errors.fullName ? "border border-red-500" : ""}`}
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^[a-zA-Z\s]*$/.test(val)) setFullName(val);
+                        }}
                     />
-                    {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mt-6">
                     <div>
                         <label className="block font-normal text-sm text-[#ABABAB]  mb-1">Email</label>
                         <input
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 `}
+                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${errors.email ? "border border-red-500" : ""}`}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -154,8 +173,7 @@ export default function AddCustomer() {
 
                         <input
                             className={`w-full bg-[#16191C] rounded-lg px-3 py-2 border
-                                ${
-                                isPhoneValid && phoneExists
+                                ${(isPhoneValid && phoneExists) || errors.phone
                                     ? "border-red-500"
                                     : "border-transparent"
                                 }`}
@@ -164,41 +182,30 @@ export default function AddCustomer() {
                                 const value = e.target.value;
                                 const digitsOnly = value.replace(/\D/g, "");
                                 if (digitsOnly.length > 15) return;
-                                setPhone(value);
+                                setPhone(digitsOnly);
                             }}
                         />
                         {isPhoneValid && phoneExists && (
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="text-red-400 text-xs">
-                                Phone number already exists
-                                </p>
-                            </div>
-                            )}
-
-                            {errors.phone && !phoneExists && (
                             <p className="text-red-400 text-xs mt-1">
-                                {errors.phone}
+                                Duplicate phone number
                             </p>
-                            )}
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm text-[#ABABAB] mt-2 mb-2">
-                        Customer Type <span className="text-red-500">*</span>
+                            Customer Type <span className="text-red-500">*</span>
                         </label>
                         <Dropdown
                             label="Customer Type"
                             options={["Buy", "Sell"]}
                             selected={
                                 deal_type === "buy" ? "Buy" :
-                                deal_type === "sell" ? "Sell" :
-                                ""
+                                    deal_type === "sell" ? "Sell" :
+                                        ""
                             }
                             onChange={(val) => setDealType(val.toLowerCase())}
-                            className="w-full"
+                            className={`w-full ${errors.deal_type ? "border border-red-500 rounded-lg" : ""}`}
                         />
-                        {errors.deal_type && (
-                        <p className="text-red-400 text-xs mt-1">{errors.deal_type}</p>
-                        )}
                     </div>
                 </div>
                 <div className="flex gap-3 mt-8 lg:justify-end">
@@ -210,7 +217,8 @@ export default function AddCustomer() {
                     </button>
                     <button
                         onClick={handleAddCustomer}
-                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 lg:px-6 py-3 lg:py-2 rounded-lg text-sm font-medium"
+                        disabled={phoneExists}
+                        className={`flex-1 lg:flex-none flex items-center justify-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 lg:px-6 py-3 lg:py-2 rounded-lg text-sm font-medium ${phoneExists ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         <img src={add} alt="add" className="w-5 h-5" />
                         <span className="lg:hidden">Save</span>

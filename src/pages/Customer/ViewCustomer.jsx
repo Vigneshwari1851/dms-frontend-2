@@ -8,6 +8,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
+import { hashValue } from "../../utils/hash";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ export default function ViewCustomer() {
   const [initialData, setInitialData] = useState(null);
   const [customerDeals, setCustomerDeals] = useState([]);
   const [selectedDeal, setSelectedDeal] = useState(null);
+  const [phoneExists, setPhoneExists] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
@@ -81,16 +83,77 @@ export default function ViewCustomer() {
     loadCustomer();
   }, [id, navigate]);
 
+  useEffect(() => {
+    const checkPhone = async () => {
+      const digits = formData.phone_number.replace(/\D/g, "");
+
+      if (digits.length < 10) {
+        setPhoneExists(false);
+        return;
+      }
+
+      // Don't count as duplicate if it's the current customer's phone
+      if (initialData && digits === initialData.phone_number.replace(/\D/g, "")) {
+        setPhoneExists(false);
+        return;
+      }
+
+      const phoneHash = await hashValue(digits);
+      const customers = JSON.parse(localStorage.getItem("customers_local")) || [];
+      const found = customers.find((c) => c.phoneHash === phoneHash);
+
+      if (found) {
+        setPhoneExists(true);
+      } else {
+        setPhoneExists(false);
+      }
+    };
+
+    if (editMode) {
+      checkPhone();
+    }
+  }, [formData.phone_number, editMode, initialData]);
+
   const handleChange = (e) => {
-    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setFormData((p) => ({ ...p, [e.target.name]: value }));
+    const { name, value, type, checked } = e.target;
+    let newValue = type === "checkbox" ? checked : value;
+
+    if (name === "name") {
+      if (!/^[a-zA-Z\s]*$/.test(newValue)) return;
+    }
+
+    if (name === "phone_number") {
+      newValue = newValue.replace(/\D/g, "");
+      if (newValue.length > 15) return;
+    }
+
+    setFormData((p) => ({ ...p, [name]: newValue }));
   };
 
   const validate = () => {
     const e = {};
-    if (!formData.name) e.name = "Full Name is required";
-    if (!formData.email) e.email = "Email is required";
-    if (!formData.phone_number) e.phone_number = "Phone number is required";
+    if (!formData.name.trim()) {
+      e.name = "Full Name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      e.name = "Name should only contain letters and spaces";
+    }
+
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      e.email = "Invalid email format";
+    }
+
+    if (!formData.phone_number.trim()) {
+      e.phone_number = "Phone number is required";
+    } else {
+      const digits = formData.phone_number.replace(/\D/g, "");
+      if (digits.length < 10) {
+        e.phone_number = "Phone number must be at least 10 digits";
+      }
+    }
+
+    if (phoneExists) {
+      e.phone = "Duplicate phone number";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -218,7 +281,8 @@ export default function ViewCustomer() {
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white"
+                disabled={phoneExists}
+                className={`flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] px-4 py-2 rounded-md text-white ${phoneExists ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <img src={saveIcon} alt="save" className="w-4 h-4" />
                 Save
@@ -234,19 +298,21 @@ export default function ViewCustomer() {
             <div>
               <div className="mb-4">
                 <label className="block text-sm text-[#ABABAB] mb-1">Full Name</label>
-                <input name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                <input name="name" value={formData.name} onChange={handleChange} className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border ${errors.name ? "border-red-500" : "border-[#2A2F33]"} focus:border-blue-500`} />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div>
                   <label className="block text-sm text-[#ABABAB] mb-1">Email</label>
-                  <input name="email" value={formData.email} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                  <input name="email" value={formData.email} onChange={handleChange} className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border ${errors.email ? "border-red-500" : "border-[#2A2F33]"} focus:border-blue-500`} />
                 </div>
                 <div>
                   <label className="block text-sm text-[#ABABAB] mb-1">Phone</label>
-                  <input name="phone_number" value={formData.phone_number} onChange={handleChange} className="w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border border-[#2A2F33] focus:border-blue-500" />
-                  {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
+                  <input name="phone_number" value={formData.phone_number} onChange={handleChange} className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border ${errors.phone_number || phoneExists ? "border-red-500" : "border-[#2A2F33]"} focus:border-blue-500`} />
+                  {phoneExists && (
+                    <p className="text-red-400 text-xs mt-1">
+                      Duplicate phone number
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="mt-6">
@@ -421,7 +487,8 @@ export default function ViewCustomer() {
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B]"
+            disabled={phoneExists}
+            className={`flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B] ${phoneExists ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             Save
           </button>
