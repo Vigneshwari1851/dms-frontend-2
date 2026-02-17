@@ -177,12 +177,12 @@ export default function Table({
   }, [filteredData, sortConfig]);
 
   return (
-    <div className="mt-6 w-full overflow-x-hidden">
+    <div className="mt-6 w-full scrollbar-grey">
       {/* HEADER */}
       {showHeader && (
         <div className="bg-[#1A1F24] rounded-t-lg px-3 sm:px-5 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between w-full gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full lg:w-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between flex-wrap w-full gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full lg:w-auto flex-wrap">
               <div className="min-w-0">
                 <h2 className="text-white text-base sm:text-lg font-semibold">{title}</h2>
                 {subtitle && (
@@ -199,7 +199,7 @@ export default function Table({
                       onSearch && onSearch(e.target.value);
                     }}
                     placeholder="Search..."
-                    className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-full sm:w-64 lg:w-99"
+                    className="bg-[#131619] h-9 text-white text-sm px-9 rounded-lg outline-none w-full sm:w-64 lg:w-[300px] xl:w-[400px]"
                   />
                   <img
                     src={searchIcon}
@@ -210,7 +210,7 @@ export default function Table({
               )}
             </div>
             {showRightSection && (
-              <div className="flex flex-row items-center gap-2 sm:gap-4 w-full lg:w-auto lg:flex-nowrap">
+              <div className="flex flex-row flex-wrap items-center gap-3 sm:gap-4 w-full lg:w-auto relative z-20">
                 {/* Date Filter */}
                 <div className="flex-1 lg:flex-none">
                   <DateFilter onApply={(range) => setDateFilter(range)} />
@@ -290,7 +290,7 @@ export default function Table({
       )}
 
       {/* TABLE BODY */}
-      <div className="bg-[#1A1F24] mt-[1.5px] py-4 overflow-x-auto">
+      <div className="bg-[#1A1F24] mt-[1.5px] py-4 overflow-x-auto scrollbar-grey">
         {data.length === 0 ? (
           <EmptyState {...emptyStateProps} />
         ) : (

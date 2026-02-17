@@ -115,7 +115,7 @@ export default function DateFilter({ onApply }) {
               </div>
 
               {/* ROW 2: CALENDARS */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-4 pb-4 sm:ml-2 items-center sm:items-start">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-4 pb-4 sm:ml-2 items-center sm:items-start justify-center sm:justify-start">
 
                 <CalendarMini
                   selectedDate={fromDate}
