@@ -1,14 +1,6 @@
-import API_BASE_URL from "./config";
+import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 export async function fetchReconcoliation({ page = 1, limit = 10, currency, dateFilter, startDate, endDate } = {}) {
   try {
@@ -23,9 +15,8 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
 
     const queryString = new URLSearchParams(params).toString();
 
-    const response = await fetch(`${API_URL}/reconciliation?${queryString}`, {
+    const response = await apiFetch(`/reconciliation?${queryString}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -49,22 +40,18 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
 
 export async function exportReconciliation(format, dateFilter) {
   try {
-    // Build query parameters
     const params = new URLSearchParams({ format });
     if (dateFilter) params.append("dateFilter", dateFilter);
 
-    const response = await fetch(`${API_URL}/reconciliation?${params.toString()}`, {
+    const response = await apiFetch(`/reconciliation?${params.toString()}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
     });
 
     if (!response.ok) {
       throw new Error("Failed to export reconciliation");
     }
 
-    const blob = await response.blob(); // MUST be blob
+    const blob = await response.blob();
     return blob;
 
   } catch (error) {
@@ -75,9 +62,8 @@ export async function exportReconciliation(format, dateFilter) {
 
 export async function fetchReconciliationAlerts() {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/alerts`, {
+    const response = await apiFetch(`/reconciliation/alerts`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -96,9 +82,8 @@ export async function fetchReconciliationAlerts() {
 
 export async function fetchReconciliationById(id) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/${id}`, {
+    const response = await apiFetch(`/reconciliation/${id}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -117,9 +102,8 @@ export async function fetchReconciliationById(id) {
 
 export async function createReconciliation(reconciliationData) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation`, {
+    const response = await apiFetch(`/reconciliation`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(reconciliationData),
     });
 
@@ -140,9 +124,8 @@ export async function createReconciliation(reconciliationData) {
 
 export async function updateReconciliation(id, reconciliationData) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/${id}`, {
+    const response = await apiFetch(`/reconciliation/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(reconciliationData),
     });
 
@@ -163,9 +146,8 @@ export async function updateReconciliation(id, reconciliationData) {
 
 export async function deleteReconciliation(id) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/${id}`, {
+    const response = await apiFetch(`/reconciliation/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -181,11 +163,11 @@ export async function deleteReconciliation(id) {
     return { success: false, error };
   }
 }
+
 export async function startReconcoliation(id) {
   try {
-    const response = await fetch(`${API_URL}/reconciliation/${id}/start`, {
+    const response = await apiFetch(`/reconciliation/${id}/start`, {
       method: "POST",
-      headers: getAuthHeaders(),
     });
 
     const result = await response.json();

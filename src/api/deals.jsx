@@ -1,14 +1,6 @@
-import API_BASE_URL from "./config";
+import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate } = {}) {
   try {
@@ -23,9 +15,8 @@ export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, s
 
     const queryString = new URLSearchParams(params).toString();
 
-    const response = await fetch(`${API_URL}/deal?${queryString}`, {
+    const response = await apiFetch(`/deal?${queryString}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -47,26 +38,20 @@ export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, s
   }
 }
 
-
-
 export async function exportDeals(format, dateFilter) {
   try {
-    // Build query parameters
     const params = new URLSearchParams({ format });
     if (dateFilter) params.append("dateFilter", dateFilter);
 
-    const response = await fetch(`${API_URL}/deal?${params.toString()}`, {
+    const response = await apiFetch(`/deal?${params.toString()}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
     });
 
     if (!response.ok) {
       throw new Error("Failed to export deal");
     }
 
-    const blob = await response.blob(); // MUST be blob
+    const blob = await response.blob();
     return blob;
 
   } catch (error) {
@@ -75,13 +60,10 @@ export async function exportDeals(format, dateFilter) {
   }
 }
 
-
-
 export async function fetchDealById(id) {
   try {
-    const response = await fetch(`${API_URL}/deal/${id}`, {
+    const response = await apiFetch(`/deal/${id}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -100,9 +82,8 @@ export async function fetchDealById(id) {
 
 export async function createDeal(dealData) {
   try {
-    const response = await fetch(`${API_URL}/deal`, {
+    const response = await apiFetch(`/deal`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(dealData),
     });
 
@@ -123,9 +104,8 @@ export async function createDeal(dealData) {
 
 export async function updateDeal(id, dealData) {
   try {
-    const response = await fetch(`${API_URL}/deal/${id}`, {
+    const response = await apiFetch(`/deal/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(dealData),
     });
 
@@ -146,9 +126,8 @@ export async function updateDeal(id, dealData) {
 
 export async function deleteDeal(id) {
   try {
-    const response = await fetch(`${API_URL}/deal/${id}`, {
+    const response = await apiFetch(`/deal/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {

@@ -27,6 +27,18 @@ function Login() {
       setFormData((prev) => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("expired") === "true") {
+      setConfirmModal({
+        open: true,
+        actionType: "authError",
+        title: "Session Expired",
+        message: "Session logged out so please login again...",
+        confirmText: "Login Now",
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
 

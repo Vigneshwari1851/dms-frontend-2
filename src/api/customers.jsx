@@ -1,14 +1,6 @@
-import API_BASE_URL from "./config";
+import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 /**
  * Search customers by name/phone.
@@ -27,9 +19,8 @@ export async function searchCustomers(
       limit,
     }).toString();
 
-    const response = await fetch(`${API_URL}/customer?${query}`, {
+    const response = await apiFetch(`/customer?${query}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const result = await response.json();
@@ -59,9 +50,8 @@ export async function searchCustomers(
 
 export async function addCustomer(customer) {
   try {
-    const response = await fetch(`${API_URL}/customer`, {
+    const response = await apiFetch(`/customer`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(customer),
     });
 
@@ -81,9 +71,8 @@ export async function addCustomer(customer) {
 
 export async function fetchCustomerById(id) {
   try {
-    const response = await fetch(`${API_URL}/customer/${id}`, {
+    const response = await apiFetch(`/customer/${id}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
     const result = await response.json();
     if (!response.ok) return { success: false, error: result };
@@ -95,9 +84,8 @@ export async function fetchCustomerById(id) {
 
 export async function updateCustomer(id, customer) {
   try {
-    const response = await fetch(`${API_URL}/customer/${id}`, {
+    const response = await apiFetch(`/customer/${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(),
       body: JSON.stringify(customer),
     });
 
