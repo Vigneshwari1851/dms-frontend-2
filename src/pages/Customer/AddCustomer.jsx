@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
+import warning from "../../assets/warning.svg";
 import { addCustomer, searchCustomers } from "../../api/customers";
 import Dropdown from "../../components/common/Dropdown";
 
@@ -57,9 +58,14 @@ export default function AddCustomer() {
             }
 
             try {
-                const res = await searchCustomers(digits, "phone", { limit: 1 });
-                if (res.success && res.data && res.data.length > 0) {
-                    const match = res.data.find(c => c.phone_number === digits);
+                const res = await searchCustomers(digits, "phone", { limit: 20 });
+                if (res.success && res.data) {
+                    const searchDigits = digits.replace(/\D/g, "");
+                    const match = res.data.find(c => {
+                        const targetDigits = c.phone_number.replace(/\D/g, "");
+                        return targetDigits === searchDigits;
+                    });
+
                     if (match) {
                         setPhoneExists(true);
                         setExistingCustomerName(match.name);
@@ -169,9 +175,12 @@ export default function AddCustomer() {
                             }}
                         />
                         {isPhoneValid && phoneExists && (
-                            <p className="text-red-400 text-xs mt-1">
-                                Duplicate phone number
-                            </p>
+                            <div className="flex items-center gap-1.5 mt-2">
+                                <img src={warning} alt="warning" className="w-4 h-4" />
+                                <p className="text-red-400 text-[11px] font-medium">
+                                    Duplicate phone number detected
+                                </p>
+                            </div>
                         )}
                     </div>
                     <div>

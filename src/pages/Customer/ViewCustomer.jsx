@@ -4,6 +4,7 @@ import { fetchCustomerById, updateCustomer, searchCustomers } from "../../api/cu
 import saveIcon from "../../assets/Common/save.svg";
 import edit from "../../assets/Common/edit.svg";
 import tickIcon from "../../assets/Common/tick.svg";
+import warning from "../../assets/warning.svg";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
@@ -98,10 +99,13 @@ export default function ViewCustomer() {
       }
 
       try {
-        const res = await searchCustomers(digits, "phone", { limit: 1 });
-        if (res.success && res.data && res.data.length > 0) {
-          // Check if any returned customer has an exact match, excluding the current one
-          const match = res.data.find(c => c.phone_number === digits && String(c.id) !== String(id));
+        const res = await searchCustomers(digits, "phone", { limit: 20 });
+        if (res.success && res.data) {
+          const searchDigits = digits.replace(/\D/g, "");
+          const match = res.data.find(c => {
+            const targetDigits = c.phone_number.replace(/\D/g, "");
+            return targetDigits === searchDigits && String(c.id) !== String(id);
+          });
           setPhoneExists(!!match);
         } else {
           setPhoneExists(false);
@@ -311,9 +315,12 @@ export default function ViewCustomer() {
                   <label className="block text-sm text-[#ABABAB] mb-1">Phone</label>
                   <input name="phone_number" value={formData.phone_number} onChange={handleChange} className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border ${errors.phone_number || phoneExists ? "border-red-500" : "border-[#2A2F33]"} focus:border-blue-500`} />
                   {phoneExists && (
-                    <p className="text-red-400 text-xs mt-1">
-                      Duplicate phone number
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <img src={warning} alt="warning" className="w-4 h-4" />
+                      <p className="text-red-400 text-[11px] font-medium">
+                        Duplicate phone number detected in database
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
