@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchCustomerById, updateCustomer } from "../../api/customers";
+import { fetchCustomerById, updateCustomer, searchCustomers } from "../../api/customers";
 import saveIcon from "../../assets/Common/save.svg";
 import edit from "../../assets/Common/edit.svg";
 import tickIcon from "../../assets/Common/tick.svg";
@@ -8,7 +8,6 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
-import { hashValue } from "../../utils/hash";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -85,7 +84,7 @@ export default function ViewCustomer() {
 
   useEffect(() => {
     const checkPhone = async () => {
-      const digits = formData.phone_number.replace(/\D/g, "");
+      const digits = formData.phone_number.replace(/[^\d+]/g, "");
 
       if (digits.length < 10) {
         setPhoneExists(false);
@@ -93,26 +92,29 @@ export default function ViewCustomer() {
       }
 
       // Don't count as duplicate if it's the current customer's phone
-      if (initialData && digits === initialData.phone_number.replace(/\D/g, "")) {
+      if (initialData && digits === initialData.phone_number.replace(/[^\d+]/g, "")) {
         setPhoneExists(false);
         return;
       }
 
-      const phoneHash = await hashValue(digits);
-      const customers = JSON.parse(localStorage.getItem("customers_local")) || [];
-      const found = customers.find((c) => c.phoneHash === phoneHash);
-
-      if (found) {
-        setPhoneExists(true);
-      } else {
-        setPhoneExists(false);
+      try {
+        const res = await searchCustomers(digits, "phone", { limit: 1 });
+        if (res.success && res.data && res.data.length > 0) {
+          // Check if any returned customer has an exact match, excluding the current one
+          const match = res.data.find(c => c.phone_number === digits && String(c.id) !== String(id));
+          setPhoneExists(!!match);
+        } else {
+          setPhoneExists(false);
+        }
+      } catch (err) {
+        console.error("Error checking phone:", err);
       }
     };
 
     if (editMode) {
       checkPhone();
     }
-  }, [formData.phone_number, editMode, initialData]);
+  }, [formData.phone_number, editMode, initialData, id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

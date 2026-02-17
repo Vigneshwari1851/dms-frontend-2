@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
-import { addCustomer } from "../../api/customers";
+import { addCustomer, searchCustomers } from "../../api/customers";
 import Dropdown from "../../components/common/Dropdown";
-import { hashValue } from "../../utils/hash";
 
 export default function AddCustomer() {
 
@@ -32,7 +31,7 @@ export default function AddCustomer() {
         if (!phone.trim()) {
             newErrors.phone = "Phone number is required";
         } else {
-            const digits = phone.replace(/\D/g, "");
+            const digits = phone.replace(/[^\d+]/g, "");
             if (digits.length < 10) {
                 newErrors.phone = "Phone number must be at least 10 digits";
             }
@@ -49,7 +48,7 @@ export default function AddCustomer() {
 
     useEffect(() => {
         const checkPhone = async () => {
-            const digits = phone.replace(/\D/g, "");
+            const digits = phone.replace(/[^\d+]/g, "");
 
             if (digits.length < 10) {
                 setPhoneExists(false);
@@ -57,42 +56,28 @@ export default function AddCustomer() {
                 return;
             }
 
-            const phoneHash = await hashValue(digits);
-
-            const customers =
-                JSON.parse(localStorage.getItem("customers_local")) || [];
-
-            const found = customers.find(
-                (c) => c.phoneHash === phoneHash
-            );
-
-            if (found) {
-                setPhoneExists(true);
-                setExistingCustomerName(found.name);
-            } else {
-                setPhoneExists(false);
-                setExistingCustomerName("");
+            try {
+                const res = await searchCustomers(digits, "phone", { limit: 1 });
+                if (res.success && res.data && res.data.length > 0) {
+                    const match = res.data.find(c => c.phone_number === digits);
+                    if (match) {
+                        setPhoneExists(true);
+                        setExistingCustomerName(match.name);
+                    } else {
+                        setPhoneExists(false);
+                        setExistingCustomerName("");
+                    }
+                } else {
+                    setPhoneExists(false);
+                    setExistingCustomerName("");
+                }
+            } catch (err) {
+                console.error("Error checking phone:", err);
             }
         };
 
         checkPhone();
     }, [phone]);
-
-    const storeCustomerLocally = (name, phone) => {
-        const customers =
-            JSON.parse(localStorage.getItem("customers_local")) || [];
-
-        const exists = customers.some((c) => c.phone === phone);
-
-        if (!exists) {
-            customers.push({ name, phone });
-            localStorage.setItem(
-                "customers_local",
-                JSON.stringify(customers)
-            );
-        }
-    };
-
 
     const handleAddCustomer = async () => {
         if (!validate()) return;
@@ -107,8 +92,6 @@ export default function AddCustomer() {
         const res = await addCustomer(payload);
 
         if (res.success) {
-            storeCustomerLocally(fullName, phone.replace(/\D/g, ""));
-
             navigate("/customer-info", {
                 state: {
                     toast: {
