@@ -123,7 +123,7 @@ export default function ViewCustomer() {
     }
 
     if (name === "phone_number") {
-      newValue = newValue.replace(/\D/g, "");
+      newValue = newValue.replace(/[^\d+]/g, "");
       if (newValue.length > 15) return;
     }
 

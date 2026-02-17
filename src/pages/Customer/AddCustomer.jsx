@@ -180,9 +180,9 @@ export default function AddCustomer() {
                             value={phone}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                const digitsOnly = value.replace(/\D/g, "");
-                                if (digitsOnly.length > 15) return;
-                                setPhone(digitsOnly);
+                                const allowedChars = value.replace(/[^\d+]/g, "");
+                                if (allowedChars.length > 15) return;
+                                setPhone(allowedChars);
                             }}
                         />
                         {isPhoneValid && phoneExists && (
