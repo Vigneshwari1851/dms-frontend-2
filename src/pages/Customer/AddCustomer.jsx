@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import warning from "../../assets/warning.svg";
-import { addCustomer, searchCustomers } from "../../api/customers";
-import { appendCustomerLocal } from "../../utils/customerLocalStore";
+import { addCustomer } from "../../api/customers";
+import { normalizePhone, checkDuplicate } from "../../utils/vector";
 import Dropdown from "../../components/common/Dropdown";
 
 export default function AddCustomer() {
@@ -49,52 +49,18 @@ export default function AddCustomer() {
     };
 
     useEffect(() => {
-        const checkPhone = async () => {
-            const digitsValue = phone.replace(/[^\d+]/g, "");
-            const onlyDigits = phone.replace(/\D/g, "");
-
-            if (onlyDigits.length === 0) {
+        const runCheck = async () => {
+            const match = await checkDuplicate(phone);
+            if (match) {
+                setPhoneExists(true);
+                setExistingCustomerName(match.name);
+            } else {
                 setPhoneExists(false);
                 setExistingCustomerName("");
-                return;
-            }
-
-            // 1. Check Local Storage first (synchronous & fast)
-            const localCustomers = JSON.parse(localStorage.getItem("customers_local")) || [];
-            const localMatch = localCustomers.find(c => c.phone === onlyDigits);
-
-            if (localMatch) {
-                setPhoneExists(true);
-                setExistingCustomerName(localMatch.name);
-                return;
-            }
-
-            // 2. Check Server API
-            try {
-                const res = await searchCustomers(digitsValue, "phone", { limit: 20 });
-                if (res.success && res.data) {
-                    const match = res.data.find(c => {
-                        const targetDigits = (c.phone_number || "").replace(/\D/g, "");
-                        return targetDigits === onlyDigits;
-                    });
-
-                    if (match) {
-                        setPhoneExists(true);
-                        setExistingCustomerName(match.name);
-                    } else {
-                        setPhoneExists(false);
-                        setExistingCustomerName("");
-                    }
-                } else {
-                    setPhoneExists(false);
-                    setExistingCustomerName("");
-                }
-            } catch (err) {
-                console.error("Error checking phone:", err);
             }
         };
 
-        checkPhone();
+        runCheck();
     }, [phone]);
 
     const handleAddCustomer = async () => {
@@ -110,9 +76,6 @@ export default function AddCustomer() {
         const res = await addCustomer(payload);
 
         if (res.success) {
-            // Update local storage for immediate sync
-            appendCustomerLocal(fullName, phone);
-
             navigate("/customer-info", {
                 state: {
                     toast: {
@@ -193,7 +156,7 @@ export default function AddCustomer() {
                             <div className="flex items-center gap-1.5 mt-2">
                                 <img src={warning} alt="warning" className="w-4 h-4" />
                                 <p className="text-red-400 text-[11px] font-medium">
-                                    Duplicate phone number detected {existingCustomerName ? `(${existingCustomerName})` : ""}
+                                    Duplicate phone number detected
                                 </p>
                             </div>
                         )}

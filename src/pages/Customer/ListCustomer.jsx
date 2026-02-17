@@ -4,7 +4,7 @@ import Table from "../../components/common/Table";
 import { searchCustomers } from "../../api/customers";
 import add from "../../assets/Common/HPlus.svg";
 import Toast from "../../components/common/Toast";
-import { resetCustomersLocal } from "../../utils/customerLocalStore";
+import { updateVector } from "../../utils/vector";
 import customerEmptyBg from "../../assets/Common/empty/customer-bg.svg";
 
 export default function ListCustomer() {
@@ -51,10 +51,8 @@ export default function ListCustomer() {
       setCustomers(res.data);
       setPagination(res.pagination);
 
-      if (page === 1 && !search) {
-        resetCustomersLocal(res.data);
-      }
-
+      // Add to memory vector for duplicate checking
+      updateVector(res.data);
     } else {
       setCustomers([]);
     }

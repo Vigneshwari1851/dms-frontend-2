@@ -9,7 +9,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
-import { appendCustomerLocal } from "../../utils/customerLocalStore";
+import { normalizePhone, checkDuplicate } from "../../utils/vector";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -86,58 +86,21 @@ export default function ViewCustomer() {
   }, [id, navigate]);
 
   useEffect(() => {
-    const checkPhone = async () => {
-      const digitsValue = formData.phone_number.replace(/[^\d+]/g, "");
-      const onlyDigits = formData.phone_number.replace(/\D/g, "");
-
-      if (onlyDigits.length === 0) {
+    const runCheck = async () => {
+      const match = await checkDuplicate(formData.phone_number, id);
+      if (match) {
+        setPhoneExists(true);
+        setExistingCustomerName(match.name);
+      } else {
         setPhoneExists(false);
         setExistingCustomerName("");
-        return;
-      }
-
-      // Don't count as duplicate if it's the current customer's phone
-      if (initialData && onlyDigits === initialData.phone_number.replace(/\D/g, "")) {
-        setPhoneExists(false);
-        return;
-      }
-
-      // 1. Check Local Storage first
-      const localCustomers = JSON.parse(localStorage.getItem("customers_local")) || [];
-      const localMatch = localCustomers.find(c => c.phone === onlyDigits);
-      if (localMatch) {
-        setPhoneExists(true);
-        return;
-      }
-
-      // 2. Check Server API
-      try {
-        const res = await searchCustomers(digitsValue, "phone", { limit: 20 });
-        if (res.success && res.data) {
-          const match = res.data.find(c => {
-            const targetDigits = (c.phone_number || "").replace(/\D/g, "");
-            return targetDigits === onlyDigits && String(c.id) !== String(id);
-          });
-          if (match) {
-            setPhoneExists(true);
-            setExistingCustomerName(match.name);
-          } else {
-            setPhoneExists(false);
-            setExistingCustomerName("");
-          }
-        } else {
-          setPhoneExists(false);
-          setExistingCustomerName("");
-        }
-      } catch (err) {
-        console.error("Error checking phone:", err);
       }
     };
 
     if (editMode) {
-      checkPhone();
+      runCheck();
     }
-  }, [formData.phone_number, editMode, initialData, id]);
+  }, [formData.phone_number, editMode, id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -187,9 +150,6 @@ export default function ViewCustomer() {
     if (!validate()) return;
     const res = await updateCustomer(id, formData);
     if (res.success) {
-      // Update local storage for immediate sync
-      appendCustomerLocal(formData.name, formData.phone_number);
-
       navigate("/customer-info", {
         state: {
           toast: {
