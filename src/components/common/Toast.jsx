@@ -21,11 +21,11 @@ export default function Toast({ show, message, type }) {
             {/* TOAST */}
             <div
                 className={`
-           fixed top-[100px] z-50
-           left-1/2 -translate-x-1/2 lg:left-[1130px] lg:translate-x-0
+           fixed top-[100px] lg:top-[112px] z-50
+           left-1/2 -translate-x-1/2 md:right-6 md:left-auto md:translate-x-0 lg:right-10
            flex items-center gap-4
-           w-[90%] lg:w-auto h-auto lg:h-14
-           px-4 py-2 lg:py-3 pr-10
+           w-[90%] md:w-auto h-auto md:h-14
+           px-4 py-2 md:py-3 pr-10
            rounded-lg
            text-white text-[16px] font-medium
            bg-[#2E3439]
