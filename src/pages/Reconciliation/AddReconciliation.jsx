@@ -283,7 +283,22 @@ export default function AddReconciliation() {
             const buyCode = currencyOptions.find(o => o.id === deal.buy_currency_id)?.value;
             const sellCode = currencyOptions.find(o => o.id === deal.sell_currency_id)?.value;
             const rate = Number(deal.exchange_rate || 0);
-            const amount = Number(deal.amount || 0);
+
+            let amount = Number(deal.amount || 0);
+            let amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+            if (deal.status === "Pending") {
+                const totalReceived = (deal.receivedItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
+                const totalPaid = (deal.paidItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+                if (deal.deal_type === "buy") {
+                    amount = totalReceived;
+                    amountToBePaid = totalPaid;
+                } else {
+                    amount = totalPaid;
+                    amountToBePaid = totalReceived;
+                }
+            }
 
             if (deal.deal_type === "buy" && buyCode === "USD") {
                 usdBuyRates.push(rate);
@@ -314,8 +329,22 @@ export default function AddReconciliation() {
         todayDeals.forEach(deal => {
             const buyCid = deal.buy_currency_id;
             const sellCid = deal.sell_currency_id;
-            const amount = Number(deal.amount || 0);
-            const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+            let amount = Number(deal.amount || 0);
+            let amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+            if (deal.status === "Pending") {
+                const totalReceived = (deal.receivedItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
+                const totalPaid = (deal.paidItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+                if (deal.deal_type === "buy") {
+                    amount = totalReceived;
+                    amountToBePaid = totalPaid;
+                } else {
+                    amount = totalPaid;
+                    amountToBePaid = totalReceived;
+                }
+            }
 
             if (deal.deal_type === "buy") {
                 if (buyCid) {
