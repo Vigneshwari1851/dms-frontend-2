@@ -50,21 +50,32 @@ export default function AddCustomer() {
 
     useEffect(() => {
         const checkPhone = async () => {
-            const digits = phone.replace(/[^\d+]/g, "");
+            const digitsValue = phone.replace(/[^\d+]/g, "");
+            const onlyDigits = phone.replace(/\D/g, "");
 
-            if (digits.length < 10) {
+            if (onlyDigits.length < 10) {
                 setPhoneExists(false);
                 setExistingCustomerName("");
                 return;
             }
 
+            // 1. Check Local Storage first (synchronous & fast)
+            const localCustomers = JSON.parse(localStorage.getItem("customers_local")) || [];
+            const localMatch = localCustomers.find(c => c.phone === onlyDigits);
+
+            if (localMatch) {
+                setPhoneExists(true);
+                setExistingCustomerName(localMatch.name);
+                return;
+            }
+
+            // 2. Check Server API
             try {
-                const res = await searchCustomers(digits, "phone", { limit: 20 });
+                const res = await searchCustomers(digitsValue, "phone", { limit: 20 });
                 if (res.success && res.data) {
-                    const searchDigits = digits.replace(/\D/g, "");
                     const match = res.data.find(c => {
-                        const targetDigits = c.phone_number.replace(/\D/g, "");
-                        return targetDigits === searchDigits;
+                        const targetDigits = (c.phone_number || "").replace(/\D/g, "");
+                        return targetDigits === onlyDigits;
                     });
 
                     if (match) {
@@ -100,7 +111,7 @@ export default function AddCustomer() {
 
         if (res.success) {
             // Update local storage for immediate sync
-            await appendCustomerLocal(fullName, phone.replace(/[^\d+]/g, ""));
+            appendCustomerLocal(fullName, phone);
 
             navigate("/customer-info", {
                 state: {
