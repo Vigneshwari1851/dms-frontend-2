@@ -22,6 +22,7 @@ export default function ViewCustomer() {
   const [customerDeals, setCustomerDeals] = useState([]);
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [phoneExists, setPhoneExists] = useState(false);
+  const [existingCustomerName, setExistingCustomerName] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
@@ -89,8 +90,9 @@ export default function ViewCustomer() {
       const digitsValue = formData.phone_number.replace(/[^\d+]/g, "");
       const onlyDigits = formData.phone_number.replace(/\D/g, "");
 
-      if (onlyDigits.length < 10) {
+      if (onlyDigits.length === 0) {
         setPhoneExists(false);
+        setExistingCustomerName("");
         return;
       }
 
@@ -116,9 +118,16 @@ export default function ViewCustomer() {
             const targetDigits = (c.phone_number || "").replace(/\D/g, "");
             return targetDigits === onlyDigits && String(c.id) !== String(id);
           });
-          setPhoneExists(!!match);
+          if (match) {
+            setPhoneExists(true);
+            setExistingCustomerName(match.name);
+          } else {
+            setPhoneExists(false);
+            setExistingCustomerName("");
+          }
         } else {
           setPhoneExists(false);
+          setExistingCustomerName("");
         }
       } catch (err) {
         console.error("Error checking phone:", err);
@@ -331,7 +340,7 @@ export default function ViewCustomer() {
                     <div className="flex items-center gap-1.5 mt-2">
                       <img src={warning} alt="warning" className="w-4 h-4" />
                       <p className="text-red-400 text-[11px] font-medium">
-                        Duplicate phone number detected in database
+                        Duplicate phone number detected {existingCustomerName ? `(${existingCustomerName})` : ""}
                       </p>
                     </div>
                   )}

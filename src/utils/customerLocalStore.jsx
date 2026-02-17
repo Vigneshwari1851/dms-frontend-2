@@ -1,6 +1,7 @@
 export const resetCustomersLocal = (customers) => {
+  if (!Array.isArray(customers)) return;
   const formatted = customers
-    .filter((c) => c.phone_number || c.phone)
+    .filter((c) => (c.phone_number || c.phone))
     .map((c) => ({
       name: c.name || c.full_name || c.customer_name,
       phone: String(c.phone_number || c.phone).replace(/\D/g, ""),
@@ -15,7 +16,7 @@ export const appendCustomerLocal = (name, phone) => {
 
   const cleanPhone = String(phone).replace(/\D/g, "");
 
-  if (!customers.some((c) => c.phone === cleanPhone)) {
+  if (cleanPhone && !customers.some((c) => c.phone === cleanPhone)) {
     customers.push({ name, phone: cleanPhone });
     localStorage.setItem("customers_local", JSON.stringify(customers));
   }

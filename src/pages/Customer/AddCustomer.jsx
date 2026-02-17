@@ -53,7 +53,7 @@ export default function AddCustomer() {
             const digitsValue = phone.replace(/[^\d+]/g, "");
             const onlyDigits = phone.replace(/\D/g, "");
 
-            if (onlyDigits.length < 10) {
+            if (onlyDigits.length === 0) {
                 setPhoneExists(false);
                 setExistingCustomerName("");
                 return;
@@ -177,7 +177,7 @@ export default function AddCustomer() {
 
                         <input
                             className={`w-full bg-[#16191C] rounded-lg px-3 py-2 border
-                                ${(isPhoneValid && phoneExists) || errors.phone
+                                ${phoneExists || errors.phone
                                     ? "border-red-500"
                                     : "border-transparent"
                                 }`}
@@ -189,11 +189,11 @@ export default function AddCustomer() {
                                 setPhone(allowedChars);
                             }}
                         />
-                        {isPhoneValid && phoneExists && (
+                        {phoneExists && (
                             <div className="flex items-center gap-1.5 mt-2">
                                 <img src={warning} alt="warning" className="w-4 h-4" />
                                 <p className="text-red-400 text-[11px] font-medium">
-                                    Duplicate phone number detected
+                                    Duplicate phone number detected {existingCustomerName ? `(${existingCustomerName})` : ""}
                                 </p>
                             </div>
                         )}
