@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import warning from "../../assets/warning.svg";
 import { addCustomer, searchCustomers } from "../../api/customers";
+import { appendCustomerLocal } from "../../utils/customerLocalStore";
 import Dropdown from "../../components/common/Dropdown";
 
 export default function AddCustomer() {
@@ -98,6 +99,9 @@ export default function AddCustomer() {
         const res = await addCustomer(payload);
 
         if (res.success) {
+            // Update local storage for immediate sync
+            await appendCustomerLocal(fullName, phone.replace(/[^\d+]/g, ""));
+
             navigate("/customer-info", {
                 state: {
                     toast: {
