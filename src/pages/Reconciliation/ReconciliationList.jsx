@@ -125,8 +125,8 @@ export default function ReconciliationList() {
       openingVault: formatCurrency(reconciliation.opening_total),
       totalTransactions: reconciliation.total_transactions || 0,
       closingVault: formatCurrency(reconciliation.closing_total),
-      variance: formatVariance(reconciliation.difference),
-      status: reconciliation.status, 
+      profitLoss: formatVariance(reconciliation.profitLoss),
+      status: reconciliation.status,
     }));
   };
 
@@ -198,7 +198,7 @@ export default function ReconciliationList() {
     { label: "Opening Vault", key: "openingVault", align: "left" },
     { label: "Total Transactions", key: "totalTransactions", align: "left" },
     { label: "Closing Vault", key: "closingVault", align: "left" },
-    { label: "Difference / Variance", key: "variance", align: "left" },
+    { label: "Profit / Loss", key: "profitLoss", align: "left" },
     { label: "Status", key: "status", align: "left" },
 
   ];
