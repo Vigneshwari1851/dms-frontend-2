@@ -428,12 +428,21 @@ export default function AddReconciliation() {
         }
     };
 
-    const handleGenerateSummary = () => {
+    const handleGenerateSummary = async () => {
         setIsGeneratingSummary(true);
-        setTimeout(() => {
-            setIsGeneratingSummary(false);
-            setDealsSummaryGenerated(true);
-        }, 2000);
+        try {
+            if (status === "In_Progress" && id) {
+                await startReconcoliation(id);
+                await fetchReconciliationDetails();
+            }
+        } catch (error) {
+            console.error("Error generating summary:", error);
+        } finally {
+            setTimeout(() => {
+                setIsGeneratingSummary(false);
+                setDealsSummaryGenerated(true);
+            }, 2000);
+        }
     };
 
     const handleStartReconciliation = async () => {
@@ -712,7 +721,7 @@ export default function AddReconciliation() {
                             <div className="space-y-0.5 text-[12px]">
                                 <div className="flex justify-between items-center">
                                     <span className="text-white/60">
-                                        USD: ${ (stats.opUSD ?? 0).toLocaleString() }
+                                        USD: ${(stats.opUSD ?? 0).toLocaleString()}
                                     </span>
                                     <span className="text-white">
                                         → {((stats.opUSD ?? 0) * (stats.valRate ?? 0)).toLocaleString(undefined, {
@@ -762,29 +771,28 @@ export default function AddReconciliation() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
+{/* 
+                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
                             <p className="text-white text-[12px] mb-1">Total Buying</p>
                             <p className="text-white text-[14px] font-bold">${stats.buyVol.toLocaleString()}</p>
                             <p className="text-white text-[14px] font-bold mt-2">
                                 TZS {stats.buyTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </p>
-                        </div>  */}
-                        {/* <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
+                        </div>
+                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
                             <p className="text-white text-[12px] mb-1">Total Selling</p>
                             <p className="text-white text-[14px] font-bold">${stats.sellVol.toLocaleString()}</p>
                             <p className="text-white text-[14px] font-bold mt-2">
                                 TZS {stats.sellTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </p>
-                        </div>  */}
+                        </div> */}
 
-                      <div className={`rounded-xl p-3 border ${
-                        stats.pl >= 0
-                            ? "bg-green-900/20 border-green-500/30"
-                            : "bg-red-900/20 border-red-500/30"
+                        <div className={`rounded-xl p-3 border ${stats.pl >= 0
+                                ? "bg-green-900/20 border-green-500/30"
+                                : "bg-red-900/20 border-red-500/30"
                             } text-center`}>
                             <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
-                            Today's Profit / Loss
+                                Today's Profit / Loss
                             </p>
                             <p className="text-white text-[16px] font-bold mt-2">
                                 <span className="text-[16px] mr-1 opacity-60 font-medium">TZS </span>
