@@ -320,7 +320,7 @@ export default function AddReconciliation() {
         openingRows.forEach(row => {
             if (!row.currencyId) return;
             if (!currencyData[row.currencyId]) {
-                currencyData[row.currencyId] = { code: row.currencyCode, opening: 0, received: 0, paid: 0, closing: 0 };
+                currencyData[row.currencyId] = { code: row.currencyCode, opening: 0, received: 0, paid: 0, scheduledReceived: 0, scheduledPaid: 0, closing: 0 };
             }
             currencyData[row.currencyId].opening += Number(row.amount || 0);
         });
@@ -330,19 +330,22 @@ export default function AddReconciliation() {
             const buyCid = deal.buy_currency_id;
             const sellCid = deal.sell_currency_id;
 
-            let amount = Number(deal.amount || 0);
-            let amountToBePaid = Number(deal.amount_to_be_paid || 0);
+            const fullAmount = Number(deal.amount || 0);
+            const fullTzs = Number(deal.amount_to_be_paid || 0);
+
+            let actualAmount = fullAmount;
+            let actualTzs = fullTzs;
 
             if (deal.status === "Pending") {
                 const totalReceived = (deal.receivedItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
                 const totalPaid = (deal.paidItems || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
 
+                actualAmount = fullAmount;
+
                 if (deal.deal_type === "buy") {
-                    amount = totalReceived;
-                    amountToBePaid = totalPaid;
+                    actualTzs = totalPaid;
                 } else {
-                    amount = totalPaid;
-                    amountToBePaid = totalReceived;
+                    actualTzs = totalReceived;
                 }
             }
 
@@ -350,31 +353,47 @@ export default function AddReconciliation() {
                 if (buyCid) {
                     if (!currencyData[buyCid]) {
                         const c = currencyOptions.find(o => o.id === buyCid);
-                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, scheduledReceived: 0, scheduledPaid: 0, closing: 0 };
                     }
-                    currencyData[buyCid].received += amount;
+                    if (currencyData[buyCid].scheduledReceived === undefined) currencyData[buyCid].scheduledReceived = 0;
+                    if (currencyData[buyCid].scheduledPaid === undefined) currencyData[buyCid].scheduledPaid = 0;
+
+                    currencyData[buyCid].received += actualAmount;
+                    currencyData[buyCid].scheduledReceived += fullAmount;
                 }
                 if (sellCid) {
                     if (!currencyData[sellCid]) {
                         const c = currencyOptions.find(o => o.id === sellCid);
-                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, scheduledReceived: 0, scheduledPaid: 0, closing: 0 };
                     }
-                    currencyData[sellCid].paid += amountToBePaid;
+                    if (currencyData[sellCid].scheduledReceived === undefined) currencyData[sellCid].scheduledReceived = 0;
+                    if (currencyData[sellCid].scheduledPaid === undefined) currencyData[sellCid].scheduledPaid = 0;
+
+                    currencyData[sellCid].paid += actualTzs;
+                    currencyData[sellCid].scheduledPaid += fullTzs;
                 }
             } else if (deal.deal_type === "sell") {
                 if (buyCid) {
                     if (!currencyData[buyCid]) {
                         const c = currencyOptions.find(o => o.id === buyCid);
-                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[buyCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, scheduledReceived: 0, scheduledPaid: 0, closing: 0 };
                     }
-                    currencyData[buyCid].received += amountToBePaid;
+                    if (currencyData[buyCid].scheduledReceived === undefined) currencyData[buyCid].scheduledReceived = 0;
+                    if (currencyData[buyCid].scheduledPaid === undefined) currencyData[buyCid].scheduledPaid = 0;
+
+                    currencyData[buyCid].received += actualTzs;
+                    currencyData[buyCid].scheduledReceived += fullTzs;
                 }
                 if (sellCid) {
                     if (!currencyData[sellCid]) {
                         const c = currencyOptions.find(o => o.id === sellCid);
-                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, closing: 0 };
+                        currencyData[sellCid] = { code: c?.value || '?', opening: 0, received: 0, paid: 0, scheduledReceived: 0, scheduledPaid: 0, closing: 0 };
                     }
-                    currencyData[sellCid].paid += amount;
+                    if (currencyData[sellCid].scheduledReceived === undefined) currencyData[sellCid].scheduledReceived = 0;
+                    if (currencyData[sellCid].scheduledPaid === undefined) currencyData[sellCid].scheduledPaid = 0;
+
+                    currencyData[sellCid].paid += actualAmount;
+                    currencyData[sellCid].scheduledPaid += fullAmount;
                 }
             }
         });
@@ -390,17 +409,27 @@ export default function AddReconciliation() {
         // 4. Valuation Calculations
         let totalOpeningValue = 0;
         let totalClosingValue = 0;
+        let totalExpectedValue = 0;
+        let expectedUSD = 0;
+        let expectedTZS = 0;
 
         Object.values(currencyData).forEach(data => {
+            const expAmount = data.opening + (data.scheduledReceived ?? data.received) - (data.scheduledPaid ?? data.paid);
+
             if (data.code === "USD") {
                 totalOpeningValue += (data.opening * (yesterdayAvgRate || totalAvg));
                 totalClosingValue += (data.closing * totalAvg);
+                totalExpectedValue += (expAmount * totalAvg);
+                expectedUSD = expAmount;
             } else if (data.code === "TZS") {
                 totalOpeningValue += data.opening;
                 totalClosingValue += data.closing;
+                totalExpectedValue += expAmount;
+                expectedTZS = expAmount;
             } else {
                 totalOpeningValue += (data.opening * totalAvg);
                 totalClosingValue += (data.closing * totalAvg);
+                totalExpectedValue += (expAmount * totalAvg);
             }
         });
 
@@ -412,6 +441,9 @@ export default function AddReconciliation() {
             totalAvg,
             totalOpeningValue,
             totalClosingValue,
+            totalExpectedValue,
+            expectedUSD,
+            expectedTZS,
             profitLoss,
             totalBuyTZS,
             totalSellTZS
@@ -864,7 +896,7 @@ export default function AddReconciliation() {
                             <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Daily Deal Summary</h3>
                             <div className="space-y-6 flex-grow overflow-y-auto pr-1">
                                 {Object.values(calculateTotals().currencyData).map((data, idx) => {
-                                    const expected = data.opening + data.received - data.paid;
+                                    const expected = data.opening + (data.scheduledReceived ?? data.received) - (data.scheduledPaid ?? data.paid);
                                     return (
                                         <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
                                             <div className="flex justify-between items-center mb-2">
