@@ -689,14 +689,11 @@ export default function CreateDeal() {
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Transaction Type <span className="text-red-500">*</span>
             </label>
-            <Dropdown
-              label="Type"
-              options={["Buy", "Sell"]}
-              selected={txnType}
-              onChange={(val) => {
-                handleTxnTypeChange(val);
-              }}
-              className="w-full"
+            <input
+              className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 outline-none text-white cursor-not-allowed"
+              value={txnType}
+              readOnly
+              placeholder="Txn Type"
             />
             <div className="min-h-3.5 mt-1">
               {errors.txnType && (
