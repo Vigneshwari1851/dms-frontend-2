@@ -761,11 +761,13 @@ export default function CreateDeal() {
               }}
               onChange={(e) => {
                 const value = e.target.value;
+                if (value === "0") return;
                 if (/^\d*\.?\d*$/.test(value)) {
                   setAmount(value);
                   setErrors(prev => ({ ...prev, amount: "" }));
                 }
               }}
+              onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
             />
             <div className="min-h-3.5 mt-1">
               {errors.amount && (
@@ -790,11 +792,13 @@ export default function CreateDeal() {
               }}
               onChange={(e) => {
                 const value = e.target.value;
+                if (value === "0") return;
                 if (/^\d*\.?\d*$/.test(value)) {
                   setRate(value);
                   setErrors(prev => ({ ...prev, rate: "" }));
                 }
               }}
+              onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
             />
             <div className="min-h-3.5 mt-1">
               {errors.rate && (
