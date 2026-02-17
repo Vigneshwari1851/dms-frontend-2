@@ -199,6 +199,13 @@ export default function AddReconciliation() {
     }, [openingRows, closingRows, notes, step]);
 
     const handleRowChange = (section, rowId, field, value) => {
+        if (field === "amount") {
+            // Block '0' at first, negatives, or any character that isn't a digit or dot
+            if (value === "0") return;
+            if (value.includes("-")) return;
+            // Only allow digits and a single decimal point (e.g., blocks 1..0 or 1-00)
+            if (value !== "" && !/^\d*\.?\d*$/.test(value)) return;
+        }
         const setRows = section === "opening" ? setOpeningRows : setClosingRows;
         setRows(prev => prev.map(row =>
             row.id === rowId ? { ...row, [field]: value } : row
@@ -385,7 +392,7 @@ export default function AddReconciliation() {
     const handleSaveOpening = async () => {
         try {
             const openingEntries = openingRows
-                .filter(row => row.amount && row.currencyId)
+                .filter(row => Number(row.amount) > 0 && row.currencyId)
                 .map(row => ({
                     currency_id: row.currencyId,
                     amount: Number(row.amount),
@@ -465,7 +472,7 @@ export default function AddReconciliation() {
     const handleSaveClosing = async (isFinalizing = false) => {
         try {
             const closingEntries = closingRows
-                .filter(row => row.amount && row.currencyId)
+                .filter(row => Number(row.amount) > 0 && row.currencyId)
                 .map(row => ({
                     currency_id: row.currencyId,
                     amount: Number(row.amount),
@@ -596,7 +603,10 @@ export default function AddReconciliation() {
                                             type="number"
                                             value={row.amount}
                                             onChange={(e) => handleRowChange(section, row.id, "amount", e.target.value)}
+                                            onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
                                             placeholder="0.00"
+                                            min="0.01"
+                                            step="0.01"
                                             className="w-full bg-[#1A1F24] border border-[#4B5563]/30 rounded-lg px-3 py-2 text-white outline-none focus:border-[#1D4CB5] text-right font-medium disabled:opacity-50 text-sm"
                                             disabled={isDisabled}
                                         />
@@ -771,7 +781,7 @@ export default function AddReconciliation() {
                                 </div>
                             </div>
                         </div>
-{/* 
+                        {/* 
                         <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
                             <p className="text-white text-[12px] mb-1">Total Buying</p>
                             <p className="text-white text-[14px] font-bold">${stats.buyVol.toLocaleString()}</p>
@@ -788,8 +798,8 @@ export default function AddReconciliation() {
                         </div> */}
 
                         <div className={`rounded-xl p-3 border ${stats.pl >= 0
-                                ? "bg-green-900/20 border-green-500/30"
-                                : "bg-red-900/20 border-red-500/30"
+                            ? "bg-green-900/20 border-green-500/30"
+                            : "bg-red-900/20 border-red-500/30"
                             } text-center`}>
                             <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
                                 Today's Profit / Loss
