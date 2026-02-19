@@ -24,39 +24,47 @@ import ListCustomer from "../pages/Customer/ListCustomer";
 import AddCustomer from "../pages/Customer/AddCustomer";
 import ViewCustomer from "../pages/Customer/ViewCustomer";
 import MyProfile from "../pages/User/MyProfile";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
+import PublicRoute from "../components/auth/PublicRoute";
+
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verify-login" element={<VerifyOtp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-login" element={<VerifyOtp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
 
       {/* Protected Routes (with layout) */}
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="deals" element={<DealsList />} />
-        <Route path="deals/create-deal" element={<CreateDeal />} />
-        <Route path="users" element={<ListUser />} />
-        <Route path="users/add-user" element={<AddUser />} />
-        <Route path="users/details/:id" element={<ViewUser />} />
-        <Route path="deal-review" element={<DealReview />} />
-        <Route path="view-slip" element={<ViewSlip />} />
-        <Route path="deals/edit-deal/:id" element={<EditDeal />} />
-        <Route path="reconciliation" element={<ReconciliationList />} />
-        <Route path="reports" element={<ListReport />} />
-        {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
-        <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
-        <Route path="reconciliation/details/:id" element={<AddReconciliation />} />
-        <Route path="customer-info" element={<ListCustomer />} />
-        <Route path="customer-info/add-customer" element={<AddCustomer />} />
-        <Route path="customer-info/view/:id" element={<ViewCustomer />} />
-        <Route path="users/my-profile" element={<MyProfile />} />
-        <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="deals" element={<DealsList />} />
+          <Route path="deals/create-deal" element={<CreateDeal />} />
+          <Route path="users" element={<ListUser />} />
+          <Route path="users/add-user" element={<AddUser />} />
+          <Route path="users/details/:id" element={<ViewUser />} />
+          <Route path="deal-review" element={<DealReview />} />
+          <Route path="view-slip" element={<ViewSlip />} />
+          <Route path="deals/edit-deal/:id" element={<EditDeal />} />
+          <Route path="reconciliation" element={<ReconciliationList />} />
+          <Route path="reports" element={<ListReport />} />
+          {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
+          <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
+          <Route path="reconciliation/details/:id" element={<AddReconciliation />} />
+          <Route path="customer-info" element={<ListCustomer />} />
+          <Route path="customer-info/add-customer" element={<AddCustomer />} />
+          <Route path="customer-info/view/:id" element={<ViewCustomer />} />
+          <Route path="users/my-profile" element={<MyProfile />} />
+          <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
+        </Route>
       </Route>
+
     </Routes>
   );
 }
