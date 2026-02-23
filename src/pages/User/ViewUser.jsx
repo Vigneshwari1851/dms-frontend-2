@@ -169,8 +169,15 @@ export default function ViewUser() {
             {/* PAGE HEADER */}
             <div className="flex items-center justify-between lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h2 className="text-[16px] font-semibold text-white lg:text-[20px]">User Details</h2>
-                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">View and manage user information</p>
+                    <h2 className="text-[16px] font-semibold text-white lg:text-[20px] flex items-center gap-2">
+                        User Details
+                        {formData.full_name && (
+                            <>
+                                <span className="text-[#3A3F45] font-light">—</span>
+                                <span className="text-[#ABABAB] font-normal">{formData.full_name}</span>
+                            </>
+                        )}
+                    </h2>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -300,13 +307,13 @@ export default function ViewUser() {
                                     });
                                 }}
                                 className={`relative flex items-center w-[110px] h-[32px] rounded-full transition-all duration-300 focus:outline-none
-                                    ${isActive ? "bg-[#10B935]" : "bg-[#B91C1C]"}
+                                    ${isActive ? "bg-[#2bc5b4]" : "bg-[#C52B2B]"}
                                     ${!editMode ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
                                 `}
                             >
-                                {/* Text inside pill */}
-                                <span className={`absolute text-white text-[11px] font-semibold tracking-wide transition-all duration-300
-                                    ${isActive ? "left-3" : "right-3"}`}
+                                {/* Text inside pill — fills zone opposite the knob, centered */}
+                                <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold tracking-wide transition-all duration-300
+                                    ${isActive ? "left-0 right-[32px]" : "left-[32px] right-0"}`}
                                 >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
