@@ -2,18 +2,19 @@ import React from "react";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 
-export default function SortableHeader({ 
-  label, 
-  sortBy, 
-  sortAsc, 
-  columnKey, 
-  onSort 
+export default function SortableHeader({
+  label,
+  sortBy,
+  sortAsc,
+  columnKey,
+  onSort,
+  className
 }) {
   const isActive = sortBy === columnKey;
 
   return (
     <th
-      className="py-3 text-center cursor-pointer select-none"
+      className={`py-1.5 text-center cursor-pointer select-none ${className || ""}`}
       onClick={() => onSort(columnKey)}
     >
       <div className="flex items-center justify-center gap-1 w-full">

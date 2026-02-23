@@ -293,7 +293,7 @@ export default function Table({
       <div className="bg-[#1A1F24] mt-[1.5px] overflow-x-auto scrollbar-grey">
         <table className="w-full text-[#8F8F8F] text-sm min-w-[640px]">
           <thead>
-            <tr className="text-white text-sm text-[14px]">
+            <tr className="text-white font-semibold">
               {columns.map((col, index) =>
                 sortableKeys.includes(col.key) ? (
                   <SortableHeader
@@ -303,12 +303,12 @@ export default function Table({
                     sortBy={sortConfig.key}
                     sortAsc={sortConfig.asc}
                     onSort={handleSort}
-                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                    className={`py-1.5 px-2 sm:px-4 font-semibold text-${col.align || "center"} ${col.className || ""}`}
                   />
                 ) : (
                   <th
                     key={index}
-                    className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                    className={`py-1.5 px-2 sm:px-4 font-semibold text-${col.align || "center"} ${col.className || ""}`}
                   >
                     {col.label}
                   </th>
