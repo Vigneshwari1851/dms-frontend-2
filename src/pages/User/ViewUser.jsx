@@ -340,8 +340,8 @@ export default function ViewUser() {
                 {/* SECURITY ACTIONS - ONLY IN EDIT MODE */}
                 {editMode && (
                     <>
-                        <h3 className="text-white font-semibold text-[14px] mt-6 mb-3">
-                            Security Actions
+                        <h3 className="text-white font-semibold text-[14px] mt-6 mb-4">
+                            User Actions
                         </h3>
                         <div className="flex flex-col lg:flex-row gap-3">
                             <button
