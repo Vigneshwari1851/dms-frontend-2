@@ -11,6 +11,7 @@ import NotificationCard from "../../components/common/Notification";
 import Dropdown from "../../components/common/Dropdown";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
 import installmentIcon from "../../assets/installment.svg";
+import DiscardModal from "../../components/common/DiscardModal";
 
 const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols }) => {
     return (
@@ -161,6 +162,8 @@ export default function EditDeal() {
         cancelText: "Cancel",
         isTallied: false,
     });
+
+    const [showDiscardModal, setShowDiscardModal] = useState(false);
 
     const totalReceived = () =>
         denominationReceived.reduce(
@@ -471,10 +474,13 @@ export default function EditDeal() {
     };
 
     const handleCancelEdit = () => {
-        if (deal) {
-            populateFormFromDeal(deal);
-        }
+        setShowDiscardModal(true);
+    };
+
+    const handleDiscard = () => {
+        if (deal) populateFormFromDeal(deal);
         setEditMode(false);
+        setShowDiscardModal(false);
     };
 
     const handleSave = () => {
@@ -886,6 +892,11 @@ export default function EditDeal() {
                 onCancel={handleModalCancel}
             />
 
+            <DiscardModal
+                show={showDiscardModal}
+                onDiscard={handleDiscard}
+                onKeep={() => setShowDiscardModal(false)}
+            />
 
         </>
     );

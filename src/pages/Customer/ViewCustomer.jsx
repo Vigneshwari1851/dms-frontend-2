@@ -13,6 +13,7 @@ import { normalizePhone, checkDuplicate } from "../../utils/vector";
 import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import PhoneFlag from "../../components/common/PhoneFlag.jsx";
+import DiscardModal from "../../components/common/DiscardModal";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -26,6 +27,7 @@ export default function ViewCustomer() {
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [phoneExists, setPhoneExists] = useState(false);
   const [existingCustomerName, setExistingCustomerName] = useState("");
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
@@ -173,9 +175,26 @@ export default function ViewCustomer() {
     }
   };
 
+  const isDirty = initialData && (
+    formData.name !== initialData.name ||
+    formData.email !== initialData.email ||
+    formData.phone_number !== initialData.phone_number ||
+    formData.is_active !== initialData.is_active
+  );
+
   const handleCancel = () => {
+    if (isDirty) {
+      setShowDiscardModal(true);
+    } else {
+      setFormData(initialData);
+      setEditMode(false);
+    }
+  };
+
+  const handleDiscard = () => {
     setFormData(initialData);
     setEditMode(false);
+    setShowDiscardModal(false);
   };
 
   const handleRowClick = (item) => {
@@ -229,7 +248,7 @@ export default function ViewCustomer() {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div>
+    <>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-3 lg:gap-0">
         <div className="flex items-center justify-between w-full lg:w-auto">
           <div className="min-w-0 flex-1 lg:flex-initial">
@@ -497,6 +516,12 @@ export default function ViewCustomer() {
           </button>
         </div>
       )}
-    </div>
+
+      <DiscardModal
+        show={showDiscardModal}
+        onDiscard={handleDiscard}
+        onKeep={() => setShowDiscardModal(false)}
+      />
+    </>
   );
 }

@@ -8,6 +8,7 @@ import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import edit from "../../assets/Common/edit.svg";
 import PhoneFlag from "../../components/common/PhoneFlag.jsx";
+import DiscardModal from "../../components/common/DiscardModal";
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -28,6 +29,7 @@ export default function ViewUser() {
     const [initialData, setInitialData] = useState(null);
     const [pendingDelete, setPendingDelete] = useState(false);
     const [pendingReset, setPendingReset] = useState(false);
+    const [showDiscardModal, setShowDiscardModal] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -104,9 +106,23 @@ export default function ViewUser() {
         setFormData((prev) => ({ ...prev, [name]: finalValue }));
     };
 
+    const isDirty = initialData && (
+        formData.full_name !== initialData.full_name ||
+        formData.email !== initialData.email ||
+        formData.phone !== initialData.phone ||
+        formData.role !== initialData.role ||
+        isActive !== initialData.is_active
+    );
+
     const handleCancel = () => {
-        setEditMode(false);
+        if (isDirty) {
+            setShowDiscardModal(true);
+        } else {
+            setEditMode(false);
+        }
     };
+
+    const handleDiscard = () => navigate("/users");
 
     const handleSave = async () => {
         if (!validate()) return;
@@ -171,7 +187,7 @@ export default function ViewUser() {
                 <div className="flex items-center gap-3">
                     {/* Back arrow */}
                     <button
-                        onClick={() => navigate("/users")}
+                        onClick={() => editMode ? handleCancel() : navigate("/users")}
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#2A2F33] transition-colors text-[#ABABAB] hover:text-white"
                         title="Back to Users"
                     >
@@ -193,15 +209,15 @@ export default function ViewUser() {
                 <div className="flex items-center gap-3">
                     {!editMode && (
                         <button
-                        onClick={() => setEditMode(true)}
-                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md px-3 py-1.5"
+                            onClick={() => setEditMode(true)}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md px-3 py-1.5"
                         >
-                        <img
-                            src={edit}
-                            alt="edit"
-                            className="w-6 h-6"
-                        />
-                        <span>Edit</span>
+                            <img
+                                src={edit}
+                                alt="edit"
+                                className="w-6 h-6"
+                            />
+                            <span>Edit</span>
                         </button>
                     )}
                 </div>
@@ -405,9 +421,7 @@ export default function ViewUser() {
                         <div className="border-b border-[#2A2F33] mb-6"></div>
                         <div className="flex gap-3">
                             <button
-                                onClick={() => {
-                                    navigate("/users");
-                                }}
+                                onClick={handleCancel}
                                 className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
                             >
                                 Cancel
@@ -425,17 +439,7 @@ export default function ViewUser() {
                 {editMode && (
                     <div className="hidden lg:flex justify-end gap-3 mt-8">
                         <button
-                            onClick={() => {
-                                navigate("/users", {
-                                    state: {
-                                        toast: {
-                                            show: true,
-                                            message: "Changes reverted",
-                                            type: "error",
-                                        },
-                                    },
-                                });
-                            }}
+                            onClick={handleCancel}
                             className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
                         >
                             Cancel
@@ -476,6 +480,11 @@ export default function ViewUser() {
             </div >
 
 
+            <DiscardModal
+                show={showDiscardModal}
+                onDiscard={handleDiscard}
+                onKeep={() => setShowDiscardModal(false)}
+            />
         </>
     );
 }

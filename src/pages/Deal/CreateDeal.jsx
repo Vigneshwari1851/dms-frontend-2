@@ -8,6 +8,7 @@ import { searchCustomers } from "../../api/customers";
 import { fetchCurrencies } from "../../api/currency/currency";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
+import DiscardModal from "../../components/common/DiscardModal";
 
 export default function CreateDeal() {
   const navigate = useNavigate();
@@ -54,7 +55,6 @@ export default function CreateDeal() {
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
 
-  // Add state for confirmation modal
   const [confirmModal, setConfirmModal] = useState({
     open: false,
     actionType: '',
@@ -64,6 +64,8 @@ export default function CreateDeal() {
     cancelText: 'Cancel',
     isTallied: false // Track if deal is tallied
   });
+
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -588,6 +590,18 @@ export default function CreateDeal() {
       })));
     }
   };
+  const isDirty = !!(selectedCustomer || amount || rate || txnMode);
+
+  const handleCancelDeal = () => {
+    if (isDirty) {
+      setShowDiscardModal(true);
+    } else {
+      navigate("/deals");
+    }
+  };
+
+  const handleDiscard = () => navigate("/deals");
+
   const buyCurrencyOptions = currencyOptions;
   const sellCurrencyOptions = currencyOptions;
 
@@ -860,7 +874,7 @@ export default function CreateDeal() {
           <div className="hidden lg:flex justify-end gap-3 mt-8">
             <button
               className="w-[95px] h-10 border border-gray-500 rounded-lg text-white hover:bg-[#2A2F34]"
-              onClick={() => navigate("/deals")}
+              onClick={handleCancelDeal}
               disabled={loading}
             >
               Cancel
@@ -880,7 +894,7 @@ export default function CreateDeal() {
           <div className="lg:hidden bottom-4 flex justify-between items-center mt-6">
             <button
               className="w-[120px] h-10 rounded-lg border border-white text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-white hover:text-black transition-colors"
-              onClick={() => navigate("/deals")}
+              onClick={handleCancelDeal}
               disabled={loading}
             >
               Cancel
@@ -911,6 +925,11 @@ export default function CreateDeal() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+      <DiscardModal
+        show={showDiscardModal}
+        onDiscard={handleDiscard}
+        onKeep={() => setShowDiscardModal(false)}
+      />
     </>
   );
 }

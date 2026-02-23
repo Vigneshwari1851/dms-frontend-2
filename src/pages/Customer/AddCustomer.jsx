@@ -7,6 +7,7 @@ import { normalizePhone, checkDuplicate } from "../../utils/vector";
 import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
+import DiscardModal from "../../components/common/DiscardModal";
 
 export default function AddCustomer() {
 
@@ -17,6 +18,7 @@ export default function AddCustomer() {
     const [errors, setErrors] = useState({});
     const [phoneExists, setPhoneExists] = useState(false);
     const [existingCustomerName, setExistingCustomerName] = useState("");
+    const [showDiscardModal, setShowDiscardModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -99,9 +101,17 @@ export default function AddCustomer() {
         }
     };
 
+    const isDirty = !!(fullName.trim() || email.trim() || phone.trim() || deal_type);
+
     const handleCancel = () => {
-        navigate("/customer-info");
+        if (isDirty) {
+            setShowDiscardModal(true);
+        } else {
+            navigate("/customer-info");
+        }
     };
+
+    const handleDiscard = () => navigate("/customer-info");
 
     const digits = phone.replace(/\D/g, "");
     const isPhoneValid = digits.length >= 10;
@@ -189,6 +199,11 @@ export default function AddCustomer() {
 
             </div>
 
+            <DiscardModal
+                show={showDiscardModal}
+                onDiscard={handleDiscard}
+                onKeep={() => setShowDiscardModal(false)}
+            />
         </>
     );
 }
