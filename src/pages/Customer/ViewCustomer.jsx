@@ -12,6 +12,7 @@ import downarrowIcon from "../../assets/down_arrow.svg";
 import { normalizePhone, checkDuplicate } from "../../utils/vector";
 import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
+import PhoneFlag from "../../components/common/PhoneFlag.jsx";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -236,7 +237,12 @@ export default function ViewCustomer() {
               {editMode ? "Edit Customer" : `Customer Name: ${formData.name}`}
             </h2>
             <p className="mt-2 text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
-              {editMode ? "Edit customer info" : `Contact Number: ${formData.phone_number}`}
+              {editMode ? "Edit customer info" : (
+                <span className="inline-flex items-center gap-1.5">
+                  Contact:
+                  <PhoneFlag phone={formData.phone_number} />
+                </span>
+              )}
             </p>
           </div>
 

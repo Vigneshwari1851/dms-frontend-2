@@ -7,6 +7,7 @@ import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
 import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import edit from "../../assets/Common/edit.svg";
+import PhoneFlag from "../../components/common/PhoneFlag.jsx";
 
 export default function ViewUser() {
     const { id } = useParams();
@@ -234,12 +235,9 @@ export default function ViewUser() {
                             Phone
                         </label>
                         {!editMode ? (
-                            <input
-                                name="phone"
-                                value={formData.phone}
-                                readOnly
-                                className="w-full rounded-lg px-3 py-2 text-white bg-[#16191C] border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
-                            />
+                            <div className="w-full rounded-lg px-3 py-2 bg-[#16191C] border border-transparent opacity-80">
+                                <PhoneFlag phone={formData.phone} />
+                            </div>
                         ) : (
                             <PhoneInput
                                 value={formData.phone}
