@@ -89,7 +89,7 @@ export default function AddUser() {
 
             {/* Form Container */}
             <div className="mt-4 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
-                <div>
+                {/* <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
                     <input
                         className="w-full bg-[#16191C] rounded-lg px-3 py-2"
@@ -99,7 +99,35 @@ export default function AddUser() {
                     {errors.fullName && (
                         <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>
                     )}
-                </div>
+                </div> */}
+
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                     <div>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">Full Name <span className="text-red-500">*</span></label>
+                        <input
+                            className="w-full bg-[#16191C] rounded-lg px-3 py-2"
+                            value={fullName}
+                            onChange={(e) => setFullName(onlyAlphabets(capitalizeWords(e.target.value)))}
+                        />
+                        {errors.fullName && (
+                            <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>
+                        )}
+                      </div>
+                        <div>
+                            <label className="block text-sm text-[#ABABAB] mb-1">
+                                Phone <span className="text-red-500">*</span>
+                            </label>
+
+                            <PhoneInput
+                                value={phone}
+                                onChange={setPhone}
+                                error={errors.phone}
+                            />
+                            {errors.phone && (
+                                <p className="text-red-400 text-xs mt-1">{errors.phone}</p>
+                            )}
+                        </div>
+                    </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div>
@@ -114,22 +142,24 @@ export default function AddUser() {
                         )}
                     </div>
                     <div>
-                        <label className="block text-sm text-[#ABABAB] mb-1">
-                            Phone <span className="text-red-500">*</span>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                            Role <span className="text-red-500">*</span>
                         </label>
 
-                        <PhoneInput
-                            value={phone}
-                            onChange={setPhone}
-                            error={errors.phone}
+                        <Dropdown
+                            label="Select Role"
+                            options={["Maker", "Admin"]}
+                            selected={role}
+                            onChange={setRole}
+                            className="w-full lg:w-[580px] max-w-full"
                         />
-                        {errors.phone && (
-                            <p className="text-red-400 text-xs mt-1">{errors.phone}</p>
+                        {errors.role && (
+                            <p className="text-red-400 text-xs mt-1">{errors.role}</p>
                         )}
                     </div>
                 </div>
 
-                <div>
+                {/* <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mt-6 mb-1">
                         Role <span className="text-red-500">*</span>
                     </label>
@@ -144,7 +174,7 @@ export default function AddUser() {
                     {errors.role && (
                         <p className="text-red-400 text-xs mt-1">{errors.role}</p>
                     )}
-                </div>
+                </div> */}
 
                 {/* <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
                     <img src={authLogo} alt="auth logo" className="w-5 h-5" />
