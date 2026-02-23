@@ -10,6 +10,7 @@ import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import { normalizePhone, checkDuplicate } from "../../utils/vector";
+import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 
 export default function ViewCustomer() {
@@ -296,7 +297,11 @@ export default function ViewCustomer() {
                 </div>
                 <div>
                   <label className="block text-sm text-[#ABABAB] mb-1">Phone</label>
-                  <input name="phone_number" value={formData.phone_number} onChange={handleChange} className={`w-full px-3 py-2 rounded-lg bg-[#16191C] text-white border ${errors.phone_number || phoneExists ? "border-red-500" : "border-[#2A2F33]"} focus:border-blue-500`} />
+                  <PhoneInput
+                    value={formData.phone_number}
+                    onChange={(value) => setFormData(p => ({ ...p, phone_number: value }))}
+                    error={errors.phone_number || phoneExists}
+                  />
                   {phoneExists && (
                     <div className="flex items-center gap-1.5 mt-2">
                       <img src={warning} alt="warning" className="w-4 h-4" />

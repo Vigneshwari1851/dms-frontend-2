@@ -4,6 +4,7 @@ import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx";
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
+import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import edit from "../../assets/Common/edit.svg";
 
@@ -244,17 +245,20 @@ export default function ViewUser() {
                         <label className="block font-normal text-sm text-[#ABABAB] mb-1">
                             Phone
                         </label>
-                        <input
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            readOnly={!editMode}
-                            className={`w-full rounded-lg px-3 py-2 text-white bg-[#16191C]
-                                ${!editMode
-                                    ? "border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
-                                    : "border border-[#2A2F33] focus:border-blue-500"}
-                            `}
-                        />
+                        {!editMode ? (
+                            <input
+                                name="phone"
+                                value={formData.phone}
+                                readOnly
+                                className="w-full rounded-lg px-3 py-2 text-white bg-[#16191C] border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
+                            />
+                        ) : (
+                            <PhoneInput
+                                value={formData.phone}
+                                onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                                error={errors.phone}
+                            />
+                        )}
                         {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                     </div>
                 </div>

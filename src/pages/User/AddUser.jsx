@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/Common/save.svg";
 import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg";
 import { createUser } from "../../api/user/user.jsx";
 import Toast from "../../components/common/Toast";
+import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 
 export default function AddUser() {
@@ -16,6 +17,7 @@ export default function AddUser() {
     const [toast, setToast] = useState({ show: false, message: "", type: "" });
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
+
 
     const validate = () => {
         const newErrors = {};
@@ -117,32 +119,10 @@ export default function AddUser() {
                             Phone <span className="text-red-500">*</span>
                         </label>
 
-                        <input
-                            className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
+                        <PhoneInput
                             value={phone}
-                            onChange={(e) => {
-                                let value = e.target.value;
-                                const digits = value.replace(/\D/g, "");
-                                if (digits.length > 15) return;
-                                setPhone(value);
-                            }}
-                            onKeyDown={(e) => {
-                                const allowedControlKeys = [
-                                    "Backspace",
-                                    "Delete",
-                                    "ArrowLeft",
-                                    "ArrowRight",
-                                    "Tab",
-                                ];
-                                if (allowedControlKeys.includes(e.key)) return;
-                                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
-                                if (/^[0-9]$/.test(e.key)) {
-                                    const currentDigits = phone.replace(/\D/g, "");
-                                    if (currentDigits.length >= 15) e.preventDefault();
-                                    return;
-                                }
-                                e.preventDefault();
-                            }}
+                            onChange={setPhone}
+                            error={errors.phone}
                         />
                         {errors.phone && (
                             <p className="text-red-400 text-xs mt-1">{errors.phone}</p>

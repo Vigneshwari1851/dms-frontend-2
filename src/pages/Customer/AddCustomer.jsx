@@ -4,6 +4,7 @@ import add from "../../assets/Common/save.svg";
 import warning from "../../assets/warning.svg";
 import { addCustomer } from "../../api/customers";
 import { normalizePhone, checkDuplicate } from "../../utils/vector";
+import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
 
@@ -48,6 +49,7 @@ export default function AddCustomer() {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
 
     useEffect(() => {
         const runCheck = async () => {
@@ -136,19 +138,10 @@ export default function AddCustomer() {
                             Phone <span className="text-red-500">*</span>
                         </label>
 
-                        <input
-                            className={`w-full bg-[#16191C] rounded-lg px-3 py-2 border
-                                ${phoneExists || errors.phone
-                                    ? "border-red-500"
-                                    : "border-transparent"
-                                }`}
+                        <PhoneInput
                             value={phone}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                const allowedChars = value.replace(/[^\d+]/g, "");
-                                if (allowedChars.length > 15) return;
-                                setPhone(allowedChars);
-                            }}
+                            onChange={setPhone}
+                            error={phoneExists || errors.phone}
                         />
                         {phoneExists && (
                             <div className="flex items-center gap-1.5 mt-2">
