@@ -4,6 +4,7 @@ import add from "../../assets/Common/save.svg";
 import warning from "../../assets/warning.svg";
 import { addCustomer } from "../../api/customers";
 import { normalizePhone, checkDuplicate } from "../../utils/vector";
+import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
 
 export default function AddCustomer() {
@@ -117,10 +118,7 @@ export default function AddCustomer() {
                     <input
                         className={`w-full bg-[#16191C] rounded-lg px-3 py-2 ${errors.fullName ? "border border-red-500" : ""}`}
                         value={fullName}
-                        onChange={(e) => {
-                            const val = e.target.value;
-                            if (/^[a-zA-Z\s]*$/.test(val)) setFullName(val);
-                        }}
+                        onChange={(e) => setFullName(onlyAlphabets(capitalizeWords(e.target.value)))}
                     />
                 </div>
 

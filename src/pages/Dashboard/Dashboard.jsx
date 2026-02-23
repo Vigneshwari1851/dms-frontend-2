@@ -52,13 +52,13 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6 lg:mb-10">
+      <div className="flex items-center justify-between mb-4 lg:mb-4">
         <h1 className="text-white text-xl lg:text-[20px] font-semibold">Welcome back!</h1>
         <button
           className="
     flex items-center justify-center 
     w-auto px-3 lg:w-[173px] h-10 
-    bg-[#1D4CB5] hover:bg-blue-600 
+    bg-[#1D4CB5] hover:bg-[#173B8B] 
     text-white 
     rounded-lg 
     gap-2 lg:gap-2.5
@@ -112,7 +112,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="mt-8 ">
+      <div className="mt-2">
         {/* <h2 className="text-white text-lg font-semibold">Today's Deals</h2> */}
         <DealsTable />
       </div>

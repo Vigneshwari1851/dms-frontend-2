@@ -4,6 +4,7 @@ import Dropdown from "../../components/common/Dropdown";
 import NotificationCard from "../../components/common/Notification";
 import { fetchUserById, updateUser, updateUserStatus, deleteUser } from "../../api/user/user.jsx";
 import { sendResetPasswordEmail } from "../../api/auth/auth.jsx";
+import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import edit from "../../assets/Common/edit.svg";
 
 export default function ViewUser() {
@@ -94,7 +95,11 @@ export default function ViewUser() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        let finalValue = value;
+        if (name === "full_name") {
+            finalValue = onlyAlphabets(capitalizeWords(value));
+        }
+        setFormData((prev) => ({ ...prev, [name]: finalValue }));
     };
 
     const handleCancel = () => {

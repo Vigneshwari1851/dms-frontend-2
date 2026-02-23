@@ -6,6 +6,7 @@ import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
 import { fetchCurrencies } from "../../api/currency/currency";
+import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
 
 export default function CreateDeal() {
@@ -465,7 +466,11 @@ export default function CreateDeal() {
 
 
   const handleCustomerSearch = async (value) => {
-    setCustomerQuery(value);
+    let formattedValue = value;
+    if (!/^\d+$/.test(value)) {
+      formattedValue = onlyAlphabets(capitalizeWords(value));
+    }
+    setCustomerQuery(formattedValue);
 
     if (!value || value.trim().length === 0) {
       setSelectedCustomer(null);

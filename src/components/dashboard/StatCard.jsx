@@ -14,7 +14,7 @@ export default function StatCard({ title, value, subValues, change, icon }) {
       "
     >
       <div className="flex items-center justify-between gap-3 mb-2">
-        <p className="text-[#C1C1C1] font-normal text-[16px]">{title}</p>
+        <p className="text-[#C1C1C1] font-normal text-[14px]">{title}</p>
         <img src={icon} alt="" className="w-8 h-8 " />
       </div>
 
@@ -23,7 +23,7 @@ export default function StatCard({ title, value, subValues, change, icon }) {
           subValues.map((item, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <span className="text-[#8F8F8F] text-sm w-8">{item.label}</span>
-              <h2 className="text-white text-xl font-semibold">{item.value}</h2>
+              <h2 className="text-white text-[18px] font-semibold">{item.value}</h2>
             </div>
           ))
         ) : (

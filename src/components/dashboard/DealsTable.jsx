@@ -216,7 +216,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   }
 
   return (
-    <div className="mt-6 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
+    <div className="mt-4 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
       {deals.length > 0 && (
         <>
           {/* Header Row */}
@@ -287,15 +287,14 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
         {deals.length === 0 ? (
           <EmptyState
             imageSrc={todayDealBg}
-            message="No deals found for today"
-            description="Get started by creating your first deal of the day"
+            message="Start creating deals"
             action={
               <button
                 onClick={() => navigate("/deals/create-deal")}
                 className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
               >
                 <img src={add} alt="add" className="w-5 h-5" />
-                Create New Deal
+                Start Now
               </button>
             }
           />

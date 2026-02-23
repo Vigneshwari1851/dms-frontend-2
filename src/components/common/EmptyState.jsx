@@ -2,7 +2,7 @@ import React from "react";
 
 const EmptyState = ({ imageSrc, message = "No data available", description, action }) => {
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="flex flex-col items-center justify-center p-2">
             <img
                 src={imageSrc}
                 alt="Empty state"
@@ -15,7 +15,7 @@ const EmptyState = ({ imageSrc, message = "No data available", description, acti
                 </p>
             )}
             {action && (
-                <div className="mt-6">
+                <div className="mt-2">
                     {action}
                 </div>
             )}

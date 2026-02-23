@@ -141,19 +141,31 @@ export default function ListUser() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-xl lg:text-[20px] font-semibold">Users</h1>
-        <button
-          onClick={handleAddUser}
-          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium">
-          <img src={add} alt="add" className="w-4 h-4 lg:w-5 lg:h-5" />
-          Add User
-        </button>
+
+      <div className="flex items-center mb-6">
+        {/* Left content */}
+        <div>
+          <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+            User Management
+          </h1>
+          <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+            Manage system users and roles
+          </p>
+        </div>
+
+        {/* Right buttons */}
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            onClick={handleAddUser}
+            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
+          >
+            <img src={add} alt="add" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
+            Add User
+          </button>
+        </div>
       </div>
 
-      <p className="text-gray-400 mb-6 hidden lg:block">Manage system users and roles</p>
-
-      <div className="mt-8">
+      <div className="">
         <Table
           columns={columns}
           data={rowsWithActions}

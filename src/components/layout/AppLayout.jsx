@@ -39,7 +39,7 @@ export default function AppLayout() {
         {/* Main content */}
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-scroll scrollbar-grey p-4 lg:p-8 bg-[#16191C] text-white"
+          className="flex-1 overflow-y-scroll scrollbar-grey p-2 lg:p-4 bg-[#16191C] text-white"
           style={{ scrollbarGutter: "stable" }}
         >
           <Outlet />

@@ -177,7 +177,7 @@ export default function Table({
   }, [filteredData, sortConfig]);
 
   return (
-    <div className="mt-6 w-full scrollbar-grey">
+    <div className="mt-2 w-full scrollbar-grey">
       {/* HEADER */}
       {showHeader && (
         <div className="bg-[#1A1F24] rounded-t-lg px-3 sm:px-5 py-4">

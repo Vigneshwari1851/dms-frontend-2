@@ -23,7 +23,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                 {editable && (
                     <button
                         onClick={onAdd}
-                        className="flex items-center gap-2 bg-[#1D4CB5] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+                        className="flex items-center gap-2 bg-[#1D4CB5] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#173B8B] transition-all shadow-lg active:scale-95"
                     >
                         <PlusIcon className="w-4 h-4" /> Add Installment
                     </button>
@@ -640,7 +640,7 @@ export default function EditDeal() {
 
                             <button
                                 onClick={handleSave}
-                                className="w-[91px] h-10 flex items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-blue-600 px-3"
+                                className="w-[91px] h-10 flex items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm cursor-pointer hover:bg-[#173B8B] px-3"
                             >
                                 Save
                             </button>
@@ -651,7 +651,7 @@ export default function EditDeal() {
                         /* Desktop Only: Edit Icon button */
                         <button
                             onClick={handleStartEdit}
-                            className="hidden lg:flex w-full lg:w-[41px] h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-blue-600"
+                            className="hidden lg:flex w-full lg:w-[41px] h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-[#173B8B]"
                         >
                             <img src={editIcon} className="lg:w-[41px] lg:h-10" alt="Edit" />
                         </button>
@@ -868,7 +868,7 @@ export default function EditDeal() {
                             </button>
                             <button
                                 onClick={handleSave}
-                                className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+                                className="w-[120px] h-10 rounded-lg bg-[#1D4CB5] text-white font-medium text-sm flex items-center justify-center cursor-pointer hover:bg-[#173B8B] transition-colors"
                             >
                                 Save
                             </button>

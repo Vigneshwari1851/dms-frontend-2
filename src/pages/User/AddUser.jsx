@@ -5,6 +5,7 @@ import Dropdown from "../../components/common/Dropdown";
 import authLogo from "../../assets/verify/authlogo.svg";
 import { createUser } from "../../api/user/user.jsx";
 import Toast from "../../components/common/Toast";
+import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 
 export default function AddUser() {
 
@@ -92,7 +93,7 @@ export default function AddUser() {
                     <input
                         className="w-full bg-[#16191C] rounded-lg px-3 py-2"
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => setFullName(onlyAlphabets(capitalizeWords(e.target.value)))}
                     />
                     {errors.fullName && (
                         <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>
@@ -173,8 +174,8 @@ export default function AddUser() {
 
                 {/* Buttons */}
                 <div className="flex flex-col lg:flex-row justify-between lg:justify-end items-stretch lg:items-center gap-3 mt-8">
-                    <button 
-                        onClick={handleCancel} 
+                    <button
+                        onClick={handleCancel}
                         className="lg:hidden w-full h-12 px-4 py-3 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200 text-sm font-medium active:opacity-80"
                     >
                         Cancel

@@ -10,6 +10,7 @@ import Dropdown from "../../components/common/Dropdown";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import { normalizePhone, checkDuplicate } from "../../utils/vector";
+import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -107,7 +108,7 @@ export default function ViewCustomer() {
     let newValue = type === "checkbox" ? checked : value;
 
     if (name === "name") {
-      if (!/^[a-zA-Z\s]*$/.test(newValue)) return;
+      newValue = onlyAlphabets(capitalizeWords(newValue));
     }
 
     if (name === "phone_number") {
