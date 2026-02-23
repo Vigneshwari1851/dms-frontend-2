@@ -556,15 +556,17 @@ export default function DealsList() {
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          />
-        </div>
+        {/* Pagination — only shown when there is data */}
+        {filteredAndSortedData.length > 0 && (
+          <div className="border-t-[3px] border-[#16191C]  mt-4 pt-4 -mx-5 px-5">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            />
+          </div>
+        )}
         {toast.show && (
           <Toast
             show={toast.show}
