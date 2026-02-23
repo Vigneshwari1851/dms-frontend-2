@@ -168,23 +168,11 @@ export default function ViewUser() {
             {/* PAGE HEADER */}
             <div className="flex items-center justify-between lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h2 className="text-[16px] font-medium text-white">User Details</h2>
-                    <p className="text-gray-400 text-[12px]">View and manage user information</p>
+                    <h2 className="text-[16px] font-semibold text-white lg:text-[20px]">User Details</h2>
+                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">View and manage user information</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <span
-                        className={`
-                        px-4 py-1 rounded-full text-[12px] lg:px-4 lg:text-[12px]
-                        ${isActive
-                                ? "bg-[#10B93524] text-[#82E890]"
-                                : "bg-[#BD404A24] text-[#FF8A8A]"
-                            }
-                    `}
-                    >
-                        {isActive ? "Active" : "Inactive"}
-                    </span>
-
                     {!editMode && (
                         <button
                             onClick={() => setEditMode(true)}

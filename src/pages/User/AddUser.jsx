@@ -82,11 +82,10 @@ export default function AddUser() {
 
             {/* Page Header */}
             <div >
-                <h2 className="text-[16px] font-medium text-white lg:text-[16px]">Add New User</h2>
-                <p className="text-gray-400 text-[12px] mb-6">Create a new user account for the system</p>
+                <h2 className="text-[16px] font-semibold text-white lg:text-[20px]">Add New User</h2>
+                <p className="text-gray-400 text-sm mt-1 hidden lg:block">Create a new user account for the system</p>
 
             </div>
-
 
             {/* Form Container */}
             <div className="mt-4 bg-[#1A1F24] p-4 lg:p-5 rounded-xl">
@@ -147,10 +146,10 @@ export default function AddUser() {
                     )}
                 </div>
 
-                <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
+                {/* <p className="flex items-start gap-2 font-normal text-[14px] text-[#C2C2C2] bg-[#5761D738] p-5 rounded-xl mt-6 mb-1">
                     <img src={authLogo} alt="auth logo" className="w-5 h-5" />
                     Default password will be sent to the user's email address. User will be required to change password on first login.
-                </p>
+                </p> */}
 
                 {/* Buttons */}
                 <div className="flex flex-col lg:flex-row justify-between lg:justify-end items-stretch lg:items-center gap-3 mt-8">

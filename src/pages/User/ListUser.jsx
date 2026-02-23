@@ -66,7 +66,7 @@ export default function ListUser() {
   const columns = [
     { label: "Name", key: "full_name", align: "left" },
     { label: "Role", key: "role", align: "center" },
-    { label: "Email", key: "email", align: "center" },
+    { label: "Email", key: "email", align: "left" },
     { label: "User Status", key: "status", align: "center" },
     { label: "last Login", key: "last_login", align: "left" },
     { label: "Actions", key: "actions", align: "center", className: "hidden lg:table-cell" },
@@ -169,9 +169,9 @@ export default function ListUser() {
         <Table
           columns={columns}
           data={rowsWithActions}
-          title="Users List"
+          title="User List"
           subtitle=""
-          sortableKeys={["email", "status"]}
+          sortableKeys={["role","status"]}
           showRightSection={false}
           onRowClick={handleRowClick}
           currentPage={currentPage}

@@ -184,7 +184,7 @@ export default function Table({
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between flex-wrap w-full gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full lg:w-auto flex-wrap">
               <div className="min-w-0">
-                <h2 className="text-white text-base sm:text-lg font-semibold">{title}</h2>
+                <h2 className="text-white text-medium">{title}</h2>
                 {subtitle && (
                   <p className="text-gray-400 text-xs sm:text-sm mt-1">{subtitle}</p>
                 )}
