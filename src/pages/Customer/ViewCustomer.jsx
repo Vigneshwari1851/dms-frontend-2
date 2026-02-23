@@ -281,7 +281,10 @@ export default function ViewCustomer() {
                 onClick={() => setEditMode(true)}
                 className="p-1 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-lg transition-colors"
               >
-                <img src={edit} alt="edit" className="w-6 h-6 cursor-pointer" />
+                <svg width="24" height="24" viewBox="0 0 41 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                  <path d="M12.8492 27.15H13.9472L24.1455 16.952L23.0472 15.8788L12.8492 26.077V27.15ZM11.1992 28.8V25.3808L25.13 11.4115C25.2158 11.3202 25.3122 11.2621 25.4192 11.2373C25.5264 11.2124 25.6305 11.2 25.7315 11.2C25.8325 11.2 25.9251 11.2045 26.0095 11.2135C26.0936 11.2225 26.189 11.2738 26.2955 11.3673L28.6127 13.6655C28.7062 13.7718 28.7607 13.8718 28.7762 13.9655C28.7916 14.0593 28.7992 14.1614 28.7992 14.2718C28.7992 14.3739 28.7847 14.4744 28.7557 14.5733C28.7267 14.6719 28.6707 14.7642 28.5877 14.85L14.6185 28.8H11.1992ZM23.6117 16.4125L23.0472 15.8788L24.1455 16.952L23.6117 16.4125Z" fill="currentColor" />
+                </svg>
+                <span>Edit</span>
               </button>
             )}
           </div>
@@ -291,9 +294,22 @@ export default function ViewCustomer() {
           {!editMode ? (
             <button
               onClick={() => setEditMode(true)}
-              className="p-1 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-lg transition-colors"
+              className="flex items-center px-1 py-1.5 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-lg transition-colors"
             >
-              <img src={edit} alt="edit" className="w-8 h-8 cursor-pointer" />
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 41 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+              >
+                <path
+                  d="M12.8492 27.15H13.9472L24.1455 16.952L23.0472 15.8788L12.8492 26.077V27.15ZM11.1992 28.8V25.3808L25.13 11.4115C25.2158 11.3202 25.3122 11.2621 25.4192 11.2373C25.5264 11.2124 25.6305 11.2 25.7315 11.2C25.8325 11.2 25.9251 11.2045 26.0095 11.2135C26.0936 11.2225 26.189 11.2738 26.2955 11.3673L28.6127 13.6655C28.7062 13.7718 28.7607 13.8718 28.7762 13.9655C28.7916 14.0593 28.7992 14.1614 28.7992 14.2718C28.7992 14.3739 28.7847 14.4744 28.7557 14.5733C28.7267 14.6719 28.6707 14.7642 28.5877 14.85L14.6185 28.8H11.1992ZM23.6117 16.4125L23.0472 15.8788L24.1455 16.952L23.6117 16.4125Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Edit</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
