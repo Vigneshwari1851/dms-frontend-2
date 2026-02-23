@@ -25,6 +25,7 @@ export const updateVector = (customers) => {
         const phone = normalizePhone(c.phone_number || c.phone);
         if (phone && !phoneVector.some(v => v.phone === phone)) {
             phoneVector.push({
+                id: String(c.id || ""),
                 name: c.name || c.full_name || c.customer_name,
                 phone: phone
             });
@@ -40,8 +41,12 @@ export const checkDuplicate = async (phone, excludeId = null) => {
     const onlyDigits = normalizePhone(phone);
     if (!onlyDigits) return null;
 
-    // 1. Check in-memory vector
-    const memMatch = phoneVector.find(v => v.phone === onlyDigits);
+    // 1. Check in-memory vector (exclude self when editing)
+    const memMatch = phoneVector.find(v => {
+        if (v.phone !== onlyDigits) return false;
+        if (excludeId && String(v.id) === String(excludeId)) return false;
+        return true;
+    });
     if (memMatch) return memMatch;
 
     // 2. Dynamic API check
@@ -65,3 +70,4 @@ export const checkDuplicate = async (phone, excludeId = null) => {
 
     return null;
 };
+
