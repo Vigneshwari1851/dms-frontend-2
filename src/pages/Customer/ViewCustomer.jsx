@@ -378,7 +378,7 @@ export default function ViewCustomer() {
           ) : (
             <div>
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 lg:gap-0 mb-4">
-                <h2 className="text-white text-base lg:text-[16px] font-semibold">Deals</h2>
+                <h2 className="text-white text-base lg:text-[16px] font-semibold">Related Deals</h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3">
                   <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-full sm:w-[150px]" />
                   <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-full sm:w-[180px]" />

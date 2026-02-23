@@ -15,7 +15,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
     { name: "User Management", icon: usermanagement, path: "/users" },
-    { name: "Customer Ledger", icon: customermanagement, path: "/customer-info" },
+    { name: "Customer Information", icon: customermanagement, path: "/customer-info" },
     { name: "Deals", icon: deals, path: "/deals" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reporting", icon: reporting, path: "/reports" },
