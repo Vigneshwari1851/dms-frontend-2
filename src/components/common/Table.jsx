@@ -82,7 +82,7 @@ export default function Table({
     if (col.key === "role")
       return (
         <span
-          className={`px-3 py-1 text-sm font-medium ${roleColors[value] || ""}`}
+          className={`px-3 text-sm font-medium ${roleColors[value] || ""}`}
           style={{ borderRadius: "18px" }}
         >
           {value}
@@ -92,7 +92,7 @@ export default function Table({
     if (col.key === "status")
       return (
         <span
-          className={`px-3 py-1 text-sm font-medium ${statusColors[value] || ""}`}
+          className={`px-3 text-sm font-medium ${statusColors[value] || ""}`}
           style={{ borderRadius: "18px" }}
         >
           {value}
@@ -290,10 +290,10 @@ export default function Table({
       )}
 
       {/* TABLE BODY */}
-      <div className="bg-[#1A1F24] mt-[1.5px] py-4 overflow-x-auto scrollbar-grey">
-        <table className="w-full text-[#8F8F8F] font-normal text-[13px] min-w-[640px]">
+      <div className="bg-[#1A1F24] mt-[1.5px] overflow-x-auto scrollbar-grey">
+        <table className="w-full text-[#8F8F8F] text-sm min-w-[640px]">
           <thead>
-            <tr className="text-[#FFFFFF] text-[12px] font-normal">
+            <tr className="text-white text-sm text-[14px]">
               {columns.map((col, index) =>
                 sortableKeys.includes(col.key) ? (
                   <SortableHeader
@@ -332,12 +332,12 @@ export default function Table({
                 <tr
                   key={rowIndex}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                  className="h-9 rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
                 >
                   {columns.map((col, colIndex) => (
                     <td
                       key={colIndex}
-                      className={`py-3 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
+                      className={`py-1.5 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                     >
                       {col.key === "full_name" ? (
                         <span className="text-white">{row[col.key]}</span>

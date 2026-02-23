@@ -387,10 +387,10 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
                 paginatedData.map((item, index) => (
                   <tr
                     key={index}
-                    className="rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
+                    className="h-9 rounded-2xl border-gray-800 hover:bg-[#151517] transition-colors cursor-pointer"
                     onClick={() => handleRowClick(item)}
                   >
-                    <td className="py-3 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                    <td className="py-1.5 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
                       {item.id}
                     </td>
                     <td>{item.date}</td>
