@@ -193,21 +193,22 @@ export default function ViewUser() {
                 <div className="flex items-center gap-3">
                     {!editMode && (
                         <button
-                            onClick={() => setEditMode(true)}
-                            className=" bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md"
+                        onClick={() => setEditMode(true)}
+                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md px-3 py-1.5"
                         >
-                            <img
-                                src={edit}
-                                alt="edit"
-                                className="w-8 h-8 cursor-pointer lg:w-8 lg:h-8"
-                            />
+                        <img
+                            src={edit}
+                            alt="edit"
+                            className="w-6 h-6"
+                        />
+                        <span>Edit</span>
                         </button>
                     )}
                 </div>
             </div>
 
             {/* MAIN FORM CONTAINER */}
-            <div className="mt-4 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
+            <div className="mt-4 ml-10 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
                 {/* FULL NAME */}
                 <div>
                     <label className="block font-normal text-sm text-[#ABABAB] mb-1">
