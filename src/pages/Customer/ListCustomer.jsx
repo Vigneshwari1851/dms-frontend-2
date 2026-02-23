@@ -123,8 +123,19 @@ export default function ListCustomer() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-white text-xl lg:text-[20px] font-semibold">Customer Ledger</h1>
+    <div className="flex items-center mb-6">
+      {/* Left content */}
+      <div>
+        <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+          Customer Ledger
+        </h1>
+        <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+          View all customers and their ledger
+        </p>
+      </div>
+
+      {/* Right buttons */}
+      <div className="ml-auto flex items-center gap-3">
         <button
           onClick={handleAddCustomer}
           className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
@@ -133,9 +144,8 @@ export default function ListCustomer() {
           Add Customer
         </button>
       </div>
-      <p className="text-gray-400 mb-6 hidden lg:block">View all customers and their ledger</p>
-
-      <div className="mt-8">
+    </div>
+      <div className="mt-2">
         <Table
           title="Search Customer"
           columns={columns}
