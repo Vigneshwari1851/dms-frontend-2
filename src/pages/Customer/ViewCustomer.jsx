@@ -14,6 +14,7 @@ import PhoneInput from "../../components/common/PhoneInput.jsx";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import PhoneFlag from "../../components/common/PhoneFlag.jsx";
 import DiscardModal from "../../components/common/DiscardModal";
+import NotificationCard from "../../components/common/Notification";
 
 export default function ViewCustomer() {
   const { id } = useParams();
@@ -28,6 +29,12 @@ export default function ViewCustomer() {
   const [phoneExists, setPhoneExists] = useState(false);
   const [existingCustomerName, setExistingCustomerName] = useState("");
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    actionType: "",
+    title: "",
+    message: "",
+  });
 
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
@@ -363,16 +370,41 @@ export default function ViewCustomer() {
                 </div>
               </div>
               <div className="mt-6">
-                <label className="flex items-center gap-2 text-sm text-[#ABABAB] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={formData.is_active}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded bg-[#16191C] border-[#2A2F33] focus:ring-blue-500"
-                  />
-                  Is Active
+                <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                  Account Status
                 </label>
+                <div className="flex items-center gap-3 h-[38px] rounded-lg">
+                  <button
+                    type="button"
+                    disabled={!editMode}
+                    onClick={() => {
+                      if (!editMode) return;
+                      setConfirmModal({
+                        open: true,
+                        actionType: formData.is_active ? "deactivate" : "activate",
+                        title: formData.is_active
+                          ? "Are you sure you want to deactivate this customer account?"
+                          : "Are you sure you want to activate this customer account?",
+                        message: formData.is_active
+                          ? "You are about to deactivate this customer. They will be marked as inactive in the system. Do you want to continue?"
+                          : "You are about to activate this customer. They will be marked as active in the system. Do you want to continue?",
+                      });
+                    }}
+                    className={`relative flex items-center w-[110px] h-[32px] rounded-full transition-all duration-300 focus:outline-none
+                                    ${formData.is_active ? "bg-[#2bc5b4]" : "bg-[#C52B2B]"}
+                                    ${!editMode ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
+                                `}
+                  >
+                    <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold tracking-wide transition-all duration-300
+                                    ${formData.is_active ? "left-0 right-[32px]" : "left-[32px] right-0"}`}
+                    >
+                      {formData.is_active ? "Active" : "Inactive"}
+                    </span>
+                    <span className={`absolute w-[24px] h-[24px] bg-white rounded-full shadow-md transition-all duration-300
+                                    ${formData.is_active ? "left-[80px]" : "left-[4px]"}`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -521,31 +553,53 @@ export default function ViewCustomer() {
           </div>
         )}
 
-      </div>
+      </div >
 
       {/* Mobile Sticky Action Bar */}
-      {editMode && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 flex gap-4 z-50">
-          <button
-            onClick={handleCancel}
-            className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={phoneExists}
-            className={`flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B] ${phoneExists ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            Save
-          </button>
-        </div>
-      )}
+      {
+        editMode && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 flex gap-4 z-50">
+            <button
+              onClick={handleCancel}
+              className="flex-1 bg-[#2A2F34] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#343a40]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={phoneExists}
+              className={`flex-1 bg-[#1D4CB5] text-white py-3 rounded-lg font-medium text-sm hover:bg-[#173B8B] ${phoneExists ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              Save
+            </button>
+          </div>
+        )
+      }
 
       <DiscardModal
         show={showDiscardModal}
         onDiscard={handleDiscard}
         onKeep={() => setShowDiscardModal(false)}
+      />
+
+      <NotificationCard
+        confirmModal={confirmModal}
+        onCancel={() =>
+          setConfirmModal((prev) => ({ ...prev, open: false }))
+        }
+        onConfirm={() => {
+          switch (confirmModal.actionType) {
+            case "deactivate":
+              setFormData(prev => ({ ...prev, is_active: false }));
+              break;
+            case "activate":
+              setFormData(prev => ({ ...prev, is_active: true }));
+              break;
+            default:
+              break;
+          }
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+        }}
       />
     </>
   );

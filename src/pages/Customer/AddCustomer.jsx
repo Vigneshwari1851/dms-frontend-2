@@ -162,21 +162,45 @@ export default function AddCustomer() {
                             </div>
                         )}
                     </div>
-                    <div>
-                        <label className="block text-sm text-[#ABABAB] mt-2 mb-2">
+                    <div className="col-span-1 lg:col-span-2">
+                        <label className="block text-sm text-[#ABABAB] mt-2 mb-3">
                             Customer Type <span className="text-red-500">*</span>
                         </label>
-                        <Dropdown
-                            label="Customer Type"
-                            options={["Buy", "Sell"]}
-                            selected={
-                                deal_type === "buy" ? "Buy" :
-                                    deal_type === "sell" ? "Sell" :
-                                        ""
-                            }
-                            onChange={(val) => setDealType(val.toLowerCase())}
-                            className={`w-full ${errors.deal_type ? "border border-red-500 rounded-lg" : ""}`}
-                        />
+                        <div className="flex gap-6">
+                            {["Buy", "Sell"].map((type) => (
+                                <label key={type} className="flex items-center gap-3 cursor-pointer group">
+                                    <div className="relative flex items-center justify-center">
+                                        <input
+                                            type="radio"
+                                            name="deal_type"
+                                            value={type.toLowerCase()}
+                                            checked={deal_type === type.toLowerCase()}
+                                            onChange={(e) => setDealType(e.target.value)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-5 h-5 rounded-full border-2 transition-all duration-200 
+                                            ${deal_type === type.toLowerCase()
+                                                ? "border-[#1D4CB5] bg-[#1D4CB5]"
+                                                : "border-[#2A2F33] group-hover:border-[#4A5568]"}`}
+                                        >
+                                            {deal_type === type.toLowerCase() && (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`text-sm font-medium transition-colors duration-200 
+                                        ${deal_type === type.toLowerCase() ? "text-white" : "text-[#8F8F8F] group-hover:text-gray-300"}`}
+                                    >
+                                        {type}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                        {errors.deal_type && (
+                            <p className="text-red-400 text-xs mt-2">{errors.deal_type}</p>
+                        )}
                     </div>
                 </div>
                 <div className="flex gap-3 mt-8 lg:justify-end">
