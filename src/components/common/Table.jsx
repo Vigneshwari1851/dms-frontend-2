@@ -332,7 +332,7 @@ export default function Table({
                 <tr
                   key={rowIndex}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className="h-9 rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
+                  className="h-9 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer"
                 >
                   {columns.map((col, colIndex) => (
                     <td
