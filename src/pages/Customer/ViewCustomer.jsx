@@ -186,15 +186,12 @@ export default function ViewCustomer() {
     if (isDirty) {
       setShowDiscardModal(true);
     } else {
-      setFormData(initialData);
-      setEditMode(false);
+      navigate("/customer-info");
     }
   };
 
   const handleDiscard = () => {
-    setFormData(initialData);
-    setEditMode(false);
-    setShowDiscardModal(false);
+    navigate("/customer-info");
   };
 
   const handleRowClick = (item) => {
@@ -251,18 +248,30 @@ export default function ViewCustomer() {
     <>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-3 lg:gap-0">
         <div className="flex items-center justify-between w-full lg:w-auto">
-          <div className="min-w-0 flex-1 lg:flex-initial">
-            <h2 className="text-white text-base lg:text-[16px] font-semibold truncate">
-              {editMode ? "Edit Customer" : `Customer Name: ${formData.name}`}
-            </h2>
-            <p className="mt-2 text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
-              {editMode ? "Edit customer info" : (
-                <span className="inline-flex items-center gap-1.5">
-                  Contact:
-                  <PhoneFlag phone={formData.phone_number} />
-                </span>
-              )}
-            </p>
+          <div className="flex items-center gap-3">
+            {/* Back arrow */}
+            <button
+              onClick={() => editMode ? handleCancel() : navigate("/customer-info")}
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#2A2F33] transition-colors text-[#ABABAB] hover:text-white"
+              title="Back to Customers"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-white text-base lg:text-[16px] font-semibold truncate">
+                {editMode ? "Edit Customer" : `Customer Name: ${formData.name}`}
+              </h2>
+              <p className="mt-2 text-gray-400 text-xs lg:text-[12px] truncate hidden lg:block">
+                {editMode ? "Edit customer info" : (
+                  <span className="inline-flex items-center gap-1.5">
+                    Contact:
+                    <PhoneFlag phone={formData.phone_number} />
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
 
           {/* Mobile Only: Edit Icons (Pencil or Save/Cancel) */}
@@ -308,7 +317,7 @@ export default function ViewCustomer() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
-        <div className="w-full lg:flex-1 bg-[#1A1F24] p-4 lg:p-5 rounded-xl overflow-y-auto scrollbar-grey">
+        <div className="w-full lg:flex-1 bg-[#1A1F24] p-4 lg:p-5 rounded-xl overflow-y-auto scrollbar-grey ml-10">
           {editMode ? (
             <div>
               <div className="mb-4">

@@ -118,7 +118,7 @@ export default function ViewUser() {
         if (isDirty) {
             setShowDiscardModal(true);
         } else {
-            setEditMode(false);
+            navigate("/users");
         }
     };
 

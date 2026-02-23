@@ -478,9 +478,7 @@ export default function EditDeal() {
     };
 
     const handleDiscard = () => {
-        if (deal) populateFormFromDeal(deal);
-        setEditMode(false);
-        setShowDiscardModal(false);
+        navigate("/deals");
     };
 
     const handleSave = () => {
@@ -616,9 +614,21 @@ export default function EditDeal() {
             {/* Page Header */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4 gap-4 lg:gap-0">
                 <div className="flex items-center justify-between w-full lg:w-auto">
-                    <h2 className="text-[16px] lg:text-[18px] font-medium text-white">
-                        Deal ID - {deal?.deal_number || id || "Loading..."}
-                    </h2>
+                    <div className="flex items-center gap-3">
+                        {/* Back arrow */}
+                        <button
+                            onClick={() => editMode ? handleCancelEdit() : navigate("/deals")}
+                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#2A2F33] transition-colors text-[#ABABAB] hover:text-white"
+                            title="Back to Deals"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <h2 className="text-[16px] lg:text-[18px] font-medium text-white">
+                            Deal ID - {deal?.deal_number || id || "Loading..."}
+                        </h2>
+                    </div>
 
                     {/* Mobile Only: Edit Pencil (only when not in edit mode) */}
                     <div className="lg:hidden flex items-center gap-2">
@@ -681,7 +691,7 @@ export default function EditDeal() {
 
             {/* Form Container */}
             {!loading && (
-                <div className="mt-4 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
+                <div className="mt-4 ml-10 bg-[#1A1F24] p-4 lg:p-6 rounded-xl">
 
                     {/* Row 1 - Customer Name & Phone */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
