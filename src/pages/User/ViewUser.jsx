@@ -249,57 +249,44 @@ export default function ViewUser() {
                     </div>
                 </div>
 
-                {/* ROLE */}
-                <div className="mt-6">
-                    <label className="block font-normal text-sm text-[#ABABAB] mb-1">
-                        Role
-                    </label>
-                    {!editMode && (
-                        <input
-                            value={formData.role}
-                            readOnly
-                            className={`w-full lg:w-[575px] bg-[#16191C] rounded-lg px-3 py-2 text-white
-                            ${!editMode
-                                    ? "border border-transparent hover:border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
-                                    : "border border-[#2A2F33] focus:border-blue-500"
-                                }
-                        `}
-                        />
-                    )}
-                    {editMode && (
-                        <Dropdown
-                            label="Select Role"
-                            options={["Maker", "Checker"]}
-                            selected={formData.role}
-                            onChange={(value) =>
-                                setFormData((prev) => ({ ...prev, role: value }))
-                            }
-                            className="w-full lg:w-[566px] max-w-full"
-                        />
-                    )}
-                </div>
-
-                {/* DIVIDER */}
-                <div className="border-b border-[#2A2F33] my-6"></div>
-
-                {/* ACCOUNT STATUS */}
-                <h3 className="text-white font-semibold text-[14px] mb-3">
-                    Account Status
-                </h3>
-
-                <div className="bg-[#16191C] px-4 lg:px-5 py-4 rounded-xl">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-white text-[14px]">Account Active</p>
-
-                        {/* SWITCH */}
-                        <label
-                            className={`relative inline-flex items-center ${!editMode ? "cursor-not-allowed" : "cursor-pointer"
-                                }`}
-                        >
+                {/* ROLE + STATUS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mt-6">
+                    {/* ROLE */}
+                    <div>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                            Role
+                        </label>
+                        {!editMode ? (
                             <input
-                                type="checkbox"
-                                checked={isActive}
-                                onChange={() => {
+                                value={formData.role}
+                                readOnly
+                                className="w-full bg-[#16191C] rounded-lg px-3 py-2 text-white border border-transparent outline-none focus:ring-0 cursor-not-allowed opacity-80"
+                            />
+                        ) : (
+                            <Dropdown
+                                label="Select Role"
+                                options={["Maker", "Checker"]}
+                                selected={formData.role}
+                                onChange={(value) =>
+                                    setFormData((prev) => ({ ...prev, role: value }))
+                                }
+                                className="w-full"
+                            />
+                        )}
+                        {errors.role && <p className="text-red-400 text-xs mt-1">{errors.role}</p>}
+                    </div>
+
+                    {/* STATUS */}
+                    <div>
+                        <label className="block font-normal text-sm text-[#ABABAB] mb-1">
+                            Account Status
+                        </label>
+                        <div className="flex items-center gap-3 h-[38px] rounded-lg px-3">
+                            {/* Custom pill toggle with text inside */}
+                            <button
+                                type="button"
+                                disabled={!editMode}
+                                onClick={() => {
                                     if (!editMode) return;
                                     setConfirmModal({
                                         open: true,
@@ -312,18 +299,26 @@ export default function ViewUser() {
                                             : "You are about to activate this user account. The user will be able to log in. Do you want to continue?",
                                     });
                                 }}
-                                disabled={!editMode}
-                                className="sr-only peer"
-
-                            />
-                            <div className={`w-10 h-5 rounded-full transition ${isActive ? "bg-blue-600" : "bg-gray-600"} ${!editMode ? "opacity-60" : ""}`}></div>
-                            <div className={`absolute left-1 w-4 h-4 bg-white rounded-full transition ${isActive ? "translate-x-5" : ""} ${!editMode ? "opacity-60" : ""}`}></div>
-                        </label>
+                                className={`relative flex items-center w-[110px] h-[32px] rounded-full transition-all duration-300 focus:outline-none
+                                    ${isActive ? "bg-[#10B935]" : "bg-[#B91C1C]"}
+                                    ${!editMode ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
+                                `}
+                            >
+                                {/* Text inside pill */}
+                                <span className={`absolute text-white text-[11px] font-semibold tracking-wide transition-all duration-300
+                                    ${isActive ? "left-3" : "right-3"}`}
+                                >
+                                    {isActive ? "Active" : "Inactive"}
+                                </span>
+                                {/* White circle knob */}
+                                <span className={`absolute w-[24px] h-[24px] bg-white rounded-full shadow-md transition-all duration-300
+                                    ${isActive ? "left-[80px]" : "left-[4px]"}`}
+                                />
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-[#9EA3A7] text-[12px]">
-                        User can login and access the system
-                    </p>
                 </div>
+
 
                 {/* SECURITY ACTIONS - ONLY IN EDIT MODE */}
                 {editMode && (
