@@ -93,7 +93,7 @@ export default function PhoneInput({ value, onChange, error, className = "" }) {
                 >
                     <img src={selectedCountry.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm shadow-sm" />
                     <span className="text-white text-sm font-medium">{selectedCountry.code}</span>
-                    <img src={down} alt="" className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    <img src={down} alt="" className={`w-2 h-2 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 <input
