@@ -372,8 +372,7 @@ export default function DealsList() {
           {filteredAndSortedData.length === 0 ? (
             <EmptyState
               imageSrc={dealEmptyBg}
-              message="No deals found"
-              description="Start by creating your first deal or adjust your filters"
+              message="Looks like deals are not yet added"
               action={
                 <button
                   onClick={() => navigate("/deals/create-deal")}

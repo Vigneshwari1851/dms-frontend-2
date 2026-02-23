@@ -160,8 +160,7 @@ export default function ListCustomer() {
           showRightSection={false}
           emptyStateProps={{
             imageSrc: customerEmptyBg,
-            message: "No customers found",
-            description: "Start by adding your first customer to the ledger",
+            message: "Looks like customers are not yet added",
             action: (
               <button
                 onClick={() => navigate("/customer-info/add-customer")}

@@ -394,8 +394,7 @@ export default function ListReport() {
         {paginatedData.length === 0 ? (
           <EmptyState
             imageSrc={dealEmptyBg}
-            message="No report data found"
-            description="Adjust your filters or date range to view business analytics"
+            message="Looks like no report data is available"
           />
         ) : (
           <>

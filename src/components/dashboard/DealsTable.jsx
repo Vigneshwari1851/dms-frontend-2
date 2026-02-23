@@ -379,7 +379,6 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
                     <EmptyState
                       imageSrc={todayDealBg}
                       message="No deals match your filters"
-                      description="Try adjusting your search criteria"
                     />
                   </td>
                 </tr>
