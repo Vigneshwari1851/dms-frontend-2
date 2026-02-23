@@ -409,30 +409,32 @@ export default function ViewUser() {
                     </div>
                 )}
 
-                <div className="hidden lg:flex justify-end gap-3 mt-8">
-                    <button
-                        onClick={() => {
-                            navigate("/users", {
-                                state: {
-                                    toast: {
-                                        show: true,
-                                        message: "Changes reverted",
-                                        type: "error",
+                {editMode && (
+                    <div className="hidden lg:flex justify-end gap-3 mt-8">
+                        <button
+                            onClick={() => {
+                                navigate("/users", {
+                                    state: {
+                                        toast: {
+                                            show: true,
+                                            message: "Changes reverted",
+                                            type: "error",
+                                        },
                                     },
-                                },
-                            });
-                        }}
-                        className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
-                    >
-                        Save
-                    </button>
-                </div>
+                                });
+                            }}
+                            className="px-6 py-2 border border-gray-500 text-white rounded-lg hover:bg-white hover:text-black transition-all duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            className="bg-[#1D4CB5] hover:bg-[#173B8B] px-6 py-2 rounded-lg text-white"
+                        >
+                            Save
+                        </button>
+                    </div>
+                )}
                 <NotificationCard
                     confirmModal={confirmModal}
                     onCancel={() =>
