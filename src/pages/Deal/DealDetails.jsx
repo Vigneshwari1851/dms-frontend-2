@@ -86,11 +86,11 @@ export default function DealDetails() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-white text-2xl font-semibold">Deal Overview</h1>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <p className="text-gray-400 text-sm">ID - {deal.deal_number}</p>
             {deal.status === 'Completed' && (
               <>
-                <span className="text-[#3A3F43]">|</span>
+                <span className="mx-0.5 text-[#3A3F43]">|</span>
                 <span className="text-[11px] text-[#ABABAB] font-semibold uppercase tracking-[0.1em]">Completed</span>
               </>
             )}
@@ -287,14 +287,14 @@ export default function DealDetails() {
             <div className="relative pl-8 space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {/* Vertical Line */}
               {(((deal.deal_type === 'sell' ? deal.received_items : deal.paid_items)?.length > 0) || (deal.status === 'Completed')) && (
-                <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#343A40]"></div>
+                <div className="absolute left-[11px] top-8 bottom-10 w-0.5 bg-[#343A40]"></div>
               )}
 
               {/* Deal Created Entry (for Completed Deals) */}
               {deal.status === 'Completed' && (
                 <div className="relative">
                   {/* Timeline Node */}
-                  <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
+                  <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full bg-[#5761D7] z-10"></div>
 
                   <div className="bg-[#1D4CB508] border border-[#1D4CB522] rounded-xl p-5 flex justify-between items-center group relative shadow-sm">
                     <div className="flex flex-col">
@@ -312,7 +312,7 @@ export default function DealDetails() {
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-2 bg-[#16191C] px-3 py-2 rounded-xl border border-[#2A2F34]">
                         <span className="text-[#E0E0E0] text-[11px] font-semibold">
-                          Deal Created•{new Date(deal.created_at).toLocaleDateString('en-IN', {
+                          Deal Created&bull;{new Date(deal.created_at).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'

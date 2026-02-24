@@ -37,7 +37,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
             <div className="relative pl-8 space-y-6">
                 {/* Timeline Line */}
                 {(items.length > 0 || isCompleted) && (
-                    <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#2A2F34]"></div>
+                    <div className="absolute left-[11px] top-2 bottom-1 w-0.5 bg-[#343A40]"></div>
                 )}
 
                 {/* Deal Created Entry (for Completed Deals) */}
@@ -87,7 +87,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                     items.map((item, index) => (
                         <div key={index} className="relative">
                             {/* Timeline Node */}
-                            <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#1D4CB5] z-10"></div>
+                            <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full bg-[#1D4CB5] z-10"></div>
 
                             <div
                                 className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
