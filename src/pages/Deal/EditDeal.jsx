@@ -13,13 +13,13 @@ import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
 import installmentIcon from "../../assets/installment.svg";
 import DiscardModal from "../../components/common/DiscardModal";
 
-const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt }) => {
+const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount }) => {
     const isCompleted = status?.toLowerCase() === 'completed';
     const buttonText = isCompleted ? 'Add Payment' : 'Add Installment';
 
     return (
-        <div className="mt-2 pb-4">
-            <div className="flex justify-between items-center mb-6">
+        <div className="pb-4">
+            <div className="flex justify-between items-center mb-2">
                 <div>
                     <h3 className="text-white font-semibold text-lg">{title}</h3>
                     <p className="text-[#ABABAB] text-xs mt-1">Track payments and historical records</p>
@@ -40,7 +40,40 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                     <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#2A2F34]"></div>
                 )}
 
-                {items.length === 0 ? (
+                {/* Deal Created Entry (for Completed Deals) */}
+                {isCompleted && createdAt && (
+                    <div className="relative">
+                        {/* Timeline Node */}
+                        <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
+
+                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                            <div className="flex flex-col">
+                                <span className="text-[#88ACFC] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Amount</span>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-white text-2xl font-black tracking-tight">
+                                        {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                    <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:items-end">
+                                <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#5761D7]"></div>
+                                    <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
+                                        {new Date(createdAt).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {items.length === 0 && !isCompleted ? (
                     <div className="bg-[#1A1F24] border border-dashed border-[#2A2F34] rounded-2xl p-4 text-center ml-[-20px]">
                         <div className="bg-[#2A2F34] w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4">
                             <img src={installmentIcon} alt="installmentIcon" />
@@ -707,7 +740,7 @@ export default function EditDeal() {
 
                     {/* LEFT SIDE: Deal Details */}
                     <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full">
-                        <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+                        <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                             Deal Information
                         </h3>
 
@@ -823,59 +856,57 @@ export default function EditDeal() {
                     {/* RIGHT SIDE: Payment Tracker */}
                     <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full self-stretch">
                         <div className="flex flex-col h-full">
-                            <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+                            <h3 className="text-white font-semibold text-lg mb-2 flex items-center gap-2">
                                 Payment Tracker
                             </h3>
 
-                            <div className="mb-6">
-                                <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${deal?.status === 'Completed' ? 'bg-[#1D902D] text-white' : 'bg-[#D8AD00] text-black'}`}>
-                                            {deal?.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className={`text-3xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                                            {Number(Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived()))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                        <span className="text-[#ABABAB] text-sm font-bold uppercase">{txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency}</span>
+                            {!isCompleted && (
+                                <div className="mb-6">
+                                    <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D8AD00] text-black">
+                                                Pending
+                                            </span>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className={`text-3xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                                                {Number(Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived()))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            <span className="text-[#ABABAB] text-sm font-bold uppercase">{txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                                 {txnType?.toLowerCase() === "buy" ? (
                                     <PaymentHistory
-                                        title="Payment History"
+                                        title={isCompleted ? "" : "Payment History"}
                                         items={denominationPaid}
                                         currency={sellCurrency}
-                                        editable={editMode || isCompleted}
-                                        onAdd={() => {
-                                            handleAddPaidSplit();
-                                            if (isCompleted) setEditMode(true);
-                                        }}
+                                        editable={editMode}
+                                        onAdd={handleAddPaidSplit}
                                         onRemove={handleRemovePaidSplit}
                                         onChange={handleChangePaidSplit}
                                         currencySymbols={currencySymbols}
                                         status={deal?.status}
                                         createdAt={deal?.created_at}
+                                        totalAmount={amountToBePaid}
                                     />
                                 ) : (
                                     <PaymentHistory
-                                        title="Payment History"
+                                        title={isCompleted ? "" : "Payment History"}
                                         items={denominationReceived}
                                         currency={buyCurrency}
-                                        editable={editMode || isCompleted}
-                                        onAdd={() => {
-                                            handleAddReceivedSplit();
-                                            if (isCompleted) setEditMode(true);
-                                        }}
+                                        editable={editMode}
+                                        onAdd={handleAddReceivedSplit}
                                         onRemove={handleRemoveReceivedSplit}
                                         onChange={handleChangeReceivedSplit}
                                         currencySymbols={currencySymbols}
                                         status={deal?.status}
                                         createdAt={deal?.created_at}
+                                        totalAmount={amountToBePaid}
                                     />
                                 )}
                             </div>

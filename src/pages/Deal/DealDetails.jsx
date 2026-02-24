@@ -228,46 +228,50 @@ export default function DealDetails() {
               Payment Tracker
             </h3>
 
-            {/* Balance Display */}
-            <div className="mb-6">
-              <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${deal.status === 'Completed' ? 'bg-[#1D902D] text-white' : 'bg-[#D8AD00] text-black'}`}>
-                    {deal.status}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  {deal.deal_type === 'sell' ? (
-                    <>
-                      <span className={`text-3xl font-black tracking-tight ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                        {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.buyCurrency}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className={`text-3xl font-black tracking-tight ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                        {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.sellCurrency}</span>
-                    </>
-                  )}
+            {/* Balance Display / Summary Card (Only for Pending) */}
+            {deal.status !== 'Completed' && (
+              <div className="mb-6">
+                <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">
+                      Remaining Balance
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D8AD00] text-black">
+                      Pending
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    {deal.deal_type === 'sell' ? (
+                      <>
+                        <span className={`text-3xl font-black tracking-tight ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                          {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.buyCurrency}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={`text-3xl font-black tracking-tight ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                          {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.sellCurrency}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h4 className="text-white font-semibold">Payment History</h4>
+                <h4 className="text-white font-semibold">{deal.status === 'Completed' ? "" : "Payment History"}</h4>
                 <p className="text-[#ABABAB] text-xs">Historical installment records</p>
               </div>
-              {(deal.status === 'Pending' || deal.status === 'Completed') && (
+              {deal.status === 'Pending' && (
                 <button
                   onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
                   className="flex items-center gap-2 bg-[#1D4CB50F] border border-[#1D4CB555] text-[#88ACFC] px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1D4CB522] transition-colors"
                 >
-                  {deal.status === 'Completed' ? 'Add Payment' : 'Add Installment'}
+                  Add Installment
                 </button>
               )}
             </div>
@@ -279,7 +283,41 @@ export default function DealDetails() {
                 <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#2A2F34]"></div>
               )}
 
-              {(deal.deal_type === 'sell' ? (deal.received_items || []) : (deal.paid_items || [])).length === 0 ? (
+              {/* Deal Created Entry (for Completed Deals) */}
+              {deal.status === 'Completed' && (
+                <div className="relative">
+                  {/* Timeline Node */}
+                  <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
+
+                  <div className="bg-[#1D4CB508] border border-[#1D4CB522] rounded-xl p-5 flex justify-between items-center group relative shadow-sm">
+                    <div className="flex flex-col">
+                      <span className="text-[#88ACFC] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Initial Amount</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-white text-2xl font-black">
+                          {Number(deal.deal_type === 'sell' ? deal.buyAmount : deal.sellAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[#1D4CB5] text-xs font-black italic uppercase">
+                          {deal.deal_type === 'sell' ? deal.buyCurrency : deal.sellCurrency}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-2 bg-[#16191C] px-3 py-2 rounded-xl border border-[#2A2F34]">
+                        <span className="text-[#E0E0E0] text-[11px] font-semibold">
+                          Deal Created • {new Date(deal.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(deal.deal_type === 'sell' ? (deal.received_items || []) : (deal.paid_items || [])).length === 0 && deal.status !== 'Completed' ? (
                 <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-6 text-center ml-[-20px]">
                   <p className="text-[#8F8F8F] text-sm font-medium">No payment records found</p>
                 </div>
