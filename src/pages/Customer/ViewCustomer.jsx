@@ -296,7 +296,7 @@ export default function ViewCustomer() {
                 onClick={() => setEditMode(true)}
                 className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
               >
-                <img src={edit} alt="edit" className="w-4 h-4" />
+                <img src={edit} alt="edit"/>
                 Edit
               </button>
             )}

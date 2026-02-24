@@ -686,7 +686,7 @@ export default function EditDeal() {
                                 onClick={handleStartEdit}
                                 className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                             >
-                                <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                <img src={editIcon} alt="edit" className="cursor-pointer" />
                                 Edit Deal
                             </button>
                         )}
