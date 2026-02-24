@@ -6,6 +6,7 @@ import usermanagement from "../../assets/Common/usermanagement.svg";
 import reconciliation from "../../assets/Common/reconciliation.svg";
 import reporting from "../../assets/Common/reporting.svg";
 import customermanagement from "../../assets/customer/ledger.svg";
+import currencymanagement from "../../assets/common/currencymanagement.svg";
 
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -18,7 +19,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: "Customer Info", icon: customermanagement, path: "/customer-info" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reports", icon: reporting, path: "/reports" },
-    { name: "Currency Info", icon: deals, path: "/currency-management" },
+    { name: "Currency Info", icon: currencymanagement, path: "/currency-management" },
     { name: "User Management", icon: usermanagement, path: "/users" },
   ];
 
