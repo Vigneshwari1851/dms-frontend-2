@@ -46,11 +46,11 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                         {/* Timeline Node */}
                         <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
 
-                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                        <div className="bg-[#1A1F24] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
                             <div className="flex flex-col">
-                                <span className="text-[#88ACFC] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Amount</span>
+                                <span className="text-[#88ACFC] text-[10px] mb-2">Amount</span>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-white text-2xl font-black tracking-tight">
+                                    <span className="text-white text-sm">
                                         {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                     <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
@@ -60,7 +60,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             <div className="flex flex-col sm:items-end">
                                 <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#5761D7]"></div>
-                                    <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
+                                    <span className="text-[#E0E0E0] text-[11px] tracking-wide">
                                         {new Date(createdAt).toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
@@ -90,7 +90,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                 className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
                             >
                                 <div className="flex flex-col">
-                                    <span className="text-[#ABABAB] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Amount</span>
+                                    <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
                                     {editable && !item.id ? (
                                         <div className="flex items-center gap-2">
                                             <div className="relative">
@@ -107,16 +107,16 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                         </div>
                                     ) : (
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-white text-2xl font-black tracking-tight">
+                                            <span className="text-white text-normal font-black tracking-tight">
                                                 {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
-                                            <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
+                                            <span className="text-[#1D4CB5] text-normal font-black italic">{currency}</span>
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="flex flex-col sm:items-end">
-                                    <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
+                                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
                                         <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : 'bg-green-500 animate-pulse'}`}></div>
                                         <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
                                             {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
@@ -791,8 +791,8 @@ export default function EditDeal() {
                                 </div>
                             </div>
 
-                            {/* Row 3 - Currency & Amount */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+                            {/* Row 3 - Currency Pair & Rate */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
                                     <label className="text-[#ABABAB] text-sm mb-1 block">
                                         Currency Pair <span className="text-red-500">*</span>
@@ -800,20 +800,6 @@ export default function EditDeal() {
                                     <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
                                         {currencyPair}
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
-                                        {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
-                                        placeholder="0.00"
-                                        type="text"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        readOnly={!isEditable || isCompleted}
-                                    />
                                 </div>
 
                                 <div>
@@ -831,46 +817,46 @@ export default function EditDeal() {
                                 </div>
                             </div>
 
-                            {/* Row 4 - Amount to be Paid/Received */}
-                            <div className="w-full h-[44px] bg-[#5761D738] rounded-lg px-4 flex items-center justify-between border border-[#5761D755]">
-                                <span className="text-[#FEFEFE] text-sm font-medium">
-                                    {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount to be Paid"}
-                                </span>
-                                <span className="text-white font-bold text-lg">
-                                    {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
+                            {/* Row 4 - Amounts */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                                <div>
+                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                        {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
+                                        placeholder="0.00"
+                                        type="text"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        readOnly={!isEditable || isCompleted}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                        {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount to be Paid"}
+                                    </label>
+                                    <div className="w-full h-9 bg-[#5761D738] rounded-lg px-3 py-2 flex items-center justify-between border border-[#5761D755]">
+                                        <span className="text-white">
+                                            {currencySymbols[txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency] || (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency)} {Number(amountToBePaid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Remarks */}
-                            {notes && (
-                                <div className="mt-4">
-                                    <label className="text-[#ABABAB] text-sm mb-2 block">Remarks</label>
-                                    <p className="bg-[#16191C] rounded-lg p-3 text-white text-sm border border-[#2A2F34] min-h-[60px]">
-                                        {notes}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* RIGHT SIDE: Payment Tracker */}
-                    <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full self-stretch">
-                        <div className="flex flex-col h-full">
-                            <h3 className="text-white font-semibold text-lg mb-2 flex items-center gap-2">
-                                Payment Tracker
-                            </h3>
-
+                            {/* Remaining Balance Card (Moved from right side) */}
                             {!isCompleted && (
-                                <div className="mb-6">
+                                <div className="mt-6">
                                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D8AD00] text-black">
+                                            <span className="text-[#ABABAB] text-xs  tracking-wider">Remaining Balance</span>
+                                            <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#D8AD00] text-black">
                                                 Pending
                                             </span>
                                         </div>
                                         <div className="flex items-baseline gap-2">
-                                            <span className={`text-3xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                                            <span className={`text-xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
                                                 {Number(Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived()))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                             <span className="text-[#ABABAB] text-sm font-bold uppercase">{txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency}</span>
@@ -878,58 +864,61 @@ export default function EditDeal() {
                                     </div>
                                 </div>
                             )}
-
-                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                {txnType?.toLowerCase() === "buy" ? (
-                                    <PaymentHistory
-                                        title={isCompleted ? "" : "Payment History"}
-                                        items={denominationPaid}
-                                        currency={sellCurrency}
-                                        editable={editMode}
-                                        onAdd={handleAddPaidSplit}
-                                        onRemove={handleRemovePaidSplit}
-                                        onChange={handleChangePaidSplit}
-                                        currencySymbols={currencySymbols}
-                                        status={deal?.status}
-                                        createdAt={deal?.created_at}
-                                        totalAmount={amountToBePaid}
-                                    />
-                                ) : (
-                                    <PaymentHistory
-                                        title={isCompleted ? "" : "Payment History"}
-                                        items={denominationReceived}
-                                        currency={buyCurrency}
-                                        editable={editMode}
-                                        onAdd={handleAddReceivedSplit}
-                                        onRemove={handleRemoveReceivedSplit}
-                                        onChange={handleChangeReceivedSplit}
-                                        currencySymbols={currencySymbols}
-                                        status={deal?.status}
-                                        createdAt={deal?.created_at}
-                                        totalAmount={amountToBePaid}
-                                    />
-                                )}
-                            </div>
                         </div>
                     </div>
 
-                    {/* Mobile Action Buttons (sticky at bottom) */}
-                    {editMode && (
-                        <div className="lg:hidden fixed bottom-6 left-6 right-6 flex justify-between items-center gap-4 z-20">
-                            <button
-                                onClick={handleCancelEdit}
-                                className="flex-1 h-12 rounded-xl border border-white bg-[#050814] text-white font-bold text-sm shadow-2xl transition-all active:scale-95"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                className="flex-1 h-12 rounded-xl bg-[#1D4CB5] text-white font-bold text-sm shadow-2xl transition-all active:scale-95"
-                            >
-                                Save Changes
-                            </button>
+                    {/* RIGHT SIDE: Payment Tracker */}
+                    <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full self-stretch flex flex-col">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                            {txnType?.toLowerCase() === "buy" ? (
+                                <PaymentHistory
+                                    title={isCompleted ? "" : "Payment History"}
+                                    items={denominationPaid}
+                                    currency={sellCurrency}
+                                    editable={editMode}
+                                    onAdd={handleAddPaidSplit}
+                                    onRemove={handleRemovePaidSplit}
+                                    onChange={handleChangePaidSplit}
+                                    currencySymbols={currencySymbols}
+                                    status={deal?.status}
+                                    createdAt={deal?.created_at}
+                                    totalAmount={amountToBePaid}
+                                />
+                            ) : (
+                                <PaymentHistory
+                                    title={isCompleted ? "" : "Payment History"}
+                                    items={denominationReceived}
+                                    currency={buyCurrency}
+                                    editable={editMode}
+                                    onAdd={handleAddReceivedSplit}
+                                    onRemove={handleRemoveReceivedSplit}
+                                    onChange={handleChangeReceivedSplit}
+                                    currencySymbols={currencySymbols}
+                                    status={deal?.status}
+                                    createdAt={deal?.created_at}
+                                    totalAmount={amountToBePaid}
+                                />
+                            )}
                         </div>
-                    )}
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile Action Buttons (sticky at bottom) */}
+            {!loading && editMode && (
+                <div className="lg:hidden fixed bottom-6 left-6 right-6 flex justify-between items-center gap-4 z-20">
+                    <button
+                        onClick={handleCancelEdit}
+                        className="flex-1 h-12 rounded-xl border border-white bg-[#050814] text-white font-bold text-sm shadow-2xl transition-all active:scale-95"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="flex-1 h-12 rounded-xl bg-[#1D4CB5] text-white font-bold text-sm shadow-2xl transition-all active:scale-95"
+                    >
+                        Save Changes
+                    </button>
                 </div>
             )}
 
@@ -944,7 +933,6 @@ export default function EditDeal() {
                 onDiscard={handleDiscard}
                 onKeep={() => setShowDiscardModal(false)}
             />
-
         </>
     );
 }

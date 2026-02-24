@@ -150,23 +150,14 @@ export default function DealDetails() {
               </div>
             </div>
 
-            {/* Row 3 - Currency & Amount */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+            {/* Row 3 - Currency Pair & Rate */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
               <div>
                 <label className="text-[#ABABAB] text-sm mb-1 block">
                   Currency Pair
                 </label>
                 <p className="text-white text-lg font-medium">
                   {deal.buyCurrency === "TZS" ? `${deal.sellCurrency}/TZS` : `${deal.buyCurrency}/TZS`}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-[#ABABAB] text-sm mb-1 block">
-                  {deal.deal_type === "sell" ? "Sell Amount" : "Buy Amount"}
-                </label>
-                <p className="text-white text-lg font-medium">
-                  {formatCurrency(deal.amount)}
                 </p>
               </div>
 
@@ -199,7 +190,7 @@ export default function DealDetails() {
               </div>
             </div>
 
-            {/* Row 5 - Calculated Profit */}
+            {/* Calculated Profit */}
             <div className="w-full h-[48px] bg-[#5761D715] rounded-lg px-4 flex items-center justify-between border border-[#5761D733]">
               <span className="text-[#FEFEFE] text-sm font-medium">
                 Profit Generated
@@ -209,28 +200,9 @@ export default function DealDetails() {
               </span>
             </div>
 
-            {/* Remarks */}
-            {deal.remarks && (
-              <div className="mt-4">
-                <label className="text-[#ABABAB] text-sm mb-2 block">Remarks</label>
-                <p className="bg-[#16191C] rounded-lg p-3 text-white text-sm border border-[#2A2F34] min-h-[60px]">
-                  {deal.remarks}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT SIDE: Payment Tracker */}
-        <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full self-stretch">
-          <div className="flex flex-col h-full">
-            <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
-              Payment Tracker
-            </h3>
-
-            {/* Balance Display / Summary Card (Only for Pending) */}
+            {/* Remaining Balance Card (Moved from right side) */}
             {deal.status !== 'Completed' && (
-              <div className="mb-6">
+              <div className="mt-6">
                 <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">
@@ -261,10 +233,26 @@ export default function DealDetails() {
               </div>
             )}
 
+            {/* Remarks */}
+            {deal.remarks && (
+              <div className="mt-4">
+                <label className="text-[#ABABAB] text-sm mb-2 block">Remarks</label>
+                <p className="bg-[#16191C] rounded-lg p-3 text-white text-sm border border-[#2A2F34] min-h-[60px]">
+                  {deal.remarks}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: Payment Tracker */}
+        <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full self-stretch">
+          <div className="flex flex-col h-full">
+
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h4 className="text-white font-semibold">{deal.status === 'Completed' ? "" : "Payment History"}</h4>
-                <p className="text-[#ABABAB] text-xs">Historical installment records</p>
+                <h3 className="text-white font-semibold text-lg">Payment History</h3>
+                <p className="text-[#ABABAB] text-xs mt-1">Historical installment records</p>
               </div>
               {deal.status === 'Pending' && (
                 <button
