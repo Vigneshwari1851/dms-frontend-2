@@ -22,7 +22,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
             <div className="flex justify-between items-center mb-2">
                 <div>
                     <h3 className="text-white font-semibold text-lg">{title}</h3>
-                    <p className="text-[#ABABAB] text-xs mt-1">Track payments and historical records</p>
+                    <p className="text-[#ABABAB] text-xs mt-4">Track payments and historical records</p>
                 </div>
                 {editable && (
                     <button
@@ -743,7 +743,7 @@ export default function EditDeal() {
 
                     {/* LEFT SIDE: Deal Details */}
                     <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full">
-                        <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                        <h3 className="text-white font-semibold text-lg flex items-center gap-2 mb-4">
                             Deal Information
                         </h3>
 
