@@ -66,6 +66,7 @@ function VerifyOtp() {
       const res = await verifyOtp(email, otp);
       if (res?.data) {
         localStorage.setItem("token", res.data.token);
+        sessionStorage.setItem("is_session_active", "true");
         localStorage.setItem(
           "user",
           JSON.stringify({

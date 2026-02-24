@@ -6,6 +6,7 @@ const PublicRoute = () => {
 
     if (token) {
         localStorage.clear();
+        sessionStorage.clear();
     }
 
     return <Outlet />;

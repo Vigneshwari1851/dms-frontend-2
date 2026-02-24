@@ -22,9 +22,19 @@ export const apiFetch = async (endpoint, options = {}) => {
             localStorage.removeItem("user");
 
             if (!window.location.pathname.includes("/login")) {
-                window.location.href = "/login?expired=true";
+                const isSessionActive = sessionStorage.getItem("is_session_active");
+                if (isSessionActive) {
+                    window.location.href = "/login?expired=true";
+                } else {
+                    window.location.href = "/login";
+                }
             }
+            sessionStorage.removeItem("is_session_active");
             return response;
+        }
+
+        if (response.ok) {
+            sessionStorage.setItem("is_session_active", "true");
         }
 
         return response;

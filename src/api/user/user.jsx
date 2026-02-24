@@ -26,7 +26,7 @@ export async function fetchUsers({ page = 1, limit = 10, orderBy = "created_at",
     }
 
     const result = await response.json();
-    
+
     return {
       data: result.data || [],
       pagination: result.pagination || { totalPages: 1 },
@@ -174,6 +174,7 @@ export async function logoutUser() {
     }
 
     localStorage.removeItem("token");
+    sessionStorage.removeItem("is_session_active");
 
     return { success: true };
 
