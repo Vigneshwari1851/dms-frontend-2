@@ -46,7 +46,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                         {/* Timeline Node */}
                         <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
 
-                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
                             <div className="flex flex-col">
                                 <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
                                 <div className="flex items-baseline gap-2">
@@ -90,7 +90,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#1D4CB5] z-10"></div>
 
                             <div
-                                className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
+                                className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
                             >
                                 <div className="flex flex-col">
                                     <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
