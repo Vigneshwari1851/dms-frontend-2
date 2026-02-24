@@ -675,12 +675,6 @@ export default function EditDeal() {
                         </button>
                         <h2 className="text-[16px] lg:text-[18px] font-medium text-white flex items-center gap-1">
                             Deal ID - {deal?.deal_number || id || "Loading..."}
-                            {isCompleted && (
-                                <>
-                                    <span className="text-[#3A3F43]">|</span>
-                                    <span className="text-[11px] text-[#ABABAB] font-semibold uppercase tracking-[0.1em]">Completed</span>
-                                </>
-                            )}
                         </h2>
                     </div>
 
