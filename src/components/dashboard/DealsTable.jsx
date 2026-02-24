@@ -62,16 +62,21 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
           const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
           const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
 
+          const pair = isBuy
+            ? `${deal.buyCurrency.code}/${deal.sellCurrency.code}`
+            : `${deal.sellCurrency.code}/${deal.buyCurrency.code}`;
+
           return {
             id: deal.deal_number,
             date: new Date(deal.created_at).toLocaleDateString("en-IN"),
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
             customer: deal.customer.name,
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
-            currency: deal.buyCurrency.code || "---",
+            pair: pair || "---",
+            buyCurrency: deal.buyCurrency.code,
+            sellCurrency: deal.sellCurrency.code,
             exchange_rate: deal.exchange_rate,
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
-            currency1: deal.sellCurrency.code || "---",
             status: deal.status,
             dealId: deal.id,
           };
@@ -130,7 +135,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
     (item) =>
       (statusFilter === "All Status" || item.status === statusFilter) &&
       (currencyFilter === "All Currencies" ||
-        item.currency === currencyFilter)
+        item.buyCurrency === currencyFilter || item.sellCurrency === currencyFilter)
   );
 
   let filteredAndSortedData = [...filteredData];
@@ -146,8 +151,8 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   if (sortBy === "currency") {
     filteredAndSortedData.sort((a, b) =>
       sortAsc
-        ? a.currency.localeCompare(b.currency)
-        : b.currency.localeCompare(a.currency)
+        ? a.pair.localeCompare(b.pair)
+        : b.pair.localeCompare(a.pair)
     );
   }
 
@@ -333,41 +338,13 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
                   </div>
                 </th>
 
-                <th>Customer Name</th>
-                <th>Buy Amount</th>
+                <th className="text-left">Customer Name</th>
+                <th className="text-left">Currency Pair</th>
+                <th className="text-left">Buy Amount</th>
 
                 {/* CURRENCY SORT */}
-                <th
-                  className="py-3 cursor-pointer select-none"
-                  onClick={() => {
-                    if (sortBy === "currency") setSortAsc(!sortAsc);
-                    else {
-                      setSortBy("currency");
-                      setSortAsc(true);
-                    }
-                  }}
-
-                >
-                  <div className="flex items-center gap-1 ml-5 justify-center">
-                    Currency
-                    <span className="flex flex-col">
-                      <img
-                        src={uparrowIcon}
-                        className={`w-3 h-3 -mt-[5px] ${!sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
-                      />
-                      <img
-                        src={downarrowIcon}
-                        className={`w-3 h-3 -mt-3 ml-1.5 ${sortAsc ? "opacity-100" : "opacity-30"
-                          }`}
-                      />
-                    </span>
-                  </div>
-                </th>
-
-                <th>Rate</th>
-                <th>Sell Amount</th>
-                <th >Currency</th>
+                <th className="text-left">Rate</th>
+                <th className="text-left">Sell Amount</th>
                 <th className="pr-5">Status</th>
               </tr>
             </thead>
@@ -404,12 +381,11 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
                       </div>
                     </td>
 
-                    <td>{item.customer}</td>
-                    <td>{item.buyAmt}</td>
-                    <td>{item.currency}</td>
-                    <td>{item.exchange_rate}</td>
-                    <td>{item.sellAmt}</td>
-                    <td>{item.currency1}</td>
+                    <td className="text-left">{item.customer}</td>
+                    <td className="text-left">{item.pair}</td>
+                    <td className="text-left">{item.buyAmt}</td>
+                    <td className="text-left">{item.exchange_rate}</td>
+                    <td className="text-left">{item.sellAmt}</td>
 
                     <td>
                       <div className="flex justify-center items-center">

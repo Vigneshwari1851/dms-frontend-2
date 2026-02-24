@@ -6,6 +6,7 @@ import NotificationCard from "../../components/common/Notification";
 import { createDeal } from "../../api/deals";
 import { searchCustomers } from "../../api/customers";
 import { fetchCurrencies } from "../../api/currency/currency";
+import { fetchCurrencyPairs } from "../../api/currencyPair";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
 import DiscardModal from "../../components/common/DiscardModal";
@@ -37,6 +38,7 @@ export default function CreateDeal() {
   const [manualPaidTotal, setManualPaidTotal] = useState("");
   const [currencyPair, setCurrencyPair] = useState("");
   const [currencyPairOptions, setCurrencyPairOptions] = useState([]);
+  const [fullPairs, setFullPairs] = useState([]);
   const [errors, setErrors] = useState({});
 
   // Currencies list
@@ -69,17 +71,19 @@ export default function CreateDeal() {
 
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  // Fetch currencies on component mount
+  // Fetch currencies and pairs on component mount
   useEffect(() => {
-    const loadCurrencies = async () => {
+    const loadData = async () => {
       try {
         setLoadingCurrencies(true);
-        const data = await fetchCurrencies({ page: 1, limit: 100 });
-        if (data && data.length > 0) {
+        const currenciesData = await fetchCurrencies({ page: 1, limit: 100 });
+        const pairsRes = await fetchCurrencyPairs({ limit: 100 });
+
+        if (currenciesData && currenciesData.length > 0) {
           const map = {};
           const symbols = {};
           const codes = [];
-          data.forEach((c) => {
+          currenciesData.forEach((c) => {
             map[c.code] = c.id;
             symbols[c.code] = c.symbol || "";
             codes.push(c.code);
@@ -88,66 +92,63 @@ export default function CreateDeal() {
           setCurrencyOptions(codes);
           setCurrencyMap(map);
           setCurrencySymbols(symbols);
-          const pairs = [];
-          codes.forEach(code => {
-            if (code !== "TZS") {
-              pairs.push(`${code}/TZS`);
-            }
-          });
-          setCurrencyPairOptions(pairs);
 
-          if (map["USD"] && map["TZS"]) {
-            setCurrencyPair("USD/TZS");
-          } else if (pairs.length > 0) {
-            setCurrencyPair(pairs[0]);
+          if (pairsRes?.data && pairsRes.data.length > 0) {
+            const pairOptions = pairsRes.data.map(p => `${p.baseCurrency.code}/${p.quoteCurrency.code}`);
+            setCurrencyPairOptions(pairOptions);
+
+            // Store the full pair objects for easy access
+            setFullPairs(pairsRes.data);
+
+            if (pairOptions.includes("USD/TZS")) {
+              setCurrencyPair("USD/TZS");
+              updateCurrenciesFromPair("USD/TZS", pairsRes.data, map);
+            } else if (pairOptions.length > 0) {
+              setCurrencyPair(pairOptions[0]);
+              updateCurrenciesFromPair(pairOptions[0], pairsRes.data, map);
+            }
           }
         }
       } catch (error) {
-        console.error("Error fetching currencies:", error);
-        showToast("Failed to load currencies", "error");
+        console.error("Error fetching data:", error);
+        showToast("Failed to load initial data", "error");
       } finally {
         setLoadingCurrencies(false);
       }
     };
 
-    loadCurrencies();
+    loadData();
   }, []);
 
   const handleUpdateTransaction = (pair = currencyPair, type = txnType) => {
     setCurrencyPair(pair);
     setTxnType(type);
 
-    if (!type) {
-      setBuyCurrency("");
-      setSellCurrency("");
-      return;
-    }
-
-    let bCurr = "";
-    let sCurr = "";
-
-    if (type === "Buy") {
-      bCurr = foreign;
-      sCurr = local;
-    } else {
-      bCurr = local;
-      sCurr = foreign;
-    }
-
-    setBuyCurrency(bCurr);
-    setSellCurrency(sCurr);
-
-    // Update denominations
-    const buyId = currencyMap[bCurr];
-    const sellId = currencyMap[sCurr];
-    if (buyId) {
-      setDenominationReceived(prev => prev.map(item => ({ ...item, currency_id: buyId })));
-    }
-    if (sellId) {
-      setDenominationPaid(prev => prev.map(item => ({ ...item, currency_id: sellId })));
-    }
+    updateCurrenciesFromPair(pair, fullPairs, currencyMap, type);
 
     setErrors(prev => ({ ...prev, currencyPair: "", txnType: "" }));
+  };
+
+  const updateCurrenciesFromPair = (pairName, pairs = fullPairs, map = currencyMap, type = txnType) => {
+    const pair = pairs.find(p => `${p.baseCurrency.code}/${p.quoteCurrency.code}` === pairName);
+    if (pair) {
+      let bCurr, sCurr;
+      if (type === "Buy") {
+        bCurr = pair.baseCurrency.code;
+        sCurr = pair.quoteCurrency.code;
+      } else {
+        bCurr = pair.quoteCurrency.code;
+        sCurr = pair.baseCurrency.code;
+      }
+
+      setBuyCurrency(bCurr);
+      setSellCurrency(sCurr);
+
+      const buyId = map[bCurr];
+      const sellId = map[sCurr];
+      if (buyId) setDenominationReceived(prev => prev.map(item => ({ ...item, currency_id: buyId })));
+      if (sellId) setDenominationPaid(prev => prev.map(item => ({ ...item, currency_id: sellId })));
+    }
   };
 
   const handlePairSelect = (pair) => {

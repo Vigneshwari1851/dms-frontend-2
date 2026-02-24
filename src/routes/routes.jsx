@@ -24,6 +24,7 @@ import ListCustomer from "../pages/Customer/ListCustomer";
 import AddCustomer from "../pages/Customer/AddCustomer";
 import ViewCustomer from "../pages/Customer/ViewCustomer";
 import MyProfile from "../pages/User/MyProfile";
+import CurrencyManagement from "../pages/Currency/CurrencyManagement";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import PublicRoute from "../components/auth/PublicRoute";
 
@@ -62,6 +63,7 @@ export default function AppRoutes() {
           <Route path="customer-info/view/:id" element={<ViewCustomer />} />
           <Route path="users/my-profile" element={<MyProfile />} />
           <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
+          <Route path="currency-management" element={<CurrencyManagement />} />
         </Route>
       </Route>
 

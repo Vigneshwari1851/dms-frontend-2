@@ -16,6 +16,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
     { name: "User Management", icon: usermanagement, path: "/users" },
     { name: "Customer Information", icon: customermanagement, path: "/customer-info" },
+    { name: "Currency Management", icon: deals, path: "/currency-management" },
     { name: "Deals", icon: deals, path: "/deals" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reporting", icon: reporting, path: "/reports" },

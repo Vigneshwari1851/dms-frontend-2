@@ -75,6 +75,14 @@ export default function ViewCustomer() {
 
       const deals = (customer.deals || []).map((deal) => {
         const isBuy = (deal.deal_type || "").toLowerCase() === "buy";
+        const getCode = (curr) => (typeof curr === 'object' ? curr?.code : curr) || "";
+        const buyCode = getCode(deal.buyCurrency);
+        const sellCode = getCode(deal.sellCurrency);
+
+        const pair = isBuy
+          ? `${buyCode}/${sellCode}`
+          : `${sellCode}/${buyCode}`;
+
         return {
           raw: deal,
           dealId: deal.id,
@@ -84,8 +92,9 @@ export default function ViewCustomer() {
           customer: customer.name,
           buyAmt: (Number(isBuy ? deal.amount : deal.amount_to_be_paid) || 0).toLocaleString(),
           sellAmt: (Number(isBuy ? deal.amount_to_be_paid : deal.amount) || 0).toLocaleString(),
-          currency: deal.buyCurrency || "---",
-          currency1: deal.sellCurrency || "---",
+          pair: pair || "---",
+          buyCurrencyCode: buyCode,
+          sellCurrencyCode: sellCode,
           rate: deal.exchange_rate || deal.rate,
           status: deal.status
         };
@@ -237,13 +246,13 @@ export default function ViewCustomer() {
   let filteredData = customerDeals.filter(
     (d) =>
       (statusFilter === "All Status" || d.status === statusFilter) &&
-      (currencyFilter === "All Currencies" || d.currency === currencyFilter)
+      (currencyFilter === "All Currencies" || d.buyCurrencyCode === currencyFilter || d.sellCurrencyCode === currencyFilter)
   );
 
   if (sortBy) {
     filteredData.sort((a, b) => {
       if (sortBy === "type") return sortAsc ? a.type.localeCompare(b.type) : b.type.localeCompare(a.type);
-      if (sortBy === "currency") return sortAsc ? a.currency.localeCompare(b.currency) : b.currency.localeCompare(a.currency);
+      if (sortBy === "currency") return sortAsc ? a.pair.localeCompare(b.pair) : b.pair.localeCompare(a.pair);
       return 0;
     });
   }
@@ -413,7 +422,7 @@ export default function ViewCustomer() {
                 <h2 className="text-white text-base lg:text-[16px] font-semibold">Related Deals</h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3">
                   <Dropdown label="All Status" options={statuses} selected={statusFilter} onChange={setStatusFilter} className="w-full sm:w-[150px]" />
-                  <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.map(d => d.currency))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-full sm:w-[180px]" />
+                  <Dropdown label="All Currencies" options={["All Currencies", ...new Set(customerDeals.flatMap(d => [d.buyCurrencyCode, d.sellCurrencyCode]).filter(Boolean))]} selected={currencyFilter} onChange={setCurrencyFilter} className="w-full sm:w-[180px]" />
                 </div>
               </div>
               <div className="border-t-[3px] border-[#16191C] mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
@@ -421,8 +430,8 @@ export default function ViewCustomer() {
                 <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse min-w-[800px] lg:min-w-full">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                      <th className="py-3 text-left pl-3 lg:pl-5 px-2 lg:px-0">Date</th>
-                      <th className="py-3 cursor-pointer select-none px-2 lg:px-0" onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
+                      <th className="py-3 text-left pl-3 lg:pl-5 ">Date</th>
+                      <th className="py-3 cursor-pointer select-none " onClick={() => { if (sortBy === "type") setSortAsc(!sortAsc); else { setSortBy("type"); setSortAsc(true); } }}>
                         <div className="flex items-center gap-1 ml-0 lg:ml-2 justify-center">
                           Type
                           <span className="flex flex-col">
@@ -431,35 +440,25 @@ export default function ViewCustomer() {
                           </span>
                         </div>
                       </th>
-                      <th className="px-2 lg:px-0">Customer Name</th>
-                      <th className="px-2 lg:px-0">Buy Amount</th>
-                      <th className="py-3 cursor-pointer select-none px-2 lg:px-0" onClick={() => { if (sortBy === "currency") setSortAsc(!sortAsc); else { setSortBy("currency"); setSortAsc(true); } }}>
-                        <div className="flex items-center gap-1 ml-0 lg:ml-5 justify-center">
-                          Currency
-                          <span className="flex flex-col">
-                            <img src={uparrowIcon} className={`w-3 h-3 -mt-[5px] ${sortBy === "currency" && !sortAsc ? "opacity-100" : "opacity-30"}`} />
-                            <img src={downarrowIcon} className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "currency" && sortAsc ? "opacity-100" : "opacity-30"}`} />
-                          </span>
-                        </div>
-                      </th>
-                      <th className="px-2 lg:px-0">Rate</th>
-                      <th className="px-2 lg:px-0">Sell Amount</th>
-                      <th className="px-2 lg:px-0">Currency</th>
-                      <th className="px-2 lg:px-0">Status</th>
+                      <th className="text-left">Customer Name</th>
+                      <th className="text-left">Currency Pair</th>
+                      <th className="text-left">Buy Amount</th>
+                      <th className="text-left">Rate</th>
+                      <th className="text-left">Sell Amount</th>
+                      <th className="text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedData.map((item, idx) => (
                       <tr key={idx} className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer" onClick={() => handleRowClick(item)}>
-                        <td className="py-3 font-normal text-[14px] text-left pl-3 lg:pl-5 px-2 lg:px-0">{item.date}</td>
-                        <td className="px-2 lg:px-0"><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
-                        <td className="px-2 lg:px-0">{item.customer}</td>
-                        <td className="px-2 lg:px-0">{item.buyAmt}</td>
-                        <td className="px-2 lg:px-0">{item.currency}</td>
-                        <td className="px-2 lg:px-0">{item.rate}</td>
-                        <td className="px-2 lg:px-0">{item.sellAmt}</td>
-                        <td className="px-2 lg:px-0">{item.currency1}</td>
-                        <td className="px-2 lg:px-0"><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>{item.status}</span></td>
+                        <td className="py-3 font-normal text-[14px] text-left pl-3 lg:pl-5 ">{item.date}</td>
+                        <td><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
+                        <td className="text-left">{item.customer}</td>
+                        <td className="text-left">{item.pair}</td>
+                        <td className="text-left">{item.buyAmt}</td>
+                        <td className="text-left">{item.rate}</td>
+                        <td className="text-left">{item.sellAmt}</td>
+                        <td className="text-left"><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]}`}>{item.status}</span></td>
                       </tr>
                     ))}
                   </tbody>
