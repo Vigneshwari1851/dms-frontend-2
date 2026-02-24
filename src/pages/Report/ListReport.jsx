@@ -95,7 +95,22 @@ export default function ListReport() {
         status: activeStatus !== "All Status" ? activeStatus : undefined // Ensure status is also passed if needed
       });
 
-      setReportRows(data || []);
+      const transformedData = (data || []).map(deal => {
+        const isBuy = deal.deal_type?.toLowerCase() === "buy";
+        const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
+        const sAmt = isBuy ? (Number(deal.amount_to_be_paid) || 0) : (Number(deal.amount) || 0);
+
+        return {
+          ...deal,
+          customerName: deal.customer?.name || "",
+          buyAmount: bAmt.toLocaleString(),
+          sellAmount: sAmt.toLocaleString(),
+          buyAmountNumeric: bAmt,
+          sellAmountNumeric: sAmt,
+        };
+      });
+
+      setReportRows(transformedData);
       setPagination((prev) => ({
         ...prev,
         page: pag.page || page,
@@ -150,6 +165,29 @@ export default function ListReport() {
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
+
+    if (sortBy === "pair") {
+      const isBuyA = a.deal_type.toLowerCase() === "buy";
+      const isBuyB = b.deal_type.toLowerCase() === "buy";
+      const pairA = isBuyA ? `${a.buyCurrency?.code}/${a.sellCurrency?.code}` : `${a.sellCurrency?.code}/${a.buyCurrency?.code}`;
+      const pairB = isBuyB ? `${b.buyCurrency?.code}/${b.sellCurrency?.code}` : `${b.sellCurrency?.code}/${b.buyCurrency?.code}`;
+      return sortAsc ? pairA.localeCompare(pairB) : pairB.localeCompare(pairA);
+    }
+
+    if (sortBy === "buyAmount") {
+      return sortAsc ? a.buyAmountNumeric - b.buyAmountNumeric : b.buyAmountNumeric - a.buyAmountNumeric;
+    }
+
+    if (sortBy === "sellAmount") {
+      return sortAsc ? a.sellAmountNumeric - b.sellAmountNumeric : b.sellAmountNumeric - a.sellAmountNumeric;
+    }
+
+    if (sortBy === "exchange_rate") {
+      const rateA = Number(a.exchange_rate) || 0;
+      const rateB = Number(b.exchange_rate) || 0;
+      return sortAsc ? rateA - rateB : rateB - rateA;
+    }
+
     let valA = a[sortBy];
     let valB = b[sortBy];
 
@@ -390,7 +428,7 @@ export default function ListReport() {
       )}
 
       {/* Table */}
-      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto">
+      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey">
         {paginatedData.length === 0 ? (
           <EmptyState
             imageSrc={dealEmptyBg}
@@ -411,8 +449,8 @@ export default function ListReport() {
             <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
               <thead>
                 <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                  <th className="py-3">Deal ID</th>
-                  <th>Date</th>
+                  <th className="text-left">Deal ID</th>
+                  <th className="text-left">Date</th>
 
                   {/* TYPE SORT */}
                   <th
@@ -436,35 +474,13 @@ export default function ListReport() {
                     </div>
                   </th>
 
-                  <th>Customer</th>
-                  <th>Buy Amount</th>
-
+                  <th className="text-left">Customer</th>
                   {/* CURRENCY SORT */}
-                  <th
-                    className="py-3 cursor-pointer select-none"
-                    onClick={() => handleSort("buyCurrency")}
-                  >
-                    <div className="flex items-center gap-1 justify-center">
-                      Currency
-                      <span className="flex flex-col">
-                        <img
-                          src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${sortBy === "buyCurrency" && !sortAsc ? "opacity-100" : "opacity-30"
-                            }`}
-                        />
-                        <img
-                          src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "buyCurrency" && sortAsc ? "opacity-100" : "opacity-30"
-                            }`}
-                        />
-                      </span>
-                    </div>
-                  </th>
-
-                  <th>Rate</th>
-                  <th>Sell Amount</th>
-                  <th>Currency</th>
-                  <th>Status</th>
+                  <th className="text-left">Currency Pair</th>
+                  <th className="text-left">Buy Amount</th>
+                  <th className="text-left">Rate</th>
+                  <th className="text-left">Sell Amount</th>
+                  <th className="text-left">Status</th>
                 </tr>
               </thead>
 
@@ -475,11 +491,11 @@ export default function ListReport() {
                     className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
                     onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
                   >
-                    <td className="py-3 text-[#92B4FF] font-bold text-[14px]">
+                    <td className="py-3 text-left text-[#92B4FF] font-bold text-[14px]">
                       {item.deal_number}
                     </td>
 
-                    <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                    <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
 
                     {/* TYPE PILL */}
                     <td>
@@ -493,18 +509,19 @@ export default function ListReport() {
                       </div>
                     </td>
 
-                    <td>{item.customer?.name}</td>
-
-                    <td>{item.buyAmount}</td>
-                    <td>{item.buyCurrency.code}</td>
-
-                    <td>{item.exchange_rate}</td>
-
-                    <td>{item.sellAmount}</td>
-                    <td>{item.sellCurrency.code}</td>
+                    <td className="text-left">{item.customer?.name}</td>
+                    <td className="text-left">
+                      {item.deal_type.toLowerCase() === "buy"
+                        ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
+                        : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
+                      }
+                    </td>
+                    <td className="text-left">{item.buyAmount}</td>
+                    <td className="text-left">{item.exchange_rate}</td>
+                    <td className="text-left">{item.sellAmount}</td>
 
                     {/* STATUS */}
-                    <td>
+                    <td className="text-left">
                       <div className="flex justify-center items-center">
                         <span
                           className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]

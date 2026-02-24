@@ -426,7 +426,7 @@ export default function ViewCustomer() {
                 </div>
               </div>
               <div className="border-t-[3px] border-[#16191C] mt-4 pt-4 -mx-4 lg:-mx-5 px-4 lg:px-5"></div>
-              <div className="-mx-4 lg:-mx-5 overflow-x-auto">
+              <div className="-mx-4 lg:-mx-5 overflow-x-auto scrollbar-grey">
                 <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse min-w-[800px] lg:min-w-full">
                   <thead>
                     <tr className="text-[#FFFFFF] text-[12px] font-normal">
