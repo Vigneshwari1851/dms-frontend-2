@@ -68,12 +68,12 @@ export default function MyProfile() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-white text-[16px] font-medium">My Profile</h2>
         <button
-            onClick={() => setEditMode(true)}
-            className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-          >
-            <img src={editIcon} alt="edit"/>
-            Edit
-          </button>
+          onClick={() => setEditMode(true)}
+          className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+        >
+          <img src={editIcon} alt="edit" className="w-4 h-4" />
+          Edit
+        </button>
       </div>
 
       <div className="bg-[#1A1F24] rounded-xl p-4 lg:p-5">
@@ -133,24 +133,24 @@ export default function MyProfile() {
               onChange={handleChange}
               readOnly={!editMode}
               className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white`}
-                onKeyDown={(e) => {
-                    if (!editMode) return;
-                    const allowedControlKeys = [
-                        "Backspace",
-                        "Delete",
-                        "ArrowLeft",
-                        "ArrowRight",
-                        "Tab",
-                    ];
-                    if (allowedControlKeys.includes(e.key)) return;
-                    if (["+", " ", "-", "(", ")"].includes(e.key)) return;
-                    if (/^[0-9]$/.test(e.key)) {
-                        const currentDigits = formData.phone.replace(/\D/g, "");
-                        if (currentDigits.length >= 15) e.preventDefault();
-                        return;
-                    }
-                    e.preventDefault();
-                }}
+              onKeyDown={(e) => {
+                if (!editMode) return;
+                const allowedControlKeys = [
+                  "Backspace",
+                  "Delete",
+                  "ArrowLeft",
+                  "ArrowRight",
+                  "Tab",
+                ];
+                if (allowedControlKeys.includes(e.key)) return;
+                if (["+", " ", "-", "(", ")"].includes(e.key)) return;
+                if (/^[0-9]$/.test(e.key)) {
+                  const currentDigits = formData.phone.replace(/\D/g, "");
+                  if (currentDigits.length >= 15) e.preventDefault();
+                  return;
+                }
+                e.preventDefault();
+              }}
             />
           </div>
         </div>

@@ -682,13 +682,13 @@ export default function EditDeal() {
                     {/* Mobile Only: Edit Pencil (only when not in edit mode) */}
                     <div className="lg:hidden flex items-center gap-2">
                         {!editMode && isPending && (
-                            <button
-                                onClick={handleStartEdit}
-                                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                            >
-                                <img src={editIcon} alt="edit" className="cursor-pointer" />
-                                Edit Deal
-                            </button>
+                        <button
+                            onClick={handleStartEdit}
+                                className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                        >
+                            <img src={editIcon} alt="edit"/>
+                            Edit
+                        </button>
                         )}
                     </div>
                 </div>
@@ -817,7 +817,7 @@ export default function EditDeal() {
                                         type="text"
                                         value={rate}
                                         onChange={(e) => setRate(e.target.value)}
-                                        readOnly={!isEditable || isCompleted}
+                                        readOnly
                                     />
                                 </div>
                             </div>
@@ -834,7 +834,7 @@ export default function EditDeal() {
                                         type="text"
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
-                                        readOnly={!isEditable || isCompleted}
+                                        readOnly
                                     />
                                 </div>
 

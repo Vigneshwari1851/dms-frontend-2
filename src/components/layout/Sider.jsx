@@ -53,9 +53,9 @@ export default function Sidebar({ isOpen, closeSidebar }) {
         {filteredMenuItems.map((item) => {
           let isActive = location.pathname.startsWith(item.path);
 
-          // Highlight Dashboard when on My Profile page
-          if (item.name === "Dashboard" && location.pathname === "/users/my-profile") {
-            isActive = true;
+          // Custom highlighting for My Profile page
+          if (location.pathname === "/users/my-profile") {
+            isActive = item.name === "Dashboard";
           }
 
           return (
