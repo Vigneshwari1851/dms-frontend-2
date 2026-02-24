@@ -58,7 +58,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             </div>
 
                             <div className="flex flex-col sm:items-end">
-                                <div className="flex items-center gap-2.5 bg-[#16191C] px-4 py-2 rounded-xl border border-[#2A2F34] shadow-inner">
+                                <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#5761D7]"></div>
                                     <span className="text-[#E0E0E0] text-[11px] tracking-wide">
                                         {new Date(createdAt).toLocaleDateString('en-IN', {
