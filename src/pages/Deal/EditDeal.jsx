@@ -682,13 +682,13 @@ export default function EditDeal() {
                     {/* Mobile Only: Edit Pencil (only when not in edit mode) */}
                     <div className="lg:hidden flex items-center gap-2">
                         {!editMode && isPending && (
-                        <button
-                            onClick={handleStartEdit}
+                            <button
+                                onClick={handleStartEdit}
                                 className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                        >
-                            <img src={editIcon} alt="edit"/>
-                            Edit
-                        </button>
+                            >
+                                <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                Edit
+                            </button>
                         )}
                     </div>
                 </div>
@@ -718,7 +718,7 @@ export default function EditDeal() {
                             onClick={handleStartEdit}
                             className="hidden lg:flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-2 lg:px-2 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors"
                         >
-                            <img src={editIcon} alt="edit" className="hidden lg:block w-8 h-8 lg:w-8 lg:h-8" />
+                            <img src={editIcon} alt="edit" className="w-4 h-4" />
                             Edit
                         </button>
                     )}

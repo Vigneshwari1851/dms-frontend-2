@@ -212,7 +212,7 @@ export default function ViewUser() {
                             onClick={() => setEditMode(true)}
                             className="flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-2 lg:px-2 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors"
                         >
-                            <img src={edit} alt="edit" className="cursor-pointer" />
+                            <img src={edit} alt="edit" className="w-4 h-4" />
                             Edit
                         </button>
                     )}
