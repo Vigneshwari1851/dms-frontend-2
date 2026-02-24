@@ -884,7 +884,7 @@ export default function EditDeal() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                             {txnType?.toLowerCase() === "buy" ? (
                                 <PaymentHistory
-                                    title="Payment History"
+                                    title={`Payment History - ${txnType?.toLowerCase() === 'buy' ? 'Debit' : 'Credit'}`}
                                     items={denominationPaid}
                                     currency={sellCurrency}
                                     editable={editMode}
@@ -898,7 +898,7 @@ export default function EditDeal() {
                                 />
                             ) : (
                                 <PaymentHistory
-                                    title="Payment History"
+                                    title={`Payment History - ${txnType?.toLowerCase() === 'buy' ? 'Debit' : 'Credit'}`}
                                     items={denominationReceived}
                                     currency={buyCurrency}
                                     editable={editMode}
