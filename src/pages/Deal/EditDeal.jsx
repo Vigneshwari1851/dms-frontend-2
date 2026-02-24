@@ -15,7 +15,7 @@ import DiscardModal from "../../components/common/DiscardModal";
 
 const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount }) => {
     const isCompleted = status?.toLowerCase() === 'completed';
-    const buttonText = isCompleted ? 'Add Payment' : 'Add Installment';
+    const buttonText = isCompleted ? 'Add Payment' : 'Add Payment';
 
     return (
         <div className="pb-4">
@@ -676,6 +676,16 @@ export default function EditDeal() {
                         </button>
                         <h2 className="text-[16px] lg:text-[18px] font-medium text-white flex items-center gap-1">
                             Deal ID - {deal?.deal_number || id || "Loading..."}
+                            {isCompleted && (
+                                <>
+                                    <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#88ACFC] text-black ml-1">Completed</span>
+                                </>
+                            )}
+                            {isPending && (
+                                <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#D8AD00] text-black ml-1">
+                                    Pending
+                                </span>
+                            )}
                         </h2>
                     </div>
 
@@ -856,9 +866,6 @@ export default function EditDeal() {
                                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="text-[#ABABAB] text-xs  tracking-wider">Remaining Balance</span>
-                                            <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#D8AD00] text-black">
-                                                Pending
-                                            </span>
                                         </div>
                                         <div className="flex items-baseline gap-2">
                                             <span className={`text-xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
