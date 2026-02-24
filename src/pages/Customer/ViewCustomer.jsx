@@ -450,7 +450,7 @@ export default function ViewCustomer() {
                   </thead>
                   <tbody>
                     {paginatedData.map((item, idx) => (
-                      <tr key={idx} className="rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer" onClick={() => handleRowClick(item)}>
+                      <tr key={idx} className="h-11 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer" onClick={() => handleRowClick(item)}>
                         <td className="py-3 font-normal text-[14px] text-left pl-3 lg:pl-5 ">{item.date}</td>
                         <td><span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.type]}`}>{item.type}</span></td>
                         <td className="text-left">{item.customer}</td>

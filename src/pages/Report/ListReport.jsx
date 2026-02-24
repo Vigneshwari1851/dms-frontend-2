@@ -427,125 +427,136 @@ export default function ListReport() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="mt-2 bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey">
+      {/* Table Section */}
+      <div className="mt-2 w-full scrollbar-grey">
         {paginatedData.length === 0 ? (
-          <EmptyState
-            imageSrc={dealEmptyBg}
-            message="Looks like no report data is available"
-          />
+          <div className="bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey text-center">
+            <EmptyState
+              imageSrc={dealEmptyBg}
+              message="Looks like no report data is available"
+            />
+          </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white text-[16px] font-semibold">
-                {dateRange === "Today" && "Today's Report"}
-                {dateRange === "Last 7 days" && "This Week's Report"}
-                {dateRange === "Last 30 days" && "This Month's Report"}
-                {dateRange === "Last 90 days" && "Three Month's Report"}
-                {dateRange === "Custom" && "Custom Report"}
-              </h2>
+            {/* Table Header */}
+            <div className="bg-[#1A1F24] rounded-t-lg px-3 lg:px-5 py-4">
+              <div className="flex justify-between items-center text-left">
+                <h2 className="text-white text-[16px] font-semibold">
+                  {dateRange === "Today" && "Today's Report"}
+                  {dateRange === "Last 7 days" && "This Week's Report"}
+                  {dateRange === "Last 30 days" && "This Month's Report"}
+                  {dateRange === "Last 90 days" && "Three Month's Report"}
+                  {dateRange === "Custom" && "Custom Report"}
+                </h2>
+              </div>
             </div>
 
-            <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
-              <thead>
-                <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                  <th className="text-left">Deal ID</th>
-                  <th className="text-left">Date</th>
+            {/* Table Body */}
+            <div className="bg-[#1A1F24] mt-[1.5px] overflow-x-auto scrollbar-grey">
+              <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
+                <thead>
+                  <tr className="text-[#FFFFFF] text-[12px] font-normal">
+                    <th className="py-3 text-left pl-5">Deal ID</th>
+                    <th className="text-left">Date</th>
 
-                  {/* TYPE SORT */}
-                  <th
-                    className="py-3 cursor-pointer select-none"
-                    onClick={() => handleSort("deal_type")}
-                  >
-                    <div className="flex items-center gap-1 justify-center">
-                      Type
-                      <span className="flex flex-col">
-                        <img
-                          src={uparrowIcon}
-                          className={`w-3 h-3 -mt-[5px] ${sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
-                            }`}
-                        />
-                        <img
-                          src={downarrowIcon}
-                          className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
-                            }`}
-                        />
-                      </span>
-                    </div>
-                  </th>
-
-                  <th className="text-left">Customer</th>
-                  {/* CURRENCY SORT */}
-                  <th className="text-left">Currency Pair</th>
-                  <th className="text-left">Buy Amount</th>
-                  <th className="text-left">Rate</th>
-                  <th className="text-left">Sell Amount</th>
-                  <th className="text-left">Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginatedData.map((item, index) => (
-                  <tr
-                    key={index}
-                    className="rounded-2xl hover:bg-[#151517] transition-colors cursor-pointer"
-                    onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
-                  >
-                    <td className="py-3 text-left text-[#92B4FF] font-bold text-[14px]">
-                      {item.deal_number}
-                    </td>
-
-                    <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
-
-                    {/* TYPE PILL */}
-                    <td>
-                      <div className="flex justify-center items-center">
-                        <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type]
-                            }`}
-                        >
-                          {item.deal_type.toUpperCase()}
+                    {/* TYPE SORT */}
+                    <th
+                      className="py-3 cursor-pointer select-none"
+                      onClick={() => handleSort("deal_type")}
+                    >
+                      <div className="flex items-center gap-1 justify-center">
+                        Type
+                        <span className="flex flex-col">
+                          <img
+                            src={uparrowIcon}
+                            className={`w-3 h-3 -mt-[5px] ${sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
+                              }`}
+                          />
+                          <img
+                            src={downarrowIcon}
+                            className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
+                              }`}
+                          />
                         </span>
                       </div>
-                    </td>
+                    </th>
 
-                    <td className="text-left">{item.customer?.name}</td>
-                    <td className="text-left">
-                      {item.deal_type.toLowerCase() === "buy"
-                        ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
-                        : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
-                      }
-                    </td>
-                    <td className="text-left">{item.buyAmount}</td>
-                    <td className="text-left">{item.exchange_rate}</td>
-                    <td className="text-left">{item.sellAmount}</td>
-
-                    {/* STATUS */}
-                    <td className="text-left">
-                      <div className="flex justify-center items-center">
-                        <span
-                          className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]
-                            }`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                    </td>
+                    <th className="text-left">Customer</th>
+                    {/* CURRENCY SORT */}
+                    <th className="text-left">Currency Pair</th>
+                    <th className="text-left">Buy Amount</th>
+                    <th className="text-left">Rate</th>
+                    <th className="text-left">Sell Amount</th>
+                    <th className="text-left">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
 
-            <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              onPrev={() => {
-                if (pagination.page > 1) fetchReportData(pagination.page - 1);
-              }}
-              onNext={() => {
-                if (pagination.page < pagination.totalPages) fetchReportData(pagination.page + 1);
-              }}
-            />
+                <tbody>
+                  {paginatedData.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="h-11 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer"
+                      onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
+                    >
+                      <td className="py-1.5 text-left pl-5 text-[#92B4FF] font-bold text-[14px]">
+                        {item.deal_number}
+                      </td>
+
+                      <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
+
+                      {/* TYPE PILL */}
+                      <td>
+                        <div className="flex justify-center items-center">
+                          <span
+                            className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type]
+                              }`}
+                          >
+                            {item.deal_type.toUpperCase()}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="text-left">{item.customer?.name}</td>
+                      <td className="text-left">
+                        {item.deal_type.toLowerCase() === "buy"
+                          ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
+                          : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
+                        }
+                      </td>
+                      <td className="text-left">{item.buyAmount}</td>
+                      <td className="text-left">{item.exchange_rate}</td>
+                      <td className="text-left">{item.sellAmount}</td>
+
+                      {/* STATUS */}
+                      <td className="text-left">
+                        <div className="flex justify-center items-center">
+                          <span
+                            className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]
+                              }`}
+                          >
+                            {item.status}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Section */}
+            <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPrev={() => {
+                  if (pagination.page > 1) fetchReportData(pagination.page - 1);
+                }}
+                onNext={() => {
+                  if (pagination.page < pagination.totalPages) fetchReportData(pagination.page + 1);
+                }}
+              />
+            </div>
           </>
         )}
       </div>
