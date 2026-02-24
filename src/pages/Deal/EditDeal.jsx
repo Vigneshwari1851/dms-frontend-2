@@ -36,7 +36,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
 
             <div className="relative pl-8 space-y-6">
                 {/* Timeline Line */}
-                {items.length > 0 && (
+                {(items.length > 0 || isCompleted) && (
                     <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#2A2F34]"></div>
                 )}
 
@@ -673,8 +673,14 @@ export default function EditDeal() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
-                        <h2 className="text-[16px] lg:text-[18px] font-medium text-white">
+                        <h2 className="text-[16px] lg:text-[18px] font-medium text-white flex items-center gap-1">
                             Deal ID - {deal?.deal_number || id || "Loading..."}
+                            {isCompleted && (
+                                <>
+                                    <span className="text-[#3A3F43]">|</span>
+                                    <span className="text-[11px] text-[#ABABAB] font-semibold uppercase tracking-[0.1em]">Completed</span>
+                                </>
+                            )}
                         </h2>
                     </div>
 
@@ -875,7 +881,7 @@ export default function EditDeal() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                             {txnType?.toLowerCase() === "buy" ? (
                                 <PaymentHistory
-                                    title={isCompleted ? "" : "Payment History"}
+                                    title="Payment History"
                                     items={denominationPaid}
                                     currency={sellCurrency}
                                     editable={editMode}
@@ -889,7 +895,7 @@ export default function EditDeal() {
                                 />
                             ) : (
                                 <PaymentHistory
-                                    title={isCompleted ? "" : "Payment History"}
+                                    title="Payment History"
                                     items={denominationReceived}
                                     currency={buyCurrency}
                                     editable={editMode}
