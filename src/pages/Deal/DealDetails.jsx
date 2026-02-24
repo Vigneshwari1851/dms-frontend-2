@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchDealById } from "../../api/deals";
+import edit from "../../assets/Common/edit.svg";
 
 export default function DealDetails() {
   const { id } = useParams();
@@ -112,8 +113,9 @@ export default function DealDetails() {
           {deal.status === 'Pending' && (
             <button
               onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
-              className="px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium transition-colors"
+              className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors"
             >
+              <img src={edit} alt="edit" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
               Edit Deal
             </button>
           )}

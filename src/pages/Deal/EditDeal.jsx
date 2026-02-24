@@ -27,9 +27,10 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                 {editable && (
                     <button
                         onClick={onAdd}
-                        className="flex items-center gap-2 bg-[#1D4CB5] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#173B8B] transition-all shadow-lg active:scale-95"
+                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors"
                     >
-                        <PlusIcon className="w-4 h-4" /> {buttonText}
+                        <PlusIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+                        {buttonText}
                     </button>
                 )}
             </div>
@@ -120,7 +121,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
 
                                 <div className="flex flex-col sm:items-end">
                                     <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : 'bg-green-500 animate-pulse'}`}></div>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : ''}`}></div>
                                         <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
                                             {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
                                                 day: '2-digit',
@@ -129,7 +130,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                                 hour: '2-digit',
                                                 minute: '2-digit',
                                                 hour12: true
-                                            }) : "Pending sync..."}
+                                            }) : ""}
                                         </span>
                                     </div>
                                 </div>
@@ -683,9 +684,10 @@ export default function EditDeal() {
                         {!editMode && isPending && (
                             <button
                                 onClick={handleStartEdit}
-                                className="p-1 hover:bg-[#2A2F34] rounded-lg transition-colors bg-[#1D4CB5]"
+                                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                             >
-                                <img src={editIcon} className="w-6 h-6" alt="Edit" />
+                                <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                Edit Deal
                             </button>
                         )}
                     </div>
@@ -712,12 +714,12 @@ export default function EditDeal() {
                     )}
 
                     {!editMode && isPending && (
-                        /* Desktop Only: Edit Icon button */
                         <button
                             onClick={handleStartEdit}
-                            className="hidden lg:flex w-full lg:w-[41px] h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4CB5] text-white cursor-pointer hover:bg-[#173B8B]"
+                            className="hidden lg:flex items-center gap-1 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-2 lg:px-2 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors"
                         >
-                            <img src={editIcon} className="lg:w-[41px] lg:h-10" alt="Edit" />
+                            <img src={editIcon} alt="edit" className="hidden lg:block w-8 h-8 lg:w-8 lg:h-8" />
+                            Edit
                         </button>
                     )}
                 </div>
