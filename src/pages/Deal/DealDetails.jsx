@@ -85,258 +85,244 @@ export default function DealDetails() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-2xl font-semibold">Deal Details</h1>
-          <p className="text-gray-400 text-sm mt-1">{deal.deal_number}</p>
+          <h1 className="text-white text-2xl font-semibold">Deal Overview</h1>
+          <p className="text-gray-400 text-sm mt-1">ID - {deal.deal_number}</p>
         </div>
-        <button
-          onClick={() => navigate("/deals")}
-          className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-medium"
-        >
-          Back to Deals
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/deals")}
+            className="px-5 py-2 bg-[#2A2F33] hover:bg-[#3A3F43] rounded-lg text-white font-medium transition-colors"
+          >
+            Back to Deals
+          </button>
+          {deal.status === 'Pending' && (
+            <button
+              onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
+              className="px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium transition-colors"
+            >
+              Edit Deal
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Details Container */}
-      <div className="bg-[#1A1F24] p-6 rounded-xl border border-[#2A2F33]">
-        {/* Customer & Contact Info */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Customer Name
-            </label>
-            <p className="text-white text-lg">{deal.customer_name}</p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Phone Number
-            </label>
-            <p className="text-white text-lg">{deal.phone_number}</p>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+
+        {/* LEFT SIDE: Deal Information */}
+        <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full">
+          <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+            Deal Information
+          </h3>
+
+          <div className="space-y-6">
+            {/* Row 1 - Customer Name & Phone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Full Name
+                </label>
+                <p className="text-white text-lg font-medium">{deal.customer_name}</p>
+              </div>
+
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Phone Number
+                </label>
+                <p className="text-white text-lg font-medium">{deal.phone_number}</p>
+              </div>
+            </div>
+
+            {/* Row 2 - Transaction fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Transaction Type
+                </label>
+                <p className="text-white text-lg font-medium capitalize">{deal.deal_type}</p>
+              </div>
+
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Transaction Mode
+                </label>
+                <p className="text-white text-lg font-medium capitalize">{deal.transaction_mode}</p>
+              </div>
+            </div>
+
+            {/* Row 3 - Currency & Amount */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Currency Pair
+                </label>
+                <p className="text-white text-lg font-medium">
+                  {deal.buyCurrency === "TZS" ? `${deal.sellCurrency}/TZS` : `${deal.buyCurrency}/TZS`}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  {deal.deal_type === "sell" ? "Sell Amount" : "Buy Amount"}
+                </label>
+                <p className="text-white text-lg font-medium">
+                  {formatCurrency(deal.amount)}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block">
+                  Rate
+                </label>
+                <p className="text-white text-lg font-medium">{formatCurrency(deal.exchange_rate)}</p>
+              </div>
+            </div>
+
+            {/* Row 4 - Summary of Amounts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 pt-4 border-t border-[#2A2F33]">
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block underline decoration-[#10B93555]">
+                  Total Buy Amount
+                </label>
+                <p className="text-[#10B935] text-xl font-bold">
+                  {formatCurrency(deal.buyAmount)} {deal.buyCurrency}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-[#ABABAB] text-sm mb-1 block underline decoration-[#D8AD0055]">
+                  Total Sell Amount
+                </label>
+                <p className="text-[#D8AD00] text-xl font-bold">
+                  {formatCurrency(deal.sellAmount)} {deal.sellCurrency}
+                </p>
+              </div>
+            </div>
+
+            {/* Row 5 - Calculated Profit */}
+            <div className="w-full h-[48px] bg-[#5761D715] rounded-lg px-4 flex items-center justify-between border border-[#5761D733]">
+              <span className="text-[#FEFEFE] text-sm font-medium">
+                Profit Generated
+              </span>
+              <span className="text-[#88ACFC] font-black text-xl">
+                TZS {formatCurrency(deal.profit)}
+              </span>
+            </div>
+
+            {/* Remarks */}
+            {deal.remarks && (
+              <div className="mt-4">
+                <label className="text-[#ABABAB] text-sm mb-2 block">Remarks</label>
+                <p className="bg-[#16191C] rounded-lg p-3 text-white text-sm border border-[#2A2F34] min-h-[60px]">
+                  {deal.remarks}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Deal Type & Currency Pair */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Transaction Type
-            </label>
-            <p className="text-white text-lg capitalize">
-              {deal.deal_type === "buy" ? "Buy" : "Sell"}
-            </p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Currency Pair
-            </label>
-            <p className="text-white text-lg">
-              {deal.buyCurrency === "TZS" ? `${deal.sellCurrency}/TZS` : `${deal.buyCurrency}/TZS`}
-            </p>
-          </div>
-        </div>
+        {/* RIGHT SIDE: Payment Tracker */}
+        <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full self-stretch">
+          <div className="flex flex-col h-full">
+            <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+              Payment Tracker
+            </h3>
 
-        {/* Transaction Mode & Amount */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Transaction Mode
-            </label>
-            <p className="text-white text-lg capitalize">
-              {deal.transaction_mode}
-            </p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">Amount</label>
-            <p className="text-white text-lg">{formatCurrency(deal.amount)}</p>
-          </div>
-        </div>
-
-        {/* Rate, Status & Dates */}
-        <div className="grid grid-cols-3 gap-6 mb-8">
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">Rate</label>
-            <p className="text-white text-lg">{formatCurrency(deal.exchange_rate)}</p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">Status</label>
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${deal.status === "Pending"
-                ? "bg-[#D8AD0024] text-[#D8AD00]"
-                : "bg-[#1D4CB53D] text-[#88ACFC]"
-                }`}
-            >
-              {deal.status}
-            </span>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Created Date
-            </label>
-            <p className="text-white text-lg">{formatDate(deal.created_at)}</p>
-          </div>
-        </div>
-
-        {/* Remarks */}
-        {deal.remarks && (
-          <div className="mb-8">
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Remarks
-            </label>
-            <p className="text-white text-lg">{deal.remarks}</p>
-          </div>
-        )}
-
-        {/* Amounts Summary */}
-        <div className="grid grid-cols-3 gap-6 mb-8 border-t border-[#2A2F33] pt-6">
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Buy Amount
-            </label>
-            <p className="text-green-400 text-xl font-semibold">
-              {formatCurrency(deal.buyAmount)} {deal.buyCurrency}
-            </p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Sell Amount
-            </label>
-            <p className="text-yellow-400 text-xl font-semibold">
-              {formatCurrency(deal.sellAmount)} {deal.sellCurrency}
-            </p>
-          </div>
-          <div>
-            <label className="text-[#ABABAB] text-sm mb-1 block">Profit</label>
-            <p className="text-blue-400 text-xl font-semibold">
-              {formatCurrency(deal.profit)}
-            </p>
-          </div>
-        </div>
-
-        {/* Received Items */}
-        {deal.received_items && deal.received_items.length > 0 && (
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white text-lg font-semibold">
-                Received Items
-              </h3>
-              {deal.deal_type === 'sell' && (
-                <div className="bg-[#2A2F33] border border-[#3E4348] rounded-lg px-3 py-1.5 flex items-center gap-2">
-                  <span className="text-[#ABABAB] text-xs font-semibold uppercase tracking-wider">Remaining Balance</span>
-                  <span className={`text-sm font-bold ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                    {deal.buyCurrency} {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {/* Balance Display */}
+            <div className="mb-6">
+              <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">Remaining Balance</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${deal.status === 'Completed' ? 'bg-[#1D902D] text-white' : 'bg-[#D8AD00] text-black'}`}>
+                    {deal.status}
                   </span>
                 </div>
-              )}
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-gray-300">
-                <thead className="border-b border-[#2A2F33]">
-                  <tr>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Price
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Quantity
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Total
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Currency
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deal.received_items.map((item, idx) => (
-                    <tr key={idx} className="border-b border-[#2A2F33]">
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.price)}
-                      </td>
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.quantity)}
-                      </td>
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.total)}
-                      </td>
-                      <td className="py-3 px-3 text-blue-400">
-                        {item.currency?.code || "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Paid Items */}
-        {deal.paid_items && deal.paid_items.length > 0 && (
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white text-lg font-semibold">
-                Paid Items
-              </h3>
-              {deal.deal_type === 'buy' && (
-                <div className="bg-[#2A2F33] border border-[#3E4348] rounded-lg px-3 py-1.5 flex items-center gap-2">
-                  <span className="text-[#ABABAB] text-xs font-semibold uppercase tracking-wider">Remaining Balance</span>
-                  <span className={`text-sm font-bold ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                    {deal.sellCurrency} {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+                <div className="flex items-baseline gap-2">
+                  {deal.deal_type === 'sell' ? (
+                    <>
+                      <span className={`text-3xl font-black tracking-tight ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                        {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.buyCurrency}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={`text-3xl font-black tracking-tight ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                        {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.sellCurrency}</span>
+                    </>
+                  )}
                 </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h4 className="text-white font-semibold">Payment History</h4>
+                <p className="text-[#ABABAB] text-xs">Historical installment records</p>
+              </div>
+              {(deal.status === 'Pending' || deal.status === 'Completed') && (
+                <button
+                  onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
+                  className="flex items-center gap-2 bg-[#1D4CB50F] border border-[#1D4CB555] text-[#88ACFC] px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1D4CB522] transition-colors"
+                >
+                  {deal.status === 'Completed' ? 'Add Payment' : 'Add Installment'}
+                </button>
               )}
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-gray-300">
-                <thead className="border-b border-[#2A2F33]">
-                  <tr>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Price
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Quantity
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Total
-                    </th>
-                    <th className="text-left py-2 px-3 text-[#ABABAB]">
-                      Currency
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deal.paid_items.map((item, idx) => (
-                    <tr key={idx} className="border-b border-[#2A2F33]">
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.price)}
-                      </td>
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.quantity)}
-                      </td>
-                      <td className="py-3 px-3">
-                        {formatCurrency(item.total)}
-                      </td>
-                      <td className="py-3 px-3 text-blue-400">
-                        {item.currency?.code || "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+            {/* Timeline */}
+            <div className="relative pl-8 space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {/* Vertical Line */}
+              {(((deal.deal_type === 'sell' ? deal.received_items : deal.paid_items)?.length > 0) || (deal.status === 'Completed')) && (
+                <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-[#2A2F34]"></div>
+              )}
+
+              {(deal.deal_type === 'sell' ? (deal.received_items || []) : (deal.paid_items || [])).length === 0 ? (
+                <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-6 text-center ml-[-20px]">
+                  <p className="text-[#8F8F8F] text-sm font-medium">No payment records found</p>
+                </div>
+              ) : (
+                (deal.deal_type === 'sell' ? deal.received_items : deal.paid_items).map((item, index) => (
+                  <div key={index} className="relative">
+                    {/* Timeline Node */}
+                    <div className="absolute -left-[28px] top-4 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#1D4CB5] z-10"></div>
+
+                    <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-4 hover:border-[#1D4CB555] transition-all">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Amount Paid</p>
+                          <p className="text-white text-xl font-black">
+                            {formatCurrency(item.total)} <span className="text-[10px] text-[#1D4CB5] uppercase">{item.currency?.code || "TZS"}</span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Date</p>
+                          <p className="text-white text-xs font-medium bg-[#1A1F24] px-2 py-1 rounded border border-[#2A2F34]">
+                            {formatDate(item.created_at || new Date())}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-[#2A2F34] flex justify-between text-[10px]">
+                        <span className="text-[#8F8F8F] italic">Ref: {deal.deal_number}-{index + 1}</span>
+                        <span className="text-[#82E890] font-bold">Verified</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
-        )}
-
-        {/* Created By */}
-        {deal.createdBy && (
-          <div className="border-t border-[#2A2F33] pt-6">
-            <label className="text-[#ABABAB] text-sm mb-1 block">
-              Created By
-            </label>
-            <p className="text-white">
-              {deal.createdBy.full_name} ({deal.createdBy.email})
-            </p>
-          </div>
-        )}
+        </div>
       </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #2A2F34; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3A3F44; }
+      `}</style>
     </>
   );
 }
