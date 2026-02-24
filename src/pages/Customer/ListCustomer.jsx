@@ -147,7 +147,7 @@ export default function ListCustomer() {
     </div>
       <div className="mt-2">
         <Table
-          title="Search Customer"
+          title="Customer List"
           columns={columns}
           data={tableData}
           currentPage={currentPage}

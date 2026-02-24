@@ -297,8 +297,8 @@ export default function DealsList() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
           {/* Left side: Deal Records + Search */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
-            <h2 className="text-white text-[16px] font-semibold shrink-0">
-              Deal Records
+            <h2 className="text-white text-[16px] font-normal shrink-0">
+              Deal List
             </h2>
 
             {/* Search Box with icon */}

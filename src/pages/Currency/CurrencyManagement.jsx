@@ -90,16 +90,16 @@ export default function CurrencyManagement() {
 
     const currencyColumns = [
         { label: "Currency Name", key: "name", align: "left" },
-        { label: "ISO Code", key: "code", align: "center" },
-        { label: "Symbol", key: "symbol", align: "center" },
-        { label: "Created At", key: "created_at", align: "right" },
+        { label: "ISO Code", key: "code", align: "left" },
+        { label: "Symbol", key: "symbol", align: "left" },
+        { label: "Created At", key: "created_at", align: "left" },
     ];
 
     const pairColumns = [
+        { label: "Currency Pair", key: "pair", align: "left" },
         { label: "Base Currency", key: "base", align: "left" },
-        { label: "Quote Currency", key: "quote", align: "center" },
-        { label: "Currency Pair", key: "pair", align: "center" },
-        { label: "Last Updated", key: "updated_at", align: "right" },
+        { label: "Quote Currency", key: "quote", align: "left" },
+        { label: "Last Updated", key: "updated_at", align: "left" },
     ];
 
     const currencyTableData = currencies.map((c) => ({
@@ -153,7 +153,7 @@ export default function CurrencyManagement() {
 
             <div className="bg-[#1A1F24] rounded-xl overflow-hidden">
                 <Table
-                    title={activeTab === "currencies" ? "Supported Currencies" : "Active Pairs"}
+                    title={activeTab === "currencies" ? "Currency List" : "Pair List"}
                     columns={activeTab === "currencies" ? currencyColumns : pairColumns}
                     data={activeTab === "currencies" ? currencyTableData : pairTableData}
                     showExport={false}
@@ -166,7 +166,7 @@ export default function CurrencyManagement() {
             </div>
 
             {showCurrencyForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <CurrencyForm
                         currencyName={newCurrency.currencyName}
                         isoCode={newCurrency.isoCode}
@@ -179,7 +179,7 @@ export default function CurrencyManagement() {
             )}
 
             {showPairForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <div className="bg-[#1A1F24] p-6 rounded-lg w-full max-w-[470px] text-white">
                         <h2 className="text-xl font-semibold">Add Currency Pair</h2>
                         <p className="text-gray-400 mt-1 text-sm">Create a new exchange rate pair</p>

@@ -14,12 +14,12 @@ export default function Sidebar({ isOpen, closeSidebar }) {
   const location = useLocation();
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
-    { name: "User Management", icon: usermanagement, path: "/users" },
-    { name: "Customer Information", icon: customermanagement, path: "/customer-info" },
-    { name: "Currency Management", icon: deals, path: "/currency-management" },
     { name: "Deals", icon: deals, path: "/deals" },
+    { name: "Customer Info", icon: customermanagement, path: "/customer-info" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
-    { name: "Reporting", icon: reporting, path: "/reports" },
+    { name: "Reports", icon: reporting, path: "/reports" },
+    { name: "Currency Info", icon: deals, path: "/currency-management" },
+    { name: "User Management", icon: usermanagement, path: "/users" },
   ];
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
