@@ -6,7 +6,7 @@ import usermanagement from "../../assets/Common/usermanagement.svg";
 import reconciliation from "../../assets/Common/reconciliation.svg";
 import reporting from "../../assets/Common/reporting.svg";
 import customermanagement from "../../assets/customer/ledger.svg";
-import currencymanagement from "../../assets/common/currencymanagement.svg";
+import currencymanagement from "../../assets/Common/currencymanagement.svg";
 
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
