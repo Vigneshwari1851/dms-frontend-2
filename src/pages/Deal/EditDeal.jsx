@@ -46,14 +46,14 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                         {/* Timeline Node */}
                         <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
 
-                        <div className="bg-[#1A1F24] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
                             <div className="flex flex-col">
-                                <span className="text-[#88ACFC] text-[10px] mb-2">Amount</span>
+                                <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-white text-sm">
+                                    <span className="text-white text-normal">
                                         {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
-                                    <span className="text-[#1D4CB5] text-sm font-black italic">{currency}</span>
+                                    <span className="text-[#1D4CB5] text-normal font-black italic">{currency}</span>
                                 </div>
                             </div>
 
@@ -64,7 +64,10 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                         {new Date(createdAt).toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
-                                            year: 'numeric'
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: true
                                         })}
                                     </span>
                                 </div>
