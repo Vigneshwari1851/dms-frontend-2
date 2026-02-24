@@ -388,7 +388,7 @@ export default function DealsList() {
               <thead>
                 <tr className="text-[#FFFFFF] text-[12px] font-normal">
                   <th className="py-3 text-left pl-5">Deal ID</th>
-                  <th>Date</th>
+                  <th className="text-left">Date</th>
 
                   {/* TYPE SORT */}
                   <th
@@ -422,8 +422,8 @@ export default function DealsList() {
                     </div>
                   </th>
 
-                  <th>Customer Name</th>
-                  <th>Buy Amount</th>
+                  <th className="text-left">Customer Name</th>
+                  <th className="text-left">Buy Amount</th>
 
                   {/* CURRENCY SORT */}
                   <th
@@ -436,7 +436,7 @@ export default function DealsList() {
                       }
                     }}
                   >
-                    <div className="flex items-center gap-1 ml-5 justify-center">
+                    <div className="flex items-center gap-1 ml-5 justify-center text-left">
                       Currency
                       <span className="flex flex-col">
                         <img
@@ -457,8 +457,8 @@ export default function DealsList() {
                     </div>
                   </th>
 
-                  <th>Rate</th>
-                  <th>Sell Amount</th>
+                  <th className="text-left">Rate</th>
+                  <th className="text-left">Sell Amount</th>
                   <th>Currency</th>
                   <th>Status</th>
                   <th className="pr-5">Action</th>
@@ -486,12 +486,11 @@ export default function DealsList() {
                         </span>
                       </div>
                     </td>
-
-                    <td>{item.customer}</td>
-                    <td>{item.buyAmt}</td>
+                    <td className="text-left">{item.customer}</td>
+                    <td className="text-left">{item.buyAmt}</td>
                     <td>{item.currency}</td>
-                    <td>{item.exchange_rate}</td>
-                    <td>{item.sellAmt}</td>
+                    <td className="text-left">{item.exchange_rate}</td>
+                    <td className="text-left">{item.sellAmt}</td>
                     <td>{item.currency1}</td>
 
                     <td>
