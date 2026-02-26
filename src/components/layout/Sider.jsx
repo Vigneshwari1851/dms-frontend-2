@@ -7,6 +7,7 @@ import reconciliation from "../../assets/Common/reconciliation.svg";
 import reporting from "../../assets/Common/reporting.svg";
 import customermanagement from "../../assets/customer/ledger.svg";
 import currencymanagement from "../../assets/Common/currencymanagement.svg";
+import pnl from "../../assets/dashboard/profit.svg";
 
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -17,6 +18,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
     { name: "Deals", icon: deals, path: "/deals" },
     { name: "Customer Info", icon: customermanagement, path: "/customer-info" },
+    { name: "P & L", icon: pnl, path: "/pnl" },
     { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
     { name: "Reports", icon: reporting, path: "/reports" },
     { name: "Currency Info", icon: currencymanagement, path: "/currency-management" },

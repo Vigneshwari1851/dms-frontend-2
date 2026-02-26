@@ -241,58 +241,36 @@ export default function ReconciliationList() {
         />
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-10">
-          <div className="text-white">Loading reconciliations...</div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-4">
-          <p className="text-red-400">{error}</p>
-          <button
-            onClick={() => fetchReconciliations()}
-            className="mt-2 px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-md text-sm"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && (
-        <div className="mt-8">
-          <Table
-            columns={columns}
-            data={prepareTableData()}
-            title="Reconciliation List"
-            showRightSection={true}
-            onRowClick={handleRowClick}
-            onSearch={handleSearch}
-            onExport={handleExport}
-            showExport={true}
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-            emptyStateProps={{
-              imageSrc: reconEmptyBg,
-              message: "No reconciliations found",
-              description: "Perform your first daily vault reconciliation to see records here",
-              action: (
-                <button
-                  onClick={() => navigate("/reconciliation/add-reconciliation")}
-                  className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
-                >
-                  <img src={add} alt="add" className="w-5 h-5" />
-                  Create Reconciliation
-                </button>
-              )
-            }}
-          />
-        </div>
-      )}
+      <div className="mt-8">
+        <Table
+          loading={loading}
+          columns={columns}
+          data={prepareTableData()}
+          title="Reconciliation List"
+          showRightSection={true}
+          onRowClick={handleRowClick}
+          onSearch={handleSearch}
+          onExport={handleExport}
+          showExport={true}
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+          emptyStateProps={{
+            imageSrc: reconEmptyBg,
+            message: "No reconciliations found",
+            description: "Perform your first daily vault reconciliation to see records here",
+            action: (
+              <button
+                onClick={() => navigate("/reconciliation/add-reconciliation")}
+                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
+              >
+                <img src={add} alt="add" className="w-5 h-5" />
+                Create Reconciliation
+              </button>
+            )
+          }}
+        />
+      </div>
 
       <Toast
         show={toast.show}

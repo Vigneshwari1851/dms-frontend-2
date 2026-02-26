@@ -1,7 +1,7 @@
 
 
 
-export default function StatCard({ title, value, subValues, change, icon, color }) {
+export default function StatCard({ title, subtitle, value, subValues, change, icon, color }) {
   const hasSubValues = subValues && subValues.length > 0;
 
   return (
@@ -21,7 +21,10 @@ export default function StatCard({ title, value, subValues, change, icon, color 
       {/* Background Accent */}
 
       <div className="flex items-center justify-between gap-3 mb-4">
-        <p className="text-white font-semibold">{title}</p>
+        <div>
+          <p className="text-white font-semibold">{title}</p>
+          {subtitle && <p className="text-[#8F8F8F] text-[10px] mt-0.5">{subtitle}</p>}
+        </div>
         <img src={icon} alt="" className="w-5 h-5" />
       </div>
 

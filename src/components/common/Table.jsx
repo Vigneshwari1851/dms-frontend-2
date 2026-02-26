@@ -28,6 +28,7 @@ export default function Table({
   totalPages,
   onPageChange,
   emptyStateProps = {},
+  loading = false,
 }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const statuses = ["All Status", "In_Progress", "Tallied", "Excess", "Short"];
@@ -78,7 +79,11 @@ export default function Table({
     }
   };
 
-  const renderCell = (col, value) => {
+  const renderCell = (col, value, row) => {
+    if (col.render) {
+      return col.render(value, row);
+    }
+
     if (col.key === "role")
       return (
         <span
@@ -318,7 +323,16 @@ export default function Table({
           </thead>
 
           <tbody>
-            {sortedData.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="py-20 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-[#1D4CB5] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-[#8F8F8F] text-sm animate-pulse">Loading data...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : sortedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="py-10">
                   <EmptyState
@@ -342,7 +356,7 @@ export default function Table({
                       {col.key === "full_name" ? (
                         <span className="text-white">{row[col.key]}</span>
                       ) : (
-                        renderCell(col, row[col.key])
+                        renderCell(col, row[col.key], row)
                       )}
                     </td>
                   ))}

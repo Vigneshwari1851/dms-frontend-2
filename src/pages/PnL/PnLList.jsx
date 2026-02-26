@@ -1,0 +1,220 @@
+import { useState, useEffect, useMemo } from "react";
+import StatCard from "../../components/dashboard/StatCard";
+import Table from "../../components/common/Table";
+import Dropdown from "../../components/common/Dropdown";
+import profitIcon from "../../assets/dashboard/profit.svg";
+import dealstodayIcon from "../../assets/dashboard/dealstoday.svg";
+import buyamountIcon from "../../assets/dashboard/buyamount.svg";
+import sellamountIcon from "../../assets/dashboard/sellamount.svg";
+import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
+import Toast from "../../components/common/Toast";
+
+export default function PnLList() {
+    const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
+    const [data, setData] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState("All Months");
+    const [pagination, setPagination] = useState({
+        page: 1,
+        totalPages: 1,
+        limit: 100, // Fetch more for local filtering/summary
+    });
+
+    const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        type: "success",
+    });
+
+    const loadPnLData = async () => {
+        try {
+            setLoading(true);
+            // Fetch a larger set for P&L analysis
+            const response = await fetchReconcoliation({ page: 1, limit: 100 });
+
+            if (response.data) {
+                const processedData = response.data.map(item => {
+                    const date = item.created_at || item.createdAt;
+                    return {
+                        ...item,
+                        profitLoss: Number(item.profitLoss || 0),
+                        date: new Date(date).toLocaleDateString("en-GB"),
+                        rawDate: date,
+                        monthKey: new Date(date).toLocaleString('default', { month: 'long', year: 'numeric' })
+                    };
+                });
+
+                setData(processedData);
+
+                setPagination(prev => ({
+                    ...prev,
+                    totalPages: response.pagination.totalPages,
+                }));
+            }
+        } catch (err) {
+            console.error("Error loading P&L data:", err);
+            setToast({ show: true, message: "Failed to load P&L data", type: "error" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadPnLData();
+    }, []);
+
+    const months = useMemo(() => {
+        const uniqueMonths = ["All Months", ...new Set(data.map(item => item.monthKey))];
+        return uniqueMonths;
+    }, [data]);
+
+    const filteredData = useMemo(() => {
+        if (selectedMonth === "All Months") return data;
+        return data.filter(item => item.monthKey === selectedMonth);
+    }, [data, selectedMonth]);
+
+    const stats = useMemo(() => {
+        const total = filteredData.reduce((acc, curr) => acc + curr.profitLoss, 0);
+        const winningDays = filteredData.filter(item => item.profitLoss > 0).length;
+        const totalDays = filteredData.length;
+        const winRate = totalDays > 0 ? (winningDays / totalDays) * 100 : 0;
+
+        // Find best day
+        const bestDay = filteredData.length > 0
+            ? [...filteredData].sort((a, b) => b.profitLoss - a.profitLoss)[0].profitLoss
+            : 0;
+
+        return {
+            totalPnL: total,
+            winRate: winRate,
+            bestDay: bestDay,
+            totalDays: totalDays
+        };
+    }, [filteredData]);
+
+    const handleExport = async (format) => {
+        try {
+            setExporting(true);
+            const blob = await exportReconciliation(format);
+            if (!blob) {
+                setToast({ show: true, message: "Export failed", type: "error" });
+                return;
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `pnl_report_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            setToast({ show: true, message: "Report exported successfully", type: "success" });
+        } catch (err) {
+            console.error("Export error:", err);
+            setToast({ show: true, message: "Export failed", type: "error" });
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const columns = [
+        { label: "Date", key: "date", align: "left" },
+        { label: "Deals count", key: "total_transactions", align: "left" },
+        {
+            label: "Opening Value",
+            key: "totalOpeningValue",
+            align: "left",
+            render: (v) => `TZS ${Number(v).toLocaleString()}`
+        },
+        {
+            label: "Closing Value",
+            key: "totalClosingValue",
+            align: "left",
+            render: (v) => `TZS ${Number(v).toLocaleString()}`
+        },
+        {
+            label: "Profit / Loss",
+            key: "profitLoss",
+            align: "left",
+            render: (v) => (
+                <div className="flex items-center gap-2">
+                    <span className={v >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                        {v >= 0 ? "▲" : "▼"} TZS {Math.abs(Number(v)).toLocaleString()}
+                    </span>
+                </div>
+            )
+        },
+    ];
+
+    return (
+        <>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-white text-xl font-semibold">Profit & Loss Analysis</h1>
+                    <p className="text-[#8F8F8F] text-sm mt-1">Detailed breakdown of trading performance</p>
+                </div>
+
+                <div className="w-full md:w-64">
+                    <Dropdown
+                        label="Filter by Month"
+                        options={months}
+                        selected={selectedMonth}
+                        onChange={setSelectedMonth}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <StatCard
+                    title="Net P&L"
+                    subtitle={selectedMonth}
+                    value={`TZS ${Number(stats.totalPnL).toLocaleString()}`}
+                    color={stats.totalPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
+                    icon={profitIcon}
+                />
+                <StatCard
+                    title="Win Rate"
+                    subtitle={`${stats.totalDays} Trading Sessions`}
+                    value={`${stats.winRate.toFixed(1)}%`}
+                    icon={dealstodayIcon}
+                    color="text-[#939AF0]"
+                />
+                <StatCard
+                    title="Best Session"
+                    subtitle="Highest Profit"
+                    value={`TZS ${Number(stats.bestDay).toLocaleString()}`}
+                    icon={buyamountIcon}
+                    color="text-[#82E890]"
+                />
+                <StatCard
+                    title="Total Volume"
+                    subtitle="Recon Records"
+                    value={stats.totalDays}
+                    icon={sellamountIcon}
+                />
+            </div>
+
+            <div className="mt-8">
+                <Table
+                    columns={columns}
+                    data={filteredData}
+                    title="Performance History"
+                    subtitle={`Showing data for ${selectedMonth}`}
+                    loading={loading || exporting}
+                    showPagination={false} // Showing all filtered data in one view for now
+                    showExport={true}
+                    onExport={handleExport}
+                />
+            </div>
+
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                type={toast.type}
+                onHide={() => setToast(prev => ({ ...prev, show: false }))}
+            />
+        </>
+    );
+}
