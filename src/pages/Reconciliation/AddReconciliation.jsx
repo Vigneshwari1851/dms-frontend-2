@@ -773,101 +773,80 @@ export default function AddReconciliation() {
                 };
 
                 return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 mb-6">
-                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50">
-                            {/* Header with TOTAL */}
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-[#8F8F8F] text-[11px]">Opening Balance</span>
-                                <span className="text-[12px] font-semibold">
-                                    {(stats.opVal ?? 0).toLocaleString(undefined, {
-                                        maximumFractionDigits: 0
-                                    })}
-                                </span>
-                            </div>
-
-                            {/* Breakdown */}
-                            <div className="space-y-0.5 text-[12px]">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-white/60">
-                                        USD: ${(stats.opUSD ?? 0).toLocaleString()}
-                                    </span>
-                                    <span className="text-white">
-                                        → {((stats.opUSD ?? 0) * (stats.valRate ?? 0)).toLocaleString(undefined, {
-                                            maximumFractionDigits: 0
-                                        })}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-white/60">TZS:</span>
-                                    <span className="text-white">
-                                        {(stats.opTZS ?? 0).toLocaleString()}
-                                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                        {/* Valuation Rate Card */}
+                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Valuation Rate</span>
+                                <div className="p-1.5 bg-[#1D4CB5]/10 rounded-lg text-[#1D4CB5]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" clipRule="evenodd" />
+                                        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                                    </svg>
                                 </div>
                             </div>
+                            <div className="text-xl font-bold text-white">
+                                {Number(stats.valRate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <p className="text-[#8F8F8F] text-[10px] mt-1 italic">Average USD Buy Rate</p>
                         </div>
 
-                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50">
-                            {/* Header with TOTAL */}
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-[#8F8F8F] text-[11px]">Closing Balance</span>
-                                <span className="text-[12px] font-semibold">
-                                    {(stats.clVal ?? 0).toLocaleString(undefined, {
-                                        maximumFractionDigits: 0
-                                    })}
-                                </span>
-                            </div>
-
-                            {/* Breakdown */}
-                            <div className="space-y-0.5 text-[12px]">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-white/60">
-                                        USD: ${(stats.clUSD ?? 0).toLocaleString()}
-                                    </span>
-                                    <span className="text-white">
-                                        → {((stats.clUSD ?? 0) * (stats.valRate ?? 0)).toLocaleString(undefined, {
-                                            maximumFractionDigits: 0
-                                        })}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-white/60">TZS:</span>
-                                    <span className="text-white">
-                                        {(stats.clTZS ?? 0).toLocaleString()}
-                                    </span>
+                        {/* Inventory Value Card */}
+                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Inventory Value</span>
+                                <div className="p-1.5 bg-[#82E890]/10 rounded-lg text-[#82E890]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                                    </svg>
                                 </div>
                             </div>
-                        </div>
-                        {/* 
-                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
-                            <p className="text-white text-[12px] mb-1">Total Buying</p>
-                            <p className="text-white text-[14px] font-bold">${stats.buyVol.toLocaleString()}</p>
-                            <p className="text-white text-[14px] font-bold mt-2">
-                                TZS {stats.buyTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
-                        </div>
-                        <div className="bg-[#16191C] rounded-xl p-3 border border-[#2A2F33]/50 text-center">
-                            <p className="text-white text-[12px] mb-1">Total Selling</p>
-                            <p className="text-white text-[14px] font-bold">${stats.sellVol.toLocaleString()}</p>
-                            <p className="text-white text-[14px] font-bold mt-2">
-                                TZS {stats.sellTZS.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
-                        </div> */}
-
-                        <div className={`rounded-xl p-3 border ${stats.pl >= 0
-                            ? "bg-green-900/20 border-green-500/30"
-                            : "bg-red-900/20 border-red-500/30"
-                            } text-center`}>
-                            <p className={`${stats.pl >= 0 ? "text-green-300" : "text-red-300"} text-[12px] mb-1 font-semibold`}>
-                                Today's Profit / Loss
-                            </p>
-                            <p className="text-white text-[16px] font-bold mt-2">
-                                <span className="text-[16px] mr-1 opacity-60 font-medium">TZS </span>
-                                {stats.pl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
+                            <div className="text-xl font-bold text-white">
+                                TZS {Number(stats.clVal || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                            <p className="text-[#8F8F8F] text-[10px] mt-1">Current vault at valuation</p>
                         </div>
 
+                        {/* Trade Volume Card */}
+                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Daily Volume</span>
+                                <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="text-xl font-bold text-white">
+                                ${((stats.buyVol || 0) + (stats.sellVol || 0)).toLocaleString()}
+                            </div>
+                            <p className="text-[#8F8F8F] text-[10px] mt-1">{todayDeals.length} Deals processed</p>
+                        </div>
+
+                        {/* Profit/Loss Card */}
+                        <div className={stats.pl >= 0 ? "bg-green-900/10 border border-green-500/30 rounded-xl p-4 shadow-sm transition-all" : "bg-red-900/10 border border-red-500/30 rounded-xl p-4 shadow-sm transition-all"}>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className={stats.pl >= 0 ? 'text-green-300 text-xs font-bold uppercase tracking-wider' : 'text-red-300 text-xs font-bold uppercase tracking-wider'}>Profit / Loss</span>
+                                <div className={stats.pl >= 0 ? 'p-1.5 rounded-lg bg-green-500/20 text-green-500' : 'p-1.5 rounded-lg bg-red-500/20 text-red-500'}>
+                                    {stats.pl >= 0 ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                                        </svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
+                                        </svg>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="text-xl font-bold text-white">
+                                TZS {Number(stats.pl || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                            <p className={`${stats.pl >= 0 ? "text-green-400/60" : "text-red-400/60"} text-[10px] mt-1 font-medium`}>
+                                {stats.pl >= 0 ? "Trading Surplus" : "Trading Deficit"}
+                            </p>
+                        </div>
                     </div>
                 );
             })()}
@@ -890,41 +869,74 @@ export default function AddReconciliation() {
                         </div>
                     ) : dealsSummaryGenerated ? (
                         <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
-                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2">Daily Deal Summary</h3>
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2 flex items-center justify-between">
+                                Daily Inventory Movement
+                                <span className="text-[10px] text-[#8F8F8F] font-normal uppercase tracking-widest bg-[#1D4CB5]/10 px-2 py-0.5 rounded">Book Balance</span>
+                            </h3>
                             <div className="space-y-6 flex-grow overflow-y-auto pr-1">
                                 {Object.values(calculateTotals().currencyData).map((data, idx) => {
+                                    const expected = data.expected;
+                                    const physical = data.closing;
+                                    const variance = physical - expected;
+                                    const isMatched = Math.abs(variance) < 0.01;
+                                    const hasClosing = showClosingVault || ["Tallied", "Short", "Excess"].includes(status);
+
                                     return (
                                         <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-semibold text-white">{data.code}</span>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-white text-[16px]">{data.code}</span>
+                                                    {hasClosing && (
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isMatched ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                                                            {isMatched ? "MATCHED" : "MISMATCH"}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[12px] sm:text-[13px]">
-                                                <div className="text-[#8F8F8F]">Opening:</div>
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] sm:text-[13px]">
+                                                <div className="text-[#8F8F8F]">Opening Vault:</div>
                                                 <div className="text-right text-white font-medium">{data.opening.toLocaleString()}</div>
 
-                                                <div className="text-[#8F8F8F]">Inflow:</div>
-                                                <div className="text-right text-[#82E890]">{data.received > 0 ? `${data.received.toLocaleString()}` : "0"}</div>
+                                                <div className="text-[#8F8F8F]">Total Inflow:</div>
+                                                <div className="text-right text-[#82E890] font-medium">+{data.received.toLocaleString()}</div>
 
-                                                <div className="text-[#8F8F8F]">Outflow:</div>
-                                                <div className="text-right text-[#FF6B6B]">{data.paid > 0 ? `${data.paid.toLocaleString()}` : "0"}</div>
+                                                <div className="text-[#8F8F8F]">Total Outflow:</div>
+                                                <div className="text-right text-[#FF6B6B] font-medium">-{data.paid.toLocaleString()}</div>
 
-                                                {data.code === "TZS" && data.pending !== 0 && (
+                                                <div className="text-white font-semibold pt-2 border-t border-[#2A2F33]/30 mt-1">Book Balance:</div>
+                                                <div className="text-right text-white font-bold pt-2 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
+
+                                                {Math.abs(data.pending) > 0.01 && (
                                                     <>
-                                                        <div className="text-[#8F8F8F] pt-1 text-[11px] opacity-70">Pending Settlement:</div>
-                                                        <div className={`text-right text-[11px] pt-1 italic ${data.pending > 0 ? 'text-[#82E890]' : 'text-[#FF6B6B]'}`}>
+                                                        <div className="text-[#8F8F8F] text-[11px] italic">Pending Settlement:</div>
+                                                        <div className="text-right text-orange-400 font-medium text-[11px] italic">
                                                             {data.pending > 0 ? "+" : ""}{data.pending.toLocaleString()}
                                                         </div>
                                                     </>
                                                 )}
 
-                                                <div className="text-[#8F8F8F] pt-2 border-t border-[#2A2F33]/30 mt-1">Expected Closing:</div>
-                                                <div className="text-right text-white font-bold pt-2 border-t border-[#2A2F33]/30 mt-1">{data.expected.toLocaleString()}</div>
+                                                {hasClosing && (
+                                                    <>
+                                                        <div className="text-[#8F8F8F] pt-2 italic">Physical Vault:</div>
+                                                        <div className="text-right text-[#1D4CB5] font-bold pt-2 italic underline underline-offset-4">{physical.toLocaleString() || "0"}</div>
+
+                                                        <div className="text-[#8F8F8F] pt-1">Variance:</div>
+                                                        <div className={`text-right font-bold pt-1 ${variance > 0 ? 'text-green-500' : variance < 0 ? 'text-red-500' : 'text-[#8F8F8F]'}`}>
+                                                            {variance > 0 ? "+" : ""}{variance.toLocaleString()}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     );
                                 })}
                                 {Object.keys(currencyData).length === 0 && (
-                                    <div className="text-center text-[#8F8F8F] py-4">No currency data available</div>
+                                    <div className="h-full flex flex-col items-center justify-center py-12 text-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-[#2A2F33] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p className="text-[#8F8F8F] text-sm">No inventory movement recorded</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -953,54 +965,62 @@ export default function AddReconciliation() {
             </div>
 
             {/* Associated Deals Section */}
-            {id && dealsSummaryGenerated && todayDeals && todayDeals.length > 0 && (
-                <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
-                    <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
-                        <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
-                        Associated Deals
-                    </h2>
-                    <DealsTable externalDeals={todayDeals} hideTitle={true} hideExport={true} />
-                </div>
-            )}
+            {
+                id && dealsSummaryGenerated && todayDeals && todayDeals.length > 0 && (
+                    <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
+                        <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
+                            <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
+                            Associated Deals
+                        </h2>
+                        <DealsTable externalDeals={todayDeals} hideTitle={true} hideExport={true} />
+                    </div>
+                )
+            }
 
             <Toast show={toast.show} message={toast.message} type={toast.type} onHide={() => setToast({ ...toast, show: false })} />
-            {confirmModal.open && (
-                <NotificationCard
-                    confirmModal={confirmModal}
-                    onConfirm={confirmDelete}
-                    onCancel={() => setConfirmModal({ ...confirmModal, open: false, target: null })}
-                />
-            )}
-
-            {isAddingCurrency && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">
-                    <CurrencyForm
-                        currencyName={newCurrency.currencyName}
-                        isoCode={newCurrency.isoCode}
-                        symbol={newCurrency.symbol}
-                        onChange={(field, val) => setNewCurrency(prev => ({ ...prev, [field]: val }))}
-                        onCancel={() => setIsAddingCurrency(false)}
-                        onSubmit={handleCurrencySubmit}
+            {
+                confirmModal.open && (
+                    <NotificationCard
+                        confirmModal={confirmModal}
+                        onConfirm={confirmDelete}
+                        onCancel={() => setConfirmModal({ ...confirmModal, open: false, target: null })}
                     />
-                </div>
-            )}
+                )
+            }
 
-            {isGeneratingSummary && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[2000] p-4 animate-in fade-in duration-300">
-                    <div className="bg-[#16191C] border border-[#2A2F33] p-8 rounded-2xl flex flex-col items-center gap-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="relative">
-                            <div className="w-16 h-16 border-4 border-[#1D4CB5]/20 border-t-[#1D4CB5] rounded-full animate-spin"></div>
-                            <div className="absolute inset-x-0 -bottom-1 flex justify-center">
-                                <div className="w-2 h-2 bg-[#1D4CB5] rounded-full animate-bounce"></div>
+            {
+                isAddingCurrency && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[1000] p-4">
+                        <CurrencyForm
+                            currencyName={newCurrency.currencyName}
+                            isoCode={newCurrency.isoCode}
+                            symbol={newCurrency.symbol}
+                            onChange={(field, val) => setNewCurrency(prev => ({ ...prev, [field]: val }))}
+                            onCancel={() => setIsAddingCurrency(false)}
+                            onSubmit={handleCurrencySubmit}
+                        />
+                    </div>
+                )
+            }
+
+            {
+                isGeneratingSummary && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[2000] p-4 animate-in fade-in duration-300">
+                        <div className="bg-[#16191C] border border-[#2A2F33] p-8 rounded-2xl flex flex-col items-center gap-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="relative">
+                                <div className="w-16 h-16 border-4 border-[#1D4CB5]/20 border-t-[#1D4CB5] rounded-full animate-spin"></div>
+                                <div className="absolute inset-x-0 -bottom-1 flex justify-center">
+                                    <div className="w-2 h-2 bg-[#1D4CB5] rounded-full animate-bounce"></div>
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <h3 className="text-white text-lg font-bold mb-2">Generating Summary</h3>
+                                <p className="text-[#8F8F8F] text-sm tracking-wide">Analysing daily deals and calculations...</p>
                             </div>
                         </div>
-                        <div className="text-center">
-                            <h3 className="text-white text-lg font-bold mb-2">Generating Summary</h3>
-                            <p className="text-[#8F8F8F] text-sm tracking-wide">Analysing daily deals and calculations...</p>
-                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

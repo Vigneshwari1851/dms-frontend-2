@@ -122,11 +122,10 @@ export default function ReconciliationList() {
       // ✅ DISPLAY DATE
       date: formatDate(reconciliation.created_at),
 
-      openingVault: formatCurrency(reconciliation.opening_total),
       totalTransactions: reconciliation.total_transactions || 0,
-      closingVault: formatCurrency(reconciliation.closing_total),
       profitLoss: formatVariance(reconciliation.profitLoss),
       status: reconciliation.status,
+      createdAt: formatDate(reconciliation.created_at),
     }));
   };
 
@@ -195,26 +194,71 @@ export default function ReconciliationList() {
 
   const columns = [
     { label: "Date", key: "date", align: "left" },
-    { label: "Opening Vault", key: "openingVault", align: "left" },
     { label: "Total Transactions", key: "totalTransactions", align: "left" },
-    { label: "Closing Vault", key: "closingVault", align: "left" },
     { label: "Profit / Loss", key: "profitLoss", align: "left" },
+    { label: "Created Date", key: "createdAt", align: "left" },
     { label: "Status", key: "status", align: "left" },
-
   ];
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-white text-xl font-semibold">Reconciliation</h1>
         <button
           onClick={handleAddUser}
-          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium"
+          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all shadow-lg shadow-[#1D4CB5]/20"
         >
-          <img src={add} alt="add" className="w-5 h-5" />
+          <img src={add} alt="add" className="w-5 h-5 transition-transform hover:scale-110" />
           <span className="lg:hidden text-[14px]">Create</span>
           <span className="hidden lg:inline text-[14px]">Create Reconciliation</span>
         </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-5 shadow-sm hover:border-[#1D4CB5]/30 transition-all">
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[#8F8F8F] text-sm font-medium">Total Reconciliations</span>
+            <div className="p-2 bg-[#1D4CB5]/10 rounded-lg text-[#1D4CB5]">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white">{pagination.totalPages > 1 ? "..." : (reconciliations?.length || 0)}</div>
+          <p className="text-[#8F8F8F] text-xs mt-2">Historical vault records</p>
+        </div>
+
+        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-5 shadow-sm hover:border-green-500/30 transition-all">
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[#8F8F8F] text-sm font-medium">Tallied</span>
+            <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {reconciliations?.filter(r => r.status === "Tallied").length || 0}
+          </div>
+          <p className="text-[#8F8F8F] text-xs mt-2">Records with zero variance</p>
+        </div>
+
+        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-5 shadow-sm hover:border-red-500/30 transition-all">
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[#8F8F8F] text-sm font-medium">Discrepancies</span>
+            <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {reconciliations?.filter(r => ["Short", "Excess"].includes(r.status)).length || 0}
+          </div>
+          <p className="text-[#8F8F8F] text-xs mt-2">Requiring review or adjustment</p>
+        </div>
       </div>
 
       {/* Loading State */}

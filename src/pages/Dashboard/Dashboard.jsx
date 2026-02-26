@@ -15,12 +15,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     today: {
       count: 0,
-      buyUSD: 0,
-      sellUSD: 0,
-      buyTZS: 0,
-      sellTZS: 0,
-      openingUSD: 0,
-      openingTZS: 0,
+      currencies: {},
+      openingBalances: {},
     },
   });
   const [loading, setLoading] = useState(true);
@@ -77,39 +73,55 @@ export default function Dashboard() {
 
       {/* <p className="text-gray-400 mb-6">Welcome back!</p> */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-10">
-        <StatCard
-          title="Today's Deals"
-          value={stats.today?.count || 0}
-          icon={dealstoday}
-        />
+      <div className="flex flex-wrap justify-center gap-4 lg:gap-10 mb-8">
+        <div className="flex-1 min-w-[260px] max-w-[350px]">
+          <StatCard
+            title="Today's Deals"
+            value={stats.today?.count || 0}
+            icon={dealstoday}
+          />
+        </div>
 
-        <StatCard
-          title="Buy Amount"
-          subValues={[
-            { label: "USD", value: formatValue(stats.today?.buyUSD) },
-            { label: "TZS", value: formatValue(stats.today?.buyTZS) },
-          ]}
-          icon={buyamount}
-        />
+        <div className="flex-1 min-w-[260px] max-w-[350px]">
+          <StatCard
+            title="Buy Amount"
+            subValues={Object.keys(stats.today?.currencies || {}).map(code => ({
+              label: code,
+              value: formatValue(stats.today.currencies[code].buy)
+            })).filter(sv => sv.value !== "0")}
+            icon={buyamount}
+          />
+        </div>
 
-        <StatCard
-          title="Sell Amount"
-          subValues={[
-            { label: "USD", value: formatValue(stats.today?.sellUSD) },
-            { label: "TZS", value: formatValue(stats.today?.sellTZS) },
-          ]}
-          icon={sellamount}
-        />
+        <div className="flex-1 min-w-[260px] max-w-[350px]">
+          <StatCard
+            title="Sell Amount"
+            subValues={Object.keys(stats.today?.currencies || {}).map(code => ({
+              label: code,
+              value: formatValue(stats.today.currencies[code].sell)
+            })).filter(sv => sv.value !== "0")}
+            icon={sellamount}
+          />
+        </div>
 
-        <StatCard
-          title="Current Balance"
-          subValues={[
-            { label: "USD", value: formatValue((stats.today?.openingUSD || 0) + (stats.today?.buyUSD || 0) - (stats.today?.sellUSD || 0)) },
-            { label: "TZS", value: formatValue((stats.today?.openingTZS || 0) + (stats.today?.buyTZS || 0) - (stats.today?.sellTZS || 0)) },
-          ]}
-          icon={profit}
-        />
+        <div className="flex-1 min-w-[260px] max-w-[350px]">
+          <StatCard
+            title="Current Balance"
+            subValues={Array.from(new Set([
+              ...Object.keys(stats.today?.currencies || {}),
+              ...Object.keys(stats.today?.openingBalances || {})
+            ])).map(code => {
+              const opening = stats.today?.openingBalances?.[code] || 0;
+              const buy = stats.today?.currencies?.[code]?.buy || 0;
+              const sell = stats.today?.currencies?.[code]?.sell || 0;
+              return {
+                label: code,
+                value: formatValue(opening + buy - sell)
+              };
+            }).filter(sv => sv.value !== "0")}
+            icon={profit}
+          />
+        </div>
       </div>
 
       <div className="mt-2">
