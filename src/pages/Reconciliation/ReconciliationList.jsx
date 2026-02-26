@@ -154,11 +154,10 @@ export default function ReconciliationList() {
 
           <button
             onClick={async () => {
-              const hasClosing = todayReconciliation?.closingEntries?.length > 0 || todayReconciliation?.closing_entries?.length > 0;
-              const resizableStatuses = ["In_Progress", "Excess", "Short"];
-              const canReconcile = todayReconciliation && resizableStatuses.includes(todayReconciliation.status) && hasClosing;
+              const isReconcileAction = todayReconciliation &&
+                ["Tallied", "Excess", "Short"].includes(todayReconciliation.status);
 
-              if (canReconcile) {
+              if (isReconcileAction) {
                 try {
                   setToast({ show: true, message: "Reconciling deals...", type: "pending" });
                   const res = await startReconcoliation(todayReconciliation.id);
@@ -183,8 +182,7 @@ export default function ReconciliationList() {
           >
             <img src={add} alt="add" className="w-5 h-5" />
             <span>
-              {todayReconciliation && ["In_Progress", "Excess", "Short"].includes(todayReconciliation.status) &&
-                (todayReconciliation?.closingEntries?.length > 0 || todayReconciliation?.closing_entries?.length > 0)
+              {todayReconciliation && ["Tallied", "Excess", "Short"].includes(todayReconciliation.status)
                 ? "Reconcile" : "Physical Cash"}
             </span>
           </button>
