@@ -9,6 +9,7 @@ import ActionDropdown from "../../components/common/ActionDropdown";
 import Toast from "../../components/common/Toast";
 import expensesIcon from "../../assets/dashboard/sellamount.svg";
 import addIcon from "../../assets/dashboard/add.svg";
+import emptyExpenses from "../../assets/common/empty/expenses-bg.svg";
 
 export default function ExpenseList() {
     const { setSidebarHidden } = useOutletContext();
@@ -303,6 +304,10 @@ export default function ExpenseList() {
                     loading={loading}
                     showSearch={true}
                     showExport={true}
+                    emptyStateProps={{
+                        imageSrc: emptyExpenses,
+                        message: "No expenses found",
+                    }}
                 />
             </div>
 

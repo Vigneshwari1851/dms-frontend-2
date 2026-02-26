@@ -9,6 +9,7 @@ import sellamountIcon from "../../assets/dashboard/sellamount.svg";
 import { fetchReconcoliation, exportReconciliation, fetchPnLOverview } from "../../api/reconcoliation";
 import { fetchExpenses } from "../../api/expense";
 import Toast from "../../components/common/Toast";
+import emptyPnL from "../../assets/common/empty/pnl-bg.svg";
 
 export default function PnLList() {
     const [loading, setLoading] = useState(true);
@@ -217,6 +218,10 @@ export default function PnLList() {
                     showPagination={false}
                     showExport={true}
                     onExport={handleExport}
+                    emptyStateProps={{
+                        imageSrc: emptyPnL,
+                        message: "No trading history found for this period",
+                    }}
                 />
             </div>
 
