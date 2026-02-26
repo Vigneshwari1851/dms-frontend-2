@@ -5,7 +5,7 @@ import save from "../../assets/Common/save.svg";
 import Dropdown from "../../components/common/Dropdown";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
     createReconciliation,
     fetchReconciliationById,
@@ -28,6 +28,8 @@ import buyamount from "../../assets/dashboard/buyamount.svg";
 export default function AddReconciliation() {
     const navigate = useNavigate();
     const { id: paramId } = useParams();
+    const location = useLocation();
+    const navigatedFromReconcile = location.state?.fromReconcile;
     const [id, setId] = useState(paramId);
     const [yesterdayAvgRate, setYesterdayAvgRate] = useState(null);
 
@@ -123,7 +125,10 @@ export default function AddReconciliation() {
                 if (clRows.length > 0) {
                     setHasSavedClosing(true);
                 }
-                if (opRows.length > 0) setOpeningRows(opRows);
+                if (opRows.length > 0) {
+                    setOpeningRows(opRows);
+                    setShowClosingVault(true);
+                }
 
                 if (clRows.length > 0) {
                     setClosingRows(clRows);
@@ -151,6 +156,10 @@ export default function AddReconciliation() {
                 if (data.deals && data.deals.length > 0) {
                     const deals = data.deals.map(d => d.deal);
                     setTodayDeals(deals);
+                    if (navigatedFromReconcile && !hasSavedClosing) {
+                        setShowClosingVault(true);
+                        setStep(3);
+                    }
                 } else if (id || data.id) {
                     // Fetch today's deals to show expected movement even before mapping
                     const dealsRes = await fetchDeals({ dateFilter: "today" });
@@ -497,12 +506,12 @@ export default function AddReconciliation() {
             if (result.success || result.data) {
                 const newId = id || result.data?.id || result.data?.data?.id;
                 setId(newId);
+                setToast({ show: true, message: "Opening Balance Saved. You can now enter Closing Vault.", type: "success" });
+                setShowClosingVault(true);
                 setStep(2);
-                setToast({ show: true, message: "Opening Balance Saved.", type: "success" });
                 setTimeout(() => {
                     setToast(prev => ({ ...prev, show: false }));
-                    navigate("/dashboard");
-                }, 1000);
+                }, 2000);
             } else {
                 setToast({ show: true, message: "Failed to save Opening Balance", type: "error" });
             }
@@ -510,6 +519,38 @@ export default function AddReconciliation() {
         } catch (error) {
             console.error("Save error:", error);
             setToast({ show: true, message: "Error saving data", type: "error" });
+        }
+    };
+
+
+    const handleManualReconcile = async () => {
+        try {
+            setIsLoading(true);
+            setToast({ show: true, message: "Mapping deals...", type: "pending" });
+            const res = await startReconcoliation(id);
+            if (res.success || res.status === "success") {
+                // Refresh details to show mapped deals and updated movement
+                await fetchReconciliationDetails();
+                setShowClosingVault(true);
+                setStep(3);
+                setToast({
+                    show: true,
+                    message: "Deals mapped successfully. Proceeding to Closing Vault.",
+                    type: "success"
+                });
+                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
+            } else {
+                setToast({
+                    show: true,
+                    message: "Failed to map deals: " + (res.error?.message || "Unknown error"),
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            console.error("Error during manual reconciliation:", error);
+            setToast({ show: true, message: "Error during reconciliation", type: "error" });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -571,15 +612,8 @@ export default function AddReconciliation() {
                 }
                 setToast({ show: true, message: toastMsg, type: "success" });
                 setHasSavedClosing(true);
-                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 1000);
-
-                if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
-                    setStatus(newStatus);
-                    setTimeout(() => navigate("/dashboard"), 1500);
-                } else {
-                    setStatus(newStatus || status);
-                    setTimeout(() => navigate("/dashboard"), 1500);
-                }
+                setStatus(newStatus || status);
+                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
             } else {
                 setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
             }
@@ -727,7 +761,7 @@ export default function AddReconciliation() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {!id && (
+                    {!id ? (
                         <button
                             onClick={handleSaveOpening}
                             className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
@@ -737,13 +771,9 @@ export default function AddReconciliation() {
                             </svg>
                             Physical Cash: Opening Vault
                         </button>
-                    )}
-                    {id && !hasSavedClosing && status !== "Tallied" && (
+                    ) : !hasSavedClosing ? (
                         <button
-                            onClick={() => {
-                                setShowClosingVault(true);
-                                setStep(3);
-                            }}
+                            onClick={() => handleSaveClosing(false)}
                             className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -751,6 +781,18 @@ export default function AddReconciliation() {
                             </svg>
                             Physical Cash: Closing Vault
                         </button>
+                    ) : (
+                        status !== "Tallied" && (
+                            <button
+                                onClick={handleManualReconcile}
+                                className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Reconcile
+                            </button>
+                        )
                     )}
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/dashboard/add.svg";
-import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
+import { fetchReconcoliation, exportReconciliation, fetchCurrentReconciliation, startReconcoliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
 import ReconciliationExpandableRow from "../../components/reconciliation/ReconciliationExpandableRow";
@@ -18,6 +18,7 @@ export default function TransactionLedger() {
         totalPages: 1,
         limit: 10,
     });
+    const [todayReconciliation, setTodayReconciliation] = useState(null);
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
     const fetchHistory = async (page = pagination.page, limit = pagination.limit) => {
@@ -43,7 +44,19 @@ export default function TransactionLedger() {
 
     useEffect(() => {
         fetchHistory();
+        checkTodayReconciliation();
     }, []);
+
+    const checkTodayReconciliation = async () => {
+        try {
+            const res = await fetchCurrentReconciliation();
+            if (res.success && res.data) {
+                setTodayReconciliation(res.data);
+            }
+        } catch (err) {
+            console.error("Error checking today's reconciliation:", err);
+        }
+    };
 
     const handlePageChange = (newPage) => {
         setPagination(prev => ({ ...prev, page: newPage }));
@@ -95,11 +108,40 @@ export default function TransactionLedger() {
 
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => navigate("/reconciliation/add-reconciliation")}
+                        onClick={async () => {
+                            const hasClosing = todayReconciliation?.closingEntries?.length > 0 || todayReconciliation?.closing_entries?.length > 0;
+                            const resizableStatuses = ["In_Progress", "Excess", "Short"];
+                            const canReconcile = todayReconciliation && resizableStatuses.includes(todayReconciliation.status) && hasClosing;
+
+                            if (canReconcile) {
+                                try {
+                                    setToast({ show: true, message: "Reconciling deals...", type: "pending" });
+                                    const res = await startReconcoliation(todayReconciliation.id);
+                                    if (res.success || res.status === "success") {
+                                        setToast({ show: true, message: "Reconciliation successful!", type: "success" });
+                                        fetchHistory();
+                                        checkTodayReconciliation();
+                                    } else {
+                                        setToast({ show: true, message: res.error?.message || "Reconciliation failed", type: "error" });
+                                    }
+                                } catch (err) {
+                                    console.error("Error triggering reconciliation:", err);
+                                    setToast({ show: true, message: "Error during reconciliation", type: "error" });
+                                }
+                            } else if (todayReconciliation) {
+                                navigate(`/reconciliation/add-reconciliation/${todayReconciliation.id}`);
+                            } else {
+                                navigate("/reconciliation/add-reconciliation");
+                            }
+                        }}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95"
                     >
                         <img src={add} alt="add" className="w-5 h-5" />
-                        <span>Physical Cash</span>
+                        <span>
+                            {todayReconciliation && ["In_Progress", "Excess", "Short"].includes(todayReconciliation.status) &&
+                                (todayReconciliation?.closingEntries?.length > 0 || todayReconciliation?.closing_entries?.length > 0)
+                                ? "Reconcile" : "Physical Cash"}
+                        </span>
                     </button>
                 </div>
             </div>

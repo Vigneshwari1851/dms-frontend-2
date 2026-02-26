@@ -59,7 +59,7 @@ export default function AppRoutes() {
           <Route path="reconciliation" element={<TransactionLedger />} />
           <Route path="reports" element={<ListReport />} />
           {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
-          <Route path="reconciliation/add-reconciliation" element={<AddReconciliation />} />
+          <Route path="reconciliation/add-reconciliation/:id?" element={<AddReconciliation />} />
           <Route path="reconciliation/details/:id" element={<AddReconciliation />} />
           <Route path="pnl" element={<PnLList />} />
           <Route path="expenses" element={<ExpenseList />} />
