@@ -756,9 +756,86 @@ export default function AddReconciliation() {
             </div>
 
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 ${id ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
+                </div>
+
+                <div className="flex flex-col gap-4">
+                    {id ? (
+                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
+                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2 flex items-center justify-between">
+                                Daily Inventory Movement
+                                <span className="text-[10px] text-[#8F8F8F] font-normal uppercase tracking-widest bg-[#1D4CB5]/10 px-2 py-0.5 rounded">Book Balance</span>
+                            </h3>
+                            <div className="space-y-6 flex-grow overflow-y-auto pr-1">
+                                {Object.values(calculateTotals().currencyData).map((data, idx) => {
+                                    const expected = data.expected;
+                                    const physical = data.closing;
+                                    const variance = physical - expected;
+                                    const isMatched = Math.abs(variance) < 0.01;
+                                    const hasClosing = showClosingVault || ["Tallied", "Short", "Excess"].includes(status);
+
+                                    return (
+                                        <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-white text-[16px]">{data.code}</span>
+                                                    {hasClosing && (
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isMatched ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                                                            {isMatched ? "MATCHED" : "MISMATCH"}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] sm:text-[13px]">
+                                                <div className="text-[#8F8F8F]">Opening Vault:</div>
+                                                <div className="text-right text-white font-medium">{data.opening.toLocaleString()}</div>
+
+                                                <div className="text-[#8F8F8F]">Total Inflow:</div>
+                                                <div className="text-right text-[#82E890] font-medium">+{data.received.toLocaleString()}</div>
+
+                                                <div className="text-[#8F8F8F]">Total Outflow:</div>
+                                                <div className="text-right text-[#FF6B6B] font-medium">-{data.paid.toLocaleString()}</div>
+
+                                                <div className="text-white font-semibold pt-2 border-t border-[#2A2F33]/30 mt-1">Book Balance:</div>
+                                                <div className="text-right text-white font-bold pt-2 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
+
+                                                {Math.abs(data.pending) > 0.01 && (
+                                                    <>
+                                                        <div className="text-[#8F8F8F] text-[11px]">Pending Settlement:</div>
+                                                        <div className="text-right text-orange-400 font-medium text-[11px]">
+                                                            {data.pending > 0 ? "+" : ""}{data.pending.toLocaleString()}
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {hasClosing && (
+                                                    <>
+                                                        <div className="text-[#8F8F8F] pt-2">Physical Vault:</div>
+                                                        <div className="text-right text-[#1D4CB5] font-bold pt-2 underline underline-offset-4">{physical.toLocaleString() || "0"}</div>
+
+                                                        <div className="text-[#8F8F8F] pt-1">Variance:</div>
+                                                        <div className={`text-right font-bold pt-1 ${variance > 0 ? 'text-green-500' : variance < 0 ? 'text-red-500' : 'text-[#8F8F8F]'}`}>
+                                                            {variance > 0 ? "+" : ""}{variance.toLocaleString()}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {Object.keys(calculateTotals().currencyData).length === 0 && (
+                                    <div className="h-full flex flex-col items-center justify-center py-12 text-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-[#2A2F33] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p className="text-[#8F8F8F] text-sm">No inventory movement recorded</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
 
                 <div className="flex flex-col gap-4">

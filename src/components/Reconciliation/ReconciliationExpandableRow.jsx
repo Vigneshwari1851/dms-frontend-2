@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import Table from "../common/Table";
 
 export default function ReconciliationExpandableRow({ reconciliation, formatDate, formatCurrency, formatVariance, statusColors }) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -12,9 +13,94 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
         setIsExpanded(!isExpanded);
     };
 
-    const handleNavigateToDeal = (dealId) => {
-        navigate(`/deals/edit-deal/${dealId}`);
+    const handleNavigateToDeal = (deal) => {
+        navigate(`/deals/edit-deal/${deal.dealId}`);
     };
+
+    const typeColors = {
+        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+    };
+
+    const columns = useMemo(() => [
+        {
+            key: "id",
+            label: "Deal ID",
+            align: "left",
+            className: "pl-5",
+            render: (val) => <span className="text-[#92B4FF] font-bold text-[14px]">{val}</span>
+        },
+        {
+            key: "date",
+            label: "Date",
+            align: "left"
+        },
+        {
+            key: "type",
+            label: "Type",
+            align: "center",
+            render: (val) => (
+                <div className="flex justify-center items-center">
+                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[val]}`}>
+                        {val}
+                    </span>
+                </div>
+            )
+        },
+        {
+            key: "customer",
+            label: "Customer Name",
+            align: "left"
+        },
+        {
+            key: "pair",
+            label: "Currency Pair",
+            align: "left"
+        },
+        {
+            key: "buyAmt",
+            label: "Buy Amount",
+            align: "left"
+        },
+        {
+            key: "exchange_rate",
+            label: "Rate",
+            align: "left"
+        },
+        {
+            key: "sellAmt",
+            label: "Sell Amount",
+            align: "left"
+        },
+        {
+            key: "status",
+            label: "Status",
+            align: "center"
+        }
+    ], []);
+
+    const tableData = useMemo(() => deals.map(({ deal }) => {
+        const isBuy = deal.deal_type === "buy";
+        const buyAmtValue = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
+        const sellAmtValue = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
+
+        const pair = isBuy
+            ? `${deal.buyCurrency.code}/${deal.sellCurrency.code}`
+            : `${deal.sellCurrency.code}/${deal.buyCurrency.code}`;
+
+        return {
+            id: deal.deal_number,
+            date: new Date(deal.created_at).toLocaleDateString("en-IN"),
+            type: deal.deal_type === "buy" ? "Buy" : "Sell",
+            customer: deal.customer?.name || "N/A",
+            buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
+            pair: pair || "---",
+            exchange_rate: deal.exchange_rate,
+            sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
+            status: deal.status,
+            dealId: deal.id,
+        };
+    }), [deals]);
 
     return (
         <>
@@ -54,42 +140,16 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
 
                             {deals.length > 0 ? (
                                 <div className="overflow-hidden rounded-xl border border-[#2A2F33]/50">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-[#1C2126] text-[#8F8F8F] text-[11px] uppercase tracking-wider">
-                                            <tr>
-                                                <th className="px-4 py-3 font-semibold">Deal #</th>
-                                                <th className="px-4 py-3 font-semibold">Customer</th>
-                                                <th className="px-4 py-3 font-semibold">Type</th>
-                                                <th className="px-4 py-3 font-semibold text-right">Amount</th>
-                                                <th className="px-4 py-3 font-semibold text-center">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-[#2A2F33]/30">
-                                            {deals.map(({ deal }) => (
-                                                <tr
-                                                    key={deal.id}
-                                                    onClick={() => handleNavigateToDeal(deal.id)}
-                                                    className="hover:bg-[#1D4CB5]/10 cursor-pointer transition-colors group"
-                                                >
-                                                    <td className="px-4 py-3 text-[#1D4CB5] font-bold group-hover:underline">#{deal.deal_number}</td>
-                                                    <td className="px-4 py-3 text-white">{deal.customer?.name || "N/A"}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${deal.deal_type === 'buy' ? 'bg-[#82E890]/10 text-[#82E890]' : 'bg-[#F7626E]/10 text-[#F7626E]'}`}>
-                                                            {deal.deal_type?.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-white font-medium">
-                                                        {Number(deal.amount).toLocaleString()} {deal.buyCurrency?.code || ""}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center">
-                                                        <span className={`text-[11px] font-medium ${deal.status === 'Completed' ? 'text-green-500' : 'text-orange-400'}`}>
-                                                            {deal.status}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                    <Table
+                                        columns={columns}
+                                        data={tableData}
+                                        showHeader={false}
+                                        showSearch={false}
+                                        showPagination={false}
+                                        onRowClick={handleNavigateToDeal}
+                                        showRightSection={false}
+                                        itemsPerPage={100}
+                                    />
                                 </div>
                             ) : (
                                 <div className="py-4 text-[#8F8F8F] italic text-sm">No deals mapped to this reconciliation.</div>
