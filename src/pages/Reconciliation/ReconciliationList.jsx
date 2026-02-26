@@ -7,20 +7,15 @@ import NotificationCard from "../../components/common/Notification";
 import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
-import StatCard from "../../components/dashboard/StatCard";
-import dealstoday from "../../assets/dashboard/dealstoday.svg";
-import profit from "../../assets/dashboard/profit.svg";
-import sellamount from "../../assets/dashboard/sellamount.svg";
+import ReconciliationReport from "./ReconciliationReport";
 
 export default function ReconciliationList() {
   const navigate = useNavigate();
+  const [viewType, setViewType] = useState("report"); // "report" or "list"
   const [confirmModal, setConfirmModal] = useState({ open: false });
   const [reconciliations, setReconciliations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [exporting, setExporting] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
@@ -28,34 +23,23 @@ export default function ReconciliationList() {
   });
 
   const location = useLocation();
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "success",
-  });
-
-  const fetchReconciliations = async (page = pagination.page, limit = pagination.limit) => {
+  const fetchHistory = async (page = pagination.page, limit = pagination.limit) => {
     try {
       setLoading(true);
-      setError(null);
-
       const result = await fetchReconcoliation({ page, limit });
-
       if (result.data) {
         setReconciliations(result.data);
-        setPagination(prev => ({
-          ...prev,
+        setPagination({
           page: result.pagination.page,
           totalPages: result.pagination.totalPages,
           limit: result.pagination.limit,
-        }));
+        });
       } else {
         setReconciliations([]);
-        setPagination(prev => ({ ...prev, totalPages: 1, page: 1 }));
       }
     } catch (err) {
-      setError("Failed to fetch reconciliations. Please try again.");
       console.error("Error fetching reconciliations:", err);
     } finally {
       setLoading(false);
@@ -64,42 +48,24 @@ export default function ReconciliationList() {
 
   useEffect(() => {
     if (location.state?.toast) {
-      setToast({
-        show: true,
-        message: location.state.toast.message,
-        type: location.state.toast.type,
-      });
-
-      setTimeout(() => {
-        setToast(prev => ({ ...prev, show: false }));
-      }, 3000);
+      setToast({ show: true, message: location.state.toast.message, type: location.state.toast.type });
+      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
       window.history.replaceState({}, document.title);
     }
+    fetchHistory();
   }, [location.state]);
-
-  useEffect(() => {
-    fetchReconciliations();
-  }, []);
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    fetchReconciliations(newPage, pagination.limit);
+    fetchHistory(newPage, pagination.limit);
   };
 
-  const handleAddUser = () => {
-    navigate("/reconciliation/add-reconciliation");
-  };
-
-  // Format date from "2025-12-11T09:19:02.337Z" to "2025/12/11"
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toISOString().split('T')[0].replace(/-/g, '/');
   };
 
-
-
-  // Format currency with commas
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return "0.00";
     return Number(amount).toLocaleString('en-IN', {
@@ -108,181 +74,118 @@ export default function ReconciliationList() {
     });
   };
 
-  // Format variance with + or - sign
   const formatVariance = (difference) => {
-    if (difference === null || difference === undefined) return "0.00";
-
     const sign = difference >= 0 ? "+" : "";
     return `${sign}${formatCurrency(difference)}`;
   };
 
-  // Prepare table data
   const prepareTableData = () => {
     return reconciliations.map((reconciliation) => ({
       id: reconciliation.id,
-      // ✅ RAW DATE (for filter)
       created_at: reconciliation.created_at,
-
-      // ✅ DISPLAY DATE
       date: formatDate(reconciliation.created_at),
-
       totalTransactions: reconciliation.total_transactions || 0,
       profitLoss: formatVariance(reconciliation.profitLoss),
       status: reconciliation.status,
-      createdAt: formatDate(reconciliation.created_at),
     }));
   };
 
-  const handleDeleteClick = (id, date) => {
-    const formattedDate = formatDate(date);
-    setConfirmModal({
-      open: true,
-      actionType: "delete",
-      title: "Delete Reconciliation",
-      message: `Are you sure you want to delete reconciliation from ${formattedDate}? This action cannot be undone.`,
-      id: id,
-      date: formattedDate
-    });
-  };
-
   const handleExport = async (format) => {
-    try {
-      setExporting(true);
-      setExportOpen(false);
-
-      // Pass "today" as a string
-      const blob = await exportReconciliation(format);
-      if (!blob) {
-        setToast({ show: true, message: "Export failed", type: "error" });
-        return;
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `reconciliation_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-
-
-    } catch (e) {
-      console.error("Export failed", e);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    const { actionType, id } = confirmModal;
-
-    if (actionType === "delete") {
-      console.log(`Deleting reconciliation ${id}`);
-      fetchReconciliations();
-    } else if (actionType === "statusToggle") {
-    }
-
-    setConfirmModal({ open: false });
-  };
-
-  const handleSearch = (searchValue) => {
-    setSearchTerm(searchValue);
-    fetchReconciliations(1, pagination.limit);
-  };
-
-  const handleRowClick = (row) => {
-    navigate(`/reconciliation/details/${row.id}`);
+    const blob = await exportReconciliation(format);
+    if (!blob) return;
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `reconciliation_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const columns = [
     { label: "Date", key: "date", align: "left" },
-    { label: "Total Transactions", key: "totalTransactions", align: "left" },
-    { label: "Profit / Loss", key: "profitLoss", align: "left" },
-    { label: "Created Date", key: "createdAt", align: "left" },
-    { label: "Status", key: "status", align: "left" },
+    { label: "Deals Count", key: "totalTransactions", align: "center" },
+    { label: "Profit / Loss", key: "profitLoss", align: "right" },
+    { label: "Status", key: "status", align: "center" },
   ];
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-white text-xl font-semibold">Reconciliation</h1>
-        <button
-          onClick={handleAddUser}
-          className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all shadow-lg shadow-[#1D4CB5]/20"
-        >
-          <img src={add} alt="add" className="w-5 h-5 transition-transform hover:scale-110" />
-          <span className="lg:hidden text-[14px]">Create</span>
-          <span className="hidden lg:inline text-[14px]">Create Reconciliation</span>
-        </button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+            Vault Reconciliation
+          </h1>
+          <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+            Audit and verify daily cash balances
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex bg-[#1A1F24] p-1 rounded-lg border border-[#2A2F33]/50 mr-2">
+            <button
+              onClick={() => setViewType("report")}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewType === "report" ? "bg-[#1D4CB5] text-white shadow-md font-bold" : "text-gray-400 hover:text-white"
+                }`}
+            >
+              REPORT
+            </button>
+            <button
+              onClick={() => setViewType("list")}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewType === "list" ? "bg-[#1D4CB5] text-white shadow-md font-bold" : "text-gray-400 hover:text-white"
+                }`}
+            >
+              HISTORY
+            </button>
+          </div>
+
+          <button
+            onClick={() => navigate("/reconciliation/add-reconciliation")}
+            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95"
+          >
+            <img src={add} alt="add" className="w-5 h-5" />
+            <span>Physical Cash</span>
+          </button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard
-          title="Total Reconciliations"
-          value={pagination.totalPages > 1 ? "..." : (reconciliations?.length || 0)}
-          icon={dealstoday}
-        />
+      {viewType === "report" ? (
+        <ReconciliationReport />
+      ) : (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Table
+            loading={loading}
+            columns={columns}
+            data={prepareTableData()}
+            title="Reconciliation Logs"
+            subtitle="Archive of all performed vault reconciliations"
+            showRightSection={true}
+            onRowClick={(row) => navigate(`/reconciliation/details/${row.id}`)}
+            onSearch={(val) => fetchHistory(1, pagination.limit)}
+            onExport={handleExport}
+            showExport={true}
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+            emptyStateProps={{
+              imageSrc: reconEmptyBg,
+              message: "Empty Ledger",
+              description: "No reconciliation records found in history",
+              action: (
+                <button
+                  onClick={() => navigate("/reconciliation/add-reconciliation")}
+                  className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-sm font-bold mt-4"
+                >
+                  Start First Reconciliation
+                </button>
+              )
+            }}
+          />
+        </div>
+      )}
 
-        <StatCard
-          title="Tallied"
-          value={reconciliations?.filter(r => r.status === "Tallied").length || 0}
-          icon={profit}
-          color="text-[#82E890]"
-        />
-
-        <StatCard
-          title="Discrepancies"
-          value={reconciliations?.filter(r => ["Short", "Excess"].includes(r.status)).length || 0}
-          icon={sellamount}
-          color="text-[#F7626E]"
-        />
-      </div>
-
-      <div className="mt-8">
-        <Table
-          loading={loading}
-          columns={columns}
-          data={prepareTableData()}
-          title="Reconciliation List"
-          showRightSection={true}
-          onRowClick={handleRowClick}
-          onSearch={handleSearch}
-          onExport={handleExport}
-          showExport={true}
-          currentPage={pagination.page}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
-          emptyStateProps={{
-            imageSrc: reconEmptyBg,
-            message: "No reconciliations found",
-            description: "Perform your first daily vault reconciliation to see records here",
-            action: (
-              <button
-                onClick={() => navigate("/reconciliation/add-reconciliation")}
-                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
-              >
-                <img src={add} alt="add" className="w-5 h-5" />
-                Create Reconciliation
-              </button>
-            )
-          }}
-        />
-      </div>
-
-      <Toast
-        show={toast.show}
-        message={toast.message}
-        type={toast.type}
-      />
-      {/* Confirmation Modal */}
-      <NotificationCard
-        confirmModal={confirmModal}
-        onConfirm={handleConfirm}
-        onCancel={() => setConfirmModal({ open: false })}
-      />
-    </>
+      <Toast show={toast.show} message={toast.message} type={toast.type} />
+      <NotificationCard confirmModal={confirmModal} onConfirm={() => setConfirmModal({ open: false })} onCancel={() => setConfirmModal({ open: false })} />
+    </div>
   );
 }

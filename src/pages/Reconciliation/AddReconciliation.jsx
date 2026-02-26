@@ -755,7 +755,7 @@ export default function AddReconciliation() {
                 </div>
             </div>
 
-            {dealsSummaryGenerated && (() => {
+            {/* {dealsSummaryGenerated && (() => {
                 const totals = calculateTotals();
                 const openingUSD = openingRows.reduce((acc, r) => r.currencyCode === "USD" ? acc + Number(r.amount || 0) : acc, 0);
                 const openingTZS = openingRows.reduce((acc, r) => r.currencyCode === "TZS" ? acc + Number(r.amount || 0) : acc, 0);
@@ -805,7 +805,7 @@ export default function AddReconciliation() {
                         />
                     </div>
                 );
-            })()}
+            })()} */}
 
             <div className={`grid grid-cols-1 ${dealsSummaryGenerated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">

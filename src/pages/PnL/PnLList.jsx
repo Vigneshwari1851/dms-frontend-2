@@ -164,8 +164,12 @@ export default function PnLList() {
         <>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-white text-xl font-semibold">Profit & Loss Analysis</h1>
-                    <p className="text-[#8F8F8F] text-sm mt-1">Detailed breakdown of trading performance</p>
+                    <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+                        Profit & Loss Analysis
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+                        Detailed breakdown of trading performance
+                    </p>
                 </div>
 
                 <div className="w-full md:w-64">

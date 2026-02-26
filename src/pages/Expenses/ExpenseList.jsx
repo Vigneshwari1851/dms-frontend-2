@@ -195,8 +195,10 @@ export default function ExpenseList() {
         <>
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-white text-xl font-semibold">Expense Management</h1>
-                    <p className="text-[#8F8F8F] text-sm mt-1">Track operating costs and platform fees</p>
+                    <h1 className="text-white text-16px lg:text-[20px] font-semibold">Expense Management</h1>
+                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+                        Track operating costs and platform fees
+                    </p>
                 </div>
                 <button
                     onClick={() => setShowAddForm(true)}

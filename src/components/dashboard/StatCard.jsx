@@ -22,7 +22,7 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
 
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
-          <p className="text-white font-semibold">{title}</p>
+          <p className="text-white">{title}</p>
           {subtitle && <p className="text-[#8F8F8F] text-[10px] mt-0.5">{subtitle}</p>}
         </div>
         <img src={icon} alt="" className="w-5 h-5" />
@@ -36,20 +36,19 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
                 key={idx}
                 className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F33]/30 hover:bg-[#2A2F33]/50 transition-colors"
               >
-                <span className="text-white text-[11px] font-bold uppercase tracking-tighter">{item.label}</span>
-                <span className={`${item.color || "text-white"} text-[15px] font-bold tabular-nums`}>{item.value}</span>
+                <span className="text-white text-[11px] uppercase tracking-tighter">{item.label}</span>
+                <span className="text-white text-[15px] tabular-nums">{item.value}</span>
               </div>
             ))}
           </div>
         ) : (
           <div className="flex flex-col">
-            <h2 className={`${color || "text-white"} text-3xl font-semibold tracking-tight tabular-nums`}>
+            <h2 className="text-white text-3xl tracking-tight tabular-nums">
               {value}
             </h2>
             {change && (
               <p
-                className={`text-[12px] mt-1.5 font-semibold ${change?.includes("-") ? "text-[#F7626E]" : "text-[#82E890]"
-                  }`}
+                className="text-[12px] mt-1.5 text-[#8F8F8F]"
               >
                 {change}
               </p>
