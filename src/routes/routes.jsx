@@ -17,7 +17,7 @@ import AddUser from "../pages/User/AddUser";
 import ViewUser from "../pages/User/ViewUser";
 import ViewSlip from "../pages/Deal/ViewSlip";
 import EditDeal from "../pages/Deal/EditDeal";
-import ReconciliationList from "../pages/Reconciliation/ReconciliationList";
+import ReconciliationDashboard from "../pages/Reconciliation/ReconciliationDashboard";
 import TransactionLedger from "../pages/Reconciliation/TransactionLedger";
 import ListReport from "../pages/Report/ListReport";
 import AddReconciliation from "../pages/Reconciliation/AddReconciliation";
@@ -56,9 +56,7 @@ export default function AppRoutes() {
           <Route path="deal-review" element={<DealReview />} />
           <Route path="view-slip" element={<ViewSlip />} />
           <Route path="deals/edit-deal/:id" element={<EditDeal />} />
-          <Route path="reconciliation" element={<TransactionLedger />} />
-          <Route path="reports" element={<ListReport />} />
-          {/* <Route path="reconciliation" element={<ReconciliationList />} /> */}
+          <Route path="reconciliation" element={<ReconciliationDashboard />} />
           <Route path="reconciliation/add-reconciliation/:id?" element={<AddReconciliation />} />
           <Route path="reconciliation/details/:id" element={<AddReconciliation />} />
           <Route path="pnl" element={<PnLList />} />

@@ -9,7 +9,8 @@ import {
     AlertCircle,
     CheckCircle2,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    List
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import StatCard from "../../components/dashboard/StatCard";
@@ -19,30 +20,13 @@ import sellamount from "../../assets/dashboard/sellamount.svg";
 import buyamount from "../../assets/dashboard/buyamount.svg";
 import { fetchReconcoliation } from "../../api/reconcoliation";
 
-export default function ReconciliationReport() {
-    const [periodType, setPeriodType] = useState("daily"); // daily, weekly, monthly
-    const [selectedDate, setSelectedDate] = useState(new Date());
+export default function ReconciliationReport({ periodType, dateRange, refreshTrigger }) {
     const [loading, setLoading] = useState(false);
     const [reconciliations, setReconciliations] = useState([]);
 
-    const dateRange = useMemo(() => {
-        if (periodType === "daily") {
-            return { start: selectedDate, end: selectedDate, dates: [selectedDate] };
-        } else if (periodType === "weekly") {
-            const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
-            const end = endOfWeek(selectedDate, { weekStartsOn: 1 });
-            const dates = eachDayOfInterval({ start, end });
-            return { start, end, dates };
-        } else {
-            const start = startOfMonth(selectedDate);
-            const end = endOfMonth(selectedDate);
-            const dates = eachDayOfInterval({ start, end });
-            return { start, end, dates };
-        }
-    }, [periodType, selectedDate]);
-
     useEffect(() => {
         const loadData = async () => {
+            if (!dateRange?.start || !dateRange?.end) return;
             setLoading(true);
             try {
                 const response = await fetchReconcoliation({
@@ -59,15 +43,12 @@ export default function ReconciliationReport() {
             }
         };
         loadData();
-    }, [dateRange]);
+    }, [dateRange, refreshTrigger]);
 
     const dailySummaries = useMemo(() => {
+        if (!dateRange?.dates) return [];
         return dateRange.dates.map(date => {
             const recon = reconciliations.find(r => isSameDay(new Date(r.created_at), date));
-
-            // Map currency stats if available in the reconciliation record
-            // In dms-frontend-2, we'll need to see how stats are structured
-            // For now, let's use the status and totals from the record
             return {
                 date,
                 recon: recon || null,
@@ -77,7 +58,7 @@ export default function ReconciliationReport() {
                 totalTransactions: recon?.total_transactions || 0
             };
         });
-    }, [dateRange.dates, reconciliations]);
+    }, [dateRange?.dates, reconciliations]);
 
     const periodStats = useMemo(() => {
         const tallied = reconciliations.filter(r => r.status === "Tallied").length;
@@ -90,9 +71,9 @@ export default function ReconciliationReport() {
             discrepancies,
             totalTransactions,
             totalProfitLoss,
-            daysWithoutCounts: dateRange.dates.length - reconciliations.length
+            daysWithoutCounts: (dateRange?.dates?.length || 0) - reconciliations.length
         };
-    }, [reconciliations, dateRange.dates]);
+    }, [reconciliations, dateRange?.dates]);
 
     const formatCurrency = (val) => {
         return new Intl.NumberFormat("en-IN", {
@@ -108,84 +89,12 @@ export default function ReconciliationReport() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Search/Filter Bar */}
-            <div className="bg-[#1A1F24] p-4 rounded-xl border border-[#2A2F33]/50">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex bg-[#131619] p-1 rounded-lg w-fit border border-[#2A2F33]/50">
-                        <button
-                            onClick={() => setPeriodType("daily")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${periodType === "daily" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
-                                }`}
-                        >
-                            <Calendar className="w-4 h-4" />
-                            Daily
-                        </button>
-                        <button
-                            onClick={() => setPeriodType("weekly")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${periodType === "weekly" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
-                                }`}
-                        >
-                            <CalendarDays className="w-4 h-4" />
-                            Weekly
-                        </button>
-                        <button
-                            onClick={() => setPeriodType("monthly")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${periodType === "monthly" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
-                                }`}
-                        >
-                            <CalendarRange className="w-4 h-4" />
-                            Monthly
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-4 bg-[#131619] px-4 py-2 rounded-xl border border-[#2A2F33]/50">
-                        <button
-                            onClick={() => {
-                                const newDate = new Date(selectedDate);
-                                if (periodType === "daily") newDate.setDate(newDate.getDate() - 1);
-                                else if (periodType === "weekly") newDate.setDate(newDate.getDate() - 7);
-                                else newDate.setMonth(newDate.getMonth() - 1);
-                                setSelectedDate(newDate);
-                            }}
-                            className="text-gray-400 hover:text-white p-1 hover:bg-[#2A2F33] rounded-md transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-
-                        <span className="text-white font-medium min-w-[120px] text-center">
-                            {periodType === "daily" && format(selectedDate, "MMMM dd, yyyy")}
-                            {periodType === "weekly" && `${format(dateRange.start, "MMM dd")} - ${format(dateRange.end, "MMM dd, yyyy")}`}
-                            {periodType === "monthly" && format(selectedDate, "MMMM yyyy")}
-                        </span>
-
-                        <button
-                            onClick={() => {
-                                const newDate = new Date(selectedDate);
-                                if (periodType === "daily") newDate.setDate(newDate.getDate() + 1);
-                                else if (periodType === "weekly") newDate.setDate(newDate.getDate() + 7);
-                                else newDate.setMonth(newDate.getMonth() + 1);
-                                setSelectedDate(newDate);
-                            }}
-                            className="text-gray-400 hover:text-white p-1 hover:bg-[#2A2F33] rounded-md transition-colors"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                     title="Total Deals"
                     value={periodStats.totalTransactions}
                     icon={dealstoday}
-                />
-                <StatCard
-                    title="Tallied Days"
-                    value={periodStats.tallied}
-                    icon={profit}
-                    color="text-[#82E890]"
                 />
                 <StatCard
                     title={`Net P&L (${periodType})`}
@@ -201,105 +110,135 @@ export default function ReconciliationReport() {
                 />
             </div>
 
-            {/* Daily Breakdown Table */}
-            <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl">
-                <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
-                    <div>
-                        <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                            <Vault className="w-5 h-5 text-[#1D4CB5]" />
-                            {periodType === "daily" ? "Daily Vault Status" : "Daily Breakdown"}
-                        </h3>
-                        <p className="text-[#8F8F8F] text-xs mt-1">
-                            Performance tracking for {periodType === "daily" ? format(selectedDate, "MMM dd") : "this period"}
-                        </p>
+            {/* Daily Vault Status Section */}
+            {(periodType === "daily" || (periodType !== "daily" && reconciliations.length > 0)) && (
+                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl">
+                    <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
+                        <div>
+                            <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                                <Vault className="w-5 h-5 text-[#1D4CB5]" />
+                                {periodType === "daily" ? "Daily Vault Status" : "Latest Vault Status"}
+                            </h3>
+                            <p className="text-[#8F8F8F] text-xs mt-1">
+                                {periodType === "daily"
+                                    ? `Performance tracking for ${dateRange?.start ? format(dateRange.start, "MMM dd") : ""}`
+                                    : `Most recent reconciliation in this ${periodType === "custom" ? "range" : periodType}`}
+                            </p>
+                        </div>
                     </div>
-                    {periodStats.discrepancies > 0 && (
-                        <div className="flex items-center gap-2 bg-red-500/10 text-[#F7626E] px-3 py-1.5 rounded-lg text-xs font-normal border border-red-500/20">
-                            <AlertCircle className="w-4 h-4" />
-                            {periodStats.discrepancies} Issue(s) detected
+
+                    {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
+                        <div className="p-0 animate-in slide-in-from-top-2 duration-300">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="bg-[#131619] text-white text-sm">
+                                            <th className="px-6 py-4">Currency</th>
+                                            <th className="px-6 py-4 text-right">Book Balance</th>
+                                            <th className="px-6 py-4 text-right">Physical Count</th>
+                                            <th className="px-6 py-4 text-right">Variance</th>
+                                            <th className="px-6 py-4 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2A2F33]/30">
+                                        {/* USD Row */}
+                                        <tr className="hover:bg-[#1E2328] transition-colors">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#1D4CB5]"></div>
+                                                    <span className="text-white font-bold text-base">USD</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-right font-mono text-gray-400">
+                                                ${formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignBought || 0)}
+                                            </td>
+                                            <td className="px-6 py-5 text-right font-mono text-white font-bold">
+                                                ${formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignSold || 0)}
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <span className={(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.status === "Tallied" ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                                    {(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.status === "Tallied" ? "0.00" : formatVariance((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.profitLoss)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.status === "Tallied"
+                                                    ? "bg-[#82E890]/10 text-[#82E890] border-[#82E890]/20"
+                                                    : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"
+                                                    }`}>
+                                                    {(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.status?.toUpperCase() || "PENDING"}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {/* TZS Row */}
+                                        <tr className="hover:bg-[#1E2328] transition-colors opacity-80">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#82E890]"></div>
+                                                    <span className="text-white font-bold text-base">TZS</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-right font-mono text-gray-400">
+                                                {formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalTzsPaid || 0)}
+                                            </td>
+                                            <td className="px-6 py-5 text-right font-mono text-white font-bold">
+                                                {formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalTzsReceived || 0)}
+                                            </td>
+                                            <td className="px-6 py-5 text-right text-gray-500">-</td>
+                                            <td className="px-6 py-5 text-center">
+                                                <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex justify-between items-center">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-xs text-gray-500">Valuation Rate: <span className="text-white">TZS {formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalAvg || 0)}</span></span>
+                                    <span className="text-xs text-gray-500">Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span></span>
+                                    {periodType !== "daily" && (
+                                        <span className="text-xs text-[#1D4CB5] font-semibold">
+                                            Record from {format(new Date((reconciliations[0]?.created_at)), "MMM dd, yyyy")}
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => window.location.href = `/reconciliation/details/${(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0]).id}`}
+                                    className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#2A5BD7] transition-all"
+                                >
+                                    Full Report Detail
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-10 text-center text-gray-500">
+                            No reconciliation record found for this date.
                         </div>
                     )}
                 </div>
+            )}
 
-                {periodType === "daily" && dailySummaries[0].hasRecord ? (
-                    <div className="p-0 animate-in slide-in-from-top-2 duration-300">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-[#131619] text-white text-sm">
-                                        <th className="px-6 py-4">Currency</th>
-                                        <th className="px-6 py-4 text-right">Book Balance</th>
-                                        <th className="px-6 py-4 text-right">Physical Count</th>
-                                        <th className="px-6 py-4 text-right">Variance</th>
-                                        <th className="px-6 py-4 text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#2A2F33]/30">
-                                    <tr className="hover:bg-[#1E2328] transition-colors">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-[#1D4CB5]"></div>
-                                                <span className="text-white font-bold text-base">USD</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-right font-mono text-gray-400">
-                                            ${formatCurrency(dailySummaries[0].recon?.totalForeignBought || 0)}
-                                        </td>
-                                        <td className="px-6 py-5 text-right font-mono text-white font-bold">
-                                            ${formatCurrency(dailySummaries[0].recon?.totalForeignSold || 0)}
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <span className={dailySummaries[0].recon?.status === "Tallied" ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                {dailySummaries[0].recon?.status === "Tallied" ? "0.00" : formatVariance(dailySummaries[0].recon?.profitLoss)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${dailySummaries[0].recon?.status === "Tallied"
-                                                ? "bg-[#82E890]/10 text-[#82E890] border-[#82E890]/20"
-                                                : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"
-                                                }`}>
-                                                {dailySummaries[0].recon?.status?.toUpperCase() || "PENDING"}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr className="hover:bg-[#1E2328] transition-colors opacity-80">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-[#82E890]"></div>
-                                                <span className="text-white font-bold text-base">TZS</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-right font-mono text-gray-400">
-                                            {formatCurrency(dailySummaries[0].recon?.totalTzsPaid || 0)}
-                                        </td>
-                                        <td className="px-6 py-5 text-right font-mono text-white font-bold">
-                                            {formatCurrency(dailySummaries[0].recon?.totalTzsReceived || 0)}
-                                        </td>
-                                        <td className="px-6 py-5 text-right text-gray-500">
-                                            -
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+            {/* Daily Breakdown Section (History List) */}
+            {periodType !== "daily" && (
+                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500">
+                    <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
+                        <div>
+                            <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                                <List className="w-5 h-5 text-[#1D4CB5]" />
+                                Daily Breakdown
+                            </h3>
+                            <p className="text-[#8F8F8F] text-xs mt-1">
+                                List of all reconciliation records for this period
+                            </p>
                         </div>
-
-                        <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex justify-between items-center">
-                            <div className="flex items-center gap-4">
-                                <span className="text-xs text-gray-500">Valuation Rate: <span className="text-white">TZS {formatCurrency(dailySummaries[0].recon?.totalAvg || 0)}</span></span>
-                                <span className="text-xs text-gray-500">Total Deals: <span className="text-white">{dailySummaries[0].recon?.total_transactions || 0}</span></span>
+                        {periodStats.discrepancies > 0 && (
+                            <div className="flex items-center gap-2 bg-red-500/10 text-[#F7626E] px-3 py-1.5 rounded-lg text-xs font-normal border border-red-500/20">
+                                <AlertCircle className="w-4 h-4" />
+                                {periodStats.discrepancies} Issue(s) detected
                             </div>
-                            <button
-                                onClick={() => window.location.href = `/reconciliation/details/${dailySummaries[0].recon.id}`}
-                                className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#2A5BD7] transition-all"
-                            >
-                                Full Report Detail
-                            </button>
-                        </div>
+                        )}
                     </div>
-                ) : (
+
                     <div className="overflow-x-auto scrollbar-grey">
                         <table className="w-full text-left">
                             <thead>
@@ -321,7 +260,7 @@ export default function ReconciliationReport() {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : dailySummaries.filter(s => periodType === "daily" ? true : s.hasRecord).map((summary, idx) => (
+                                ) : dailySummaries.filter(s => s.hasRecord).map((summary, idx) => (
                                     <tr key={idx} className="hover:bg-[#1E2328] transition-colors group cursor-default">
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-3">
@@ -380,12 +319,13 @@ export default function ReconciliationReport() {
                                             )}
                                         </td>
                                     </tr>
-                                ))}
+                                ))
+                                }
                             </tbody>
                         </table>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

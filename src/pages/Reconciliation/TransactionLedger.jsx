@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import add from "../../assets/dashboard/add.svg";
 import { fetchReconcoliation, exportReconciliation, fetchCurrentReconciliation, startReconcoliation } from "../../api/reconcoliation";
@@ -8,7 +9,7 @@ import ReconciliationExpandableRow from "../../components/reconciliation/Reconci
 import Pagination from "../../components/common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
 
-export default function TransactionLedger() {
+export default function TransactionLedger({ dateRange, embedded = false }) {
     const navigate = useNavigate();
     const [reconciliations, setReconciliations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +25,15 @@ export default function TransactionLedger() {
     const fetchHistory = async (page = pagination.page, limit = pagination.limit) => {
         try {
             setLoading(true);
-            const result = await fetchReconcoliation({ page, limit });
+            const params = { page, limit };
+
+            if (dateRange?.start && dateRange?.end) {
+                params.dateFilter = "custom";
+                params.startDate = format(dateRange.start, "yyyy-MM-dd");
+                params.endDate = format(dateRange.end, "yyyy-MM-dd");
+            }
+
+            const result = await fetchReconcoliation(params);
             if (result.data) {
                 setReconciliations(result.data);
                 setPagination({
@@ -44,8 +53,8 @@ export default function TransactionLedger() {
 
     useEffect(() => {
         fetchHistory();
-        checkTodayReconciliation();
-    }, []);
+        if (!embedded) checkTodayReconciliation();
+    }, [dateRange]);
 
     const checkTodayReconciliation = async () => {
         try {
@@ -96,53 +105,55 @@ export default function TransactionLedger() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-white text-16px lg:text-[20px] font-semibold">
-                        Transaction Ledger
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">
-                        Daily reconciliation records and mapped deals
-                    </p>
-                </div>
+            {!embedded && (
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+                            Transaction Ledger
+                        </h1>
+                        <p className="text-gray-400 text-sm mt-1">
+                            Daily reconciliation records and mapped deals
+                        </p>
+                    </div>
 
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={async () => {
-                            const isReconcileAction = todayReconciliation &&
-                                ["Tallied", "Excess", "Short"].includes(todayReconciliation.status);
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={async () => {
+                                const isReconcileAction = todayReconciliation &&
+                                    ["Tallied", "Excess", "Short"].includes(todayReconciliation.status);
 
-                            if (isReconcileAction) {
-                                try {
-                                    setToast({ show: true, message: "Reconciling deals...", type: "pending" });
-                                    const res = await startReconcoliation(todayReconciliation.id);
-                                    if (res.success || res.status === "success") {
-                                        setToast({ show: true, message: "Reconciliation successful!", type: "success" });
-                                        fetchHistory();
-                                        checkTodayReconciliation();
-                                    } else {
-                                        setToast({ show: true, message: res.error?.message || "Reconciliation failed", type: "error" });
+                                if (isReconcileAction) {
+                                    try {
+                                        setToast({ show: true, message: "Reconciling deals...", type: "pending" });
+                                        const res = await startReconcoliation(todayReconciliation.id);
+                                        if (res.success || res.status === "success") {
+                                            setToast({ show: true, message: "Reconciliation successful!", type: "success" });
+                                            fetchHistory();
+                                            checkTodayReconciliation();
+                                        } else {
+                                            setToast({ show: true, message: res.error?.message || "Reconciliation failed", type: "error" });
+                                        }
+                                    } catch (err) {
+                                        console.error("Error triggering reconciliation:", err);
+                                        setToast({ show: true, message: "Error during reconciliation", type: "error" });
                                     }
-                                } catch (err) {
-                                    console.error("Error triggering reconciliation:", err);
-                                    setToast({ show: true, message: "Error during reconciliation", type: "error" });
+                                } else if (todayReconciliation) {
+                                    navigate(`/reconciliation/add-reconciliation/${todayReconciliation.id}`);
+                                } else {
+                                    navigate("/reconciliation/add-reconciliation");
                                 }
-                            } else if (todayReconciliation) {
-                                navigate(`/reconciliation/add-reconciliation/${todayReconciliation.id}`);
-                            } else {
-                                navigate("/reconciliation/add-reconciliation");
-                            }
-                        }}
-                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95"
-                    >
-                        <img src={add} alt="add" className="w-5 h-5" />
-                        <span>
-                            {todayReconciliation && ["Tallied", "Excess", "Short"].includes(todayReconciliation.status)
-                                ? "Reconcile" : "Physical Cash"}
-                        </span>
-                    </button>
+                            }}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95"
+                        >
+                            <img src={add} alt="add" className="w-5 h-5" />
+                            <span>
+                                {todayReconciliation && ["Tallied", "Excess", "Short"].includes(todayReconciliation.status)
+                                    ? "Reconcile" : "Physical Cash"}
+                            </span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden">
                 <div className="p-5 border-b border-[#2A2F33]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
