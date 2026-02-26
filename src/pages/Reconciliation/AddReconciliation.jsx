@@ -11,6 +11,11 @@ import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import DealsTable from "../../components/dashboard/DealsTable";
+import StatCard from "../../components/dashboard/StatCard";
+import dealstoday from "../../assets/dashboard/dealstoday.svg";
+import profit from "../../assets/dashboard/profit.svg";
+import sellamount from "../../assets/dashboard/sellamount.svg";
+import buyamount from "../../assets/dashboard/buyamount.svg";
 
 
 export default function AddReconciliation() {
@@ -774,79 +779,30 @@ export default function AddReconciliation() {
 
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                        {/* Valuation Rate Card */}
-                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Valuation Rate</span>
-                                <div className="p-1.5 bg-[#1D4CB5]/10 rounded-lg text-[#1D4CB5]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" clipRule="evenodd" />
-                                        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="text-xl font-bold text-white">
-                                {Number(stats.valRate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            <p className="text-[#8F8F8F] text-[10px] mt-1 italic">Average USD Buy Rate</p>
-                        </div>
+                        <StatCard
+                            title="Valuation Rate"
+                            value={Number(stats.valRate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            icon={buyamount}
+                        />
 
-                        {/* Inventory Value Card */}
-                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Inventory Value</span>
-                                <div className="p-1.5 bg-[#82E890]/10 rounded-lg text-[#82E890]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                                        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="text-xl font-bold text-white">
-                                TZS {Number(stats.clVal || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </div>
-                            <p className="text-[#8F8F8F] text-[10px] mt-1">Current vault at valuation</p>
-                        </div>
+                        <StatCard
+                            title="Inventory Value"
+                            value={`TZS ${Number(stats.clVal || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                            icon={dealstoday}
+                        />
 
-                        {/* Trade Volume Card */}
-                        <div className="bg-[#16191C] border border-[#2A2F33]/50 rounded-xl p-4 shadow-sm">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wider">Daily Volume</span>
-                                <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="text-xl font-bold text-white">
-                                ${((stats.buyVol || 0) + (stats.sellVol || 0)).toLocaleString()}
-                            </div>
-                            <p className="text-[#8F8F8F] text-[10px] mt-1">{todayDeals.length} Deals processed</p>
-                        </div>
+                        <StatCard
+                            title="Daily Volume"
+                            value={`$${((stats.buyVol || 0) + (stats.sellVol || 0)).toLocaleString()}`}
+                            icon={sellamount}
+                        />
 
-                        {/* Profit/Loss Card */}
-                        <div className={stats.pl >= 0 ? "bg-green-900/10 border border-green-500/30 rounded-xl p-4 shadow-sm transition-all" : "bg-red-900/10 border border-red-500/30 rounded-xl p-4 shadow-sm transition-all"}>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className={stats.pl >= 0 ? 'text-green-300 text-xs font-bold uppercase tracking-wider' : 'text-red-300 text-xs font-bold uppercase tracking-wider'}>Profit / Loss</span>
-                                <div className={stats.pl >= 0 ? 'p-1.5 rounded-lg bg-green-500/20 text-green-500' : 'p-1.5 rounded-lg bg-red-500/20 text-red-500'}>
-                                    {stats.pl >= 0 ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                                        </svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
-                                        </svg>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="text-xl font-bold text-white">
-                                TZS {Number(stats.pl || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </div>
-                            <p className={`${stats.pl >= 0 ? "text-green-400/60" : "text-red-400/60"} text-[10px] mt-1 font-medium`}>
-                                {stats.pl >= 0 ? "Trading Surplus" : "Trading Deficit"}
-                            </p>
-                        </div>
+                        <StatCard
+                            title="Profit / Loss"
+                            value={`TZS ${Number(stats.pl || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                            icon={profit}
+                            color={stats.pl >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
+                        />
                     </div>
                 );
             })()}

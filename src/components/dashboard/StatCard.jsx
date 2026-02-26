@@ -16,14 +16,13 @@ export default function StatCard({ title, value, subValues, change, icon, color 
         overflow-hidden
         group
         transition-all duration-300
-        border border-[#2E3439]
       "
     >
       {/* Background Accent */}
 
       <div className="flex items-center justify-between gap-3 mb-4">
         <p className="text-white font-semibold">{title}</p>
-        <img src={icon} alt="" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
+        <img src={icon} alt="" className="w-5 h-5" />
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
@@ -32,7 +31,7 @@ export default function StatCard({ title, value, subValues, change, icon, color 
             {subValues.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F33]/30 border border-[#343A40]/30 hover:bg-[#2A2F33]/50 transition-colors"
+                className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F33]/30 hover:bg-[#2A2F33]/50 transition-colors"
               >
                 <span className="text-white text-[11px] font-bold uppercase tracking-tighter">{item.label}</span>
                 <span className={`${item.color || "text-white"} text-[15px] font-bold tabular-nums`}>{item.value}</span>
