@@ -3,7 +3,15 @@ import successIcon from "../../assets/toast/success.svg";
 import failIcon from "../../assets/toast/fail.svg";
 import pendingIcon from "../../assets/toast/pending.svg";
 
-export default function Toast({ show, message, type }) {
+export default function Toast({ show, message, type, onHide }) {
+    React.useEffect(() => {
+        if (show && onHide) {
+            const timer = setTimeout(() => {
+                onHide();
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [show, onHide]);
 
     const getIcon = () => {
         if (type === "success") return successIcon;
@@ -15,9 +23,6 @@ export default function Toast({ show, message, type }) {
 
     return (
         <>
-
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
-
             {/* TOAST */}
             <div
                 className={`

@@ -7,19 +7,21 @@ import reconciliation from "../../assets/Common/reconciliation.svg";
 import reporting from "../../assets/Common/reporting.svg";
 import customermanagement from "../../assets/customer/ledger.svg";
 import currencymanagement from "../../assets/Common/currencymanagement.svg";
-import pnl from "../../assets/dashboard/profit.svg";
+import pnl from "../../assets/Common/pl.svg";
+import expenses from "../../assets/Common/expense.svg";
 
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-export default function Sidebar({ isOpen, closeSidebar }) {
+export default function Sidebar({ isOpen, closeSidebar, hidden }) {
   const navigate = useNavigate();
   const location = useLocation();
   const menuItems = [
     { name: "Dashboard", icon: dashboard, path: "/dashboard" },
     { name: "Deals", icon: deals, path: "/deals" },
     { name: "Customer Info", icon: customermanagement, path: "/customer-info" },
-    { name: "P & L", icon: pnl, path: "/pnl" },
-    { name: "Reconciliation", icon: reconciliation, path: "/reconciliation" },
+    { name: "P & L", path: "/pnl", icon: pnl },
+    { name: "Expenses", path: "/expenses", icon: expenses },
+    { name: "Reconciliation", path: "/reconciliation", icon: reconciliation },
     { name: "Reports", icon: reporting, path: "/reports" },
     { name: "Currency Info", icon: currencymanagement, path: "/currency-management" },
     { name: "User Management", icon: usermanagement, path: "/users" },
@@ -42,6 +44,7 @@ export default function Sidebar({ isOpen, closeSidebar }) {
         fixed lg:static inset-y-0 left-0 z-60 w-64 h-full bg-[#1E2328] border-r border-[#161A1D] p-4 text-white
         transition-transform duration-300 transform
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        ${hidden ? "hidden lg:hidden" : "block"}
       `}
     >
       <div className="flex items-center justify-between mb-6 lg:hidden">

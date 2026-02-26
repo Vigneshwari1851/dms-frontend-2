@@ -80,6 +80,26 @@ export async function fetchReconciliationAlerts() {
   }
 }
 
+export async function fetchPnLOverview() {
+  try {
+    const response = await apiFetch(`/pnl/overview`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Failed to fetch PnL overview:", errorData);
+      return { success: false, error: errorData };
+    }
+
+    const result = await response.json();
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error fetching PnL overview:", error);
+    return { success: false, error };
+  }
+}
+
 export async function fetchReconciliationById(id) {
   try {
     const response = await apiFetch(`/reconciliation/${id}`, {
