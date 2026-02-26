@@ -798,12 +798,12 @@ export default function AddReconciliation() {
             </div>
 
 
-            <div className={`grid grid-cols-1 ${id ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
+            <div className={`grid grid-cols-1 ${id ? 'lg:grid-cols-2' : 'lg:grid-cols-2'} gap-6`}>
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
                 </div>
 
-                <div className="flex flex-col gap-4">
+                {/* <div className="flex flex-col gap-4">
                     {id ? (
                         <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
                             <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2 flex items-center justify-between">
@@ -878,7 +878,7 @@ export default function AddReconciliation() {
                             </div>
                         </div>
                     ) : null}
-                </div>
+                </div> */}
 
                 <div className="flex flex-col gap-4">
                     {(id || showClosingVault || ["Tallied", "Short", "Excess"].includes(status)) && (
