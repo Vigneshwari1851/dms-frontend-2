@@ -6,8 +6,16 @@ import Dropdown from "../../components/common/Dropdown";
 import Toast from "../../components/common/Toast";
 import bgIcon from "../../assets/report/bgimage.svg";
 import { useNavigate, useParams } from "react-router-dom";
-import { createReconciliation, fetchReconciliationById, updateReconciliation, startReconcoliation, fetchReconcoliation } from "../../api/reconcoliation";
+import {
+    createReconciliation,
+    fetchReconciliationById,
+    updateReconciliation,
+    startReconcoliation,
+    fetchReconcoliation,
+    fetchCurrentReconciliation
+} from "../../api/reconcoliation";
 import { fetchCurrencies, createCurrency } from "../../api/currency/currency";
+import { fetchDeals } from "../../api/deals";
 import NotificationCard from "../../components/common/Notification";
 import CurrencyForm from "../../components/common/CurrencyForm";
 import DealsTable from "../../components/dashboard/DealsTable";
@@ -16,7 +24,6 @@ import dealstoday from "../../assets/dashboard/dealstoday.svg";
 import profit from "../../assets/dashboard/profit.svg";
 import sellamount from "../../assets/dashboard/sellamount.svg";
 import buyamount from "../../assets/dashboard/buyamount.svg";
-
 
 export default function AddReconciliation() {
     const navigate = useNavigate();
@@ -34,18 +41,16 @@ export default function AddReconciliation() {
     const [currencyOptions, setCurrencyOptions] = useState([]);
     const [currencyMap, setCurrencyMap] = useState({});
     const [notes, setNotes] = useState("");
-    const [showSaveButton, setShowSaveButton] = useState(false);
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
     const [isAddingCurrency, setIsAddingCurrency] = useState(false);
     const [newCurrency, setNewCurrency] = useState({ currencyName: "", isoCode: "", symbol: "" });
     const [step, setStep] = useState(1);
-    const [status, setStatus] = useState(null); // Track reconciliation status
+    const [status, setStatus] = useState(null);
     const [todayDeals, setTodayDeals] = useState([]);
-    const [dealsSummaryGenerated, setDealsSummaryGenerated] = useState(false);
-    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
     const [showClosingVault, setShowClosingVault] = useState(false);
     const [hasSavedClosing, setHasSavedClosing] = useState(false);
     const [backendStats, setBackendStats] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [confirmModal, setConfirmModal] = useState({
         open: false,
@@ -81,11 +86,23 @@ export default function AddReconciliation() {
     };
 
     const fetchReconciliationDetails = async () => {
+        setIsLoading(true);
         const actualCurrencies = await loadCurrencies();
 
-        if (actualCurrencies.length > 0 && id) {
-            try {
-                const result = await fetchReconciliationById(id);
+        try {
+            let result;
+            if (id) {
+                result = await fetchReconciliationById(id);
+            } else {
+                // Check if there's a reconciliation for today
+                const currentRes = await fetchCurrentReconciliation();
+                if (currentRes.success && currentRes.data) {
+                    result = { success: true, data: currentRes.data };
+                    setId(currentRes.data.id);
+                }
+            }
+
+            if (result && result.success) {
                 const data = result.data?.data || result.data || result;
                 setNotes(data.notes?.[0]?.note || "");
                 setStatus(data.status);
@@ -110,7 +127,7 @@ export default function AddReconciliation() {
 
                 if (clRows.length > 0) {
                     setClosingRows(clRows);
-                } else {
+                } else if (actualCurrencies.length > 0) {
                     const usd = actualCurrencies.find(c => c.code === "USD");
                     const tzs = actualCurrencies.find(c => c.code === "TZS");
                     if (usd && tzs) {
@@ -121,14 +138,12 @@ export default function AddReconciliation() {
                     }
                 }
 
-                if (["Tallied", "Short", "Excess", "In_Progress"].includes(data.status)) {
+                // Determine step based on status and data
+                if (["Tallied", "Short", "Excess"].includes(data.status)) {
                     setStep(3);
-                } else if (id) {
-                    if (clRows.length > 0) {
-                        setStep(2);
-                    } else {
-                        setStep(2);
-                    }
+                    setShowClosingVault(true);
+                } else if (data.openingEntries?.length > 0) {
+                    setStep(2);
                 } else {
                     setStep(1);
                 }
@@ -136,14 +151,12 @@ export default function AddReconciliation() {
                 if (data.deals && data.deals.length > 0) {
                     const deals = data.deals.map(d => d.deal);
                     setTodayDeals(deals);
+                } else if (id || data.id) {
+                    // Fetch today's deals to show expected movement even before mapping
+                    const dealsRes = await fetchDeals({ dateFilter: "today" });
+                    if (dealsRes.data) setTodayDeals(dealsRes.data);
                 } else {
                     setTodayDeals([]);
-                }
-
-                if (["Tallied", "Short", "Excess"].includes(data.status)) {
-                    setDealsSummaryGenerated(true);
-                    setShowClosingVault(true);
-                    setStep(3);
                 }
 
                 const usdStats = data.currencyStats ? Object.values(data.currencyStats).find(s => s.code === "USD") : null;
@@ -161,35 +174,36 @@ export default function AddReconciliation() {
                     avgBuyRate: usdStats?.avgBuyRate,
                     avgSellRate: usdStats?.avgSellRate
                 });
+            } else if (actualCurrencies.length > 0) {
+                // New Reconciliation
+                setStep(1);
+                const usd = actualCurrencies.find(c => c.code === "USD");
+                const tzs = actualCurrencies.find(c => c.code === "TZS");
 
-            } catch (err) {
-                console.error("Error fetching reconciliation:", err);
-            }
-        } else if (actualCurrencies.length > 0) {
-            // New Reconciliation
-            setStep(1);
-            const usd = actualCurrencies.find(c => c.code === "USD");
-            const tzs = actualCurrencies.find(c => c.code === "TZS");
+                if (usd && tzs) {
+                    const initialOp = [
+                        { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                        { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                    ];
+                    const initialCl = [
+                        { id: Date.now() + 2, currencyId: usd.id, currencyCode: usd.code, amount: '' },
+                        { id: Date.now() + 3, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
+                    ];
+                    setOpeningRows(initialOp);
+                    setClosingRows(initialCl);
+                }
+                setTodayDeals([]);
 
-            if (usd && tzs) {
-                const initialOp = [
-                    { id: Date.now(), currencyId: usd.id, currencyCode: usd.code, amount: '' },
-                    { id: Date.now() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
-                ];
-                const initialCl = [
-                    { id: Date.now() + 2, currencyId: usd.id, currencyCode: usd.code, amount: '' },
-                    { id: Date.now() + 3, currencyId: tzs.id, currencyCode: tzs.code, amount: '' }
-                ];
-                setOpeningRows(initialOp);
-                setClosingRows(initialCl);
+                // Fetch previous reconciliation for "Yesterday's Avg"
+                const prevRecons = await fetchReconcoliation({ limit: 1 });
+                if (prevRecons?.data?.length > 0) {
+                    setYesterdayAvgRate(prevRecons.data[0].total_avg || prevRecons.data[0].totalAvg || 0);
+                }
             }
-            setTodayDeals([]);
-
-            // Fetch previous reconciliation for "Yesterday's Avg"
-            const prevRecons = await fetchReconcoliation({ limit: 1 });
-            if (prevRecons?.data?.length > 0) {
-                setYesterdayAvgRate(prevRecons.data[0].total_avg || prevRecons.data[0].totalAvg || 0);
-            }
+        } catch (err) {
+            console.error("Error fetching reconciliation:", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -487,6 +501,7 @@ export default function AddReconciliation() {
                 setToast({ show: true, message: "Opening Balance Saved.", type: "success" });
                 setTimeout(() => {
                     setToast(prev => ({ ...prev, show: false }));
+                    navigate("/dashboard");
                 }, 1000);
             } else {
                 setToast({ show: true, message: "Failed to save Opening Balance", type: "error" });
@@ -498,39 +513,6 @@ export default function AddReconciliation() {
         }
     };
 
-    const handleGenerateSummary = async () => {
-        setIsGeneratingSummary(true);
-        try {
-            if (status === "In_Progress" && id) {
-                await startReconcoliation(id);
-                await fetchReconciliationDetails();
-            }
-        } catch (error) {
-            console.error("Error generating summary:", error);
-        } finally {
-            setTimeout(() => {
-                setIsGeneratingSummary(false);
-                setDealsSummaryGenerated(true);
-            }, 2000);
-        }
-    };
-
-    const handleStartReconciliation = async () => {
-        if (!id) return;
-        try {
-            const result = await startReconcoliation(id);
-            if (result.success) {
-                setStatus("In_Progress");
-                setStep(3);
-                await fetchReconciliationDetails();
-            } else {
-                setToast({ show: true, message: "Failed to start reconciliation", type: "error" });
-            }
-        } catch (error) {
-            console.error("Error starting reconciliation:", error);
-            setToast({ show: true, message: "An error occurred. Please try again.", type: "error" });
-        }
-    };
 
     const handleSaveClosing = async (isFinalizing = false) => {
         try {
@@ -593,9 +575,10 @@ export default function AddReconciliation() {
 
                 if (isFinalizing && ["Tallied", "Short", "Excess"].includes(newStatus)) {
                     setStatus(newStatus);
-                    setTimeout(() => navigate("/reconciliation"), 1500);
+                    setTimeout(() => navigate("/dashboard"), 1500);
                 } else {
                     setStatus(newStatus || status);
+                    setTimeout(() => navigate("/dashboard"), 1500);
                 }
             } else {
                 setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
@@ -739,180 +722,47 @@ export default function AddReconciliation() {
                         {id ? "Reconciliation" : "Add Reconciliation"}
                     </h1>
                     <p className="text-[#8F8F8F] text-[13px] lg:text-[14px]">
-                        Step {step}: {step === 1 ? "Capture opening vault balances" : step === 2 ? "Start Reconciliation" : "Capture closing vault balances"}
+                        {id ? "Review inventory movement and capture closing vault" : "Capture initial opening vault balances"}
                     </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {id && ["Short", "Excess"].includes(status) && (
+                    {!id && (
                         <button
-                            onClick={handleStartReconciliation}
-                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20 animate-in fade-in zoom-in-95 duration-300"
+                            onClick={handleSaveOpening}
+                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
                         >
-                            Start Reconciliation
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Physical Cash: Opening Vault
+                        </button>
+                    )}
+                    {id && !hasSavedClosing && status !== "Tallied" && (
+                        <button
+                            onClick={() => {
+                                setShowClosingVault(true);
+                                setStep(3);
+                            }}
+                            className="px-5 py-2 rounded-lg text-sm transition-all flex items-center gap-2 font-semibold bg-[#1D4CB5] text-white hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Physical Cash: Closing Vault
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* {dealsSummaryGenerated && (() => {
-                const totals = calculateTotals();
-                const openingUSD = openingRows.reduce((acc, r) => r.currencyCode === "USD" ? acc + Number(r.amount || 0) : acc, 0);
-                const openingTZS = openingRows.reduce((acc, r) => r.currencyCode === "TZS" ? acc + Number(r.amount || 0) : acc, 0);
-                const closingUSD = closingRows.reduce((acc, r) => r.currencyCode === "USD" ? acc + Number(r.amount || 0) : acc, 0);
-                const closingTZS = closingRows.reduce((acc, r) => r.currencyCode === "TZS" ? acc + Number(r.amount || 0) : acc, 0);
 
-                const stats = {
-                    buyTZS: backendStats?.totalTzsPaid ?? totals.totalBuyTZS,
-                    sellTZS: backendStats?.totalTzsReceived ?? totals.totalSellTZS,
-                    buyVol: backendStats?.totalForeignBought ?? 0,
-                    sellVol: backendStats?.totalForeignSold ?? 0,
-                    valRate: backendStats?.valuationRate ?? totals.totalAvg,
-                    opVal: backendStats?.totalOpeningValue ?? totals.totalOpeningValue,
-                    clVal: backendStats?.totalClosingValue ?? totals.totalClosingValue,
-                    pl: backendStats?.profitLoss ?? totals.profitLoss,
-                    opUSD: openingUSD,
-                    opTZS: openingTZS,
-                    clUSD: closingUSD,
-                    clTZS: closingTZS
-                };
-
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <StatCard
-                            title="Valuation Rate"
-                            value={Number(stats.valRate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            icon={buyamount}
-                        />
-
-                        <StatCard
-                            title="Inventory Value"
-                            value={`TZS ${Number(stats.clVal || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                            icon={dealstoday}
-                        />
-
-                        <StatCard
-                            title="Daily Volume"
-                            value={`$${((stats.buyVol || 0) + (stats.sellVol || 0)).toLocaleString()}`}
-                            icon={sellamount}
-                        />
-
-                        <StatCard
-                            title="Profit / Loss"
-                            value={`TZS ${Number(stats.pl || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                            icon={profit}
-                            color={stats.pl >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
-                        />
-                    </div>
-                );
-            })()} */}
-
-            <div className={`grid grid-cols-1 ${dealsSummaryGenerated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="transition-all animate-in fade-in slide-in-from-left-4 duration-500">
                     {renderTable("opening", openingRows)}
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    {id && !dealsSummaryGenerated ? (
-                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
-                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Opening balance saved.</p>
-                            <button
-                                onClick={handleGenerateSummary}
-                                className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
-                            >
-                                Generate Deals Summary
-                            </button>
-                        </div>
-                    ) : dealsSummaryGenerated ? (
-                        <div className="bg-[#16191C] rounded-xl p-5 border border-[#2A2F33]/50 h-full animate-in fade-in duration-500 delay-150 flex flex-col min-h-[400px]">
-                            <h3 className="text-white text-[15px] font-semibold mb-4 border-b border-[#2A2F33] pb-2 flex items-center justify-between">
-                                Daily Inventory Movement
-                                <span className="text-[10px] text-[#8F8F8F] font-normal uppercase tracking-widest bg-[#1D4CB5]/10 px-2 py-0.5 rounded">Book Balance</span>
-                            </h3>
-                            <div className="space-y-6 flex-grow overflow-y-auto pr-1">
-                                {Object.values(calculateTotals().currencyData).map((data, idx) => {
-                                    const expected = data.expected;
-                                    const physical = data.closing;
-                                    const variance = physical - expected;
-                                    const isMatched = Math.abs(variance) < 0.01;
-                                    const hasClosing = showClosingVault || ["Tallied", "Short", "Excess"].includes(status);
-
-                                    return (
-                                        <div key={idx} className="border-b border-[#2A2F33]/30 pb-4 last:border-0 last:pb-0">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-white text-[16px]">{data.code}</span>
-                                                    {hasClosing && (
-                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isMatched ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
-                                                            {isMatched ? "MATCHED" : "MISMATCH"}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] sm:text-[13px]">
-                                                <div className="text-[#8F8F8F]">Opening Vault:</div>
-                                                <div className="text-right text-white font-medium">{data.opening.toLocaleString()}</div>
-
-                                                <div className="text-[#8F8F8F]">Total Inflow:</div>
-                                                <div className="text-right text-[#82E890] font-medium">+{data.received.toLocaleString()}</div>
-
-                                                <div className="text-[#8F8F8F]">Total Outflow:</div>
-                                                <div className="text-right text-[#FF6B6B] font-medium">-{data.paid.toLocaleString()}</div>
-
-                                                <div className="text-white font-semibold pt-2 border-t border-[#2A2F33]/30 mt-1">Book Balance:</div>
-                                                <div className="text-right text-white font-bold pt-2 border-t border-[#2A2F33]/30 mt-1">{expected.toLocaleString()}</div>
-
-                                                {Math.abs(data.pending) > 0.01 && (
-                                                    <>
-                                                        <div className="text-[#8F8F8F] text-[11px]">Pending Settlement:</div>
-                                                        <div className="text-right text-orange-400 font-medium text-[11px]">
-                                                            {data.pending > 0 ? "+" : ""}{data.pending.toLocaleString()}
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {hasClosing && (
-                                                    <>
-                                                        <div className="text-[#8F8F8F] pt-2">Physical Vault:</div>
-                                                        <div className="text-right text-[#1D4CB5] font-bold pt-2 underline underline-offset-4">{physical.toLocaleString() || "0"}</div>
-
-                                                        <div className="text-[#8F8F8F] pt-1">Variance:</div>
-                                                        <div className={`text-right font-bold pt-1 ${variance > 0 ? 'text-green-500' : variance < 0 ? 'text-red-500' : 'text-[#8F8F8F]'}`}>
-                                                            {variance > 0 ? "+" : ""}{variance.toLocaleString()}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {Object.keys(currencyData).length === 0 && (
-                                    <div className="h-full flex flex-col items-center justify-center py-12 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-[#2A2F33] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        <p className="text-[#8F8F8F] text-sm">No inventory movement recorded</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : null}
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    {dealsSummaryGenerated && !showClosingVault && (
-                        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#16191C]/30 rounded-xl animate-in fade-in zoom-in-95 duration-500 min-h-[400px]">
-                            <p className="text-[#8F8F8F] text-sm mb-6 text-center">Summary generated. Enter your closing vault.</p>
-                            <button
-                                onClick={() => setShowClosingVault(true)}
-                                className="px-8 py-4 bg-[#1D4CB5] text-white rounded-xl font-bold hover:bg-[#2A5BD7] shadow-xl hover:shadow-[#1D4CB5]/20 transition-all transform hover:-translate-y-1"
-                            >
-                                Enter Closing Vault
-                            </button>
-                        </div>
-                    )}
-
-                    {(showClosingVault || ["Tallied", "Short", "Excess"].includes(status)) && (
+                    {(id || showClosingVault || ["Tallied", "Short", "Excess"].includes(status)) && (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-500 h-full">
                             {renderTable("closing", closingRows)}
                         </div>
@@ -922,7 +772,7 @@ export default function AddReconciliation() {
 
             {/* Associated Deals Section */}
             {
-                id && dealsSummaryGenerated && todayDeals && todayDeals.length > 0 && (
+                id && todayDeals && todayDeals.length > 0 && (
                     <div className="bg-[#16191C] rounded-xl border border-[#2A2F33]/50 p-4 mt-6">
                         <h2 className="text-[16px] font-medium mb-4 flex items-center gap-2 text-white">
                             <div className="w-1.5 h-4 bg-[#82E890] rounded-full"></div>
@@ -959,24 +809,6 @@ export default function AddReconciliation() {
                 )
             }
 
-            {
-                isGeneratingSummary && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-[2000] p-4 animate-in fade-in duration-300">
-                        <div className="bg-[#16191C] border border-[#2A2F33] p-8 rounded-2xl flex flex-col items-center gap-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="relative">
-                                <div className="w-16 h-16 border-4 border-[#1D4CB5]/20 border-t-[#1D4CB5] rounded-full animate-spin"></div>
-                                <div className="absolute inset-x-0 -bottom-1 flex justify-center">
-                                    <div className="w-2 h-2 bg-[#1D4CB5] rounded-full animate-bounce"></div>
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <h3 className="text-white text-lg font-bold mb-2">Generating Summary</h3>
-                                <p className="text-[#8F8F8F] text-sm tracking-wide">Analysing daily deals and calculations...</p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
         </div >
     );
 }

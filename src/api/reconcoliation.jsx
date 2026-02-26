@@ -203,3 +203,23 @@ export async function startReconcoliation(id) {
     return { success: false, error };
   }
 }
+export async function fetchCurrentReconciliation() {
+  try {
+    const response = await apiFetch(`/reconciliation/current`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return { success: true, data: null };
+      const errorData = await response.json();
+      console.error(`Failed to fetch current reconciliation:`, errorData);
+      return { success: false, error: errorData };
+    }
+
+    const result = await response.json();
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error(`Error fetching current reconciliation:`, error);
+    return { success: false, error };
+  }
+}
