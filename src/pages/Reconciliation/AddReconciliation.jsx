@@ -864,8 +864,8 @@ export default function AddReconciliation() {
 
                                                 {Math.abs(data.pending) > 0.01 && (
                                                     <>
-                                                        <div className="text-[#8F8F8F] text-[11px] italic">Pending Settlement:</div>
-                                                        <div className="text-right text-orange-400 font-medium text-[11px] italic">
+                                                        <div className="text-[#8F8F8F] text-[11px]">Pending Settlement:</div>
+                                                        <div className="text-right text-orange-400 font-medium text-[11px]">
                                                             {data.pending > 0 ? "+" : ""}{data.pending.toLocaleString()}
                                                         </div>
                                                     </>
@@ -873,8 +873,8 @@ export default function AddReconciliation() {
 
                                                 {hasClosing && (
                                                     <>
-                                                        <div className="text-[#8F8F8F] pt-2 italic">Physical Vault:</div>
-                                                        <div className="text-right text-[#1D4CB5] font-bold pt-2 italic underline underline-offset-4">{physical.toLocaleString() || "0"}</div>
+                                                        <div className="text-[#8F8F8F] pt-2">Physical Vault:</div>
+                                                        <div className="text-right text-[#1D4CB5] font-bold pt-2 underline underline-offset-4">{physical.toLocaleString() || "0"}</div>
 
                                                         <div className="text-[#8F8F8F] pt-1">Variance:</div>
                                                         <div className={`text-right font-bold pt-1 ${variance > 0 ? 'text-green-500' : variance < 0 ? 'text-red-500' : 'text-[#8F8F8F]'}`}>
