@@ -286,11 +286,103 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
     const dotColors = ["bg-[#1D4CB5]", "bg-[#82E890]", "bg-[#D8AD00]", "bg-[#F7626E]", "bg-[#939AF0]"];
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2 animate-in fade-in duration-500">
 
             {/* ── Vault Status Section ── */}
-            {(periodType === "daily" || reconciliations.length > 0) && (
-                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl">
+            {/* ── Vault Status Section ── */}
+            {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
+                <>
+                    <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
+                        <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
+                            <div>
+                                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                                    <Vault className="w-5 h-5 text-[#1D4CB5]" />
+                                    {periodType === "daily" ? "Daily Vault Status" : "Latest Vault Status"}
+                                </h3>
+                                <p className="text-[#8F8F8F] text-xs mt-1">
+                                    {periodType === "daily"
+                                        ? `Performance tracking for ${dateRange?.start ? format(dateRange.start, "MMM dd") : ""}`
+                                        : `Most recent reconciliation in this ${periodType === "custom" ? "range" : periodType}`}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Currency breakdown table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-[#131619] text-white text-sm">
+                                        <th className="px-6 py-4">Currency</th>
+                                        <th className="px-6 py-4 text-right">Book Balance</th>
+                                        <th className="px-6 py-4 text-right">Physical Closing</th>
+                                        <th className="px-6 py-4 text-right">Variance</th>
+                                        <th className="px-6 py-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#2A2F33]/30">
+                                    {vaultRows.length > 0 ? vaultRows.map((row, idx) => {
+                                        const isTallied = row.status === "Tallied";
+                                        const variance = isTallied ? 0 : row.variance;
+                                        return (
+                                            <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`} />
+                                                        <span className="text-white font-bold text-base">{row.code}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5 text-right text-gray-400">{formatCurrency(row.book)}</td>
+                                                <td className="px-6 py-5 text-right text-white">{formatCurrency(row.physical)}</td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                                        {isTallied ? "0.00" : `${variance >= 0 ? "+" : ""}${formatCurrency(variance)}`}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-5 text-center">
+                                                    {isTallied ? (
+                                                        <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
+                                                    ) : (
+                                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
+                                                            {variance > 0 ? "EXCESS" : "SHORT"}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }) : (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic text-sm">
+                                                No currency entries found for this reconciliation.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* ── Daily view: show deals in separate card ── */}
+                    {periodType === "daily" && (
+                        <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-6">
+                            <div className="py-2 bg-[#16191C]/60 border-b border-[#2A2F33]/50">
+                                <div className="flex justify-between items-center">
+                                    <p className="text-[#8F8F8F] flex items-center gap-2">
+                                        <span className="" />
+                                        Associated Transactions
+                                    </p>
+                                    <span className="text-[#8F8F8F]">
+                                        Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="p-0">
+                                <DealsTable deals={dailySummaries[0]?.recon?.deals} />
+                            </div>
+                        </div>
+                    )}
+                </>
+            ) : (periodType === "daily" || reconciliations.length > 0) ? (
+                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
                     <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
                             <h3 className="text-white font-semibold text-lg flex items-center gap-2">
@@ -304,96 +396,11 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                             </p>
                         </div>
                     </div>
-
-                    {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
-                        <div className="animate-in slide-in-from-top-2 duration-300">
-                            {/* Currency breakdown table */}
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="bg-[#131619] text-white text-sm">
-                                            <th className="px-6 py-4">Currency</th>
-                                            <th className="px-6 py-4 text-right">Book Balance</th>
-                                            <th className="px-6 py-4 text-right">Physical Closing</th>
-                                            <th className="px-6 py-4 text-right">Variance</th>
-                                            <th className="px-6 py-4 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-[#2A2F33]/30">
-                                        {vaultRows.length > 0 ? vaultRows.map((row, idx) => {
-                                            const isTallied = row.status === "Tallied";
-                                            const variance = isTallied ? 0 : row.variance;
-                                            return (
-                                                <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`} />
-                                                            <span className="text-white font-bold text-base">{row.code}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-right text-gray-400">{formatCurrency(row.book)}</td>
-                                                    <td className="px-6 py-5 text-right text-white">{formatCurrency(row.physical)}</td>
-                                                    <td className="px-6 py-5 text-right">
-                                                        <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                            {isTallied ? "0.00" : `${variance >= 0 ? "+" : ""}${formatCurrency(variance)}`}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-center">
-                                                        {isTallied ? (
-                                                            <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
-                                                        ) : (
-                                                            <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
-                                                                {variance > 0 ? "EXCESS" : "SHORT"}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        }) : (
-                                            <tr>
-                                                <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic text-sm">
-                                                    No currency entries found for this reconciliation.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Footer info */}
-                            <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex items-center gap-4">
-                                {periodType !== "daily" && reconciliations[0]?.created_at && (
-                                    <span className="text-xs text-[#1D4CB5] font-semibold">
-                                        Record from {format(new Date(reconciliations[0].created_at), "MMM dd, yyyy")}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* ── Daily view: show deals inline ── */}
-                            {periodType === "daily" && (
-                                <div className="border-t border-[#2A2F33]/50">
-                                    <div className="px-6 py-4 bg-[#16191C]/60">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <p className="text-[#8F8F8F] flex items-center gap-2">
-                                                <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
-                                                Associated Transactions
-                                            </p>
-                                            <span className="text-[#8F8F8F]">
-                                                Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span>
-                                            </span>
-                                        </div>
-                                        <DealsTable deals={dailySummaries[0]?.recon?.deals} />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="p-10 text-center text-gray-500">
-                            No reconciliation record found for this date.
-                        </div>
-                    )}
+                    <div className="p-10 text-center text-gray-500">
+                        No reconciliation record found for this date.
+                    </div>
                 </div>
-            )}
+            ) : null}
 
             {/* ── Daily Breakdown Section (non-daily) with expandable rows ── */}
             {periodType !== "daily" && (
