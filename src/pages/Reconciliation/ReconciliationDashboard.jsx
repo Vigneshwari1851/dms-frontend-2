@@ -114,8 +114,7 @@ export default function ReconciliationDashboard() {
                     >
                         <img src={add} alt="add" className="w-5 h-5" />
                         <span>
-                            {todayReconciliation && ["Tallied", "Excess", "Short"].includes(todayReconciliation.status)
-                                ? "Reconcile" : "Physical Cash"}
+                            Physical Cash
                         </span>
                     </button>
                 </div>
