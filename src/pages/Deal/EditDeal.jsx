@@ -105,13 +105,13 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                                     className="bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white w-44 focus:outline-none focus:border-[#1D4CB5] text-xl font-bold transition-all"
                                                 />
                                                 <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                                    <span className="text-[#8F8F8F] font-bold text-sm tracking-tighter">{currency}</span>
+                                                    <span className="text-[#8F8F8F] font-bold text-smer">{currency}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-white text-normal font-black tracking-tight">
+                                            <span className="text-white text-normal font-black">
                                                 {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
                                             <span className="text-[#1D4CB5] text-normal font-black italic">{currency}</span>
@@ -868,7 +868,7 @@ export default function EditDeal() {
                                             <span className="text-[#ABABAB] text-xs  tracking-wider">Remaining Balance</span>
                                         </div>
                                         <div className="flex items-baseline gap-2">
-                                            <span className={`text-xl font-black tracking-tight ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                                            <span className={`text-xl font-black ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
                                                 {Number(Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived()))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                             <span className="text-[#ABABAB] text-sm font-bold uppercase">{txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency}</span>

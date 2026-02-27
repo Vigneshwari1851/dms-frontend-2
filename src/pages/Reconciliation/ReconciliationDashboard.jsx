@@ -130,14 +130,14 @@ export default function ReconciliationDashboard() {
 
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Tab Switcher */}
-                    <div className="flex bg-[#1A1F24] p-1 rounded-xl border border-[#2A2F33]/50">
+                    <div className="flex rounded-md border border-[#2A2F33]/50">
                         <button
                             onClick={() => setActiveTab("report")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "report" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
                                 }`}
                         >
                             <FileText className="w-4 h-4" />
-                            CASH RECONCILIATION
+                            Cash Reconciliation
                         </button>
                         <button
                             onClick={() => setActiveTab("ledger")}
@@ -145,7 +145,7 @@ export default function ReconciliationDashboard() {
                                 }`}
                         >
                             <List className="w-4 h-4" />
-                            TRANSACTION LEDGER
+                            Transaction Ledger
                         </button>
                     </div>
 
@@ -163,7 +163,7 @@ export default function ReconciliationDashboard() {
             </div>
 
             {/* Shared Filter Bar */}
-            <div className="bg-[#1A1F24] p-4 rounded-xl border border-[#2A2F33]/50">
+            <div className="">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex bg-[#131619] p-1 rounded-lg w-fit border border-[#2A2F33]/50">
                         {[

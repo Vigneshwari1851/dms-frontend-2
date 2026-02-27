@@ -97,7 +97,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                     icon={dealstoday}
                 />
                 <StatCard
-                    title={`Net P&L (${periodType})`}
+                    title={`Net P&L`}
                     value={`TZS ${formatCurrency(periodStats.totalProfitLoss)}`}
                     icon={buyamount}
                     color={periodStats.totalProfitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
@@ -150,10 +150,10 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right font-mono text-gray-400">
-                                                ${formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignBought || 0)}
+                                                {formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignBought || 0)}
                                             </td>
                                             <td className="px-6 py-5 text-right font-mono text-white font-bold">
-                                                ${formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignSold || 0)}
+                                                {formatCurrency((periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.totalForeignSold || 0)}
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <span className={(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.status === "Tallied" ? "text-[#82E890]" : "text-[#F7626E]"}>
@@ -293,7 +293,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                                 <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-5 text-right font-mono font-bold tracking-tighter">
+                                        <td className="px-6 py-5 text-right font-mono font-bold">
                                             {summary.hasRecord ? (
                                                 <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                     {summary.profitLoss >= 0 ? "▲" : "▼"} TZS {formatCurrency(summary.profitLoss)}
