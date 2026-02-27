@@ -234,6 +234,7 @@ export default function ReconciliationReport({
         isEdit: false
     });
     const [lastTriggerId, setLastTriggerId] = useState(0);
+    const isToday = periodType === "daily" && isSameDay(dateRange.start, new Date());
 
     // Hide sidebar when modal is open
     useEffect(() => {
@@ -283,10 +284,32 @@ export default function ReconciliationReport({
     }, [dateRange, refreshTrigger]);
 
 
-    const handleOpenVaultCapture = (focusCurrency, type = "opening", recon = null) => {
+    const handleOpenVaultCapture = async (focusCurrency, type = "opening", recon = null) => {
         const initialAmounts = {};
         let isLocked = false;
         let isEdit = false;
+
+        // If no recon provided and we are opening today's vault, try to find previous closing balance
+        if (!recon && type === "opening") {
+            try {
+                // Fetch the last 2 reconciliations (today + yesterday/previous)
+                const response = await fetchReconcoliation({ limit: 5 });
+                const recs = response?.data || [];
+
+                // Find the most recent record that isn't today's empty one (if any)
+                // Filter records with closing entries.
+                const previousRec = recs.find(r => r.closingEntries?.length > 0);
+
+                if (previousRec) {
+                    console.log("Auto-populating opening balance from previous closing of:", previousRec.created_at);
+                    previousRec.closingEntries.forEach(e => {
+                        initialAmounts[e.currency_id] = e.amount.toString();
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching previous reconciliation for carry-over:", err);
+            }
+        }
 
         if (recon) {
             const entries = type === "opening" ? recon.openingEntries : recon.closingEntries;
@@ -538,15 +561,15 @@ export default function ReconciliationReport({
                                         <th className="px-6 py-2 text-right">Closing Vault</th>
                                         <th className="px-6 py-2 text-right">Variance</th>
                                         <th className="px-6 py-2 text-center">Status</th>
-                                        <th className="px-6 py-2 text-right">Actions</th>
+                                        {isToday && <th className="px-6 py-2 text-right">Actions</th>}
                                     </tr>
                                 </thead>
 
                                 <tbody className="divide-y divide-[#2A2F33]/30">
                                     {vaultRows.length > 0 ? (
-                                        (periodType === "daily" && isSameDay(dateRange.start, new Date()) && !dailySummaries[0]?.hasRecord) ? (
+                                        (periodType === "daily" && isToday && !dailySummaries[0]?.hasRecord) ? (
                                             <tr>
-                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                                <td colSpan={isToday ? 7 : 6} className="px-6 py-12 text-center">
                                                     <div className="flex flex-col items-center gap-4">
                                                         <div className="bg-[#1D4CB5]/10 p-4 rounded-full">
                                                             <Vault className="w-8 h-8 text-[#1D4CB5]" />
@@ -587,22 +610,24 @@ export default function ReconciliationReport({
                                                                 </span>
                                                             )}
                                                         </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <div className="flex justify-end">
-                                                                <ActionDropdown
-                                                                    options={[
-                                                                        {
-                                                                            label: row.book > 0 ? "View Opening" : "Open Vault",
-                                                                            onClick: () => handleOpenVaultCapture(row, "opening", row.recon)
-                                                                        },
-                                                                        ...(row.book > 0 ? [{
-                                                                            label: row.physical > 0 ? "Edit Closing" : "Close Vault",
-                                                                            onClick: () => handleOpenVaultCapture(row, "closing", row.recon)
-                                                                        }] : [])
-                                                                    ]}
-                                                                />
-                                                            </div>
-                                                        </td>
+                                                        {isToday && (
+                                                            <td className="px-6 py-4 text-right">
+                                                                <div className="flex justify-end">
+                                                                    <ActionDropdown
+                                                                        options={[
+                                                                            {
+                                                                                label: row.book > 0 ? "View Opening" : "Open Vault",
+                                                                                onClick: () => handleOpenVaultCapture(row, "opening", row.recon)
+                                                                            },
+                                                                            ...(row.book > 0 ? [{
+                                                                                label: row.physical > 0 ? "Edit Closing" : "Close Vault",
+                                                                                onClick: () => handleOpenVaultCapture(row, "closing", row.recon)
+                                                                            }] : [])
+                                                                        ]}
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 );
                                             })
