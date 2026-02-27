@@ -10,9 +10,9 @@ import { format, isSameDay } from "date-fns";
 import { fetchReconcoliation } from "../../api/reconcoliation";
 import { useNavigate } from "react-router-dom";
 
-// ─── Inline Deals Table ──────────────────────────────────────────────────────
 function DealsTable({ deals }) {
     const navigate = useNavigate();
+
     if (!deals || deals.length === 0) {
         return (
             <div className="py-5 text-center text-[#8F8F8F] italic text-sm">
@@ -215,26 +215,81 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
         loadData();
     }, [dateRange, refreshTrigger]);
 
+    const calculateCurrencyTotals = (recon) => {
+        const totals = {};
+        if (!recon) return totals;
+
+        (recon.openingEntries || []).forEach(entry => {
+            const code = entry.currency?.code || "?";
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            totals[code].book += Number(entry.amount || 0);
+        });
+
+        (recon.closingEntries || []).forEach(entry => {
+            const code = entry.currency?.code || "?";
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            totals[code].physical += Number(entry.amount || 0);
+        });
+
+        (recon.deals || []).forEach(rd => {
+            const deal = rd.deal;
+            if (!deal) return;
+
+            const hasItems = (deal.receivedItems?.length > 0 || deal.paidItems?.length > 0);
+            if (hasItems) {
+                deal.receivedItems.forEach(item => {
+                    const code = item.currency?.code || "?";
+                    if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+                    totals[code].deals += Number(item.total || 0);
+                });
+                deal.paidItems.forEach(item => {
+                    const code = item.currency?.code || "?";
+                    if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+                    totals[code].deals -= Number(item.total || 0);
+                });
+            } else {
+                const buyCode = deal.buyCurrency?.code;
+                const sellCode = deal.sellCurrency?.code;
+                const amount = Number(deal.amount || 0);
+                const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+
+                if (deal.deal_type === "buy") {
+                    if (buyCode) {
+                        if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, physical: 0 };
+                        totals[buyCode].deals += amount;
+                    }
+                    if (sellCode) {
+                        if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, physical: 0 };
+                        totals[sellCode].deals -= amountToBePaid;
+                    }
+                } else if (deal.deal_type === "sell") {
+                    if (buyCode) {
+                        if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, physical: 0 };
+                        totals[buyCode].deals += amountToBePaid;
+                    }
+                    if (sellCode) {
+                        if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, physical: 0 };
+                        totals[sellCode].deals -= amount;
+                    }
+                }
+            }
+        });
+        return totals;
+    };
+
     const dailySummaries = useMemo(() => {
         if (!dateRange?.dates) return [];
         return dateRange.dates.map(date => {
             const recon = reconciliations.find(r => isSameDay(new Date(r.created_at), date));
-
             const currencyVariances = [];
+
             if (recon) {
-                const totals = {};
-                (recon.openingEntries || []).forEach(entry => {
-                    const code = entry.currency?.code || "?";
-                    if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
-                    totals[code].opening += Number(entry.amount || 0);
-                });
-                (recon.closingEntries || []).forEach(entry => {
-                    const code = entry.currency?.code || "?";
-                    if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
-                    totals[code].closing += Number(entry.amount || 0);
-                });
-                Object.entries(totals).forEach(([code, { opening, closing }]) => {
-                    currencyVariances.push({ code, variance: closing - opening });
+                const totals = calculateCurrencyTotals(recon);
+                Object.values(totals).forEach(row => {
+                    currencyVariances.push({
+                        code: row.code,
+                        variance: row.physical - (row.book + row.deals)
+                    });
                 });
             }
 
@@ -265,20 +320,10 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
     const vaultRows = useMemo(() => {
         const activeRecon = periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0];
         if (!activeRecon) return [];
-        const totals = {};
-        (activeRecon.openingEntries || []).forEach(entry => {
-            const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, physical: 0 };
-            totals[code].book += Number(entry.amount || 0);
-        });
-        (activeRecon.closingEntries || []).forEach(entry => {
-            const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, physical: 0 };
-            totals[code].physical += Number(entry.amount || 0);
-        });
+        const totals = calculateCurrencyTotals(activeRecon);
         return Object.values(totals).map(row => ({
             ...row,
-            variance: row.physical - row.book,
+            variance: row.physical - (row.book + row.deals),
             status: activeRecon.status,
         }));
     }, [periodType, dailySummaries, reconciliations]);
@@ -313,8 +358,9 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                 <thead>
                                     <tr className="bg-[#131619] text-white text-sm">
                                         <th className="px-6 py-2">Currency</th>
+                                        <th className="px-6 py-2 text-right">Opening Vault</th>
                                         <th className="px-6 py-2 text-right">Book Balance</th>
-                                        <th className="px-6 py-2 text-right">Physical Closing</th>
+                                        <th className="px-6 py-2 text-right">Closing Vault</th>
                                         <th className="px-6 py-2 text-right">Variance</th>
                                         <th className="px-6 py-2 text-center">Status</th>
                                     </tr>
@@ -327,12 +373,12 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                             <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
                                                 <td className="px-6 py-2">
                                                     <div className="flex items-center gap-2">
-                                                        <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`} />
-                                                        <span className="text-white font-bold text-base">{row.code}</span>
+                                                        <span className="">{row.code}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-2 text-right text-gray-400">{formatCurrency(row.book)}</td>
-                                                <td className="px-6 py-2 text-right text-white">{formatCurrency(row.physical)}</td>
+                                                <td className="px-6 py-2 text-right">{formatCurrency(row.book)}</td>
+                                                <td className="px-6 py-2 text-right">{formatCurrency(row.book + row.deals)}</td>
+                                                <td className="px-6 py-2 text-right">{formatCurrency(row.physical)}</td>
                                                 <td className="px-6 py-2 text-right">
                                                     <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                         {isTallied ? "0.00" : `${variance >= 0 ? "" : ""}${formatCurrency(variance)}`}

@@ -27,19 +27,60 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
         const totals = {};
         (reconciliation.openingEntries || []).forEach(entry => {
             const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
+            if (!totals[code]) totals[code] = { opening: 0, deals: 0, closing: 0 };
             totals[code].opening += Number(entry.amount || 0);
         });
         (reconciliation.closingEntries || []).forEach(entry => {
             const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
+            if (!totals[code]) totals[code] = { opening: 0, deals: 0, closing: 0 };
             totals[code].closing += Number(entry.amount || 0);
         });
-        return Object.entries(totals).map(([code, { opening, closing }]) => ({
+        (reconciliation.deals || []).forEach(rd => {
+            const deal = rd.deal;
+            if (!deal) return;
+            const hasItems = (deal.receivedItems?.length > 0 || deal.paidItems?.length > 0);
+            if (hasItems) {
+                deal.receivedItems.forEach(item => {
+                    const code = item.currency?.code || "?";
+                    if (!totals[code]) totals[code] = { opening: 0, deals: 0, closing: 0 };
+                    totals[code].deals += Number(item.total || 0);
+                });
+                deal.paidItems.forEach(item => {
+                    const code = item.currency?.code || "?";
+                    if (!totals[code]) totals[code] = { opening: 0, deals: 0, closing: 0 };
+                    totals[code].deals -= Number(item.total || 0);
+                });
+            } else {
+                const buyCode = deal.buyCurrency?.code;
+                const sellCode = deal.sellCurrency?.code;
+                const amount = Number(deal.amount || 0);
+                const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+                if (deal.deal_type === "buy") {
+                    if (buyCode) {
+                        if (!totals[buyCode]) totals[buyCode] = { code: buyCode, opening: 0, deals: 0, closing: 0 };
+                        totals[buyCode].deals += amount;
+                    }
+                    if (sellCode) {
+                        if (!totals[sellCode]) totals[sellCode] = { code: sellCode, opening: 0, deals: 0, closing: 0 };
+                        totals[sellCode].deals -= amountToBePaid;
+                    }
+                } else if (deal.deal_type === "sell") {
+                    if (buyCode) {
+                        if (!totals[buyCode]) totals[buyCode] = { code: buyCode, opening: 0, deals: 0, closing: 0 };
+                        totals[buyCode].deals += amountToBePaid;
+                    }
+                    if (sellCode) {
+                        if (!totals[sellCode]) totals[sellCode] = { code: sellCode, opening: 0, deals: 0, closing: 0 };
+                        totals[sellCode].deals -= amount;
+                    }
+                }
+            }
+        });
+        return Object.entries(totals).map(([code, { opening, deals, closing }]) => ({
             code,
-            variance: closing - opening
+            variance: closing - (opening + deals)
         }));
-    }, [reconciliation.openingEntries, reconciliation.closingEntries]);
+    }, [reconciliation]);
 
     const columns = useMemo(() => [
         {
