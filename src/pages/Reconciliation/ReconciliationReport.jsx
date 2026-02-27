@@ -1,25 +1,190 @@
 import { useState, useEffect, useMemo } from "react";
 import {
     Vault,
-    TrendingUp,
-    TrendingDown,
-    Calendar,
-    CalendarDays,
-    CalendarRange,
     AlertCircle,
     CheckCircle2,
-    ChevronLeft,
     ChevronRight,
     List
 } from "lucide-react";
-import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
-import StatCard from "../../components/dashboard/StatCard";
-import dealstoday from "../../assets/dashboard/dealstoday.svg";
-import profit from "../../assets/dashboard/profit.svg";
-import sellamount from "../../assets/dashboard/sellamount.svg";
-import buyamount from "../../assets/dashboard/buyamount.svg";
+import { format, isSameDay } from "date-fns";
 import { fetchReconcoliation } from "../../api/reconcoliation";
+import { useNavigate } from "react-router-dom";
 
+// ─── Inline Deals Table ──────────────────────────────────────────────────────
+function DealsTable({ deals }) {
+    const navigate = useNavigate();
+    if (!deals || deals.length === 0) {
+        return (
+            <div className="py-5 text-center text-[#8F8F8F] italic text-sm">
+                No deals mapped to this reconciliation.
+            </div>
+        );
+    }
+
+    const typeColors = {
+        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+    };
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+                <thead>
+                    <tr className="bg-[#0E1114] text-[#8F8F8F]">
+                        <th className="px-5 py-3">Deal ID</th>
+                        <th className="px-5 py-3">Date</th>
+                        <th className="px-5 py-3 text-center">Type</th>
+                        <th className="px-5 py-3">Customer</th>
+                        <th className="px-5 py-3">Pair</th>
+                        <th className="px-5 py-3 text-right">Buy Amount</th>
+                        <th className="px-5 py-3 text-right">Rate</th>
+                        <th className="px-5 py-3 text-right">Sell Amount</th>
+                        <th className="px-5 py-3 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2A2F33]/30">
+                    {deals.map(({ deal }) => {
+                        if (!deal) return null;
+                        const isBuy = deal.deal_type === "buy";
+                        const buyAmt = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
+                        const sellAmt = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
+                        const pair = isBuy
+                            ? `${deal.buyCurrency?.code}/${deal.sellCurrency?.code}`
+                            : `${deal.sellCurrency?.code}/${deal.buyCurrency?.code}`;
+                        const typeLabel = isBuy ? "Buy" : "Sell";
+
+                        return (
+                            <tr
+                                key={deal.id}
+                                onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
+                                className="hover:bg-[#1A1F24] cursor-pointer transition-colors"
+                            >
+                                <td className="px-5 py-3 text-[#92B4FF] font-bold">{deal.deal_number}</td>
+                                <td className="px-5 py-3 text-gray-400">
+                                    {new Date(deal.created_at).toLocaleDateString("en-GB")}
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[typeLabel]}`}>
+                                        {typeLabel}
+                                    </span>
+                                </td>
+                                <td className="px-5 py-3 text-gray-300">{deal.customer?.name || "N/A"}</td>
+                                <td className="px-5 py-3 text-gray-300">{pair || "---"}</td>
+                                <td className="px-5 py-3 text-right text-gray-300">
+                                    {buyAmt > 0 ? buyAmt.toLocaleString() : "—"}
+                                </td>
+                                <td className="px-5 py-3 text-right text-gray-400">{deal.exchange_rate}</td>
+                                <td className="px-5 py-3 text-right text-gray-300">
+                                    {sellAmt > 0 ? sellAmt.toLocaleString() : "—"}
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                    <span className="text-xs text-gray-400">{deal.status}</span>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+// ─── Expandable breakdown row (non-daily) ────────────────────────────────────
+function BreakdownRow({ summary, formatCurrency }) {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <>
+            {/* Main summary row */}
+            <tr
+                onClick={() => summary.hasRecord && setExpanded(v => !v)}
+                className={`transition-colors group ${summary.hasRecord ? "cursor-pointer hover:bg-[#1E2328]" : "cursor-default"}`}
+            >
+                <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                        {summary.hasRecord && (
+                            <div className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}>
+                                <ChevronRight className="w-4 h-4 text-[#8F8F8F]" />
+                            </div>
+                        )}
+                        <div className="w-8 h-8 rounded-lg bg-[#131619] flex flex-col items-center justify-center border border-[#2A2F33]/50 group-hover:border-[#1D4CB5]/50 transition-colors">
+                            <span className="text-[10px] text-[#8F8F8F]">{format(summary.date, "MMM")}</span>
+                            <span className="text-sm text-white font-bold leading-none">{format(summary.date, "dd")}</span>
+                        </div>
+                        <span className="text-white font-medium">{format(summary.date, "EEEE")}</span>
+                    </div>
+                </td>
+                <td className="px-6 py-5 text-center">
+                    <span className="px-2.5 py-1 rounded-md bg-[#131619] border border-[#2A2F33]/50 text-gray-300 text-xs">
+                        {summary.totalTransactions} deals
+                    </span>
+                </td>
+                <td className="px-6 py-5 text-center">
+                    {summary.hasRecord ? (
+                        <div className="flex items-center justify-center gap-1.5">
+                            {summary.status === "Tallied" ? (
+                                <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px] font-bold">
+                                    <CheckCircle2 className="w-3 h-3" /> TALLIED
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px] font-bold">
+                                    <AlertCircle className="w-3 h-3" /> {summary.status.toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
+                    )}
+                </td>
+                <td className="px-6 py-5 text-right font-bold">
+                    {summary.hasRecord ? (
+                        summary.currencyVariances.length > 0 ? (
+                            <div className="flex flex-col items-end gap-0.5">
+                                {summary.currencyVariances.map(({ code, variance }) => (
+                                    <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                        {variance >= 0 ? "▲" : "▼"} {formatCurrency(variance)} {code}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                {summary.profitLoss >= 0 ? "▲" : "▼"} TZS {formatCurrency(summary.profitLoss)}
+                            </span>
+                        )
+                    ) : "—"}
+                </td>
+                <td className="px-6 py-5 text-right">
+                    {!summary.hasRecord && (
+                        <a
+                            href="/reconciliation/add-reconciliation"
+                            onClick={e => e.stopPropagation()}
+                            className="bg-[#1D4CB5]/10 text-[#1D4CB5] hover:bg-[#1D4CB5] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-[#1D4CB5]/20"
+                        >
+                            Capture
+                        </a>
+                    )}
+                </td>
+            </tr>
+
+            {/* Expanded deals panel */}
+            {expanded && summary.hasRecord && (
+                <tr>
+                    <td colSpan={5} className="p-0 bg-[#16191C]/60">
+                        <div className="px-10 py-4 border-l-2 border-[#1D4CB5] animate-in fade-in slide-in-from-top-1 duration-200">
+                            <p className="text-[#8F8F8F] text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
+                                Assosiated Transactions
+                            </p>
+                            <DealsTable deals={summary.recon?.deals} />
+                        </div>
+                    </td>
+                </tr>
+            )}
+        </>
+    );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ReconciliationReport({ periodType, dateRange, refreshTrigger }) {
     const [loading, setLoading] = useState(false);
     const [reconciliations, setReconciliations] = useState([]);
@@ -85,32 +250,16 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
         const discrepancies = reconciliations.filter(r => ["Short", "Excess"].includes(r.status)).length;
         const totalTransactions = reconciliations.reduce((sum, r) => sum + (r.total_transactions || 0), 0);
         const totalProfitLoss = reconciliations.reduce((sum, r) => sum + Number(r.profitLoss || 0), 0);
-
-        return {
-            tallied,
-            discrepancies,
-            totalTransactions,
-            totalProfitLoss,
-            daysWithoutCounts: (dateRange?.dates?.length || 0) - reconciliations.length
-        };
+        return { tallied, discrepancies, totalTransactions, totalProfitLoss, daysWithoutCounts: (dateRange?.dates?.length || 0) - reconciliations.length };
     }, [reconciliations, dateRange?.dates]);
 
-    const formatCurrency = (val) => {
-        return new Intl.NumberFormat("en-IN", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(Math.abs(val));
-    };
+    const formatCurrency = (val) =>
+        new Intl.NumberFormat("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.abs(val));
 
-    const formatVariance = (difference) => {
-        const sign = difference >= 0 ? "+" : "";
-        return `${sign}${formatCurrency(difference)}`;
-    };
-
+    // Per-currency vault rows for the active reconciliation
     const vaultRows = useMemo(() => {
         const activeRecon = periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0];
         if (!activeRecon) return [];
-
         const totals = {};
         (activeRecon.openingEntries || []).forEach(entry => {
             const code = entry.currency?.code || "?";
@@ -122,7 +271,6 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
             if (!totals[code]) totals[code] = { code, book: 0, physical: 0 };
             totals[code].physical += Number(entry.amount || 0);
         });
-
         return Object.values(totals).map(row => ({
             ...row,
             variance: row.physical - row.book,
@@ -130,10 +278,13 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
         }));
     }, [periodType, dailySummaries, reconciliations]);
 
+    const dotColors = ["bg-[#1D4CB5]", "bg-[#82E890]", "bg-[#D8AD00]", "bg-[#F7626E]", "bg-[#939AF0]"];
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Daily Vault Status Section */}
-            {(periodType === "daily" || (periodType !== "daily" && reconciliations.length > 0)) && (
+
+            {/* ── Vault Status Section ── */}
+            {(periodType === "daily" || reconciliations.length > 0) && (
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl">
                     <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
@@ -150,7 +301,8 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                     </div>
 
                     {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
-                        <div className="p-0 animate-in slide-in-from-top-2 duration-300">
+                        <div className="animate-in slide-in-from-top-2 duration-300">
+                            {/* Currency breakdown table */}
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
@@ -166,21 +318,16 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                         {vaultRows.length > 0 ? vaultRows.map((row, idx) => {
                                             const isTallied = row.status === "Tallied";
                                             const variance = isTallied ? 0 : row.variance;
-                                            const dotColors = ["bg-[#1D4CB5]", "bg-[#82E890]", "bg-[#D8AD00]", "bg-[#F7626E]", "bg-[#939AF0]"];
                                             return (
                                                 <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
                                                     <td className="px-6 py-5">
                                                         <div className="flex items-center gap-2">
-                                                            <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`}></div>
+                                                            <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`} />
                                                             <span className="text-white font-bold text-base">{row.code}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-5 text-right text-gray-400">
-                                                        {formatCurrency(row.book)}
-                                                    </td>
-                                                    <td className="px-6 py-5 text-right text-white">
-                                                        {formatCurrency(row.physical)}
-                                                    </td>
+                                                    <td className="px-6 py-5 text-right text-gray-400">{formatCurrency(row.book)}</td>
+                                                    <td className="px-6 py-5 text-right text-white">{formatCurrency(row.physical)}</td>
                                                     <td className="px-6 py-5 text-right">
                                                         <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                             {isTallied ? "0.00" : `${variance >= 0 ? "+" : ""}${formatCurrency(variance)}`}
@@ -190,10 +337,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                                         {isTallied ? (
                                                             <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
                                                         ) : (
-                                                            <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${variance > 0
-                                                                    ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20"
-                                                                    : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"
-                                                                }`}>
+                                                            <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
                                                                 {variance > 0 ? "EXCESS" : "SHORT"}
                                                             </span>
                                                         )}
@@ -211,22 +355,28 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                 </table>
                             </div>
 
-                            <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex justify-between items-center">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-xs text-gray-500">Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span></span>
-                                    {periodType !== "daily" && (
-                                        <span className="text-xs text-[#1D4CB5] font-semibold">
-                                            Record from {format(new Date((reconciliations[0]?.created_at)), "MMM dd, yyyy")}
-                                        </span>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => window.location.href = `/reconciliation/details/${(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0]).id}`}
-                                    className="bg-[#1D4CB5] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#2A5BD7] transition-all"
-                                >
-                                    Full Report Detail
-                                </button>
+                            {/* Footer info */}
+                            <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex items-center gap-4">
+                                <span className="text-xs text-gray-500">Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span></span>
+                                {periodType !== "daily" && reconciliations[0]?.created_at && (
+                                    <span className="text-xs text-[#1D4CB5] font-semibold">
+                                        Record from {format(new Date(reconciliations[0].created_at), "MMM dd, yyyy")}
+                                    </span>
+                                )}
                             </div>
+
+                            {/* ── Daily view: show deals inline ── */}
+                            {periodType === "daily" && (
+                                <div className="border-t border-[#2A2F33]/50">
+                                    <div className="px-6 py-4 bg-[#16191C]/60">
+                                        <p className="text-[#8F8F8F] text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
+                                            Assosiated Transactions
+                                        </p>
+                                        <DealsTable deals={dailySummaries[0]?.recon?.deals} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="p-10 text-center text-gray-500">
@@ -236,7 +386,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                 </div>
             )}
 
-            {/* Daily Breakdown Section (History List) */}
+            {/* ── Daily Breakdown Section (non-daily) with expandable rows ── */}
             {periodType !== "daily" && (
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500">
                     <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
@@ -245,9 +395,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                 <List className="w-5 h-5 text-[#1D4CB5]" />
                                 Daily Breakdown
                             </h3>
-                            <p className="text-[#8F8F8F] text-xs mt-1">
-                                List of all reconciliation records for this period
-                            </p>
+                            <p className="text-[#8F8F8F] text-xs mt-1">Click a row to view associated deals</p>
                         </div>
                         {periodStats.discrepancies > 0 && (
                             <div className="flex items-center gap-2 bg-red-500/10 text-[#F7626E] px-3 py-1.5 rounded-lg text-xs font-normal border border-red-500/20">
@@ -264,8 +412,8 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                     <th className="px-6 py-4">Date</th>
                                     <th className="px-6 py-4 text-center">Deals</th>
                                     <th className="px-6 py-4 text-center">Status</th>
-                                    <th className="px-6 py-4 text-right">Profit / Loss</th>
-                                    <th className="px-6 py-4 text-right">Action</th>
+                                    <th className="px-6 py-4 text-right">Variance</th>
+                                    <th className="px-6 py-4 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#2A2F33]/30">
@@ -273,82 +421,14 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                     <tr>
                                         <td colSpan="5" className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-10 h-10 border-4 border-[#1D4CB5] border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-10 h-10 border-4 border-[#1D4CB5] border-t-transparent rounded-full animate-spin" />
                                                 <p className="text-gray-400 animate-pulse">Scanning records...</p>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : dailySummaries.filter(s => s.hasRecord).map((summary, idx) => (
-                                    <tr key={idx} className="hover:bg-[#1E2328] transition-colors group cursor-default">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-[#131619] flex flex-col items-center justify-center border border-[#2A2F33]/50 group-hover:border-[#1D4CB5]/50 transition-colors">
-                                                    <span className="text-[10px] text-[#8F8F8F]">{format(summary.date, "MMM")}</span>
-                                                    <span className="text-sm text-white font-bold leading-none">{format(summary.date, "dd")}</span>
-                                                </div>
-                                                <span className="text-white font-medium">{format(summary.date, "EEEE")}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            <span className="px-2.5 py-1 rounded-md bg-[#131619] border border-[#2A2F33]/50 text-gray-300 text-xs">
-                                                {summary.totalTransactions} deals
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            {summary.hasRecord ? (
-                                                <div className="flex items-center justify-center gap-1.5">
-                                                    {summary.status === "Tallied" ? (
-                                                        <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px] font-bold">
-                                                            <CheckCircle2 className="w-3 h-3" /> TALLIED
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px] font-bold">
-                                                            <AlertCircle className="w-3 h-3" /> {summary.status.toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-5 text-right font-bold">
-                                            {summary.hasRecord ? (
-                                                summary.currencyVariances.length > 0 ? (
-                                                    <div className="flex flex-col items-end gap-0.5">
-                                                        {summary.currencyVariances.map(({ code, variance }) => (
-                                                            <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                                {variance >= 0 ? "▲" : "▼"} {formatCurrency(variance)} {code}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                        {summary.profitLoss >= 0 ? "▲" : "▼"} TZS {formatCurrency(summary.profitLoss)}
-                                                    </span>
-                                                )
-                                            ) : "-"}
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            {summary.hasRecord ? (
-                                                <button
-                                                    onClick={() => window.location.href = `/reconciliation/details/${summary.recon.id}`}
-                                                    className="text-[#1D4CB5] hover:text-[#2A5BD7] text-xs font-bold transition-colors"
-                                                >
-                                                    Details
-                                                    <span className="ml-1 inline-block transform transition-transform group-hover:translate-x-1">→</span>
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => window.location.href = `/reconciliation/add-reconciliation`}
-                                                    className="bg-[#1D4CB5]/10 text-[#1D4CB5] hover:bg-[#1D4CB5] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-[#1D4CB5]/20"
-                                                >
-                                                    Capture
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                                }
+                                    <BreakdownRow key={idx} summary={summary} formatCurrency={formatCurrency} />
+                                ))}
                             </tbody>
                         </table>
                     </div>

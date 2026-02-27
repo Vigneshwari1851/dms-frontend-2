@@ -166,7 +166,7 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                         <div className="px-12 py-6 border-l-2 border-[#1D4CB5]">
                             <h4 className="text-[#8F8F8F] text-[12px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <div className="w-1.5 h-3 bg-[#1D4CB5] rounded-full"></div>
-                                Mapped Transactions
+                                Assosiated Transactions
                             </h4>
 
                             {deals.length > 0 ? (
