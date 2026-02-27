@@ -86,10 +86,6 @@ export default function TransactionLedger({ dateRange, embedded = false }) {
         });
     };
 
-    const formatVariance = (difference) => {
-        const sign = difference >= 0 ? "+" : "";
-        return `${sign}${formatCurrency(difference)} TZS`;
-    };
 
     const statusColors = {
         Tallied: "text-[#82E890] bg-[#10B93524] border-[#82E890] border",
@@ -206,7 +202,6 @@ export default function TransactionLedger({ dateRange, embedded = false }) {
                                         reconciliation={rec}
                                         formatDate={formatDate}
                                         formatCurrency={formatCurrency}
-                                        formatVariance={formatVariance}
                                         statusColors={statusColors}
                                     />
                                 ))

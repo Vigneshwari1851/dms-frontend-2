@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../common/Table";
 
-export default function ReconciliationExpandableRow({ reconciliation, formatDate, formatCurrency, formatVariance, statusColors }) {
+export default function ReconciliationExpandableRow({ reconciliation, formatDate, formatCurrency, statusColors }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const navigate = useNavigate();
 
@@ -21,6 +21,25 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
         Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
         Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
     };
+
+    // Compute per-currency variance from opening and closing entries
+    const currencyVariances = useMemo(() => {
+        const totals = {};
+        (reconciliation.openingEntries || []).forEach(entry => {
+            const code = entry.currency?.code || "?";
+            if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
+            totals[code].opening += Number(entry.amount || 0);
+        });
+        (reconciliation.closingEntries || []).forEach(entry => {
+            const code = entry.currency?.code || "?";
+            if (!totals[code]) totals[code] = { opening: 0, closing: 0 };
+            totals[code].closing += Number(entry.amount || 0);
+        });
+        return Object.entries(totals).map(([code, { opening, closing }]) => ({
+            code,
+            variance: closing - opening
+        }));
+    }, [reconciliation.openingEntries, reconciliation.closingEntries]);
 
     const columns = useMemo(() => [
         {
@@ -119,8 +138,20 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                     </div>
                 </td>
                 <td className="py-3 px-6 text-center text-white">{deals.length}</td>
-                <td className={`py-3 px-6 text-right font-semibold ${reconciliation.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}`}>
-                    {formatVariance(reconciliation.profitLoss)}
+                <td className="py-3 px-6 text-right font-semibold">
+                    {currencyVariances.length > 0 ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                            {currencyVariances.map(({ code, variance }) => (
+                                <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                    {variance >= 0 ? "+" : ""}{formatCurrency(variance)} {code}
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <span className={reconciliation.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                            {reconciliation.profitLoss >= 0 ? "+" : ""}{formatCurrency(reconciliation.profitLoss)} TZS
+                        </span>
+                    )}
                 </td>
                 <td className="py-3 px-6 text-center">
                     <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full ${statusColors[reconciliation.status] || ""}`}>
