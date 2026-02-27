@@ -23,7 +23,9 @@ export default function Dropdown({
             const rect = dropdownRef.current.getBoundingClientRect();
             const spaceBelow = window.innerHeight - rect.bottom;
             const spaceAbove = rect.top;
-            const menuHeight = 200; // estimated max height (max-h-48 is ~192px + margin)
+
+            // max-h-48 is 192px. Add buffer for padding/borders.
+            const menuHeight = 210;
 
             if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
                 setDropUp(true);
@@ -65,7 +67,7 @@ export default function Dropdown({
                     setOpen((prev) => !prev);
                 }}
             >
-                <span className="truncate">{selected ? selected : label}</span>
+                <span className="truncate">{selected ? (typeof selected === 'string' ? selected : selected.label) : label}</span>
                 <img
                     src={down}
                     alt="chevrondown"
@@ -75,7 +77,7 @@ export default function Dropdown({
             </button>
 
             {open && !disabled && (
-                <ul className={`w-full bg-[#2E3439] border border-[#2A2F33] rounded-lg z-10 max-h-48 overflow-y-auto scrollbar-grey absolute ${dropUp ? "bottom-full mb-2" : "mt-2"}`}>
+                <ul className={`w-full bg-[#2E3439] border border-[#2A2F33] rounded-lg z-[100] max-h-48 overflow-y-auto scrollbar-grey absolute ${dropUp ? "bottom-full mb-2" : "mt-2"}`}>
                     {options.map((item, index) => {
                         const value = typeof item === "string" ? item : item.label;
 
@@ -87,7 +89,7 @@ export default function Dropdown({
                                     onChange(item);
                                     setOpen(false);
                                 }}
-                                className="px-4 py-2 whitespace-nowrap flex items-center justify-between hover:bg-[#2A2F33] cursor-pointer text-white"
+                                className="px-4 py-2 whitespace-nowrap flex items-center justify-between hover:bg-[#2A2F33] cursor-pointer text-white text-[14px]"
                             >
                                 <span>
                                     {renderOption ? renderOption(item) : value}

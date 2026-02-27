@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
     fetchCurrentReconciliation,
     startReconcoliation
@@ -16,7 +16,8 @@ import {
     endOfMonth,
     eachDayOfInterval,
     subDays,
-    subMonths
+    subMonths,
+    isSameDay
 } from "date-fns";
 import {
     Calendar,
@@ -38,6 +39,7 @@ export default function ReconciliationDashboard() {
     const [customRange, setCustomRange] = useState({ from: null, to: null });
 
     const [todayReconciliation, setTodayReconciliation] = useState(null);
+    const [autoCaptureTrigger, setAutoCaptureTrigger] = useState(0);
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
     const dateRange = useMemo(() => {
@@ -78,31 +80,10 @@ export default function ReconciliationDashboard() {
         }
     };
 
-    const handleReconcileAction = async () => {
-        const isReconcileAction = todayReconciliation &&
-            ["Tallied", "Excess", "Short"].includes(todayReconciliation.status);
-
-        if (isReconcileAction) {
-            try {
-                setToast({ show: true, message: "Reconciling deals...", type: "pending" });
-                const res = await startReconcoliation(todayReconciliation.id);
-                if (res.success || res.status === "success") {
-                    setToast({ show: true, message: "Reconciliation successful!", type: "success" });
-                    checkTodayReconciliation();
-                    // We might need to trigger a refresh in the child components too
-                    // This can be handled by a unique key or a refresh trigger prop
-                } else {
-                    setToast({ show: true, message: res.error?.message || "Reconciliation failed", type: "error" });
-                }
-            } catch (err) {
-                console.error("Error triggering reconciliation:", err);
-                setToast({ show: true, message: "Error during reconciliation", type: "error" });
-            }
-        } else if (todayReconciliation) {
-            navigate(`/reconciliation/add-reconciliation/${todayReconciliation.id}`);
-        } else {
-            navigate("/reconciliation/add-reconciliation");
-        }
+    const handleReconcileAction = () => {
+        setPeriodType("daily");
+        setSelectedDate(new Date());
+        setAutoCaptureTrigger(prev => prev + 1);
     };
 
     const movePeriod = (direction) => {
@@ -200,6 +181,12 @@ export default function ReconciliationDashboard() {
                     periodType={periodType}
                     dateRange={dateRange}
                     refreshTrigger={todayReconciliation}
+                    autoCaptureTrigger={isSameDay(dateRange.start, new Date()) ? autoCaptureTrigger : 0}
+                    onDateSelect={(date) => {
+                        setPeriodType("daily");
+                        setSelectedDate(date);
+                    }}
+                    setSidebarHidden={useOutletContext()?.setSidebarHidden}
                 />
             </div>
 

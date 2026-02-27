@@ -4,12 +4,30 @@ import {
     AlertCircle,
     CheckCircle2,
     ChevronRight,
-    List
+    List,
+    X,
+    Info,
+    RefreshCw,
+    Search,
+    Download,
+    Printer,
+    Filter
 } from "lucide-react";
 import { format, isSameDay } from "date-fns";
-import { fetchReconcoliation } from "../../api/reconcoliation";
 import { useNavigate } from "react-router-dom";
 import Table from "../../components/common/Table";
+import VaultCaptureModal from "../../components/common/VaultCaptureModal";
+import ActionDropdown from "../../components/common/ActionDropdown";
+import {
+    createReconciliation,
+    updateReconciliation,
+    fetchCurrentReconciliation,
+    startReconcoliation,
+    fetchReconcoliation
+} from "../../api/reconcoliation";
+import { fetchCurrencies } from "../../api/currency/currency";
+import Toast from "../../components/common/Toast";
+
 
 
 const getDealsColumns = (typeColors) => [
@@ -80,7 +98,7 @@ const getDealsColumns = (typeColors) => [
 ];
 
 // ─── Expandable breakdown row (non-daily) ────────────────────────────────────
-function BreakdownRow({ summary, formatCurrency }) {
+function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
     const navigate = useNavigate();
     const [expanded, setExpanded] = useState(false);
 
@@ -144,13 +162,15 @@ function BreakdownRow({ summary, formatCurrency }) {
                 </td>
                 <td className="px-6 py-5 text-right">
                     {!summary.hasRecord && (
-                        <a
-                            href="/reconciliation/add-reconciliation"
-                            onClick={e => e.stopPropagation()}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onDateSelect) onDateSelect(new Date(summary.date));
+                            }}
                             className="bg-[#1D4CB5]/10 text-[#1D4CB5] hover:bg-[#1D4CB5] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-[#1D4CB5]/20"
                         >
                             Capture
-                        </a>
+                        </button>
                     )}
                 </td>
             </tr>
@@ -185,37 +205,171 @@ function BreakdownRow({ summary, formatCurrency }) {
                         </div>
                     </td>
                 </tr>
-            )}
+            )
+            }
         </>
     );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function ReconciliationReport({ periodType, dateRange, refreshTrigger }) {
+export default function ReconciliationReport({
+    periodType,
+    dateRange,
+    refreshTrigger,
+    onDateSelect,
+    autoCaptureTrigger = 0,
+    setSidebarHidden
+}) {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [reconciliations, setReconciliations] = useState([]);
+    const [allCurrencies, setAllCurrencies] = useState([]);
+    const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+    const [captureModal, setCaptureModal] = useState({
+        isOpen: false,
+        type: "opening",
+        initialAmounts: {}, // { currencyId: amount }
+        isLocked: false,
+        reconId: null,
+        isEdit: false
+    });
+    const [lastTriggerId, setLastTriggerId] = useState(0);
 
+    // Hide sidebar when modal is open
     useEffect(() => {
-        const loadData = async () => {
-            if (!dateRange?.start || !dateRange?.end) return;
-            setLoading(true);
-            try {
-                const response = await fetchReconcoliation({
-                    dateFilter: "custom",
-                    startDate: format(dateRange.start, "yyyy-MM-dd"),
-                    endDate: format(dateRange.end, "yyyy-MM-dd"),
-                    limit: 100
-                });
-                setReconciliations(response.data || []);
-            } catch (err) {
-                console.error("Error loading reconciliation report data:", err);
-            } finally {
-                setLoading(false);
+        if (setSidebarHidden) {
+            setSidebarHidden(captureModal.isOpen);
+        }
+        // Cleanup on unmount or when modal closes
+        return () => {
+            if (setSidebarHidden) {
+                setSidebarHidden(false);
             }
         };
+    }, [captureModal.isOpen, setSidebarHidden]);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const currencies = await fetchCurrencies({ page: 1, limit: 100 });
+                setAllCurrencies(currencies?.data || currencies || []);
+            } catch (err) {
+                console.error("Error loading currencies:", err);
+            }
+        };
+        loadInitialData();
+    }, []);
+
+    const loadData = async () => {
+        if (!dateRange?.start || !dateRange?.end) return;
+        setLoading(true);
+        try {
+            const response = await fetchReconcoliation({
+                dateFilter: "custom",
+                startDate: format(dateRange.start, "yyyy-MM-dd"),
+                endDate: format(dateRange.end, "yyyy-MM-dd"),
+                limit: 100
+            });
+            setReconciliations(response.data || []);
+        } catch (err) {
+            console.error("Error loading reconciliation report data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadData();
     }, [dateRange, refreshTrigger]);
+
+
+    const handleOpenVaultCapture = (focusCurrency, type = "opening", recon = null) => {
+        const initialAmounts = {};
+        let isLocked = false;
+        let isEdit = false;
+
+        if (recon) {
+            const entries = type === "opening" ? recon.openingEntries : recon.closingEntries;
+
+            // Map ALL existing entries into initialAmounts
+            entries?.forEach(e => {
+                initialAmounts[e.currency_id] = e.amount.toString();
+            });
+
+            if (Object.keys(initialAmounts).length > 0) {
+                isEdit = true;
+            }
+
+            // Opening vault is locked if deals are mapped
+            if (type === "opening" && recon.deals?.length > 0) {
+                isLocked = true;
+            }
+        }
+
+        setCaptureModal({
+            isOpen: true,
+            type,
+            initialAmounts,
+            isLocked,
+            reconId: recon?.id || null,
+            isEdit
+        });
+    };
+
+    const handleSaveVault = async (entries) => {
+        try {
+            setToast({ show: true, message: "Saving balances...", type: "pending" });
+
+            const payload = {
+                notes: [],
+                [captureModal.type === "opening" ? "openingEntries" : "closingEntries"]: entries
+            };
+
+            let result;
+            if (captureModal.isEdit && captureModal.reconId) {
+                result = await updateReconciliation(captureModal.reconId, payload);
+            } else {
+                result = await createReconciliation(payload);
+            }
+
+            if (result.success) {
+                setToast({ show: true, message: "Balance saved successfully", type: "success" });
+                setCaptureModal(prev => ({ ...prev, isOpen: false }));
+
+                if (captureModal.type === "opening") {
+                    // Navigate to dashboard after saving opening vault
+                    setTimeout(() => {
+                        navigate("/reconciliation");
+                    }, 1000);
+                } else {
+                    loadData(); // Refresh report for closing entries
+                }
+
+                if (refreshTrigger?.callback) refreshTrigger.callback();
+            } else {
+                setToast({ show: true, message: result.error?.message || "Failed to save balance", type: "error" });
+            }
+        } catch (err) {
+            console.error("Error saving vault balance:", err);
+            setToast({ show: true, message: "Error saving balance", type: "error" });
+        }
+    };
+
+    const handleMapDeals = async (reconId) => {
+        try {
+            setToast({ show: true, message: "Mapping deals...", type: "pending" });
+            const res = await startReconcoliation(reconId);
+            if (res.success) {
+                setToast({ show: true, message: "Deals mapped successfully", type: "success" });
+                loadData();
+            } else {
+                setToast({ show: true, message: res.error?.message || "Failed to map deals", type: "error" });
+            }
+        } catch (err) {
+            console.error("Error mapping deals:", err);
+            setToast({ show: true, message: "Error mapping deals", type: "error" });
+        }
+    };
 
     const calculateCurrencyTotals = (recon) => {
         const totals = {};
@@ -321,14 +475,35 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
     // Per-currency vault rows for the active reconciliation
     const vaultRows = useMemo(() => {
         const activeRecon = periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0];
-        if (!activeRecon) return [];
+        const isToday = periodType === "daily" && isSameDay(dateRange.start, new Date());
+
         const totals = calculateCurrencyTotals(activeRecon);
+
         return Object.values(totals).map(row => ({
             ...row,
             variance: row.physical - (row.book + row.deals),
-            status: activeRecon.status,
+            status: activeRecon?.status || "None",
+            recon: activeRecon
         }));
-    }, [periodType, dailySummaries, reconciliations]);
+    }, [periodType, dailySummaries, reconciliations, allCurrencies, dateRange]);
+
+    // Handle auto-capture trigger from dashboard (Physical Cash button)
+    useEffect(() => {
+        if (autoCaptureTrigger > 0 && autoCaptureTrigger !== lastTriggerId && allCurrencies.length > 0) {
+            // Find the first currency that doesn't have an opening balance in vaultRows
+            const rowToCapture = vaultRows.find(r => r.book === 0) || vaultRows[0];
+            const activeRecon = periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0];
+            const typeToCapture = (activeRecon?.deals?.length > 0) ? "closing" : "opening";
+
+            if (rowToCapture) {
+                handleOpenVaultCapture(rowToCapture, typeToCapture, rowToCapture.recon);
+                setLastTriggerId(autoCaptureTrigger);
+            } else if (allCurrencies.length > 0) {
+                handleOpenVaultCapture(allCurrencies[0], typeToCapture, activeRecon);
+                setLastTriggerId(autoCaptureTrigger);
+            }
+        }
+    }, [autoCaptureTrigger, lastTriggerId, vaultRows, allCurrencies, periodType, dailySummaries, reconciliations]);
 
     const dotColors = ["bg-[#1D4CB5]", "bg-[#82E890]", "bg-[#D8AD00]", "bg-[#F7626E]", "bg-[#939AF0]"];
 
@@ -336,12 +511,11 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
         <div className="space-y-2 animate-in fade-in duration-500">
 
             {/* ── Vault Status Section ── */}
-            {/* ── Vault Status Section ── */}
-            {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
+            {(periodType === "daily" || (periodType !== "daily" && reconciliations.length > 0)) ? (
                 <>
                     <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
                         <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
-                            <div>
+                            <div className="flex items-center gap-3">
                                 <h3 className="text-white text-lg flex items-center gap-2">
                                     <Vault className="w-5 h-5 text-[#1D4CB5]" />
                                     Vault Status - {
@@ -354,7 +528,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                         </div>
 
                         {/* Currency breakdown table */}
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto scrollbar-grey">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-[#131619] text-white text-sm">
@@ -364,41 +538,78 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                         <th className="px-6 py-2 text-right">Closing Vault</th>
                                         <th className="px-6 py-2 text-right">Variance</th>
                                         <th className="px-6 py-2 text-center">Status</th>
+                                        <th className="px-6 py-2 text-right">Actions</th>
                                     </tr>
                                 </thead>
+
                                 <tbody className="divide-y divide-[#2A2F33]/30">
-                                    {vaultRows.length > 0 ? vaultRows.map((row, idx) => {
-                                        const isTallied = row.status === "Tallied";
-                                        const variance = isTallied ? 0 : row.variance;
-                                        return (
-                                            <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
-                                                <td className="px-6 py-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="">{row.code}</span>
+                                    {vaultRows.length > 0 ? (
+                                        (periodType === "daily" && isSameDay(dateRange.start, new Date()) && !dailySummaries[0]?.hasRecord) ? (
+                                            <tr>
+                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center gap-4">
+                                                        <div className="bg-[#1D4CB5]/10 p-4 rounded-full">
+                                                            <Vault className="w-8 h-8 text-[#1D4CB5]" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-white font-medium text-lg">Please record your opening balances to start today's reconciliation.</p>
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-2 text-right">{formatCurrency(row.book)}</td>
-                                                <td className="px-6 py-2 text-right">{formatCurrency(row.book + row.deals)}</td>
-                                                <td className="px-6 py-2 text-right">{formatCurrency(row.physical)}</td>
-                                                <td className="px-6 py-2 text-right">
-                                                    <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                        {isTallied ? "0.00" : `${variance >= 0 ? "" : ""}${formatCurrency(variance)}`}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-2 text-center">
-                                                    {isTallied ? (
-                                                        <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
-                                                    ) : (
-                                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
-                                                            {variance > 0 ? "EXCESS" : "SHORT"}
-                                                        </span>
-                                                    )}
-                                                </td>
                                             </tr>
-                                        );
-                                    }) : (
+                                        ) : (
+                                            vaultRows.map((row, idx) => {
+                                                const isTallied = row.status === "Tallied";
+                                                const variance = isTallied ? 0 : row.variance;
+                                                return (
+                                                    <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-white font-medium">{row.code}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.physical)}</td>
+                                                        <td className="px-6 py-4 text-right font-mono">
+                                                            <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                                                {isTallied ? "0.00" : `${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            {isTallied ? (
+                                                                <div className="flex items-center justify-center gap-1.5 text-[#82E890] text-[10px] font-bold uppercase">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Tallied
+                                                                </div>
+                                                            ) : (
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
+                                                                    {variance > 0 ? "EXCESS" : "SHORT"}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex justify-end">
+                                                                <ActionDropdown
+                                                                    options={[
+                                                                        {
+                                                                            label: row.book > 0 ? "View Opening" : "Open Vault",
+                                                                            onClick: () => handleOpenVaultCapture(row, "opening", row.recon)
+                                                                        },
+                                                                        ...(row.book > 0 ? [{
+                                                                            label: row.physical > 0 ? "Edit Closing" : "Close Vault",
+                                                                            onClick: () => handleOpenVaultCapture(row, "closing", row.recon)
+                                                                        }] : [])
+                                                                    ]}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )
+                                    ) : (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic text-sm">
+                                            <td colSpan={7} className="px-6 py-10 text-center text-gray-500 italic text-sm">
                                                 No currency entries found for this reconciliation.
                                             </td>
                                         </tr>
@@ -420,6 +631,15 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                     <span className="text-[#8F8F8F]">
                                         Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span>
                                     </span>
+                                    {periodType === "daily" && isSameDay(dateRange.start, new Date()) && dailySummaries[0]?.recon && (
+                                        <button
+                                            onClick={() => handleMapDeals(dailySummaries[0].recon.id)}
+                                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+                                        >
+                                            <List className="w-3.5 h-3.5" />
+                                            Map Deals
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <div className="p-0">
@@ -501,12 +721,30 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                         </td>
                                     </tr>
                                 ) : dailySummaries.filter(s => s.hasRecord).map((summary, idx) => (
-                                    <BreakdownRow key={idx} summary={summary} formatCurrency={formatCurrency} />
+                                    <BreakdownRow key={idx} summary={summary} formatCurrency={formatCurrency} onDateSelect={onDateSelect} />
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
+            )}
+
+            <VaultCaptureModal
+                isOpen={captureModal.isOpen}
+                onClose={() => setCaptureModal(prev => ({ ...prev, isOpen: false }))}
+                onSave={handleSaveVault}
+                currencies={allCurrencies}
+                type={captureModal.type}
+                initialAmounts={captureModal.initialAmounts}
+                isLocked={captureModal.isLocked}
+            />
+
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
             )}
         </div>
     );
