@@ -293,7 +293,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
             {((periodType === "daily" && dailySummaries[0]?.hasRecord) || (periodType !== "daily" && reconciliations.length > 0)) ? (
                 <>
                     <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
-                        <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
+                        <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                             <div>
                                 <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                                     <Vault className="w-5 h-5 text-[#1D4CB5]" />
@@ -312,11 +312,11 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-[#131619] text-white text-sm">
-                                        <th className="px-6 py-4">Currency</th>
-                                        <th className="px-6 py-4 text-right">Book Balance</th>
-                                        <th className="px-6 py-4 text-right">Physical Closing</th>
-                                        <th className="px-6 py-4 text-right">Variance</th>
-                                        <th className="px-6 py-4 text-center">Status</th>
+                                        <th className="px-6 py-2">Currency</th>
+                                        <th className="px-6 py-2 text-right">Book Balance</th>
+                                        <th className="px-6 py-2 text-right">Physical Closing</th>
+                                        <th className="px-6 py-2 text-right">Variance</th>
+                                        <th className="px-6 py-2 text-center">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#2A2F33]/30">
@@ -325,20 +325,20 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                         const variance = isTallied ? 0 : row.variance;
                                         return (
                                             <tr key={row.code} className="hover:bg-[#1E2328] transition-colors">
-                                                <td className="px-6 py-5">
+                                                <td className="px-6 py-2">
                                                     <div className="flex items-center gap-2">
                                                         <div className={`w-2 h-2 rounded-full ${dotColors[idx % dotColors.length]}`} />
                                                         <span className="text-white font-bold text-base">{row.code}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-5 text-right text-gray-400">{formatCurrency(row.book)}</td>
-                                                <td className="px-6 py-5 text-right text-white">{formatCurrency(row.physical)}</td>
-                                                <td className="px-6 py-5 text-right">
+                                                <td className="px-6 py-2 text-right text-gray-400">{formatCurrency(row.book)}</td>
+                                                <td className="px-6 py-2 text-right text-white">{formatCurrency(row.physical)}</td>
+                                                <td className="px-6 py-2 text-right">
                                                     <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                         {isTallied ? "0.00" : `${variance >= 0 ? "+" : ""}${formatCurrency(variance)}`}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-5 text-center">
+                                                <td className="px-6 py-2 text-center">
                                                     {isTallied ? (
                                                         <CheckCircle2 className="w-4 h-4 text-[#82E890] mx-auto" />
                                                     ) : (
@@ -363,7 +363,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
 
                     {/* ── Daily view: show deals in separate card ── */}
                     {periodType === "daily" && (
-                        <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-2">
+                        <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                             <div className="py-2 bg-[#16191C]/60 border-b border-[#2A2F33]/50">
                                 <div className="flex justify-between items-center">
                                     <p className="text-[#8F8F8F] flex items-center gap-2">
@@ -404,8 +404,8 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
 
             {/* ── Daily Breakdown Section (non-daily) with expandable rows ── */}
             {periodType !== "daily" && (
-                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500">
-                    <div className="p-5 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
+                <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
+                    <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
                             <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                                 <List className="w-5 h-5 text-[#1D4CB5]" />
@@ -425,11 +425,11 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-[#131619] text-[#8F8F8F] font-normal">
-                                    <th className="px-6 py-4">Date</th>
-                                    <th className="px-6 py-4 text-center">Deals</th>
-                                    <th className="px-6 py-4 text-center">Status</th>
-                                    <th className="px-6 py-4 text-right">Variance</th>
-                                    <th className="px-6 py-4 text-right"></th>
+                                    <th className="px-6 py-2">Date</th>
+                                    <th className="px-6 py-2 text-center">Deals</th>
+                                    <th className="px-6 py-2 text-center">Status</th>
+                                    <th className="px-6 py-2 text-right">Variance</th>
+                                    <th className="px-6 py-2 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#2A2F33]/30">
