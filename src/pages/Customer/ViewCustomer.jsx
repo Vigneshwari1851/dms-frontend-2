@@ -211,21 +211,7 @@ export default function ViewCustomer() {
   };
 
   const handleRowClick = (item) => {
-    const deal = item.raw;
-
-    setSelectedDeal({
-      dealId: item.dealId,
-      type: deal.deal_type,
-      date: item.date,
-      id: item.id,
-      mode: deal.transaction_mode,
-      buyCurrency: deal.buyCurrency,
-      sellCurrency: deal.sellCurrency,
-      rate: `${deal.exchange_rate || deal.rate} ${deal.sellCurrency} / ${deal.buyCurrency}`,
-      buyAmt: Number(deal.buyAmount),
-      sellAmt: Number(deal.sellAmount),
-      notes: deal.remarks
-    });
+    navigate(`/deals/edit-deal/${item.dealId}`);
   };
 
   const Row = ({ label, value }) => (

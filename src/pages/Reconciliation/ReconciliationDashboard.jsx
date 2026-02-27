@@ -6,7 +6,7 @@ import {
 } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import ReconciliationReport from "./ReconciliationReport";
-import TransactionLedger from "./TransactionLedger";
+// import TransactionLedger from "./TransactionLedger";
 import add from "../../assets/dashboard/add.svg";
 import {
     format,
@@ -24,14 +24,15 @@ import {
     CalendarRange,
     ChevronLeft,
     ChevronRight,
-    List,
     FileText
 } from "lucide-react";
 import DateFilter from "../../components/common/DateFilter";
 
 export default function ReconciliationDashboard() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState("report"); // "report" or "ledger"
+    // Removed tab switching functionality as per request
+
+
     const [periodType, setPeriodType] = useState("daily"); // daily, weekly, monthly, custom
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [customRange, setCustomRange] = useState({ from: null, to: null });
@@ -129,26 +130,6 @@ export default function ReconciliationDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    {/* Tab Switcher */}
-                    <div className="flex rounded-md border border-[#2A2F33]/50">
-                        <button
-                            onClick={() => setActiveTab("report")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "report" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
-                                }`}
-                        >
-                            <FileText className="w-4 h-4" />
-                            Cash Reconciliation
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("ledger")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "ledger" ? "bg-[#1D4CB5] text-white shadow-lg" : "text-gray-400 hover:text-white"
-                                }`}
-                        >
-                            <List className="w-4 h-4" />
-                            Transaction Ledger
-                        </button>
-                    </div>
-
                     <button
                         onClick={handleReconcileAction}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95"
@@ -218,18 +199,11 @@ export default function ReconciliationDashboard() {
 
             {/* Main Content Areas */}
             <div className="animate-in fade-in duration-500">
-                {activeTab === "report" ? (
-                    <ReconciliationReport
-                        periodType={periodType}
-                        dateRange={dateRange}
-                        refreshTrigger={todayReconciliation}
-                    />
-                ) : (
-                    <TransactionLedger
-                        dateRange={dateRange}
-                        embedded={true}
-                    />
-                )}
+                <ReconciliationReport
+                    periodType={periodType}
+                    dateRange={dateRange}
+                    refreshTrigger={todayReconciliation}
+                />
             </div>
 
             <Toast show={toast.show} message={toast.message} type={toast.type} onHide={() => setToast({ ...toast, show: false })} />

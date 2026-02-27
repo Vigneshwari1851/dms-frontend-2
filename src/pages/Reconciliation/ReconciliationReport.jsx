@@ -81,6 +81,7 @@ const getDealsColumns = (typeColors) => [
 
 // ─── Expandable breakdown row (non-daily) ────────────────────────────────────
 function BreakdownRow({ summary, formatCurrency }) {
+    const navigate = useNavigate();
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -193,6 +194,7 @@ function BreakdownRow({ summary, formatCurrency }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ReconciliationReport({ periodType, dateRange, refreshTrigger }) {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [reconciliations, setReconciliations] = useState([]);
 
