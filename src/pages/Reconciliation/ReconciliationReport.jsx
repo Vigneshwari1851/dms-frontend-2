@@ -171,10 +171,15 @@ function BreakdownRow({ summary, formatCurrency }) {
                 <tr>
                     <td colSpan={5} className="p-0 bg-[#16191C]/60">
                         <div className="px-10 py-4 border-l-2 border-[#1D4CB5] animate-in fade-in slide-in-from-top-1 duration-200">
-                            <p className="text-[#8F8F8F] text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
-                                Assosiated Transactions
-                            </p>
+                            <div className="flex justify-between items-center mb-3">
+                                <p className="text-[#8F8F8F] flex items-center gap-2">
+                                    <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
+                                    Associated Transactions
+                                </p>
+                                <span className="text-[#8F8F8F]">
+                                    Total Deals: <span className="text-white">{summary.totalTransactions}</span>
+                                </span>
+                            </div>
                             <DealsTable deals={summary.recon?.deals} />
                         </div>
                     </td>
@@ -357,7 +362,6 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
 
                             {/* Footer info */}
                             <div className="p-4 bg-[#131619]/50 border-t border-[#2A2F33]/50 flex items-center gap-4">
-                                <span className="text-xs text-gray-500">Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span></span>
                                 {periodType !== "daily" && reconciliations[0]?.created_at && (
                                     <span className="text-xs text-[#1D4CB5] font-semibold">
                                         Record from {format(new Date(reconciliations[0].created_at), "MMM dd, yyyy")}
@@ -369,10 +373,15 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                             {periodType === "daily" && (
                                 <div className="border-t border-[#2A2F33]/50">
                                     <div className="px-6 py-4 bg-[#16191C]/60">
-                                        <p className="text-[#8F8F8F] text-[11px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                                            <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
-                                            Assosiated Transactions
-                                        </p>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <p className="text-[#8F8F8F] flex items-center gap-2">
+                                                <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
+                                                Associated Transactions
+                                            </p>
+                                            <span className="text-[#8F8F8F]">
+                                                Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span>
+                                            </span>
+                                        </div>
                                         <DealsTable deals={dailySummaries[0]?.recon?.deals} />
                                     </div>
                                 </div>

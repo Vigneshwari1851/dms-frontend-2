@@ -154,7 +154,7 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                     )}
                 </td>
                 <td className="py-3 px-6 text-center">
-                    <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full ${statusColors[reconciliation.status] || ""}`}>
+                    <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${statusColors[reconciliation.status] || ""}`}>
                         {reconciliation.status}
                     </span>
                 </td>
@@ -164,10 +164,15 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                 <tr className="bg-[#16191C]/50 animate-in fade-in slide-in-from-top-2 duration-300">
                     <td colSpan={4} className="p-0">
                         <div className="px-12 py-6 border-l-2 border-[#1D4CB5]">
-                            <h4 className="text-[#8F8F8F] text-[12px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <div className="w-1.5 h-3 bg-[#1D4CB5] rounded-full"></div>
-                                Assosiated Transactions
-                            </h4>
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="text-[#8F8F8F] flex items-center gap-2">
+                                    <div className="w-1.5 h-3 bg-[#1D4CB5] rounded-full"></div>
+                                    Associated Transactions
+                                </h4>
+                                <span className="text-[12px] text-[#8F8F8F]">
+                                    Total Deals: <span className="text-white">{deals.length}</span>
+                                </span>
+                            </div>
 
                             {deals.length > 0 ? (
                                 <div className="overflow-hidden rounded-xl border border-[#2A2F33]/50">
