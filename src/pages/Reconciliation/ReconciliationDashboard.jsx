@@ -122,11 +122,8 @@ export default function ReconciliationDashboard() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-white text-20px lg:text-[24px] font-bold">
-                        Reconciliation Centre
+                        Reconciliation Hub
                     </h1>
-                    <p className="text-gray-400 text-sm mt-1">
-                        Analyze vault balances and track transaction history
-                    </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -176,9 +173,9 @@ export default function ReconciliationDashboard() {
                                 </button>
 
                                 <span className="text-white font-medium min-w-[140px] text-center">
-                                    {periodType === "daily" && format(selectedDate, "MMMM dd, yyyy")}
-                                    {periodType === "weekly" && `${format(dateRange.start, "MMM dd")} - ${format(dateRange.end, "MMM dd, yyyy")}`}
-                                    {periodType === "monthly" && format(selectedDate, "MMMM yyyy")}
+                                    {periodType === "daily" && format(selectedDate, "dd/MM/yyyy")}
+                                    {periodType === "weekly" && `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`}
+                                    {periodType === "monthly" && `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`}
                                 </span>
 
                                 <button

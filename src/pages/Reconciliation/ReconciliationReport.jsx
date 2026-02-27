@@ -98,11 +98,9 @@ function BreakdownRow({ summary, formatCurrency }) {
                                 <ChevronRight className="w-4 h-4 text-[#8F8F8F]" />
                             </div>
                         )}
-                        <div className="w-8 h-8 rounded-lg bg-[#131619] flex flex-col items-center justify-center border border-[#2A2F33]/50 group-hover:border-[#1D4CB5]/50 transition-colors">
-                            <span className="text-[10px] text-[#8F8F8F]">{format(summary.date, "MMM")}</span>
-                            <span className="text-sm text-white font-bold leading-none">{format(summary.date, "dd")}</span>
+                        <div className="flex flex-col">
+                            <span className="text-white font-medium">{format(summary.date, "dd/MM/yyyy")}</span>
                         </div>
-                        <span className="text-white font-medium">{format(summary.date, "EEEE")}</span>
                     </div>
                 </td>
                 <td className="px-6 py-5 text-center">
