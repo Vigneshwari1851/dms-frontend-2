@@ -353,7 +353,7 @@ export default function Table({
                       key={colIndex}
                       className={`py-1.5 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                     >
-                      {col.key === "full_name" ? (
+                      {col.key === "full_name"? (
                         <span className="text-white">{row[col.key]}</span>
                       ) : (
                         renderCell(col, row[col.key], row)

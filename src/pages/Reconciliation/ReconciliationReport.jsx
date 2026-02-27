@@ -9,85 +9,75 @@ import {
 import { format, isSameDay } from "date-fns";
 import { fetchReconcoliation } from "../../api/reconcoliation";
 import { useNavigate } from "react-router-dom";
+import Table from "../../components/common/Table";
 
-function DealsTable({ deals }) {
-    const navigate = useNavigate();
 
-    if (!deals || deals.length === 0) {
-        return (
-            <div className="py-5 text-center text-[#8F8F8F] italic text-sm">
-                No deals mapped to this reconciliation.
-            </div>
-        );
+const getDealsColumns = (typeColors) => [
+    { key: "deal_number", label: "Deal ID", align: "left", className: "pl-5 text-white" },
+    {
+        key: "created_at",
+        label: "Date",
+        align: "left",
+        render: (val) => <span>{new Date(val).toLocaleDateString("en-GB")}</span>
+    },
+    {
+        key: "deal_type",
+        label: "Type",
+        align: "center",
+        render: (val) => {
+            const typeLabel = val === "buy" ? "Buy" : "Sell";
+            return (
+                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[typeLabel]}`}>
+                    {typeLabel}
+                </span>
+            );
+        }
+    },
+    {
+        key: "customer",
+        label: "Customer",
+        align: "left",
+        render: (val) => <span>{val?.name || "N/A"}</span>
+    },
+    {
+        key: "pair",
+        label: "Pair",
+        align: "left",
+        render: (_, row) => {
+            const isBuy = row.deal_type === "buy";
+            return isBuy
+                ? `${row.buyCurrency?.code}/${row.sellCurrency?.code}`
+                : `${row.sellCurrency?.code}/${row.buyCurrency?.code}`;
+        }
+    },
+    {
+        key: "buyAmt",
+        label: "Buy Amount",
+        align: "right",
+        render: (_, row) => {
+            const isBuy = row.deal_type === "buy";
+            const amt = Number(isBuy ? row.amount : row.amount_to_be_paid);
+            return <span>{amt > 0 ? amt.toLocaleString() : "—"}</span>;
+        }
+    },
+    { key: "exchange_rate", label: "Rate", align: "right", className: "text-gray-400" },
+    {
+        key: "sellAmt",
+        label: "Sell Amount",
+        align: "right",
+        render: (_, row) => {
+            const isBuy = row.deal_type === "buy";
+            const amt = Number(isBuy ? row.amount_to_be_paid : row.amount);
+            return <span>{amt > 0 ? amt.toLocaleString() : "—"}</span>;
+        }
+    },
+    {
+        key: "status",
+        label: "Status",
+        align: "center",
+        render: (val) => <span>{val}</span>
     }
-
-    const typeColors = {
-        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
-        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
-    };
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-                <thead>
-                    <tr className="bg-[#0E1114] text-[#8F8F8F]">
-                        <th className="px-5 py-3">Deal ID</th>
-                        <th className="px-5 py-3">Date</th>
-                        <th className="px-5 py-3 text-center">Type</th>
-                        <th className="px-5 py-3">Customer</th>
-                        <th className="px-5 py-3">Pair</th>
-                        <th className="px-5 py-3 text-right">Buy Amount</th>
-                        <th className="px-5 py-3 text-right">Rate</th>
-                        <th className="px-5 py-3 text-right">Sell Amount</th>
-                        <th className="px-5 py-3 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-[#2A2F33]/30">
-                    {deals.map(({ deal }) => {
-                        if (!deal) return null;
-                        const isBuy = deal.deal_type === "buy";
-                        const buyAmt = Number(isBuy ? deal.amount : deal.amount_to_be_paid);
-                        const sellAmt = Number(isBuy ? deal.amount_to_be_paid : deal.amount);
-                        const pair = isBuy
-                            ? `${deal.buyCurrency?.code}/${deal.sellCurrency?.code}`
-                            : `${deal.sellCurrency?.code}/${deal.buyCurrency?.code}`;
-                        const typeLabel = isBuy ? "Buy" : "Sell";
-
-                        return (
-                            <tr
-                                key={deal.id}
-                                onClick={() => navigate(`/deals/edit-deal/${deal.id}`)}
-                                className="hover:bg-[#1A1F24] cursor-pointer transition-colors"
-                            >
-                                <td className="px-5 py-3 text-[#92B4FF] font-bold">{deal.deal_number}</td>
-                                <td className="px-5 py-3 text-gray-400">
-                                    {new Date(deal.created_at).toLocaleDateString("en-GB")}
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                    <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[typeLabel]}`}>
-                                        {typeLabel}
-                                    </span>
-                                </td>
-                                <td className="px-5 py-3 text-gray-300">{deal.customer?.name || "N/A"}</td>
-                                <td className="px-5 py-3 text-gray-300">{pair || "---"}</td>
-                                <td className="px-5 py-3 text-right text-gray-300">
-                                    {buyAmt > 0 ? buyAmt.toLocaleString() : "—"}
-                                </td>
-                                <td className="px-5 py-3 text-right text-gray-400">{deal.exchange_rate}</td>
-                                <td className="px-5 py-3 text-right text-gray-300">
-                                    {sellAmt > 0 ? sellAmt.toLocaleString() : "—"}
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                    <span className="text-xs text-gray-400">{deal.status}</span>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
-    );
-}
+];
 
 // ─── Expandable breakdown row (non-daily) ────────────────────────────────────
 function BreakdownRow({ summary, formatCurrency }) {
@@ -180,7 +170,19 @@ function BreakdownRow({ summary, formatCurrency }) {
                                     Total Deals: <span className="text-white">{summary.totalTransactions}</span>
                                 </span>
                             </div>
-                            <DealsTable deals={summary.recon?.deals} />
+                            <Table
+                                columns={getDealsColumns({
+                                    Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+                                    Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                })}
+                                data={(summary.recon?.deals || []).map(d => d.deal).filter(Boolean)}
+                                showHeader={false}
+                                showSearch={false}
+                                showPagination={false}
+                                onRowClick={(row) => navigate(`/deals/edit-deal/${row.id}`)}
+                                itemsPerPage={100}
+                                emptyStateProps={{ message: "No deals mapped to this reconciliation." }}
+                            />
                         </div>
                     </td>
                 </tr>
@@ -340,15 +342,14 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                     <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
                         <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                             <div>
-                                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                                <h3 className="text-white text-lg flex items-center gap-2">
                                     <Vault className="w-5 h-5 text-[#1D4CB5]" />
-                                    {periodType === "daily" ? "Daily Vault Status" : "Latest Vault Status"}
+                                    Vault Status - {
+                                        periodType === "daily"
+                                            ? (isSameDay(dateRange.start, new Date()) ? "Today" : format(dateRange.start, "MMM dd"))
+                                            : `${format(dateRange.start, "MMM dd")} to ${format(dateRange.end, "MMM dd")}`
+                                    }
                                 </h3>
-                                <p className="text-[#8F8F8F] text-xs mt-1">
-                                    {periodType === "daily"
-                                        ? `Performance tracking for ${dateRange?.start ? format(dateRange.start, "MMM dd") : ""}`
-                                        : `Most recent reconciliation in this ${periodType === "custom" ? "range" : periodType}`}
-                                </p>
                             </div>
                         </div>
 
@@ -422,7 +423,19 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                 </div>
                             </div>
                             <div className="p-0">
-                                <DealsTable deals={dailySummaries[0]?.recon?.deals} />
+                                <Table
+                                    columns={getDealsColumns({
+                                        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+                                        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                    })}
+                                    data={(dailySummaries[0]?.recon?.deals || []).map(d => d.deal).filter(Boolean)}
+                                    showHeader={false}
+                                    showSearch={false}
+                                    showPagination={false}
+                                    onRowClick={(row) => navigate(`/deals/edit-deal/${row.id}`)}
+                                    itemsPerPage={100}
+                                    emptyStateProps={{ message: "No deals mapped to this reconciliation." }}
+                                />
                             </div>
                         </div>
                     )}
@@ -433,13 +446,12 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                         <div>
                             <h3 className="text-white font-semibold text-lg flex items-center gap-2">
                                 <Vault className="w-5 h-5 text-[#1D4CB5]" />
-                                {periodType === "daily" ? "Daily Vault Status" : "Latest Vault Status"}
+                                Vault Status - {
+                                    periodType === "daily"
+                                        ? (isSameDay(dateRange.start, new Date()) ? "today" : format(dateRange.start, "MMM dd"))
+                                        : `${format(dateRange.start, "MMM dd")} to ${format(dateRange.end, "MMM dd")}`
+                                }
                             </h3>
-                            <p className="text-[#8F8F8F] text-xs mt-1">
-                                {periodType === "daily"
-                                    ? `Performance tracking for ${dateRange?.start ? format(dateRange.start, "MMM dd") : ""}`
-                                    : `Most recent reconciliation in this ${periodType === "custom" ? "range" : periodType}`}
-                            </p>
                         </div>
                     </div>
                     <div className="p-10 text-center text-gray-500">
@@ -453,7 +465,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                     <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
-                            <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                            <h3 className="text-white text-lg flex items-center gap-2">
                                 <List className="w-5 h-5 text-[#1D4CB5]" />
                                 Daily Breakdown
                             </h3>

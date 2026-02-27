@@ -498,7 +498,7 @@ export default function ListReport() {
                       className="h-11 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer"
                       onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
                     >
-                      <td className="py-1.5 text-left pl-5 text-[#92B4FF] font-bold text-[14px]">
+                      <td className="py-1.5 text-left pl-5 text-white text-[14px]">
                         {item.deal_number}
                       </td>
 

@@ -446,7 +446,7 @@ export default function DealsList() {
                     className="h-9 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer"
                     onClick={() => handleRowClick(item)}
                   >
-                    <td className="py-1.5 text-[#92B4FF] font-bold text-[14px] text-left pl-5">
+                    <td className="py-1.5 text-white text-[14px] text-left pl-5">
                       {item.id}
                     </td>
                     <td>{item.date}</td>
