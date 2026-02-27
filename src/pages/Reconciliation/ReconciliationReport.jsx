@@ -142,13 +142,13 @@ function BreakdownRow({ summary, formatCurrency }) {
                             <div className="flex flex-col items-end gap-0.5">
                                 {summary.currencyVariances.map(({ code, variance }) => (
                                     <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                        {variance >= 0 ? "▲" : "▼"} {formatCurrency(variance)} {code}
+                                        {variance >= 0 ? "" : ""} {formatCurrency(variance)} {code}
                                     </span>
                                 ))}
                             </div>
                         ) : (
                             <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                {summary.profitLoss >= 0 ? "▲" : "▼"} TZS {formatCurrency(summary.profitLoss)}
+                                {summary.profitLoss >= 0 ? "" : ""} TZS {formatCurrency(summary.profitLoss)}
                             </span>
                         )
                     ) : "—"}
@@ -335,7 +335,7 @@ export default function ReconciliationReport({ periodType, dateRange, refreshTri
                                                 <td className="px-6 py-2 text-right text-white">{formatCurrency(row.physical)}</td>
                                                 <td className="px-6 py-2 text-right">
                                                     <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                        {isTallied ? "0.00" : `${variance >= 0 ? "+" : ""}${formatCurrency(variance)}`}
+                                                        {isTallied ? "0.00" : `${variance >= 0 ? "" : ""}${formatCurrency(variance)}`}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-2 text-center">
