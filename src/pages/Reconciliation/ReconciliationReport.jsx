@@ -645,7 +645,7 @@ export default function ReconciliationReport({
                     </div>
 
                     {/* ── Daily view: show deals in separate card ── */}
-                    {periodType === "daily" && (
+                    {periodType === "daily" && (dailySummaries[0]?.totalTransactions > 0) && (
                         <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                             <div className="py-2 bg-[#16191C]/60 border-b border-[#2A2F33]/50">
                                 <div className="flex justify-between items-center">
