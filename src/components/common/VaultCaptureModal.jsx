@@ -97,7 +97,7 @@ export default function VaultCaptureModal({
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="bg-[#1A1F24] border border-[#2A2D31] rounded-2xl w-full max-w-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh]">
+            <div className="bg-[#1A1F24] border border-[#2A2D31] w-full max-w-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-[#2A2D31] flex items-center justify-between bg-[#1E2328]">
                     <div className="flex items-center gap-3">
