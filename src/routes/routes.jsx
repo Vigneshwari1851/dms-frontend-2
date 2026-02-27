@@ -67,6 +67,7 @@ export default function AppRoutes() {
           <Route path="users/my-profile" element={<MyProfile />} />
           <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
           <Route path="currency-management" element={<CurrencyManagement />} />
+          <Route path="reports" element={<ListReport />} />
         </Route>
       </Route>
 
