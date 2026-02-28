@@ -30,7 +30,7 @@ import Toast from "../../components/common/Toast";
 
 
 
-const getDealsColumns = (typeColors) => [
+const getDealsColumns = (typeColors, statusColors = {}) => [
     { key: "deal_number", label: "Deal ID", align: "left", className: "pl-5 text-white" },
     {
         key: "created_at",
@@ -93,7 +93,13 @@ const getDealsColumns = (typeColors) => [
         key: "status",
         label: "Status",
         align: "center",
-        render: (val) => <span>{val}</span>
+        render: (val) => (
+            <div className="flex justify-center items-center">
+                <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[val] || ""}`}>
+                    {val}
+                </span>
+            </div>
+        )
     }
 ];
 
@@ -190,10 +196,16 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                                 </span>
                             </div>
                             <Table
-                                columns={getDealsColumns({
-                                    Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
-                                    Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
-                                })}
+                                columns={getDealsColumns(
+                                    {
+                                        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+                                        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                    },
+                                    {
+                                        Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                        Completed: "bg-[#1D4CB53D] text-[#88ACFC] border border-[#88ACFC]",
+                                    }
+                                )}
                                 data={(summary.recon?.deals || []).map(d => d.deal).filter(Boolean)}
                                 showHeader={false}
                                 showSearch={false}
@@ -756,10 +768,16 @@ export default function ReconciliationReport({
                             </div>
                             <div className="p-0">
                                 <Table
-                                    columns={getDealsColumns({
-                                        Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
-                                        Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
-                                    })}
+                                    columns={getDealsColumns(
+                                        {
+                                            Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+                                            Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                        },
+                                        {
+                                            Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+                                            Completed: "bg-[#1D4CB53D] text-[#88ACFC] border border-[#88ACFC]",
+                                        }
+                                    )}
                                     data={(dailySummaries[0]?.recon?.deals || []).map(d => d.deal).filter(Boolean)}
                                     showHeader={false}
                                     showSearch={false}
