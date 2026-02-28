@@ -697,12 +697,12 @@ export default function ReconciliationReport({
                                                                 <span className="text-white font-medium">{row.code}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{formatCurrency(row.book)}</td>
-                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{formatCurrency(row.book + row.deals)}</td>
-                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
                                                         {vaultRows.some(r => r.physical > 0) && (
                                                             <>
-                                                                <td className="px-6 py-4 text-right font-mono">
+                                                                <td className="px-6 py-4 text-right">
                                                                     {row.physical > 0 ? (
                                                                         <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                                             {isTallied ? "0.00" : `${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}

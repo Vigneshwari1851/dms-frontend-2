@@ -124,7 +124,7 @@ export default function VaultCaptureModal({
         return (
             <div className="mb-6 last:mb-0">
                 <div className="flex justify-between items-center mb-3 px-1">
-                    {title && <h3 className="text-[#8F8F8F] text-xs uppercase tracking-wider">{title}</h3>}
+                    {title && <h3 className="text-[#8F8F8F] text-xs">{title}</h3>}
                     {canEdit && !isCurrentlyEditing && (
                         <button
                             onClick={() => setEditingType(tableType)}
@@ -183,9 +183,9 @@ export default function VaultCaptureModal({
                                                 onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
                                                 placeholder="0.00"
                                                 disabled={!isCurrentlyEditing}
-                                                className="w-full bg-[#131619] border border-[#2A2D31] rounded-lg px-4 py-2 text-white text-right font-mono outline-none focus:border-[#1D4CB5] transition-all disabled:opacity-80 text-xs"
+                                                className="w-full bg-[#131619] border border-[#2A2D31] rounded-lg px-4 py-2 text-white text-right outline-none focus:border-[#1D4CB5] transition-all disabled:opacity-80 text-xs"
                                             />
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4B5563] text-[9px] font-mono pointer-events-none">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4B5563] text-[9px] pointer-events-none">
                                                 {row.currencyCode}
                                             </div>
                                         </div>

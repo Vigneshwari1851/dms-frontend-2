@@ -221,7 +221,7 @@ export default function DealDetails() {
               <div className="mt-6">
                 <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[#ABABAB] text-xs font-bold">
                       Remaining Balance
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D8AD00] text-black">
@@ -339,13 +339,13 @@ export default function DealDetails() {
                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-4 hover:border-[#1D4CB555] transition-all">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Amount Paid</p>
+                          <p className="text-[#ABABAB] text-[10px] font-bold mb-1">Amount Paid</p>
                           <p className="text-white text-xl font-black">
                             {formatCurrency(item.total)} <span className="text-[10px] text-[#1D4CB5] uppercase">{item.currency?.code || "TZS"}</span>
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Date</p>
+                          <p className="text-[#ABABAB] text-[10px] font-bold mb-1">Date</p>
                           <p className="text-white text-xs font-medium bg-[#1A1F24] px-2 py-1 rounded border border-[#2A2F34]">
                             {formatDate(item.created_at || new Date())}
                           </p>

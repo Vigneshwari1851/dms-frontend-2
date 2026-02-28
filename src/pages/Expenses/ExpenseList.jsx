@@ -344,7 +344,7 @@ export default function ExpenseList() {
                                         type="number"
                                         required
                                         placeholder="0.00"
-                                        className={`w-full bg-[#131619] border ${formErrors.amount ? 'border-red-500' : 'border-[#2A2D31]'} rounded-lg p-2.5 text-white text-sm font-mono outline-none focus:border-[#1D4CB5]`}
+                                        className={`w-full bg-[#131619] border ${formErrors.amount ? 'border-red-500' : 'border-[#2A2D31]'} rounded-lg p-2.5 text-white text-sm outline-none focus:border-[#1D4CB5]`}
                                         value={formData.amount}
                                         onChange={(e) => setFormData({ ...formData, amount: formatPositiveNumeric(e.target.value) })}
                                     />
@@ -355,7 +355,7 @@ export default function ExpenseList() {
                                     <input
                                         type="text"
                                         placeholder="1.0"
-                                        className="w-full bg-[#131619] border border-[#2A2D31] rounded-lg p-2.5 text-white text-sm font-mono outline-none focus:border-[#1D4CB5]"
+                                        className="w-full bg-[#131619] border border-[#2A2D31] rounded-lg p-2.5 text-white text-sm outline-none focus:border-[#1D4CB5]"
                                         value={formData.rate}
                                         onChange={(e) => setFormData({ ...formData, rate: formatPositiveNumeric(e.target.value) })}
                                     />
@@ -433,11 +433,11 @@ export default function ExpenseList() {
                                 </div>
                                 <div>
                                     <p className=" text-[#8F8F8F] mb-1">Amount</p>
-                                    <p className="text-white text-sm font-mono font-bold">{Number(viewingExpense.amount).toLocaleString()}</p>
+                                    <p className="text-white text-sm font-bold">{Number(viewingExpense.amount).toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <p className=" text-[#8F8F8F] mb-1">Rate</p>
-                                    <p className="text-white text-sm font-mono">{viewingExpense.rate || "—"}</p>
+                                    <p className="text-white text-sm">{viewingExpense.rate || "—"}</p>
                                 </div>
                             </div>
                             <div className="pt-4">

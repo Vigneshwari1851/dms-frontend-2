@@ -865,7 +865,7 @@ export default function EditDeal() {
                                 <div className="mt-6">
                                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[#ABABAB] text-xs  tracking-wider">Remaining Balance</span>
+                                            <span className="text-[#ABABAB] text-xs ">Remaining Balance</span>
                                         </div>
                                         <div className="flex items-baseline gap-2">
                                             <span className={`text-xl font-black ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
