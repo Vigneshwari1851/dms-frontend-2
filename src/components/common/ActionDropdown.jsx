@@ -31,17 +31,6 @@ function ActionDropdown({ options = [] }) {
         direction = "down";
       }
 
-      const DROPDOWN_WIDTH = 180;
-
-      // On mobile, adjust positioning to fit within viewport
-      const isMobile = window.innerWidth < 640;
-      let left = rect.right;
-      let transform = "translateX(-100%)";
-
-      if (isMobile && rect.right > window.innerWidth - 20) {
-        left = rect.left;
-        transform = "translateX(0)";
-      }
 
       // Arrow horizontal center aligned with button center
       const arrowLeft = rect.left + rect.width / 2;
@@ -49,11 +38,10 @@ function ActionDropdown({ options = [] }) {
       setArrowInfo({ direction, left: arrowLeft });
       setDropdownStyle({
         position: "fixed",
-        left,
-        transform,
-        width: isMobile ? Math.min(DROPDOWN_WIDTH, window.innerWidth - 40) : DROPDOWN_WIDTH,
+        right: window.innerWidth - rect.right,
+        width: "max-content",
         top,
-        minWidth: rect.width,
+        minWidth: "120px",
         maxHeight: "300px",
         overflowY: "auto",
         zIndex: 9999,

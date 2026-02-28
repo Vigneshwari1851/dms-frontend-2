@@ -128,7 +128,7 @@ export default function VaultCaptureModal({
                     {canEdit && !isCurrentlyEditing && (
                         <button
                             onClick={() => setEditingType(tableType)}
-                            className="text-[#1D4CB5] hover:text-[#2A5BD7] text-[10px] font-medium transition-all px-2 py-1 rounded hover:bg-[#1D4CB5]/5 flex items-center gap-1.5"
+                            className="bg-[#1D4CB5] hover:bg-[#1C44A0] text-white text-[10px] font-medium transition-all px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95"
                         >
                             <Edit2 className="w-3 h-3" /> Edit
                         </button>
@@ -255,38 +255,6 @@ export default function VaultCaptureModal({
                         </div>
                     ) : (
                         renderTable(rows, null, type)
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-[#2A2D31] bg-[#1E2328] flex gap-4">
-                    {type === "both" ? (
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 bg-[#1D4CB5] border border-[#1D4CB5] hover:bg-[#2A5BD7] text-white text-sm px-6 py-2.5 rounded-lg shadow-lg shadow-[#1D4CB5]/10 transition-all active:scale-[0.98]"
-                        >
-                            Close Summary
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2.5 rounded-lg border border-[#2A2D31] text-white text-sm hover:bg-[#2A2D31] transition-all active:scale-[0.98]"
-                            >
-                                Cancel
-                            </button>
-                            {!isViewOnly && (
-                                <button
-                                    onClick={() => handleInternalSave(type)}
-                                    disabled={!rows.some(r => r.currencyId && r.amount !== "")}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-[#1D4CB5] text-white text-sm hover:bg-[#2A5BD7] shadow-lg shadow-[#1D4CB5]/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Save {type === "opening" ? "Opening" : "Closing"} Balance
-                                </button>
-                            )}
-                        </>
                     )}
                 </div>
             </div>
