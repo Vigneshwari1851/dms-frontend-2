@@ -233,7 +233,7 @@ export default function VaultCaptureModal({
                         <div className={`w-1 h-5 rounded-full ${type === "opening" ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
                         <div>
                             <h2 className="text-white text-base">
-                                {type === "both" ? "Vault Summary" : `${isViewOnly ? "View" : editingType ? "Edit" : "Record"} ${type === "opening" ? "Opening Balance" : "Closing Balance"}`}
+                                {type === "both" ? "Vault Summary" : `${isViewOnly ? "View" : editingType ? "Edit" : ""} ${type === "opening" ? "Opening Balance" : "Closing Balance"}`}
                             </h2>
                             <p className="text-[#8F8F8F] text-[11px]">Review and update vault cash positions</p>
                         </div>

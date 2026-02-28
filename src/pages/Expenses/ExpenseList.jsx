@@ -256,7 +256,7 @@ export default function ExpenseList() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <div className="bg-[#1A1F24] border border-[#2A2D31] rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
                         <div className="px-6 py-4 border-b border-[#2A2D31] flex items-center justify-between">
-                            <h2 className="text-white">{editingExpense ? 'Edit Expense' : 'Add New Expense'}</h2>
+                            <h2 className="text-white">{editingExpense ? 'Edit Expense' : 'Add Expense'}</h2>
                             <button onClick={handleCloseModal} className="text-[#8F8F8F] hover:text-white">✕</button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
