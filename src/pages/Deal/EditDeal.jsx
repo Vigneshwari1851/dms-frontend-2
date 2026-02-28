@@ -54,7 +54,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                     <span className="text-white text-normal">
                                         {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
-                                    <span className="text-[#1D4CB5] text-normal font-black italic">{currency}</span>
+                                    <span className="">{currency}</span>
                                 </div>
                             </div>
 
@@ -114,7 +114,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                             <span className="text-white text-normal font-black">
                                                 {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
-                                            <span className="text-[#1D4CB5] text-normal font-black italic">{currency}</span>
+                                            <span className="">{currency}</span>
                                         </div>
                                     )}
                                 </div>
