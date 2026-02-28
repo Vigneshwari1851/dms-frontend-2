@@ -465,64 +465,6 @@ export default function ViewCustomer() {
             </div>
           )}
         </div>
-
-        {!editMode && (
-          <div className={`w-full lg:w-80 bg-[#1A1F24] p-4 lg:p-5 rounded-xl overflow-y-auto scrollbar-grey transition-all duration-300
-                          ${!selectedDeal ? "min-h-[200px] lg:min-h-[calc(100vh-200px)] flex items-center justify-center" : "max-h-[600px] lg:max-h-[calc(100vh-200px)]"}`}>
-            {!selectedDeal ? (
-              <span className="text-gray-400 text-center">Click a row to see details</span>
-            ) : (
-              <div className="space-y-3 lg:space-y-4 text-sm">
-                <div
-                  className="flex items-center justify-between gap-2 cursor-pointer group"
-                  onClick={() => navigate(`/deals/edit-deal/${selectedDeal.dealId}`)}
-                  title="Click to view full deal details"
-                >
-                  <h3 className="text-white font-semibold text-base lg:text-lg truncate group-hover:text-[#7B8CFF] transition-colors">
-                    Deal Detail
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-3 py-1 rounded-2xl text-xs lg:text-sm whitespace-nowrap ${typeColors[selectedDeal.type]}`}
-                    >
-                      {selectedDeal.type}
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 group-hover:text-[#7B8CFF] transition-all group-hover:translate-x-0.5">
-                      <path d="M5 12h14"></path>
-                      <path d="M12 5l7 7-7 7"></path>
-                    </svg>
-                  </div>
-                </div>
-
-
-                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
-
-                <Row label="Date" value={selectedDeal.date} />
-                <Row label="Deal ID" value={selectedDeal.id} />
-                <Row label="Transaction Mode" value={selectedDeal.mode} />
-                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
-
-                <Section title="Currency Information">
-                  <Row label="Buy Currency" value={selectedDeal.buyCurrency} />
-                  <Row label="Sell Currency" value={selectedDeal.sellCurrency} />
-                  <Row label="Exchange Rate" value={selectedDeal.rate} />
-                </Section>
-                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
-
-                <Section title="Amount Details">
-                  <Row label="Buy Amount" value={`${selectedDeal.buyAmt.toLocaleString()} ${selectedDeal.buyCurrency}`} />
-                  <Row label="Sell Amount" value={`${selectedDeal.sellAmt.toLocaleString()} ${selectedDeal.sellCurrency}`} />
-                </Section>
-                <div className="border-t-[3px] border-[#16191C] -mx-1 px-5"></div>
-
-                <Section title="Notes">
-                  <p className="text-white text-xs">{selectedDeal.notes || "—"}</p>
-                </Section>
-              </div>
-            )}
-          </div>
-        )}
-
       </div >
 
       {/* Mobile Sticky Action Bar */}
