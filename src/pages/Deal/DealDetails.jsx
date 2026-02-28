@@ -127,7 +127,7 @@ export default function DealDetails() {
 
         {/* LEFT SIDE: Deal Information */}
         <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full">
-          <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+          <h3 className="text-white font-semibold text-lg mb-12 flex items-center gap-2">
             Deal Information
           </h3>
 
