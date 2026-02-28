@@ -208,7 +208,7 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                             <div className="flex justify-between items-center mb-4">
                                 <h4 className="text-[#8F8F8F] flex items-center gap-2">
                                     <div className="w-1.5 h-3 bg-[#1D4CB5] rounded-full"></div>
-                                    Associated Transactions
+                                    Associated Deals
                                 </h4>
                                 <span className="text-[12px] text-[#8F8F8F]">
                                     Total Deals: <span className="text-white">{deals.length}</span>

@@ -183,7 +183,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                             <div className="flex justify-between items-center mb-3">
                                 <p className="text-[#8F8F8F] flex items-center gap-2">
                                     <span className="w-1.5 h-3 bg-[#1D4CB5] rounded-full inline-block" />
-                                    Associated Transactions
+                                    Associated Deals
                                 </p>
                                 <span className="text-[#8F8F8F]">
                                     Total Deals: <span className="text-white">{summary.totalTransactions}</span>
@@ -747,20 +747,11 @@ export default function ReconciliationReport({
                                 <div className="flex justify-between items-center">
                                     <p className="text-[#8F8F8F] flex items-center gap-2">
                                         <span className="" />
-                                        Associated Transactions
+                                        Associated Deals
                                     </p>
-                                    <span className="text-[#8F8F8F]">
+                                    <span className="text-[#8F8F8F] mr-4">
                                         Total Deals: <span className="text-white">{(periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0])?.total_transactions || 0}</span>
                                     </span>
-                                    {periodType === "daily" && isSameDay(dateRange.start, new Date()) && dailySummaries[0]?.recon && (
-                                        <button
-                                            onClick={() => handleMapDeals(dailySummaries[0].recon.id)}
-                                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-3 py-1 rounded-lg text-xs transition-all flex items-center gap-2"
-                                        >
-                                            <List className="w-3.5 h-3.5" />
-                                            Map Deals
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                             <div className="p-0">
