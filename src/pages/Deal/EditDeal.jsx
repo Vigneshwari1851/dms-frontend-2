@@ -49,7 +49,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
 
                         <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
                             <div className="flex flex-col">
-                                <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
+                                <span className="text-[#ABABAB] text-[10px] mb-2">Amount</span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-white text-normal">
                                         {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -61,7 +61,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             <div className="flex flex-col sm:items-end">
                                 <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#5761D7]"></div>
-                                    <span className="text-[#E0E0E0] text-[11px] tracking-wide">
+                                    <span className="text-[#E0E0E0] text-[11px]">
                                         {new Date(createdAt).toLocaleDateString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
@@ -94,7 +94,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                 className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#1D4CB588] transition-all duration-300 group relative shadow-sm hover:shadow-md"
                             >
                                 <div className="flex flex-col">
-                                    <span className="text-[#ABABAB] text-[10px] tracking-[0.1em] mb-2">Amount</span>
+                                    <span className="text-[#ABABAB] text-[10px] mb-2">Amount</span>
                                     {editable && !item.id ? (
                                         <div className="flex items-center gap-2">
                                             <div className="relative">
@@ -122,7 +122,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                                 <div className="flex flex-col sm:items-end">
                                     <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
                                         <div className={`w-1.5 h-1.5 rounded-full ${item.id ? 'bg-[#92B4FF]' : ''}`}></div>
-                                        <span className="text-[#E0E0E0] text-[11px] font-semibold tracking-wide">
+                                        <span className="text-[#E0E0E0] text-[11px] font-semibold">
                                             {item.created_at ? new Date(item.created_at).toLocaleString('en-IN', {
                                                 day: '2-digit',
                                                 month: 'short',

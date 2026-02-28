@@ -36,7 +36,7 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
                 key={idx}
                 className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F33]/30 hover:bg-[#2A2F33]/50 transition-colors"
               >
-                <span className="text-white text-[11px] uppercase">{item.label}</span>
+                <span className="text-white text-[11px]">{item.label}</span>
                 <span className="text-white text-[15px] tabular-nums">{item.value}</span>
               </div>
             ))}

@@ -375,7 +375,7 @@ export default function ViewCustomer() {
                                     ${!editMode ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
                                 `}
                   >
-                    <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold tracking-wide transition-all duration-300
+                    <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold transition-all duration-300
                                     ${formData.is_active ? "left-0 right-[32px]" : "left-[32px] right-0"}`}
                     >
                       {formData.is_active ? "Active" : "Inactive"}
