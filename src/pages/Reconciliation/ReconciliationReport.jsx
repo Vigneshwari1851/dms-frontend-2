@@ -167,7 +167,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                                 e.stopPropagation();
                                 if (onDateSelect) onDateSelect(new Date(summary.date));
                             }}
-                            className="bg-[#1D4CB5]/10 text-[#1D4CB5] hover:bg-[#1D4CB5] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-[#1D4CB5]/20"
+                            className="bg-[#1D4CB5]/10 text-[#1D4CB5] hover:bg-[#1D4CB5] hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-[#1D4CB5]/20"
                         >
                             Capture
                         </button>
@@ -231,7 +231,8 @@ export default function ReconciliationReport({
         initialAmounts: {}, // { currencyId: amount }
         isLocked: false,
         reconId: null,
-        isEdit: false
+        isEdit: false,
+        isViewOnly: false
     });
     const [lastTriggerId, setLastTriggerId] = useState(0);
     const isToday = periodType === "daily" && isSameDay(dateRange.start, new Date());
@@ -335,22 +336,71 @@ export default function ReconciliationReport({
             initialAmounts,
             isLocked,
             reconId: recon?.id || null,
-            isEdit
+            isEdit,
+            isViewOnly: false
         });
     };
 
-    const handleSaveVault = async (entries) => {
+    const handleViewVaultCapture = (focusCurrency, type = "opening", recon = null) => {
+        const initialAmounts = {};
+        if (recon) {
+            const entries = type === "opening" ? recon.openingEntries : recon.closingEntries;
+            entries?.forEach(e => {
+                if (e.currency) initialAmounts[e.currency.id] = e.amount;
+            });
+        }
+
+        setCaptureModal({
+            isOpen: true,
+            type,
+            initialAmounts,
+            isLocked: true,
+            reconId: recon?.id || null,
+            isEdit: false,
+            isViewOnly: true
+        });
+    };
+
+    const handleViewFullVault = () => {
+        const recon = dailySummaries[0]?.recon;
+        if (!recon) return;
+
+        const openingAmounts = {};
+        recon.openingEntries?.forEach(e => {
+            if (e.currency) openingAmounts[e.currency.id] = e.amount;
+        });
+
+        const closingAmounts = {};
+        recon.closingEntries?.forEach(e => {
+            if (e.currency) closingAmounts[e.currency.id] = e.amount;
+        });
+
+        setCaptureModal({
+            isOpen: true,
+            type: "both",
+            initialAmounts: {
+                opening: openingAmounts,
+                closing: closingAmounts
+            },
+            isLocked: false,
+            isViewOnly: false,
+            isDealsMapped: (recon.deals?.length || 0) > 0
+        });
+    };
+
+    const handleSaveVault = async (entries, saveType) => {
         try {
             setToast({ show: true, message: "Saving balances...", type: "pending" });
 
             const payload = {
                 notes: [],
-                [captureModal.type === "opening" ? "openingEntries" : "closingEntries"]: entries
+                [(saveType || captureModal.type) === "opening" ? "openingEntries" : "closingEntries"]: entries
             };
 
+            const reconId = captureModal.reconId || dailySummaries[0]?.recon?.id;
             let result;
-            if (captureModal.isEdit && captureModal.reconId) {
-                result = await updateReconciliation(captureModal.reconId, payload);
+            if (reconId) {
+                result = await updateReconciliation(reconId, payload);
             } else {
                 result = await createReconciliation(payload);
             }
@@ -497,16 +547,53 @@ export default function ReconciliationReport({
 
     // Per-currency vault rows for the active reconciliation
     const vaultRows = useMemo(() => {
-        const activeRecon = periodType === "daily" ? dailySummaries[0]?.recon : reconciliations[0];
-        const isToday = periodType === "daily" && isSameDay(dateRange.start, new Date());
+        if (periodType === "daily") {
+            const activeRecon = dailySummaries[0]?.recon;
+            const totals = calculateCurrencyTotals(activeRecon);
+            return Object.values(totals).map(row => ({
+                ...row,
+                variance: row.physical - (row.book + row.deals),
+                status: activeRecon?.status || "None",
+                recon: activeRecon
+            }));
+        }
 
-        const totals = calculateCurrencyTotals(activeRecon);
+        // Weekly/Monthly Aggregation
+        const sortedRecs = [...reconciliations].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        if (sortedRecs.length === 0) return [];
+
+        const totals = {};
+
+        // 1. Opening: First day of the period
+        const firstDay = sortedRecs[0];
+        (firstDay.openingEntries || []).forEach(e => {
+            const code = e.currency?.code || "?";
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            totals[code].book += Number(e.amount || 0);
+        });
+
+        // 2. Closing: Last captured balance in the period
+        const lastDayWithClosing = [...sortedRecs].reverse().find(r => r.closingEntries?.length > 0) || sortedRecs[sortedRecs.length - 1];
+        (lastDayWithClosing.closingEntries || []).forEach(e => {
+            const code = e.currency?.code || "?";
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            totals[code].physical += Number(e.amount || 0);
+        });
+
+        // 3. Deals: Accumulate across every day
+        sortedRecs.forEach(recon => {
+            const dayTotals = calculateCurrencyTotals(recon);
+            Object.values(dayTotals).forEach(row => {
+                if (!totals[row.code]) totals[row.code] = { code: row.code, book: 0, deals: 0, physical: 0 };
+                totals[row.code].deals += row.deals;
+            });
+        });
 
         return Object.values(totals).map(row => ({
             ...row,
             variance: row.physical - (row.book + row.deals),
-            status: activeRecon?.status || "None",
-            recon: activeRecon
+            status: "Period Summary",
+            recon: null
         }));
     }, [periodType, dailySummaries, reconciliations, allCurrencies, dateRange]);
 
@@ -540,13 +627,29 @@ export default function ReconciliationReport({
                         <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                             <div className="flex items-center gap-3">
                                 <h3 className="text-white text-lg flex items-center gap-2">
-                                    <Vault className="w-5 h-5 text-[#1D4CB5]" />
+                                    <div className="w-5 h-5 bg-[#1D4CB5]/20 rounded border border-[#1D4CB5]/40 flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-[#1D4CB5] rounded-sm transform rotate-45"></div>
+                                    </div>
                                     Vault Status - {
                                         periodType === "daily"
                                             ? (isSameDay(dateRange.start, new Date()) ? "Today" : format(dateRange.start, "MMM dd"))
                                             : `${format(dateRange.start, "MMM dd")} to ${format(dateRange.end, "MMM dd")}`
                                     }
                                 </h3>
+                            </div>
+                            <div className="flex items-center">
+                                <ActionDropdown
+                                    options={[
+                                        {
+                                            label: "View Vault",
+                                            onClick: () => handleViewFullVault()
+                                        },
+                                        {
+                                            label: "Refresh Data",
+                                            onClick: loadData
+                                        }
+                                    ]}
+                                />
                             </div>
                         </div>
 
@@ -556,12 +659,15 @@ export default function ReconciliationReport({
                                 <thead>
                                     <tr className="bg-[#131619] text-white text-sm">
                                         <th className="px-6 py-2">Currency</th>
-                                        <th className="px-6 py-2 text-right">Opening Vault</th>
-                                        <th className="px-6 py-2 text-right">Book Balance</th>
-                                        <th className="px-6 py-2 text-right">Closing Vault</th>
-                                        <th className="px-6 py-2 text-right">Variance</th>
-                                        <th className="px-6 py-2 text-center">Status</th>
-                                        {isToday && <th className="px-6 py-2 text-right">Actions</th>}
+                                        <th className="px-6 py-2 text-right font-normal">Opening Vault</th>
+                                        <th className="px-6 py-2 text-right font-normal">Book Balance</th>
+                                        <th className="px-6 py-2 text-right font-normal">Closing Vault</th>
+                                        {vaultRows.some(r => r.physical > 0) && (
+                                            <>
+                                                <th className="px-6 py-2 text-right font-normal">Variance</th>
+                                                <th className="px-6 py-2 text-center font-normal">Status</th>
+                                            </>
+                                        )}
                                     </tr>
                                 </thead>
 
@@ -569,7 +675,7 @@ export default function ReconciliationReport({
                                     {vaultRows.length > 0 ? (
                                         (periodType === "daily" && isToday && !dailySummaries[0]?.hasRecord) ? (
                                             <tr>
-                                                <td colSpan={isToday ? 7 : 6} className="px-6 py-12 text-center">
+                                                <td colSpan={vaultRows.some(r => r.physical > 0) ? 6 : 4} className="px-6 py-12 text-center">
                                                     <div className="flex flex-col items-center gap-4">
                                                         <div className="bg-[#1D4CB5]/10 p-4 rounded-full">
                                                             <Vault className="w-8 h-8 text-[#1D4CB5]" />
@@ -591,42 +697,32 @@ export default function ReconciliationReport({
                                                                 <span className="text-white font-medium">{row.code}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
-                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td>
-                                                        <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.physical)}</td>
-                                                        <td className="px-6 py-4 text-right font-mono">
-                                                            <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                                                {isTallied ? "0.00" : `${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            {isTallied ? (
-                                                                <div className="flex items-center justify-center gap-1.5 text-[#82E890] text-[10px] font-bold uppercase">
-                                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Tallied
-                                                                </div>
-                                                            ) : (
-                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
-                                                                    {variance > 0 ? "EXCESS" : "SHORT"}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        {isToday && (
-                                                            <td className="px-6 py-4 text-right">
-                                                                <div className="flex justify-end">
-                                                                    <ActionDropdown
-                                                                        options={[
-                                                                            {
-                                                                                label: row.book > 0 ? "View Opening" : "Open Vault",
-                                                                                onClick: () => handleOpenVaultCapture(row, "opening", row.recon)
-                                                                            },
-                                                                            ...(row.book > 0 ? [{
-                                                                                label: row.physical > 0 ? "Edit Closing" : "Close Vault",
-                                                                                onClick: () => handleOpenVaultCapture(row, "closing", row.recon)
-                                                                            }] : [])
-                                                                        ]}
-                                                                    />
-                                                                </div>
-                                                            </td>
+                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{formatCurrency(row.book)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{formatCurrency(row.book + row.deals)}</td>
+                                                        <td className="px-6 py-4 text-right text-gray-300 font-mono">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
+                                                        {vaultRows.some(r => r.physical > 0) && (
+                                                            <>
+                                                                <td className="px-6 py-4 text-right font-mono">
+                                                                    {row.physical > 0 ? (
+                                                                        <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                                                            {isTallied ? "0.00" : `${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}
+                                                                        </span>
+                                                                    ) : "—"}
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    {row.physical > 0 ? (
+                                                                        isTallied ? (
+                                                                            <div className="flex items-center justify-center gap-1.5 text-[#82E890] text-[10px]">
+                                                                                <CheckCircle2 className="w-3.5 h-3.5" /> Tallied
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
+                                                                                {variance > 0 ? "Excess" : "Short"}
+                                                                            </span>
+                                                                        )
+                                                                    ) : "—"}
+                                                                </td>
+                                                            </>
                                                         )}
                                                     </tr>
                                                 );
@@ -634,7 +730,7 @@ export default function ReconciliationReport({
                                         )
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-10 text-center text-gray-500 italic text-sm">
+                                            <td colSpan={vaultRows.some(r => r.physical > 0) ? 6 : 4} className="px-6 py-10 text-center text-gray-500 italic text-sm">
                                                 No currency entries found for this reconciliation.
                                             </td>
                                         </tr>
@@ -659,7 +755,7 @@ export default function ReconciliationReport({
                                     {periodType === "daily" && isSameDay(dateRange.start, new Date()) && dailySummaries[0]?.recon && (
                                         <button
                                             onClick={() => handleMapDeals(dailySummaries[0].recon.id)}
-                                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+                                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-3 py-1 rounded-lg text-xs transition-all flex items-center gap-2"
                                         >
                                             <List className="w-3.5 h-3.5" />
                                             Map Deals
@@ -710,9 +806,9 @@ export default function ReconciliationReport({
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                     <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
-                            <h3 className="text-white text-lg flex items-center gap-2">
+                            <h3 className="text-white flex items-center gap-2">
                                 <List className="w-5 h-5 text-[#1D4CB5]" />
-                                Daily Breakdown
+                                Vault History
                             </h3>
                             <p className="text-[#8F8F8F] text-xs mt-1">Click a row to view associated deals</p>
                         </div>
@@ -761,7 +857,10 @@ export default function ReconciliationReport({
                 currencies={allCurrencies}
                 type={captureModal.type}
                 initialAmounts={captureModal.initialAmounts}
+                reconId={captureModal.reconId}
                 isLocked={captureModal.isLocked}
+                isViewOnly={captureModal.isViewOnly}
+                isDealsMapped={captureModal.isDealsMapped}
             />
 
             {toast.show && (

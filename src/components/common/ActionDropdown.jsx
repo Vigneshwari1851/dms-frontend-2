@@ -120,9 +120,9 @@ function ActionDropdown({ options = [] }) {
           e.stopPropagation();
           toggleDropdown();
         }}
-        className="text-white font-bold text-xl w-8 h-8 rounded-full flex items-center justify-center relative z-10 hover:bg-[#2E3439]"
+        className="text-white w-8 h-8 rounded-full flex items-center justify-center relative z-10 hover:bg-[#2E3439]"
       >
-        &#8942;
+        &#8943;
       </button>
 
       {open &&
