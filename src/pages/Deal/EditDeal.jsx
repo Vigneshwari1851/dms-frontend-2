@@ -678,11 +678,11 @@ export default function EditDeal() {
                             Deal ID - {deal?.deal_number || id || "Loading..."}
                             {isCompleted && (
                                 <>
-                                    <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#88ACFC] text-black ml-1">Completed</span>
+                                    <span className="rounded-2xl px-1 text-xs font-medium bg-[#1D4CB53D] text-[#88ACFC] border border-[#88ACFC] ml-1">Completed</span>
                                 </>
                             )}
                             {isPending && (
-                                <span className="px-2 py-0.5 rounded text-[10px] uppercase bg-[#D8AD00] text-black ml-1">
+                                <span className="rounded-2xl px-1 text-xs font-medium bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00] ml-1">
                                     Pending
                                 </span>
                             )}
