@@ -297,7 +297,7 @@ export default function DealsList() {
         <div className="ml-auto flex items-center gap-3">
           <button
             onClick={handleAddCustomer}
-            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
+            className="flex items-center gap-2 border border-white/10 hover:bg-[#173B8B] h-9 lg:h-10 text-white px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium"
           >
             <img src={add} alt="add" className="hidden lg:block w-4 h-4 lg:w-5 lg:h-5" />
             Add Customer

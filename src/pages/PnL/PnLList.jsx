@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { isSameDay } from "date-fns";
 import StatCard from "../../components/dashboard/StatCard";
-import Table from "../../components/common/Table";
 import Dropdown from "../../components/common/Dropdown";
 import DateFilter from "../../components/common/DateFilter";
+import PnLExpandableRow from "../../components/PnL/PnLExpandableRow";
+import download from "../../assets/dashboard/download.svg";
 import profitIcon from "../../assets/dashboard/profit.svg";
 import dealstodayIcon from "../../assets/dashboard/dealstoday.svg";
 import buyamountIcon from "../../assets/dashboard/buyamount.svg";
@@ -475,22 +476,57 @@ export default function PnLList() {
                 </div>
             )}
 
-            <div className="mt-8">
-                <Table
-                    columns={columns}
-                    data={data}
-                    title="Trading History"
-                    loading={loading || exporting}
-                    showPagination={false}
-                    showRightSection={false}
-                    showSearch={false}
-                    showExport={true}
-                    onExport={handleExport}
-                    emptyStateProps={{
-                        imageSrc: emptyPnL,
-                        message: "No trading history found for this period",
-                    }}
-                />
+            <div className="mt-8 bg-[#1A1F24] rounded-xl border border-[#2A2F33] overflow-hidden">
+                <div className="px-6 py-4 flex items-center justify-between border-b border-[#2A2F33]">
+                    <h2 className="text-white font-semibold">Trading History</h2>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => handleExport('pdf')}
+                            disabled={exporting}
+                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <img src={download} alt="download" className="w-4 h-4" />
+                            {exporting ? "Exporting..." : "Export PDF"}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead>
+                            <tr className="text-white font-semibold border-b border-[#2A2F33] bg-[#16191C]">
+                                {columns.map((col, idx) => (
+                                    <th key={idx} className={`py-4 px-4 text-${col.align || "left"}`}>{col.label}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={6} className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="w-10 h-10 border-4 border-[#1D4CB5] border-t-transparent rounded-full animate-spin"></div>
+                                            <p className="text-[#8F8F8F] animate-pulse">Loading data...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-4">
+                                            <img src={emptyPnL} alt="empty" className="w-32 opacity-50" />
+                                            <p className="text-[#8F8F8F]">No trading history found for this period</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                data.map((row, idx) => (
+                                    <PnLExpandableRow key={idx} rowData={row} />
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {showRateModal && (
