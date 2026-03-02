@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import StatCard from "../../components/dashboard/StatCard";
 import Table from "../../components/common/Table";
 import Dropdown from "../../components/common/Dropdown";
+import DateFilter from "../../components/common/DateFilter";
 import profitIcon from "../../assets/dashboard/profit.svg";
 import dealstodayIcon from "../../assets/dashboard/dealstoday.svg";
 import buyamountIcon from "../../assets/dashboard/buyamount.svg";
@@ -37,7 +38,8 @@ export default function PnLList() {
     const [exporting, setExporting] = useState(false);
     const [data, setData] = useState([]);
     const [expenseData, setExpenseData] = useState([]);
-    const [selectedMonth, setSelectedMonth] = useState("Today");
+    const [periodType, setPeriodType] = useState("today"); // today, weekly, monthly, custom
+    const [customRange, setCustomRange] = useState({ from: null, to: null });
     const [currencies, setCurrencies] = useState([]);
     const [todayRates, setTodayRates] = useState({});
     const [previousRate, setPreviousRate] = useState(0);
@@ -152,33 +154,36 @@ export default function PnLList() {
         }
     };
 
-    const months = useMemo(() => {
-        const reconMonths = data.map(item => item.monthKey);
-        const expenseMonths = expenseData.map(item => item.monthKey);
-        const uniqueMonths = ["All Months", "Today", ...new Set([...reconMonths, ...expenseMonths])];
-        return uniqueMonths;
-    }, [data, expenseData]);
+    const dateRange = useMemo(() => {
+        const today = new Date();
+        const sdStart = (d) => { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; };
+        const sdEnd = (d) => { const r = new Date(d); r.setHours(23, 59, 59, 999); return r; };
+        if (periodType === "weekly") {
+            const wStart = new Date(today);
+            wStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+            return { start: sdStart(wStart), end: sdEnd(today) };
+        } else if (periodType === "monthly") {
+            return { start: new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0), end: sdEnd(today) };
+        } else if (periodType === "custom" && customRange.from && customRange.to) {
+            return { start: sdStart(customRange.from), end: sdEnd(customRange.to) };
+        }
+        // default: today
+        return { start: sdStart(today), end: sdEnd(today) };
+    }, [periodType, customRange]);
 
     const filteredRecon = useMemo(() => {
-        if (selectedMonth === "All Months") return data;
-        if (selectedMonth === "Today") {
-            const todayStr = new Date().toLocaleDateString("en-GB");
-            return data.filter(item => item.date === todayStr);
-        }
-        return data.filter(item => item.monthKey === selectedMonth);
-    }, [data, selectedMonth]);
+        return data.filter(item => {
+            const d = new Date(item.rawDate);
+            return d >= dateRange.start && d <= dateRange.end;
+        });
+    }, [data, dateRange]);
 
     const filteredExpenses = useMemo(() => {
-        if (selectedMonth === "All Months") return expenseData;
-        if (selectedMonth === "Today") {
-            const todayStr = new Date().toISOString().split('T')[0];
-            return expenseData.filter(e => {
-                const eDate = e.date ? new Date(e.date).toISOString().split('T')[0] : "";
-                return eDate === todayStr;
-            });
-        }
-        return expenseData.filter(item => item.monthKey === selectedMonth);
-    }, [expenseData, selectedMonth]);
+        return expenseData.filter(e => {
+            const d = new Date(e.date);
+            return d >= dateRange.start && d <= dateRange.end;
+        });
+    }, [expenseData, dateRange]);
 
     const stats = useMemo(() => {
         if (data.length === 0) return {
@@ -346,14 +351,31 @@ export default function PnLList() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4 ml-auto">
+                <div className="flex items-center gap-2 ml-auto">
+                    {/* Period selection dropdown */}
                     <Dropdown
-                        label="Filter by Month"
-                        options={months}
-                        selected={selectedMonth}
-                        onChange={setSelectedMonth}
-                        className="w-[150px]"
+                        options={[
+                            { id: "today", label: "Today" },
+                            { id: "weekly", label: "Weekly" },
+                            { id: "monthly", label: "Monthly" },
+                            { id: "custom", label: "Custom Range" },
+                        ]}
+                        selected={
+                            [
+                                { id: "today", label: "Today" },
+                                { id: "weekly", label: "Weekly" },
+                                { id: "monthly", label: "Monthly" },
+                                { id: "custom", label: "Custom Range" },
+                            ].find(p => p.id === periodType)?.label || "Today"
+                        }
+                        onChange={(val) => setPeriodType(val.id)}
+                        className="w-[140px]"
                     />
+
+                    {/* DateFilter for custom range */}
+                    {periodType === "custom" && (
+                        <DateFilter onApply={(range) => setCustomRange(range)} />
+                    )}
                 </div>
             </div>
 
@@ -423,7 +445,7 @@ export default function PnLList() {
             </div>
 
             {/* CHART SECTION */}
-            {selectedMonth !== "Today" && (
+            {periodType !== "today" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
                     <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
@@ -508,7 +530,7 @@ export default function PnLList() {
                     columns={columns}
                     data={filteredRecon}
                     title="Trading History"
-                    subtitle={`Performance for ${selectedMonth}`}
+                    subtitle={`Performance for ${{ today: "Today", weekly: "This Week", monthly: "This Month", custom: "Custom Range" }[periodType] || "Today"}`}
                     loading={loading || exporting}
                     showPagination={false}
                     showExport={true}
