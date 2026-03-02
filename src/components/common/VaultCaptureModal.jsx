@@ -257,6 +257,24 @@ export default function VaultCaptureModal({
                         renderTable(rows, null, type)
                     )}
                 </div>
+
+                {/* Footer for individual modes */}
+                {type !== "both" && !isViewOnly && !isLocked && (
+                    <div className="px-6 py-4 border-t border-[#2A2D31] bg-[#1E2328] flex justify-end gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm text-[#8F8F8F] hover:text-white transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => handleInternalSave(type)}
+                            className="bg-[#1D4CB5] hover:bg-[#2A5BD7] text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-[#1D4CB5]/20 active:scale-95"
+                        >
+                            Save {type === "opening" ? "Opening" : "Closing"} Balance
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
