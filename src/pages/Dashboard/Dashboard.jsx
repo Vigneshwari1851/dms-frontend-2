@@ -9,6 +9,7 @@ import profit from "../../assets/dashboard/profit.svg"
 import add from "../../assets/dashboard/add.svg"
 import { useNavigate } from "react-router-dom";
 import { fetchDeals } from "../../api/deals";
+import { fetchReconcoliation } from "../../api/reconcoliation";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -25,9 +26,27 @@ export default function Dashboard() {
     const loadDashboardStats = async () => {
       try {
         setLoading(true);
-        const response = await fetchDeals({ dateFilter: "today" });
-        if (response.stats) {
-          setStats(response.stats);
+        const [dealsResponse, reconResponse] = await Promise.all([
+          fetchDeals({ dateFilter: "today" }),
+          fetchReconcoliation({ dateFilter: "today", limit: 1 })
+        ]);
+
+        if (dealsResponse.stats) {
+          setStats(dealsResponse.stats);
+        }
+
+        if (reconResponse.data && reconResponse.data.length > 0) {
+          const latest = reconResponse.data[0];
+          setStats(prev => ({
+            ...prev,
+            currentRate: latest.setRate || 0,
+            currentPnL: latest.profitLoss || 0,
+            reconBalances: latest.closingEntries?.reduce((acc, curr) => {
+              const code = curr.currency?.code || "TZS";
+              acc[code] = (acc[code] || 0) + Number(curr.amount);
+              return acc;
+            }, {})
+          }));
         }
       } catch (err) {
         console.error("Error loading dashboard stats:", err);
@@ -91,37 +110,38 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Buy Amount"
-          subValues={allCurrencyCodes.map(code => ({
-            label: code,
-            value: formatValue(stats.today.currencies[code]?.buy || 0)
-          })).filter(sv => sv.value !== "0")}
+          title="Current Avg Rate"
+          value={Number(stats.currentRate || 0).toFixed(2)}
+          subtitle="Latest Session"
           icon={buyamount}
         />
 
         <StatCard
-          title="Sell Amount"
-          subValues={allCurrencyCodes.map(code => ({
-            label: code,
-            value: formatValue(stats.today.currencies[code]?.sell || 0)
-          })).filter(sv => sv.value !== "0")}
-          icon={sellamount}
+          title="Current P&L"
+          value={`TZS ${Number(stats.currentPnL || 0).toLocaleString()}`}
+          subtitle="Trading Profit"
+          icon={profit}
         />
 
         <StatCard
           title="Current Balance"
-          subValues={allCurrencyCodes.map(code => {
-            const opening = stats.today?.openingBalances?.[code] || 0;
-            const buy = stats.today?.currencies?.[code]?.buy || 0;
-            const sell = stats.today?.currencies?.[code]?.sell || 0;
-            const balance = opening + buy - sell;
-            return {
+          icon={sellamount}
+          subValues={Object.entries(stats.reconBalances || {}).length > 0
+            ? Object.entries(stats.reconBalances).map(([code, balance]) => ({
               label: code,
               value: formatValue(balance),
-              color: balance > 0 ? "text-[#82E890]" : balance < 0 ? "text-[#F7626E]" : "text-white"
-            };
-          }).filter(sv => sv.value !== "0")}
-          icon={profit}
+            }))
+            : allCurrencyCodes.map(code => {
+              const opening = stats.today?.openingBalances?.[code] || 0;
+              const buy = stats.today?.currencies?.[code]?.buy || 0;
+              const sell = stats.today?.currencies?.[code]?.sell || 0;
+              const balance = opening + buy - sell;
+              return {
+                label: code,
+                value: formatValue(balance)
+              };
+            }).filter(sv => sv.value !== "0")
+          }
         />
       </div>
 
