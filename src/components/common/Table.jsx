@@ -238,7 +238,7 @@ export default function Table({
                     {exportOptions.length === 1 ? (
                       <button
                         onClick={() => onExport(exportOptions[0])}
-                        className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                        className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 border border-white rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap  hover:bg-[#173B8B] hover:border-[#173B8B] transition-all"
                       >
                         <img src={download} className="w-4 h-4 sm:w-5 sm:h-5" />
                         <span className="hidden sm:inline">Export</span>
@@ -248,7 +248,7 @@ export default function Table({
                       <div className="relative" ref={exportRef}>
                         <button
                           onClick={() => setExportOpen(!exportOpen)}
-                          className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 bg-[#1D4CB5] rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                          className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 border border-white rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap  hover:bg-[#173B8B] hover:border-[#173B8B] transition-all"
                         >
                           <img src={download} className="w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="hidden sm:inline">Export</span>
@@ -353,7 +353,7 @@ export default function Table({
                       key={colIndex}
                       className={`py-1.5 px-2 sm:px-4 text-${col.align || "center"} ${col.className || ""}`}
                     >
-                      {col.key === "full_name"? (
+                      {col.key === "full_name" ? (
                         <span className="text-white">{row[col.key]}</span>
                       ) : (
                         renderCell(col, row[col.key], row)

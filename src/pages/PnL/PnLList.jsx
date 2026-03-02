@@ -358,7 +358,7 @@ export default function PnLList() {
                                 setRateForm(prev => ({ ...prev, set_rate: existingRate }));
                                 setShowRateModal(true);
                             }}
-                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0 ml-6"
+                            className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 border border-white rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap  hover:bg-[#173B8B] hover:border-[#173B8B] transition-all"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -479,16 +479,6 @@ export default function PnLList() {
             <div className="mt-8 bg-[#1A1F24] rounded-xl border border-[#2A2F33] overflow-hidden">
                 <div className="px-6 py-4 flex items-center justify-between border-b border-[#2A2F33]">
                     <h2 className="text-white font-semibold">Trading History</h2>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => handleExport('pdf')}
-                            disabled={exporting}
-                            className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <img src={download} alt="download" className="w-4 h-4" />
-                            {exporting ? "Exporting..." : "Export PDF"}
-                        </button>
-                    </div>
                 </div>
 
                 <div className="overflow-x-auto">

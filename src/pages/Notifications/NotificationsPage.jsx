@@ -136,22 +136,23 @@ const NotificationsPage = () => {
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
     return (
-        <div className="max-w-6xl">
+        <div className="">
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <h1 className="text-2xl font-semibold text-white">Notifications</h1>
                 </div>
-                <button
-                    onClick={handleMarkAllRead}
-                    disabled={unreadCount === 0}
-                    className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all"
-                >
-                    Mark all as read
-                </button>
+                    {unreadCount > 0 && (
+                    <button
+                        onClick={handleMarkAllRead}
+                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all"
+                    >
+                        Mark all as read
+                    </button>
+                    )}
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-8 mb-8 border-b border-[#2A2F33] relative">
+            <div className="flex gap-8 mb-8 border-b border-[#2A2F33] relative max-w-6xl">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -170,7 +171,7 @@ const NotificationsPage = () => {
             </div>
 
             {/* Notification List */}
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-6xl">
                 {loading ? (
                     <div className="text-center py-20 text-gray-500">Loading notifications...</div>
                 ) : notifications.length === 0 ? (

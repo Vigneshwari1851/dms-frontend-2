@@ -363,7 +363,7 @@ export default function DealsList() {
               <div className="relative w-full lg:w-auto" ref={exportRef}>
                 <button
                   onClick={() => setExportOpen(!exportOpen)}
-                  className="w-full px-5 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] rounded-lg text-white font-medium flex items-center justify-center lg:justify-start gap-2 cursor-pointer"
+                  className="w-full lg:w-auto px-3 sm:px-5 py-2 h-10 border border-white rounded-lg text-white font-medium flex items-center justify-center gap-2 text-sm whitespace-nowrap  hover:bg-[#173B8B] hover:border-[#173B8B] transition-all"
                 >
                   <img src={download} alt="download" className="w-6 h-6" /> Export
                 </button>
