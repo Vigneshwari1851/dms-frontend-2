@@ -4,7 +4,7 @@ import dashboard from "../../assets/Common/dashboard.svg";
 import deals from "../../assets/Common/deals.svg";
 import usermanagement from "../../assets/Common/usermanagement.svg";
 import reconciliation from "../../assets/Common/reconciliation.svg";
-import reporting from "../../assets/Common/reporting.svg";
+import reporting from "../../assets/Common/report.svg";
 import customermanagement from "../../assets/customer/ledger.svg";
 import currencymanagement from "../../assets/Common/currencymanagement.svg";
 import pnl from "../../assets/Common/pl.svg";
