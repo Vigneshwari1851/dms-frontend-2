@@ -6,7 +6,7 @@ import logout from "../../assets/Common/logout.svg";
 import NotificationCard from "../common/Notification";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
-import { fetchReconciliationAlerts } from "../../api/reconcoliation";
+import { fetchNotifications } from "../../api/notification.api";
 import bellIcon from "../../assets/notification/bell.svg";
 import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg";
 
@@ -30,14 +30,14 @@ export default function Header({ toggleSidebar }) {
 
   const loadNotifications = async () => {
     try {
-      const res = await fetchReconciliationAlerts();
-      if (res && Array.isArray(res.alerts)) {
-        setNotifications(res.alerts.map(alert => ({
-          id: alert.id,
+      const res = await fetchNotifications("unread");
+      if (res && res.success && Array.isArray(res.data)) {
+        setNotifications(res.data.map(alert => ({
+          id: alert.reference_id, // Navigation still uses reference_id
           title: alert.title,
           message: alert.message,
-          time: alert.created_at,
-          alertType: alert.alertType,
+          time: new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          alertType: alert.alert_type,
         })));
       } else setNotifications([]);
     } catch (err) {
@@ -143,6 +143,10 @@ export default function Header({ toggleSidebar }) {
               onClick={() => {
                 setNotifDropdownOpen(!notifDropdownOpen);
                 setShowAllNotifications(false);
+                if (!notifDropdownOpen) {
+                  navigate("/notifications");
+                  setNotifDropdownOpen(false);
+                }
               }}
             />
 
