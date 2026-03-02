@@ -25,7 +25,7 @@ import dealsIcon from "../../assets/Common/deals.svg";
 import addIcon from "../../assets/Common/HPlus.svg";
 import { fetchReconcoliation, exportReconciliation, fetchPnLOverview } from "../../api/reconcoliation";
 import { fetchExpenses } from "../../api/expense";
-import emptyPnL from "../../assets/common/empty/pnl-bg.svg";
+import emptyPnL from "../../assets/Common/empty/pnl-bg.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import calendarIcon from "../../assets/Common/calendar.svg";
 import { useRef } from "react";
