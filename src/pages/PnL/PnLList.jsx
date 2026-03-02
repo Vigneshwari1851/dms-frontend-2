@@ -9,6 +9,10 @@ import sellamountIcon from "../../assets/dashboard/sellamount.svg";
 import {
     AreaChart,
     Area,
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -233,12 +237,14 @@ export default function PnLList() {
             });
         }
 
+        const perDayExpense = filteredRecon.length > 0 ? totalExpensesInTZS / filteredRecon.length : 0;
         const chartData = [...filteredRecon].reverse().map(item => {
             const date = new Date(item.rawDate);
             return {
                 name: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
                 pnl: item.profitLoss,
-                net: item.profitLoss - (totalExpensesInTZS / filteredRecon.length || 0), // Estimate net per session
+                net: item.profitLoss - perDayExpense,
+                expenses: Math.round(perDayExpense),
                 fullDate: item.date
             };
         });
@@ -337,7 +343,7 @@ export default function PnLList() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-end gap-4">
                     <button
                         onClick={() => setShowRateModal(true)}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -351,6 +357,7 @@ export default function PnLList() {
                             options={months}
                             selected={selectedMonth}
                             onChange={setSelectedMonth}
+                            className="w-[150px]"
                         />
                     </div>
                 </div>
@@ -383,80 +390,82 @@ export default function PnLList() {
 
             {/* CHART SECTION */}
             {selectedMonth !== "Today" && (
-                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 mb-8 shadow-lg">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="text-white text-base font-semibold">P&L Performance Trend</h3>
-                            <p className="text-[#8F8F8F] text-[11px] mt-1">Visualizing Daily Profit vs Net Profit (TZS)</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-white text-base font-semibold">Daily P&L Trend</h3>
+                                <p className="text-[#8F8F8F] text-[11px] mt-1">Daily vs Net Profit/Loss (TZS)</p>
+                            </div>
+                            <div className="flex items-center gap-4 text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#3b82f6]"></div>
+                                    <span className="text-[#8F8F8F]">Daily P&L</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#82E890]"></div>
+                                    <span className="text-[#8F8F8F]">Net P&L</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4 text-[11px]">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded bg-[#82E890]/80"></div>
-                                <span className="text-[#8F8F8F]">Daily P&L</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded bg-[#F7626E]/80"></div>
-                                <span className="text-[#8F8F8F]">Net P&L (Est.)</span>
-                            </div>
+                        <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={stats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
+                                        itemStyle={{ fontSize: '12px' }}
+                                        labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
+                                        formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
+                                    />
+                                    <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
+                                    <Line type="monotone" dataKey="pnl" stroke="#3b82f6" strokeWidth={2.5} dot={false} name="Daily P&L" animationDuration={1200} />
+                                    <Line type="monotone" dataKey="net" stroke="#82E890" strokeWidth={2.5} dot={false} name="Net P&L" animationDuration={1200} />
+                                </LineChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
-                    <div className="h-[280px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorPnL" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#82E890" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#82E890" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#F7626E" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#F7626E" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#8F8F8F', fontSize: 11 }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#8F8F8F', fontSize: 11 }}
-                                    hide
-                                />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
-                                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                                    labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
-                                    formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
-                                />
-                                <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="pnl"
-                                    stroke="#82E890"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorPnL)"
-                                    animationDuration={1500}
-                                    name="Daily P&L"
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="net"
-                                    stroke="#F7626E"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorNet)"
-                                    animationDuration={1500}
-                                    name="Net P&L"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+
+                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-white text-base font-semibold">Daily Breakdown</h3>
+                                <p className="text-[#8F8F8F] text-[11px] mt-1">P&L vs Expenses per day (TZS)</p>
+                            </div>
+                            <div className="flex items-center gap-4 text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#3b82f6]"></div>
+                                    <span className="text-[#8F8F8F]">Daily P&L</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#f59e0b]"></div>
+                                    <span className="text-[#8F8F8F]">Expenses</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
+                                        itemStyle={{ fontSize: '12px' }}
+                                        labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
+                                        formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
+                                    />
+                                    <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
+                                    <Bar dataKey="pnl" fill="#3b82f6" name="Daily P&L" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="expenses" fill="#f59e0b" name="Expenses" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
+
                 </div>
             )}
 
