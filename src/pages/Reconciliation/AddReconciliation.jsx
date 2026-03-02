@@ -613,7 +613,13 @@ export default function AddReconciliation() {
                 setToast({ show: true, message: toastMsg, type: "success" });
                 setHasSavedClosing(true);
                 setStatus(newStatus || status);
-                setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
+
+                if (isFinalizing) {
+                    const msg = encodeURIComponent(toastMsg);
+                    window.location.href = `/reconciliation?toast=success&msg=${msg}`;
+                } else {
+                    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 2000);
+                }
             } else {
                 setToast({ show: true, message: "Failed to save Closing Balance", type: "error" });
             }

@@ -6,11 +6,12 @@ import logout from "../../assets/Common/logout.svg";
 import NotificationCard from "../common/Notification";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/user/user";
-import { fetchReconciliationAlerts } from "../../api/reconcoliation";
+import { fetchNotifications } from "../../api/notification.api";
 import bellIcon from "../../assets/notification/bell.svg";
 import bellnotificationIcon from "../../assets/notification/bell_red_dot.svg";
 
 import { Bars3Icon } from "@heroicons/react/24/outline";
+import { AlertCircle, TrendingDown } from "lucide-react";
 
 export default function Header({ toggleSidebar }) {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
@@ -30,14 +31,12 @@ export default function Header({ toggleSidebar }) {
 
   const loadNotifications = async () => {
     try {
-      const res = await fetchReconciliationAlerts();
-      if (res && Array.isArray(res.alerts)) {
-        setNotifications(res.alerts.map(alert => ({
+      const res = await fetchNotifications("unread");
+      if (res && res.success && Array.isArray(res.data)) {
+        setNotifications(res.data.map(alert => ({
+          ...alert,
           id: alert.id,
-          title: alert.title,
-          message: alert.message,
-          time: alert.created_at,
-          alertType: alert.alertType,
+          time: new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         })));
       } else setNotifications([]);
     } catch (err) {
@@ -48,10 +47,17 @@ export default function Header({ toggleSidebar }) {
 
   useEffect(() => {
     loadNotifications();
+
+    // Listen for manual updates from other pages
+    window.addEventListener('notificationsUpdated', loadNotifications);
+
     const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
     const intervalId = setInterval(loadNotifications, TWO_DAYS);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('notificationsUpdated', loadNotifications);
+    };
   }, []);
 
   useEffect(() => {
@@ -136,61 +142,110 @@ export default function Header({ toggleSidebar }) {
 
           {/* Notification Bell */}
           <div className="relative" ref={notifDropdownRef}>
-            <img
-              src={notifications.length > 0 ? bellnotificationIcon : bellIcon}
-              alt="notifications"
-              className="w-6 h-6 cursor-pointer"
-              onClick={() => {
-                setNotifDropdownOpen(!notifDropdownOpen);
-                setShowAllNotifications(false);
-              }}
-            />
+            <div className="relative cursor-pointer" onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}>
+              <img
+                src={notifications.length > 0 ? bellnotificationIcon : bellIcon}
+                alt="notifications"
+                className="w-6 h-6"
+              />
+            </div>
 
             {notifDropdownOpen && (
-              <div className="fixed lg:absolute left-0 lg:left-auto right-0 top-[72px] lg:top-auto lg:mt-3 w-full lg:w-96 bg-[#1E2328] rounded-none lg:rounded-xl shadow-lg p-4 animate-fadeIn z-50 transition-all">
-                <div className={`${showAllNotifications ? "max-h-70 overflow-y-auto scrollbar-grey pr-3" : ""}`}>
+              <div className="fixed lg:absolute left-0 lg:left-auto right-4 top-[72px] lg:top-full lg:mt-3 w-[calc(100vw-32px)] lg:w-[400px] bg-[#1E2328] rounded-2xl shadow-2xl border border-[#2E3439] z-50 animate-fadeIn flex flex-col max-h-[600px]">
+                <div className="p-4 border-b border-[#2E3439] flex justify-between items-center">
+                  <h3 className="text-white font-semibold flex items-center gap-2">
+                    Notifications
+                    {notifications.length > 0 && (
+                      <span className="bg-[#1D4CB5] text-white text-[10px] px-2 py-0.5 rounded-full">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setNotifDropdownOpen(false);
+                      navigate("/notifications");
+                    }}
+                    className="text-[#1D4CB5] text-xs font-medium hover:underline"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto scrollbar-grey p-2">
                   {notifications.length === 0 ? (
-                    <p className="text-gray-400 text-sm text-center">No notifications</p>
+                    <div className="py-12 text-center text-gray-500 text-sm">
+                      No new notifications
+                    </div>
                   ) : (
-                    (notifications.slice(0, showAllNotifications ? notifications.length : 3)).map((n, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          setNotifDropdownOpen(false);
-                          setShowAllNotifications(false);
-                          if (n.alertType === "RECONCILIATION") {
-                            navigate(`/reconciliation/details/${n.id}`);
-                          } else if (n.alertType === "PENDING_DEAL") {
-                            navigate(`/deals/edit-deal/${n.id}`);
-                          }
-                        }}
-                        className="mb-2 p-3 bg-[#16191C] rounded-lg text-white flex justify-between items-start cursor-pointer"
-                      >
-                        <div className="flex items-start gap-2 relative">
-                          <span
-                            className={`w-2 h-2 rounded-full mt-2 ${n.alertType === "RECONCILIATION" ? "bg-[#D83D00]" : "bg-[#D8AD00]"
-                              }`}
-                          ></span>
-                          <div className="flex flex-col gap-[9px]">
-                            <p className="font-normal">{n.title}</p>
-                            <p className="text-gray-400 text-sm">{n.message}</p>
-                          </div>
+                    Object.entries(
+                      notifications.reduce((groups, n) => {
+                        const date = new Date(n.created_at);
+                        const today = new Date();
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+
+                        let groupKey = "Earlier";
+                        if (date.toDateString() === today.toDateString()) groupKey = "Today";
+                        else if (date.toDateString() === yesterday.toDateString()) groupKey = "Yesterday";
+
+                        if (!groups[groupKey]) groups[groupKey] = [];
+                        groups[groupKey].push(n);
+                        return groups;
+                      }, {})
+                    ).map(([group, groupItems]) => (
+                      <div key={group} className="mb-4 last:mb-0">
+                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider px-3 mb-2">
+                          {group}
+                        </h4>
+                        <div className="space-y-1">
+                          {groupItems.map((n) => (
+                            <div
+                              key={n.id}
+                              onClick={async () => {
+                                setNotifDropdownOpen(false);
+                                if (!n.is_read) {
+                                  try {
+                                    const { markNotificationsRead } = await import("../../api/notification.api");
+                                    await markNotificationsRead([n.id]);
+                                    loadNotifications();
+                                  } catch (err) {
+                                    console.error("Error marking as read", err);
+                                  }
+                                }
+                                if (n.alert_type === "RECONCILIATION") window.location.href = `/reconciliation/details/${n.reference_id}`;
+                                else if (n.alert_type === "PENDING_DEAL") window.location.href = `/deals/edit-deal/${n.reference_id}`;
+                              }}
+                              className="flex items-start gap-4 p-3 hover:bg-[#16191C] rounded-xl cursor-pointer transition-colors group"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-[#1D4CB5] flex items-center justify-center shrink-0">
+                                <div className="text-white">
+                                  {n.alert_type === "RECONCILIATION" ? (
+                                    <TrendingDown size={18} />
+                                  ) : (
+                                    <AlertCircle size={18} />
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-semibold group-hover:text-[#1D4CB5] transition-colors truncate">
+                                  {n.title}
+                                  <span className="text-gray-500 text-[10px] font-medium"> -- Created by: {n.user?.full_name?.split(' ')[0] || "User"}</span>
+                                </p>
+                                <p className="text-gray-400 text-xs line-clamp-1 mb-1">
+                                  {n.message}
+                                </p>
+                                <p className="text-[10px] text-gray-500">
+                                  {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} • {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <span className="text-gray-400 text-xs">{n.time}</span>
                       </div>
                     ))
                   )}
                 </div>
-                {notifications.length > 3 && !showAllNotifications && (
-                  <div className="text-center mt-2">
-                    <button
-                      onClick={() => setShowAllNotifications(true)}
-                      className="text-blue-500 text-sm hover:underline"
-                    >
-                      View All
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </div>

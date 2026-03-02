@@ -621,17 +621,9 @@ export default function EditDeal() {
             };
 
             await updateDeal(id, dealData);
-            navigate("/deals", {
-                state: {
-                    toast: {
-                        message:
-                            finalStatus === "Completed"
-                                ? "Deal completed successfully"
-                                : "Deal updated successfully",
-                        type: finalStatus === "Completed" ? "success" : "pending",
-                    },
-                },
-            });
+            const msg = encodeURIComponent(finalStatus === "Completed" ? "Deal completed successfully" : "Deal updated successfully");
+            const type = finalStatus === "Completed" ? "success" : "pending";
+            window.location.href = `/deals?toast=${type}&msg=${msg}`;
         } catch (err) {
             console.error("Error updating deal:", err);
             setError("Failed to update deal");

@@ -28,6 +28,7 @@ import MyProfile from "../pages/User/MyProfile";
 import CurrencyManagement from "../pages/Currency/CurrencyManagement";
 import PnLList from "../pages/PnL/PnLList";
 import ExpenseList from "../pages/Expenses/ExpenseList";
+import NotificationsPage from "../pages/Notifications/NotificationsPage";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import PublicRoute from "../components/auth/PublicRoute";
 
@@ -68,6 +69,7 @@ export default function AppRoutes() {
           <Route path="reconciliation/edit/:id" element={<AddReconciliation />} />
           <Route path="currency-management" element={<CurrencyManagement />} />
           <Route path="reports" element={<ListReport />} />
+          <Route path="notifications" element={<NotificationsPage />} />
         </Route>
       </Route>
 

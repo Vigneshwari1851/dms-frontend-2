@@ -122,21 +122,44 @@ export default function DealsList() {
   }, [currentPage]);
 
   useEffect(() => {
+    // 1. Handle location state (SPA navigation)
     if (location.state?.toast) {
       setToast({
         show: true,
         message: location.state.toast.message,
         type: location.state.toast.type,
       });
-
-      // Clear navigation state (important)
+      // Clear navigation state to prevent re-showing on refresh
       navigate(location.pathname, { replace: true });
+    }
+    // 2. Handle URL parameters (Full page reload)
+    else {
+      const params = new URLSearchParams(window.location.search);
+      const toastMsg = params.get('msg');
+      const toastType = params.get('toast');
 
-      setTimeout(() => {
-        setToast({ show: false, message: "", type: "success" });
-      }, 2500);
+      if (toastMsg) {
+        setToast({
+          show: true,
+          message: decodeURIComponent(toastMsg),
+          type: toastType || 'success',
+        });
+
+        // Clean URL without reloading the page
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
   }, [location.state]);
+
+  // Handle toast timeout
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast({ show: false, message: "", type: "success" });
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
 
   const statusColors = {
     Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
