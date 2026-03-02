@@ -161,6 +161,8 @@ export default function PnLList() {
             totalAmount: 0,
             todayBuyAmount: 0,
             todaySellAmount: 0,
+            buyByCurrency: {},
+            sellByCurrency: {},
             expensesByCurrency: {}
         };
 
@@ -189,6 +191,26 @@ export default function PnLList() {
 
         const totalExpensesInTZS = filteredExpenses.reduce((acc, curr) => acc + Number(curr.amount), 0);
 
+        const buyByCurrency = {};
+        const sellByCurrency = {};
+
+        if (isToday && latest?.deals) {
+            latest.deals.forEach(rd => {
+                const deal = rd.deal;
+                if (!deal) return;
+                const buyCode = deal.buyCurrency?.code;
+                const sellCode = deal.sellCurrency?.code;
+                const amount = Number(deal.amount || 0);
+                const amountPaid = Number(deal.amount_to_be_paid || 0);
+
+                if (deal.deal_type === "buy") {
+                    if (buyCode && buyCode !== "TZS") buyByCurrency[buyCode] = (buyByCurrency[buyCode] || 0) + amount;
+                } else {
+                    if (sellCode && sellCode !== "TZS") sellByCurrency[sellCode] = (sellByCurrency[sellCode] || 0) + amount;
+                }
+            });
+        }
+
         return {
             prevRate: previous?.setRate || previousRate || 0,
             currRate: isToday ? (latest?.setRate || 0) : (usdRateToday || latest?.setRate || 0),
@@ -198,6 +220,8 @@ export default function PnLList() {
             todayTotalAmount,
             todayBuyAmount,
             todaySellAmount,
+            buyByCurrency,
+            sellByCurrency,
             expensesByCurrency
         };
     }, [data, filteredRecon, filteredExpenses, previousRate, todayRates]);
@@ -329,39 +353,76 @@ export default function PnLList() {
                 />
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 p-4 bg-[#1A1F24] border border-[#2A2F33] rounded-xl mb-8">
-                <div className="flex flex-col">
-                    <span className="text-[#ABABAB]">Total Deals</span>
-                    <span className="text-white">{stats.todayDeals || 0}</span>
-                </div>
-                <div className="w-[1px] h-10 bg-[#2A2F33] hidden sm:block"></div>
-                <div className="flex flex-col">
-                    <span className="text-[#ABABAB]">Buy Deals</span>
-                    <span className="text-[#82E890]">{Number(stats.todayBuyAmount || 0).toLocaleString()}</span>
-                </div>
-                <div className="w-[1px] h-10 bg-[#2A2F33] hidden sm:block"></div>
-                <div className="flex flex-col">
-                    <span className="text-[#ABABAB]">Sell Deals</span>
-                    <span className="text-[#F7626E]">{Number(stats.todaySellAmount || 0).toLocaleString()}</span>
-                </div>
-                <div className="w-[1px] h-10 bg-[#2A2F33] hidden sm:block"></div>
-                <div className="flex flex-col">
-                    <span className="text-[#ABABAB]">Total Amount</span>
-                    <span className="text-white">{Number(stats.todayTotalAmount || 0).toLocaleString()}</span>
-                </div>
-                <div className="w-[1px] h-10 bg-[#2A2F33] hidden sm:block"></div>
-                <div className="flex flex-col flex-1">
-                    <span className="text-[#ABABAB]">Total Expenses</span>
-                    <div className="flex flex-wrap gap-4 mt-1">
-                        {Object.keys(stats.expensesByCurrency).length > 0 ? (
-                            Object.entries(stats.expensesByCurrency).map(([curr, amt]) => (
-                                <div key={curr} className="flex items-center gap-2">
-                                    <span className="text-[#82E890] font-medium">{curr}:</span>
-                                    <span className="text-white">{Number(amt || 0).toLocaleString()}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+
+                {/* CARD 2: BUY BREAKDOWN */}
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                    <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
+                        <span className="text-white">Buy Deals</span>
+                        <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.buyByCurrency).length} currencies</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
+                        {Object.keys(stats.buyByCurrency).length > 0 ? (
+                            Object.entries(stats.buyByCurrency).map(([curr, amt]) => (
+                                <div key={curr} className="flex justify-between items-center group">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-medium text-sm">{curr}</span>
+                                    </div>
+                                    <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
                                 </div>
                             ))
                         ) : (
-                            <span className="text-gray-500 italic text-sm">No expenses recorded</span>
+                            <div className="h-full flex items-center justify-center">
+                                <span className="text-gray-500 italic text-xs">No buy deals today</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* CARD 3: SELL BREAKDOWN */}
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                    <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
+                        <span className="text-white">Sell Deals</span>
+                        <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.sellByCurrency).length} currencies</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
+                        {Object.keys(stats.sellByCurrency).length > 0 ? (
+                            Object.entries(stats.sellByCurrency).map(([curr, amt]) => (
+                                <div key={curr} className="flex justify-between items-center group">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-medium text-sm">{curr}</span>
+                                    </div>
+                                    <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <span className="text-gray-500 italic text-xs">No sell deals today</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* CARD 4: EXPENSES BREAKDOWN */}
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                    <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
+                        <span className="text-white text-sm">Total Expenses</span>
+                        <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.expensesByCurrency).length} currencies</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
+                        {Object.keys(stats.expensesByCurrency).length > 0 ? (
+                            Object.entries(stats.expensesByCurrency).map(([curr, amt]) => (
+                                <div key={curr} className="flex justify-between items-center group">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-medium text-sm">{curr}</span>
+                                    </div>
+                                    <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <span className="text-gray-500 italic text-xs">No expenses found</span>
+                            </div>
                         )}
                     </div>
                 </div>
