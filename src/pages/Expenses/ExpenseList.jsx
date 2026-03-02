@@ -388,7 +388,7 @@ export default function ExpenseList() {
                     title="Expense History"
                     loading={loading}
                     showSearch={true}
-                    showExport={true}
+                    showRightSection={false}
                     emptyStateProps={{
                         imageSrc: emptyExpenses,
                         message: "No expenses found",

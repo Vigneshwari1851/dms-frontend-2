@@ -280,8 +280,7 @@ export default function ReconciliationReport({
         try {
             const response = await fetchReconcoliation({
                 dateFilter: "custom",
-                startDate: format(dateRange.start, "yyyy-MM-dd"),
-                endDate: format(dateRange.end, "yyyy-MM-dd"),
+                dateRange,
                 limit: 100
             });
             setReconciliations(response.data || []);

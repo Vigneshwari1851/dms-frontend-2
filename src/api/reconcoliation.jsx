@@ -1,16 +1,20 @@
+import { format } from "date-fns";
 import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
 
-export async function fetchReconcoliation({ page = 1, limit = 10, currency, dateFilter, startDate, endDate } = {}) {
+export async function fetchReconcoliation({ page = 1, limit = 10, currency, dateFilter, dateRange, startDate, endDate } = {}) {
   try {
     const params = { page, limit };
     if (currency) params.currency = currency;
     if (dateFilter) params.dateFilter = dateFilter;
 
-    if (dateFilter === "custom" && startDate && endDate) {
-      params.startDate = startDate;
-      params.endDate = endDate;
+    const start = startDate || dateRange?.start;
+    const end = endDate || dateRange?.end;
+
+    if (dateFilter === "custom" && start && end) {
+      params.startDate = format(start, "yyyy-MM-dd");
+      params.endDate = format(end, "yyyy-MM-dd");
     }
 
     const queryString = new URLSearchParams(params).toString();

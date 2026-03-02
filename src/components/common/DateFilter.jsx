@@ -57,11 +57,6 @@ export default function DateFilter({ onApply, initialOption = "Today" }) {
 
     setFromDate(start);
     setToDate(end);
-
-    // If initializing or selecting a preset, apply immediately
-    if (option !== "Custom" || initialOption === "Custom") {
-      if (onApply) onApply({ from: start, to: end });
-    }
   };
 
   const handleApply = () => {

@@ -1,10 +1,20 @@
+import { format } from "date-fns";
 import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
 
 export const fetchExpenses = async (params = {}) => {
     try {
-        const queryString = new URLSearchParams(params).toString();
+        const { dateRange, ...rest } = params;
+        const finalParams = { ...rest };
+
+        if (dateRange?.start && dateRange?.end) {
+            finalParams.startDate = format(dateRange.start, "yyyy-MM-dd");
+            finalParams.endDate = format(dateRange.end, "yyyy-MM-dd");
+            finalParams.dateFilter = "custom";
+        }
+
+        const queryString = new URLSearchParams(finalParams).toString();
         const response = await apiFetch(`/expense${queryString ? `?${queryString}` : ""}`, {
             method: "GET",
         });

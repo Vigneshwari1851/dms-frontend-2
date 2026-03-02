@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { isSameDay } from "date-fns";
 import StatCard from "../../components/dashboard/StatCard";
 import Table from "../../components/common/Table";
 import Dropdown from "../../components/common/Dropdown";
@@ -28,7 +29,6 @@ import { fetchExpenses } from "../../api/expense";
 import emptyPnL from "../../assets/Common/empty/pnl-bg.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import calendarIcon from "../../assets/Common/calendar.svg";
-import { useRef } from "react";
 import { fetchCurrencies } from "../../api/currency/currency";
 import { fetchOpenSetRates, upsertOpenSetRate } from "../../api/openSetRate";
 import Toast from "../../components/common/Toast";
@@ -38,8 +38,10 @@ export default function PnLList() {
     const [exporting, setExporting] = useState(false);
     const [data, setData] = useState([]);
     const [expenseData, setExpenseData] = useState([]);
-    const [periodType, setPeriodType] = useState("today"); // today, weekly, monthly, custom
-    const [customRange, setCustomRange] = useState({ from: null, to: null });
+    const [dateRange, setDateRange] = useState({
+        start: new Date(new Date().setHours(0, 0, 0, 0)),
+        end: new Date(new Date().setHours(23, 59, 59, 999))
+    });
     const [currencies, setCurrencies] = useState([]);
     const [todayRates, setTodayRates] = useState({});
     const [previousRate, setPreviousRate] = useState(0);
@@ -74,12 +76,12 @@ export default function PnLList() {
         type: "success",
     });
 
-    const loadPnLData = async () => {
+    const loadPnLData = async (dr = dateRange) => {
         setLoading(true);
         try {
             const [reconResponse, expenseResponse, currencyResponse, rateResponse] = await Promise.all([
-                fetchReconcoliation({ page: 1, limit: 100 }),
-                fetchExpenses({ limit: 100 }),
+                fetchReconcoliation({ page: 1, limit: 100, dateFilter: "custom", dateRange: dr }),
+                fetchExpenses({ limit: 100, dateRange: dr }),
                 fetchCurrencies({ limit: 100 }),
                 fetchOpenSetRates()
             ]);
@@ -131,8 +133,8 @@ export default function PnLList() {
     };
 
     useEffect(() => {
-        loadPnLData();
-    }, []);
+        loadPnLData(dateRange);
+    }, [dateRange]);
 
     const handleSaveRate = async () => {
         if (!rateForm.currency_id || !rateForm.set_rate || !rateForm.date) {
@@ -154,41 +156,11 @@ export default function PnLList() {
         }
     };
 
-    const dateRange = useMemo(() => {
-        const today = new Date();
-        const sdStart = (d) => { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; };
-        const sdEnd = (d) => { const r = new Date(d); r.setHours(23, 59, 59, 999); return r; };
-        if (periodType === "weekly") {
-            const wStart = new Date(today);
-            wStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-            return { start: sdStart(wStart), end: sdEnd(today) };
-        } else if (periodType === "monthly") {
-            return { start: new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0), end: sdEnd(today) };
-        } else if (periodType === "custom" && customRange.from && customRange.to) {
-            return { start: sdStart(customRange.from), end: sdEnd(customRange.to) };
-        }
-        // default: today
-        return { start: sdStart(today), end: sdEnd(today) };
-    }, [periodType, customRange]);
-
-    const filteredRecon = useMemo(() => {
-        return data.filter(item => {
-            const d = new Date(item.rawDate);
-            return d >= dateRange.start && d <= dateRange.end;
-        });
-    }, [data, dateRange]);
-
-    const filteredExpenses = useMemo(() => {
-        return expenseData.filter(e => {
-            const d = new Date(e.date);
-            return d >= dateRange.start && d <= dateRange.end;
-        });
-    }, [expenseData, dateRange]);
 
     const stats = useMemo(() => {
         if (data.length === 0) return {
             prevRate: previousRate || 0,
-            currRate: todayRates["USD"]?.setRate || 0,
+            currRate: todayRates["TZS"]?.setRate || 0,
             dailyPnL: 0,
             netPnL: 0,
             totalDeals: 0,
@@ -197,16 +169,17 @@ export default function PnLList() {
             todaySellAmount: 0,
             buyByCurrency: {},
             sellByCurrency: {},
-            expensesByCurrency: {}
+            expensesByCurrency: {},
+            chartData: []
         };
 
         const sortedRecon = [...data].sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
         const latest = sortedRecon[0];
         const previous = sortedRecon[1];
 
-        const grossPnL_Period = filteredRecon.reduce((acc, curr) => acc + curr.profitLoss, 0);
+        const grossPnL_Period = data.reduce((acc, curr) => acc + curr.profitLoss, 0);
 
-        const expensesByCurrency = filteredExpenses.reduce((acc, curr) => {
+        const expensesByCurrency = expenseData.reduce((acc, curr) => {
             const code = curr.currency?.code || "TZS";
             acc[code] = (acc[code] || 0) + Number(curr.amount);
             return acc;
@@ -216,14 +189,14 @@ export default function PnLList() {
         const latestDateStr = latest?.rawDate ? new Date(latest.rawDate).toISOString().split('T')[0] : "";
         const isToday = latestDateStr === todayStr;
 
-        const usdRateToday = todayRates["USD"]?.setRate || 0;
+        const manualRateToday = todayRates["TZS"]?.setRate;
 
         const todayDeals = isToday ? (latest?.total_transactions || 0) : 0;
         const todayTotalAmount = isToday ? (Number(latest?.totalForeignBought || 0) + Number(latest?.totalForeignSold || 0)) : 0;
         const todayBuyAmount = isToday ? (latest?.totalForeignBought || 0) : 0;
         const todaySellAmount = isToday ? (latest?.totalForeignSold || 0) : 0;
 
-        const totalExpensesInTZS = filteredExpenses.reduce((acc, curr) => acc + Number(curr.amount), 0);
+        const totalExpensesInTZS = expenseData.reduce((acc, curr) => acc + Number(curr.amount), 0);
 
         const buyByCurrency = {};
         const sellByCurrency = {};
@@ -245,8 +218,8 @@ export default function PnLList() {
             });
         }
 
-        const perDayExpense = filteredRecon.length > 0 ? totalExpensesInTZS / filteredRecon.length : 0;
-        const chartData = [...filteredRecon].reverse().map(item => {
+        const perDayExpense = data.length > 0 ? totalExpensesInTZS / data.length : 0;
+        const chartData = [...data].reverse().map(item => {
             const date = new Date(item.rawDate);
             return {
                 name: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
@@ -259,7 +232,7 @@ export default function PnLList() {
 
         return {
             prevRate: previous?.setRate || previousRate || 0,
-            currRate: isToday ? (latest?.setRate || 0) : (usdRateToday || latest?.setRate || 0),
+            currRate: isToday ? (latest?.setRate || manualRateToday || 0) : (manualRateToday || latest?.setRate || 0),
             dailyPnL: isToday ? (latest?.profitLoss || 0) : 0,
             netPnL: grossPnL_Period - totalExpensesInTZS,
             todayDeals,
@@ -271,7 +244,7 @@ export default function PnLList() {
             expensesByCurrency,
             chartData
         };
-    }, [data, filteredRecon, filteredExpenses, previousRate, todayRates]);
+    }, [data, expenseData, previousRate, todayRates]);
 
     const handleExport = async (format) => {
         try {
@@ -349,33 +322,10 @@ export default function PnLList() {
                 </div>
 
                 <div className="flex items-center gap-2 ml-auto">
-                    {/* Period selection dropdown */}
-                    <Dropdown
-                        options={[
-                            { id: "today", label: "Today" },
-                            { id: "weekly", label: "Weekly" },
-                            { id: "monthly", label: "Monthly" },
-                            { id: "custom", label: "Custom Range" },
-                        ]}
-                        selected={
-                            [
-                                { id: "today", label: "Today" },
-                                { id: "weekly", label: "Weekly" },
-                                { id: "monthly", label: "Monthly" },
-                                { id: "custom", label: "Custom Range" },
-                            ].find(p => p.id === periodType)?.label || "Today"
-                        }
-                        onChange={(val) => setPeriodType(val.id)}
-                        className="w-[140px]"
+                    <DateFilter
+                        initialOption="Today"
+                        onApply={(range) => setDateRange({ start: range.from, end: range.to })}
                     />
-
-                    {/* DateFilter for custom range */}
-                    {periodType === "custom" && (
-                        <DateFilter
-                            initialOption="Custom"
-                            onApply={(range) => setCustomRange(range)}
-                        />
-                    )}
                 </div>
             </div>
 
@@ -445,7 +395,7 @@ export default function PnLList() {
             </div>
 
             {/* CHART SECTION */}
-            {periodType !== "today" && (
+            {!isSameDay(dateRange.start, dateRange.end) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
                     <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
@@ -528,7 +478,7 @@ export default function PnLList() {
             <div className="mt-8">
                 <Table
                     columns={columns}
-                    data={filteredRecon}
+                    data={data}
                     title="Trading History"
                     loading={loading || exporting}
                     showPagination={false}
