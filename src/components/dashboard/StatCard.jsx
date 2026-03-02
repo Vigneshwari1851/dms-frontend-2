@@ -24,7 +24,7 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
           <p className="text-white text-sm font-medium">{title}</p>
           {subtitle && <p className="text-[#8F8F8F] text-[10px] mt-0.5">{subtitle}</p>}
         </div>
-        <img src={icon} alt="" className="w-4 h-4 opacity-70" />
+        <img src={icon} alt="" className="w-4 h-4" />
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-grey pr-1">
