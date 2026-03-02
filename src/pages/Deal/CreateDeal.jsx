@@ -438,26 +438,12 @@ export default function CreateDeal() {
       const result = await createDeal(dealData);
 
       if (result.success) {
-        navigate("/deals", {
-          state: {
-            toast: {
-              message:
-                finalStatus === "Completed"
-                  ? "Deal completed successfully"
-                  : "Deal is pending.",
-              type: finalStatus === "Completed" ? "success" : "pending",
-            },
-          },
-        });
+        const msg = encodeURIComponent(finalStatus === "Completed" ? "Deal completed successfully" : "Deal is pending.");
+        const type = finalStatus === "Completed" ? "success" : "pending";
+        window.location.href = `/deals?toast=${type}&msg=${msg}`;
       } else {
-        navigate("/deals", {
-          state: {
-            toast: {
-              message: result.error?.message || "Failed to create deal",
-              type: "error",
-            },
-          },
-        });
+        const msg = encodeURIComponent(result.error?.message || "Failed to create deal");
+        window.location.href = `/deals?toast=error&msg=${msg}`;
       }
     } catch (err) {
       console.error("Error creating deal:", err);

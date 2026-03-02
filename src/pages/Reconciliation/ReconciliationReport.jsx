@@ -294,7 +294,33 @@ export default function ReconciliationReport({
 
     useEffect(() => {
         loadData();
+
+        // Handle URL parameters (Full page reload)
+        const params = new URLSearchParams(window.location.search);
+        const toastMsg = params.get('msg');
+        const toastType = params.get('toast');
+
+        if (toastMsg) {
+            setToast({
+                show: true,
+                message: decodeURIComponent(toastMsg),
+                type: toastType || 'success',
+            });
+
+            // Clean URL without reloading the page
+            window.history.replaceState({}, '', window.location.pathname);
+        }
     }, [dateRange, refreshTrigger]);
+
+    // Handle toast timeout
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ show: false, message: "", type: "success" });
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
 
 
     const handleOpenVaultCapture = async (focusCurrency, type = "opening", recon = null) => {
@@ -418,16 +444,11 @@ export default function ReconciliationReport({
             }
 
             if (result.success) {
-                setToast({ show: true, message: "Balance saved successfully", type: "success" });
-                setCaptureModal(prev => ({ ...prev, isOpen: false }));
-
+                const msg = encodeURIComponent("Balance saved successfully");
                 if (captureModal.type === "opening") {
-                    // Navigate to dashboard after saving opening vault
-                    setTimeout(() => {
-                        navigate("/reconciliation");
-                    }, 1000);
+                    window.location.href = `/reconciliation?toast=success&msg=${msg}`;
                 } else {
-                    loadData(); // Refresh report for closing entries
+                    window.location.href = `/reconciliation?toast=success&msg=${msg}`;
                 }
 
                 if (refreshTrigger?.callback) refreshTrigger.callback();
