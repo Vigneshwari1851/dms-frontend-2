@@ -356,7 +356,7 @@ export default function PnLList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
                 {/* CARD 2: BUY BREAKDOWN */}
-                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
                     <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
                         <span className="text-white">Buy Deals</span>
                         <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.buyByCurrency).length} currencies</span>
@@ -380,7 +380,7 @@ export default function PnLList() {
                 </div>
 
                 {/* CARD 3: SELL BREAKDOWN */}
-                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
                     <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
                         <span className="text-white">Sell Deals</span>
                         <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.sellByCurrency).length} currencies</span>
@@ -404,7 +404,7 @@ export default function PnLList() {
                 </div>
 
                 {/* CARD 4: EXPENSES BREAKDOWN */}
-                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[200px]">
+                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
                     <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
                         <span className="text-white text-sm">Total Expenses</span>
                         <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.expensesByCurrency).length} currencies</span>
