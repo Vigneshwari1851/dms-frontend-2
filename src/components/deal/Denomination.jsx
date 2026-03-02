@@ -256,7 +256,7 @@ export default function Denomination({
 
           <div className="pt-4">
             <div className="bg-[#1B1E21]/80 flex justify-between items-center px-4 py-2 rounded-lg border border-[#1B1E21]">
-              <span className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium text-[13px] uppercase tracking-wide`}>Total</span>
+              <span className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-medium text-[13px]`}>Total</span>
               <span className={`${Math.abs(calculateTotal(list) - (listType === "received" ? receivedAmount : paidAmount)) > 0.01 ? "text-red-500" : "text-[#00C853]"} font-semibold text-[14px]`}>
                 {calculateTotal(list).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>

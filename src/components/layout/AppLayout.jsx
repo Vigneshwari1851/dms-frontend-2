@@ -15,6 +15,7 @@ export default function AppLayout() {
     }
   }, [pathname]);
 
+  const [sidebarHidden, setSidebarHidden] = useState(false);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
 
@@ -34,7 +35,7 @@ export default function AppLayout() {
         )}
 
         {/* Left Sidebar */}
-        <Sider isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
+        <Sider isOpen={isSidebarOpen && !sidebarHidden} closeSidebar={closeSidebar} hidden={sidebarHidden} />
 
         {/* Main content */}
         <main
@@ -42,7 +43,7 @@ export default function AppLayout() {
           className="flex-1 overflow-y-scroll scrollbar-grey p-2 lg:p-4 bg-[#16191C] text-white"
           style={{ scrollbarGutter: "stable" }}
         >
-          <Outlet />
+          <Outlet context={{ setSidebarHidden }} />
         </main>
       </div>
     </div>

@@ -117,7 +117,7 @@ export default function PhoneInput({ value, onChange, error, className = "" }) {
                                 <img src={country.flag} alt="" className="w-6 h-4 object-cover rounded-sm shadow-sm" />
                                 <span className="text-white text-sm group-hover:text-blue-400 transition-colors truncate max-w-[120px]">{country.name}</span>
                             </div>
-                            <span className="text-[#ABABAB] text-xs font-mono">{country.code}</span>
+                            <span className="text-[#ABABAB] text-xs">{country.code}</span>
                         </li>
                     ))}
                 </ul>

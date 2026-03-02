@@ -92,11 +92,11 @@ export default function DealDetails() {
             {deal.status === 'Completed' && (
               <>
                 <span className="mx-0.5 text-[#3A3F43]">|</span>
-                <span className="text-[11px] text-[#ABABAB] font-semibold uppercase tracking-[0.1em]">Completed</span>
+                <span className="text-[11px] text-[#ABABAB] font-semibold">Completed</span>
               </>
             )}
             {deal.status !== 'Completed' && (
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${deal.status === 'Completed' ? 'bg-[#1D902D] text-white' : 'bg-[#D8AD00] text-black'}`}
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${deal.status === 'Completed' ? 'bg-[#1D902D] text-white' : 'bg-[#D8AD00] text-black'}`}
               >
                 {deal.status}
               </span>
@@ -127,7 +127,7 @@ export default function DealDetails() {
 
         {/* LEFT SIDE: Deal Information */}
         <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl border border-[#2A2F33] w-full">
-          <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+          <h3 className="text-white font-semibold text-lg mb-12 flex items-center gap-2">
             Deal Information
           </h3>
 
@@ -221,27 +221,27 @@ export default function DealDetails() {
               <div className="mt-6">
                 <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[#ABABAB] text-xs font-bold uppercase tracking-wider">
+                    <span className="text-[#ABABAB] text-xs font-bold">
                       Remaining Balance
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#D8AD00] text-black">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#D8AD00] text-black">
                       Pending
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     {deal.deal_type === 'sell' ? (
                       <>
-                        <span className={`text-3xl font-black tracking-tight ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                        <span className={`text-3xl font-black ${(Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
                           {Math.max(0, Number(deal.buyAmount || 0) - (deal.received_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                        <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.buyCurrency}</span>
+                        <span className="text-[#ABABAB] text-sm font-bold">{deal.buyCurrency}</span>
                       </>
                     ) : (
                       <>
-                        <span className={`text-3xl font-black tracking-tight ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                        <span className={`text-3xl font-black ${(Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
                           {Math.max(0, Number(deal.sellAmount || 0) - (deal.paid_items?.reduce((s, i) => s + (Number(i.total) || 0), 0) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                        <span className="text-[#ABABAB] text-sm font-bold uppercase">{deal.sellCurrency}</span>
+                        <span className="text-[#ABABAB] text-sm font-bold">{deal.sellCurrency}</span>
                       </>
                     )}
                   </div>
@@ -300,12 +300,12 @@ export default function DealDetails() {
 
                   <div className="bg-[#1D4CB508] border border-[#1D4CB522] rounded-xl p-5 flex justify-between items-center group relative shadow-sm">
                     <div className="flex flex-col">
-                      <span className="text-[#88ACFC] text-[10px] uppercase tracking-[0.1em] mb-2 font-bold">Initial Amount</span>
+                      <span className="text-[#88ACFC] text-[10px] mb-2 font-bold">Initial Amount</span>
                       <div className="flex items-baseline gap-2">
                         <span className="text-white text-2xl font-black">
                           {Number(deal.deal_type === 'sell' ? deal.buyAmount : deal.sellAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
-                        <span className="text-[#1D4CB5] text-xs font-black italic uppercase">
+                        <span className="text-[#1D4CB5] text-xs font-black italic">
                           {deal.deal_type === 'sell' ? deal.buyCurrency : deal.sellCurrency}
                         </span>
                       </div>
@@ -339,13 +339,13 @@ export default function DealDetails() {
                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-4 hover:border-[#1D4CB555] transition-all">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Amount Paid</p>
+                          <p className="text-[#ABABAB] text-[10px] font-bold mb-1">Amount Paid</p>
                           <p className="text-white text-xl font-black">
-                            {formatCurrency(item.total)} <span className="text-[10px] text-[#1D4CB5] uppercase">{item.currency?.code || "TZS"}</span>
+                            {formatCurrency(item.total)} <span className="text-[10px] text-[#1D4CB5]">{item.currency?.code || "TZS"}</span>
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[#ABABAB] text-[10px] font-bold uppercase tracking-wider mb-1">Date</p>
+                          <p className="text-[#ABABAB] text-[10px] font-bold mb-1">Date</p>
                           <p className="text-white text-xs font-medium bg-[#1A1F24] px-2 py-1 rounded border border-[#2A2F34]">
                             {formatDate(item.created_at || new Date())}
                           </p>

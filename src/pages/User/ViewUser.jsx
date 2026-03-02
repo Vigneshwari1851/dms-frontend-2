@@ -335,7 +335,7 @@ export default function ViewUser() {
                                 `}
                             >
                                 {/* Text inside pill — fills zone opposite the knob, centered */}
-                                <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold tracking-wide transition-all duration-300
+                                <span className={`absolute flex items-center justify-center text-white text-[11px] font-semibold transition-all duration-300
                                     ${isActive ? "left-0 right-[32px]" : "left-[32px] right-0"}`}
                                 >
                                     {isActive ? "Active" : "Inactive"}

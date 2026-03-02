@@ -30,6 +30,8 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
       data: result.data || [],
       pagination: result.pagination || { totalPages: 1 },
       stats: result.stats || {},
+      todayRates: result.todayRates || {},
+      previousRate: result.previousRate || 0,
     };
 
   } catch (error) {
@@ -77,6 +79,26 @@ export async function fetchReconciliationAlerts() {
   } catch (error) {
     console.error("Error fetching reconciliation alerts:", error);
     return [];
+  }
+}
+
+export async function fetchPnLOverview() {
+  try {
+    const response = await apiFetch(`/pnl/overview`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Failed to fetch PnL overview:", errorData);
+      return { success: false, error: errorData };
+    }
+
+    const result = await response.json();
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error fetching PnL overview:", error);
+    return { success: false, error };
   }
 }
 
@@ -180,6 +202,26 @@ export async function startReconcoliation(id) {
     return { success: true, data: result };
   } catch (error) {
     console.error(`Error starting reconciliation with ID ${id}:`, error);
+    return { success: false, error };
+  }
+}
+export async function fetchCurrentReconciliation() {
+  try {
+    const response = await apiFetch(`/reconciliation/current`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return { success: true, data: null };
+      const errorData = await response.json();
+      console.error(`Failed to fetch current reconciliation:`, errorData);
+      return { success: false, error: errorData };
+    }
+
+    const result = await response.json();
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error(`Error fetching current reconciliation:`, error);
     return { success: false, error };
   }
 }

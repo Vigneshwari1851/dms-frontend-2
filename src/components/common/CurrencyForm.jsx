@@ -35,7 +35,7 @@ export default function CurrencyForm({
           <input
             value={isoCode}
             onChange={(e) => onChange("isoCode", e.target.value)}
-            className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none uppercase"
+            className="w-full bg-[#16191C] rounded-lg px-3 py-2 outline-none"
             maxLength={3}
           />
         </div>
