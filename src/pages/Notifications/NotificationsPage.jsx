@@ -140,14 +140,11 @@ const NotificationsPage = () => {
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <h1 className="text-2xl font-semibold text-white">Notifications</h1>
-                    <p className="text-gray-400 text-sm mt-1">
-                        You've {unreadCount} unread notifications
-                    </p>
                 </div>
                 <button
                     onClick={handleMarkAllRead}
                     disabled={unreadCount === 0}
-                    className="px-4 py-2 bg-[#1D4CB5]/10 text-white hover:bg-[#1D4CB5]/20 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all"
                 >
                     Mark all as read
                 </button>
@@ -177,14 +174,14 @@ const NotificationsPage = () => {
                 {loading ? (
                     <div className="text-center py-20 text-gray-500">Loading notifications...</div>
                 ) : notifications.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500 bg-[#16191C]/30 rounded-2xl border border-dashed border-[#2A2F33]">
+                    <div className="text-center py-20 text-gray-500 bg-[#16191C]/30 rounded-md border border-dashed border-[#2A2F33]">
                         No notifications to show.
                     </div>
                 ) : (
                     notifications.map((n) => (
                         <div
                             key={n.id}
-                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${n.is_read ? "bg-[#1E2328]/40 border-[#2A2F33]" : "bg-[#1E2328] border-[#3A4046] shadow-xl ring-1 ring-white/5"
+                            className={`flex items-center justify-between p-4 rounded-md border transition-all duration-300 ${n.is_read ? "bg-[#1E2328]/40 border-[#2A2F33]" : "bg-[#1E2328] border-[#3A4046] shadow-xl ring-1 ring-white/5"
                                 } group hover:border-[#1D4CB5]/30`}
                         >
                             <div className="flex gap-4 items-center flex-1 cursor-pointer" onClick={() => navigateToAlert(n)}>

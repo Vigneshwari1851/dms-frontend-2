@@ -232,7 +232,7 @@ export default function ExpenseList() {
                 if (isToday) {
                     options.push({ label: "Delete", onClick: () => handleDelete(row) });
                 }
-                return <ActionDropdown options={options} />;
+                return <ActionDropdown options={options} vertical={true} />;
             }
         }
 
@@ -272,44 +272,42 @@ export default function ExpenseList() {
                                     />
                                     {formErrors.date && <p className=" text-red-500 mt-0.5">{formErrors.date}</p>}
                                 </div>
-                                <div className="space-y-2 relative">
+                                <div className="space-y-2">
                                     <label className="text-[#8F8F8F]">Category</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="e.g. Fees, Rent, Salary"
-                                        className={`w-full bg-[#131619] border ${formErrors.category ? 'border-red-500' : 'border-[#2A2D31]'} rounded-lg p-2.5 text-white text-sm outline-none focus:border-[#1D4CB5]`}
-                                        value={formData.category}
-                                        autoComplete="off"
-                                        onChange={(e) => {
-                                            const val = formatTitleCaseAlphanumeric(e.target.value);
-                                            setFormData({ ...formData, category: val });
-                                            setShowSuggestions(true);
-                                        }}
-
-
-                                    />
-                                    {showSuggestions && formData.category.trim() && !expenses.some(e => e.category === formatCategory(formData.category)) && (
-
-                                        <ul className="absolute z-10 w-full bg-[#1E2328] border border-[#2A2D31] rounded-lg mt-1 max-h-32 overflow-y-auto shadow-xl">
-                                            {[...new Set(expenses.map(e => e.category))]
-                                                .filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase()))
-                                                .map(suggestion => (
-                                                    <li
-                                                        key={suggestion}
-                                                        className="px-4 py-2 text-sm text-gray-300 hover:bg-[#1D4CB5] hover:text-white cursor-pointer transition-colors"
-                                                        onClick={() => {
-                                                            setFormData({ ...formData, category: suggestion });
-                                                            setShowSuggestions(false);
-                                                        }}
-
-                                                    >
-                                                        {suggestion}
-                                                    </li>
-                                                ))
-                                            }
-                                        </ul>
-                                    )}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="e.g. Fees, Rent, Salary"
+                                            className={`w-full bg-[#131619] border ${formErrors.category ? 'border-red-500' : 'border-[#2A2D31]'} rounded-lg p-2.5 text-white text-sm outline-none focus:border-[#1D4CB5]`}
+                                            value={formData.category}
+                                            autoComplete="off"
+                                            onChange={(e) => {
+                                                const val = formatTitleCaseAlphanumeric(e.target.value);
+                                                setFormData({ ...formData, category: val });
+                                                setShowSuggestions(true);
+                                            }}
+                                        />
+                                        {showSuggestions && formData.category.trim() && !expenses.some(e => e.category === formatCategory(formData.category)) && (
+                                            <ul className="absolute z-10 w-full left-0 mt-1 bg-[#1E2328] border border-[#2A2D31] rounded-lg max-h-32 overflow-y-auto shadow-xl">
+                                                {[...new Set(expenses.map(e => e.category))]
+                                                    .filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase()))
+                                                    .map(suggestion => (
+                                                        <li
+                                                            key={suggestion}
+                                                            className="px-4 py-2 text-sm text-gray-300 hover:bg-[#1D4CB5] hover:text-white cursor-pointer transition-colors"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, category: suggestion });
+                                                                setShowSuggestions(false);
+                                                            }}
+                                                        >
+                                                            {suggestion}
+                                                        </li>
+                                                    ))
+                                                }
+                                            </ul>
+                                        )}
+                                    </div>
                                     {formErrors.category && <p className=" text-red-500 mt-0.5">{formErrors.category}</p>}
                                 </div>
 
@@ -375,7 +373,7 @@ export default function ExpenseList() {
                                     type="submit"
                                     className="flex-1 bg-[#1D4CB5] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#173B8B] shadow-lg shadow-[#1D4CB5]/20 transition-all"
                                 >
-                                    {editingExpense ? 'Update Expense' : 'Save Expense'}
+                                    {editingExpense ? 'Update Expense' : 'Add Expense'}
                                 </button>
                             </div>
                         </form>

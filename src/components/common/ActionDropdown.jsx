@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-function ActionDropdown({ options = [] }) {
+function ActionDropdown({ options = [], vertical = false }) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState({});
   const [arrowInfo, setArrowInfo] = useState({ direction: "down", left: 0 });
@@ -110,7 +110,7 @@ function ActionDropdown({ options = [] }) {
         }}
         className="text-white w-8 h-8 rounded-full flex items-center justify-center relative z-10 hover:bg-[#2E3439]"
       >
-        &#8943;
+        {vertical ? <>&#8942;</> : <>&#8943;</>}
       </button>
 
       {open &&

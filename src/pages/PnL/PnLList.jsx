@@ -346,9 +346,6 @@ export default function PnLList() {
                     <h1 className="text-white text-16px lg:text-[20px] font-semibold">
                         Profit & Loss Analysis
                     </h1>
-                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">
-                        Detailed breakdown of trading performance
-                    </p>
                 </div>
 
                 <div className="flex items-center gap-2 ml-auto">
@@ -389,7 +386,7 @@ export default function PnLList() {
                 return (
                     <div className="flex items-center justify-between bg-[#1A1F24] border border-[#2A2F33] rounded-xl px-6 py-4 mb-6">
                         <div>
-                            <p className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wide mb-1">Opening Rate (TZS)</p>
+                            <p className="text-[#8F8F8F] text-xs font-medium">System Opening Rate (TZS)</p>
                             {displayRate ? (
                                 <p className="text-white text-2xl font-semibold">
                                     {Number(displayRate).toLocaleString()}
@@ -399,8 +396,8 @@ export default function PnLList() {
                                 </p>
                             ) : (
                                 <>
-                                    <p className="text-[#555] text-2xl font-semibold">Not Set</p>
-                                    <p className="text-[#8F8F8F] text-xs mt-0.5">Click "Edit" to enter your starting reference rate for P&L calculation</p>
+                                    <p className="text-[#555] text-2xl font-semibold ml-40">Not Set</p>
+                                    <p className="text-[#8F8F8F] text-xs mt-0.5">Note: Click "Edit" to enter your opening rate</p>
                                 </>
                             )}
                         </div>
@@ -416,7 +413,7 @@ export default function PnLList() {
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
-                            {displayRate ? "Edit Rate" : "Set Rate"}
+                            {displayRate ? "Edit Rate" : "Edit Rate"}
                         </button>
                     </div>
                 );
@@ -533,9 +530,10 @@ export default function PnLList() {
                     columns={columns}
                     data={filteredRecon}
                     title="Trading History"
-                    subtitle={`Performance for ${{ today: "Today", weekly: "This Week", monthly: "This Month", custom: "Custom Range" }[periodType] || "Today"}`}
                     loading={loading || exporting}
                     showPagination={false}
+                    showRightSection={false}
+                    showSearch={false}
                     showExport={true}
                     onExport={handleExport}
                     emptyStateProps={{
