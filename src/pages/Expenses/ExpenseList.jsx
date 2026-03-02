@@ -9,7 +9,7 @@ import ActionDropdown from "../../components/common/ActionDropdown";
 import Toast from "../../components/common/Toast";
 import expensesIcon from "../../assets/dashboard/sellamount.svg";
 import addIcon from "../../assets/dashboard/add.svg";
-import emptyExpenses from "../../assets/common/empty/expenses-bg.svg";
+import emptyExpenses from "../../assets/Common/empty/expenses-bg.svg";
 import {
     formatTitleCaseAlphanumeric,
     formatPositiveNumeric
