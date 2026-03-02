@@ -9,7 +9,6 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
       className="
         w-full h-[130px]
         bg-[#1E2328]
-        border border-[#2A2F33]
         rounded-xl
         p-4
         flex flex-col
