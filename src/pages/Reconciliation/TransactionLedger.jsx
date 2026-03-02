@@ -5,7 +5,7 @@ import add from "../../assets/dashboard/add.svg";
 import { fetchReconcoliation, exportReconciliation, fetchCurrentReconciliation, startReconcoliation } from "../../api/reconcoliation";
 import Toast from "../../components/common/Toast";
 import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
-import ReconciliationExpandableRow from "../../components/reconciliation/ReconciliationExpandableRow";
+import ReconciliationExpandableRow from "../../components/Reconciliation/ReconciliationExpandableRow";
 import Pagination from "../../components/common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
 
