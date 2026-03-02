@@ -1,8 +1,20 @@
 
-
-
 export default function StatCard({ title, subtitle, value, subValues, change, icon, color }) {
   const hasSubValues = subValues && subValues.length > 0;
+
+  const renderValue = (val) => {
+    if (typeof val !== "string") return <span>{val}</span>;
+    const match = val.match(/^([A-Z]{2,4})\s+(.+)$/);
+    if (match) {
+      return (
+        <>
+          <span className="text-[10px] font-normal text-[#8F8F8F] mr-2">{match[1]}</span>
+          <span>{match[2]}</span>
+        </>
+      );
+    }
+    return <span>{val}</span>;
+  };
 
   return (
     <div
@@ -36,23 +48,19 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
                 className="flex items-center justify-between py-1 group/item"
               >
                 <span className="text-white text-[12px] group-hover/item:text-blue-400 transition-colors">{item.label}</span>
-                <span className="text-[#8F8F8F] text-[13px] tabular-nums group-hover/item:text-white transition-colors">{item.value}</span>
+                <span className="text-[#8F8F8F] text-[13px] tabular-nums group-hover/item:text-white transition-colors">{renderValue(item.value)}</span>
               </div>
             ))}
           </div>
         ) : (
           <div className="flex flex-col h-full justify-center">
-            <h2 className={`text-3xl tabular-nums ${color || 'text-white'}`}>
-              {value}
+            <h2 className={`text-lg tabular-nums font-semibold ${color || 'text-white'}`}>
+              {renderValue(value)}
             </h2>
-            {change && (
-              <p className="text-[11px] mt-1 text-[#8F8F8F]">
-                {change}
-              </p>
-            )}
           </div>
         )}
       </div>
     </div>
   );
 }
+

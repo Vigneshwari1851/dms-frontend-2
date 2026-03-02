@@ -6,7 +6,7 @@ import { fetchCurrencyPairs, createCurrencyPair } from "../../api/currencyPair";
 import addIcon from "../../assets/Common/HPlus.svg";
 import Toast from "../../components/common/Toast";
 import Dropdown from "../../components/common/Dropdown";
-import emptyCurrency from "../../assets/common/empty/currency-bg.svg";
+import emptyCurrency from "../../assets/Common/empty/currency-bg.svg";
 
 export default function CurrencyManagement() {
     const [activeTab, setActiveTab] = useState("currencies");

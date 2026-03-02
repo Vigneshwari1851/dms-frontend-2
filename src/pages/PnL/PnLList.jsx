@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import StatCard from "../../components/dashboard/StatCard";
 import Table from "../../components/common/Table";
 import Dropdown from "../../components/common/Dropdown";
+import DateFilter from "../../components/common/DateFilter";
 import profitIcon from "../../assets/dashboard/profit.svg";
 import dealstodayIcon from "../../assets/dashboard/dealstoday.svg";
 import buyamountIcon from "../../assets/dashboard/buyamount.svg";
@@ -9,6 +10,10 @@ import sellamountIcon from "../../assets/dashboard/sellamount.svg";
 import {
     AreaChart,
     Area,
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -20,7 +25,7 @@ import dealsIcon from "../../assets/Common/deals.svg";
 import addIcon from "../../assets/Common/HPlus.svg";
 import { fetchReconcoliation, exportReconciliation, fetchPnLOverview } from "../../api/reconcoliation";
 import { fetchExpenses } from "../../api/expense";
-import emptyPnL from "../../assets/common/empty/pnl-bg.svg";
+import emptyPnL from "../../assets/Common/empty/pnl-bg.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import calendarIcon from "../../assets/Common/calendar.svg";
 import { useRef } from "react";
@@ -33,7 +38,8 @@ export default function PnLList() {
     const [exporting, setExporting] = useState(false);
     const [data, setData] = useState([]);
     const [expenseData, setExpenseData] = useState([]);
-    const [selectedMonth, setSelectedMonth] = useState("Today");
+    const [periodType, setPeriodType] = useState("today"); // today, weekly, monthly, custom
+    const [customRange, setCustomRange] = useState({ from: null, to: null });
     const [currencies, setCurrencies] = useState([]);
     const [todayRates, setTodayRates] = useState({});
     const [previousRate, setPreviousRate] = useState(0);
@@ -97,6 +103,9 @@ export default function PnLList() {
                     acc[r.currency.code] = { setRate: Number(r.set_rate) };
                     return acc;
                 }, {});
+                if (!ratesMap["TZS"] && rateResponse.currentRate != null) {
+                    ratesMap["TZS"] = { setRate: rateResponse.currentRate };
+                }
                 setTodayRates(ratesMap);
                 setPreviousRate(rateResponse.previousRate || 0);
             }
@@ -110,8 +119,8 @@ export default function PnLList() {
 
             if (currencyResponse) {
                 setCurrencies(currencyResponse);
-                const usd = currencyResponse.find(c => c.code === "USD");
-                if (usd) setRateForm(prev => ({ ...prev, currency_id: usd.id }));
+                const tzs = currencyResponse.find(c => c.code === "TZS");
+                if (tzs) setRateForm(prev => ({ ...prev, currency_id: tzs.id }));
             }
         } catch (err) {
             console.error("Error loading P&L data:", err);
@@ -145,33 +154,36 @@ export default function PnLList() {
         }
     };
 
-    const months = useMemo(() => {
-        const reconMonths = data.map(item => item.monthKey);
-        const expenseMonths = expenseData.map(item => item.monthKey);
-        const uniqueMonths = ["All Months", "Today", ...new Set([...reconMonths, ...expenseMonths])];
-        return uniqueMonths;
-    }, [data, expenseData]);
+    const dateRange = useMemo(() => {
+        const today = new Date();
+        const sdStart = (d) => { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; };
+        const sdEnd = (d) => { const r = new Date(d); r.setHours(23, 59, 59, 999); return r; };
+        if (periodType === "weekly") {
+            const wStart = new Date(today);
+            wStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+            return { start: sdStart(wStart), end: sdEnd(today) };
+        } else if (periodType === "monthly") {
+            return { start: new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0), end: sdEnd(today) };
+        } else if (periodType === "custom" && customRange.from && customRange.to) {
+            return { start: sdStart(customRange.from), end: sdEnd(customRange.to) };
+        }
+        // default: today
+        return { start: sdStart(today), end: sdEnd(today) };
+    }, [periodType, customRange]);
 
     const filteredRecon = useMemo(() => {
-        if (selectedMonth === "All Months") return data;
-        if (selectedMonth === "Today") {
-            const todayStr = new Date().toLocaleDateString("en-GB");
-            return data.filter(item => item.date === todayStr);
-        }
-        return data.filter(item => item.monthKey === selectedMonth);
-    }, [data, selectedMonth]);
+        return data.filter(item => {
+            const d = new Date(item.rawDate);
+            return d >= dateRange.start && d <= dateRange.end;
+        });
+    }, [data, dateRange]);
 
     const filteredExpenses = useMemo(() => {
-        if (selectedMonth === "All Months") return expenseData;
-        if (selectedMonth === "Today") {
-            const todayStr = new Date().toISOString().split('T')[0];
-            return expenseData.filter(e => {
-                const eDate = e.date ? new Date(e.date).toISOString().split('T')[0] : "";
-                return eDate === todayStr;
-            });
-        }
-        return expenseData.filter(item => item.monthKey === selectedMonth);
-    }, [expenseData, selectedMonth]);
+        return expenseData.filter(e => {
+            const d = new Date(e.date);
+            return d >= dateRange.start && d <= dateRange.end;
+        });
+    }, [expenseData, dateRange]);
 
     const stats = useMemo(() => {
         if (data.length === 0) return {
@@ -233,12 +245,14 @@ export default function PnLList() {
             });
         }
 
+        const perDayExpense = filteredRecon.length > 0 ? totalExpensesInTZS / filteredRecon.length : 0;
         const chartData = [...filteredRecon].reverse().map(item => {
             const date = new Date(item.rawDate);
             return {
                 name: date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
                 pnl: item.profitLoss,
-                net: item.profitLoss - (totalExpensesInTZS / filteredRecon.length || 0), // Estimate net per session
+                net: item.profitLoss - perDayExpense,
+                expenses: Math.round(perDayExpense),
                 fullDate: item.date
             };
         });
@@ -327,7 +341,7 @@ export default function PnLList() {
 
     return (
         <>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-white text-16px lg:text-[20px] font-semibold">
                         Profit & Loss Analysis
@@ -337,206 +351,180 @@ export default function PnLList() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => setShowRateModal(true)}
-                        className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                        <img src={addIcon} alt="add" className="w-5 h-5" />
-                        Set Rates
-                    </button>
-                    <div className="w-full md:w-64">
-                        <Dropdown
-                            label="Filter by Month"
-                            options={months}
-                            selected={selectedMonth}
-                            onChange={setSelectedMonth}
+                <div className="flex items-center gap-2 ml-auto">
+                    {/* Period selection dropdown */}
+                    <Dropdown
+                        options={[
+                            { id: "today", label: "Today" },
+                            { id: "weekly", label: "Weekly" },
+                            { id: "monthly", label: "Monthly" },
+                            { id: "custom", label: "Custom Range" },
+                        ]}
+                        selected={
+                            [
+                                { id: "today", label: "Today" },
+                                { id: "weekly", label: "Weekly" },
+                                { id: "monthly", label: "Monthly" },
+                                { id: "custom", label: "Custom Range" },
+                            ].find(p => p.id === periodType)?.label || "Today"
+                        }
+                        onChange={(val) => setPeriodType(val.id)}
+                        className="w-[140px]"
+                    />
+
+                    {/* DateFilter for custom range */}
+                    {periodType === "custom" && (
+                        <DateFilter
+                            initialOption="Custom"
+                            onApply={(range) => setCustomRange(range)}
                         />
-                    </div>
+                    )}
                 </div>
             </div>
+
+            {/* Opening Rate Inline Card */}
+            {(() => {
+                const displayRate = todayRates["TZS"]?.setRate || previousRate || null;
+                const isManual = !!todayRates["TZS"]?.setRate;
+                return (
+                    <div className="flex items-center justify-between bg-[#1A1F24] border border-[#2A2F33] rounded-xl px-6 py-4 mb-6">
+                        <div>
+                            <p className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wide mb-1">Opening Rate (TZS)</p>
+                            {displayRate ? (
+                                <p className="text-white text-2xl font-semibold">
+                                    {Number(displayRate).toLocaleString()}
+                                    <span className="text-xs font-normal text-[#8F8F8F] ml-2">
+                                        {isManual ? "manually set" : "based on yesterday's avg deal rate"}
+                                    </span>
+                                </p>
+                            ) : (
+                                <>
+                                    <p className="text-[#555] text-2xl font-semibold">Not Set</p>
+                                    <p className="text-[#8F8F8F] text-xs mt-0.5">Click "Edit" to enter your starting reference rate for P&L calculation</p>
+                                </>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => {
+                                const existingRate = todayRates["TZS"]?.setRate || previousRate || "";
+                                setRateForm(prev => ({ ...prev, set_rate: existingRate }));
+                                setShowRateModal(true);
+                            }}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0 ml-6"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            {displayRate ? "Edit Rate" : "Set Rate"}
+                        </button>
+                    </div>
+                );
+            })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard
                     title="Prev Day Avg Rate"
-                    subtitle="Previous Session"
-                    value={Number(stats.prevRate).toFixed(2)}
+                    value={`TZS ${Number(todayRates["TZS"]?.setRate || previousRate || stats.prevRate).toLocaleString()}`}
                     icon={profitIcon}
                 />
                 <StatCard
-                    title="Current Avg Rate"
-                    subtitle="Latest Session"
-                    value={Number(stats.currRate).toFixed(2)}
+                    title="Current Avg Fx Rate"
+                    value={`TZS ${Number(stats.currRate).toFixed(2)}`}
                     icon={dealstodayIcon}
                 />
                 <StatCard
                     title="Daily P&L"
-                    subtitle="Trading Profit"
-                    value={`TZS ${Number(stats.dailyPnL).toLocaleString()}`}
+                    value={(`TZS ${Number(Math.abs(stats.dailyPnL)).toLocaleString()}`)}
                     icon={buyamountIcon}
+                    color={stats.dailyPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
                 <StatCard
-                    title="Net P&L"
-                    subtitle="After Expenses"
-                    value={`TZS ${Number(stats.netPnL).toLocaleString()}`}
+                    title="Net P&L (After Expenses)"
+                    value={`TZS ${Number(Math.abs(stats.netPnL)).toLocaleString()}`}
                     icon={sellamountIcon}
+                    color={stats.netPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
             </div>
 
-            {selectedMonth !== "All Months" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-
-                    {/* CARD 2: BUY BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white">Buy Deals</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.buyByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.buyByCurrency).length > 0 ? (
-                                Object.entries(stats.buyByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No buy deals today</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 3: SELL BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white">Sell Deals</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.sellByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.sellByCurrency).length > 0 ? (
-                                Object.entries(stats.sellByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No sell deals today</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 4: EXPENSES BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white text-sm">Total Expenses</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.expensesByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.expensesByCurrency).length > 0 ? (
-                                Object.entries(stats.expensesByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No expenses found</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                </div>
-            )}
-
             {/* CHART SECTION */}
-            {selectedMonth !== "Today" && (
-                <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 mb-8 shadow-lg">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="text-white text-base font-semibold">P&L Performance Trend</h3>
-                            <p className="text-[#8F8F8F] text-[11px] mt-1">Visualizing Daily Profit vs Net Profit (TZS)</p>
+            {periodType !== "today" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-white text-base font-semibold">Daily P&L Trend</h3>
+                                <p className="text-[#8F8F8F] text-[11px] mt-1">Daily vs Net Profit/Loss (TZS)</p>
+                            </div>
+                            <div className="flex items-center gap-4 text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#3b82f6]"></div>
+                                    <span className="text-[#8F8F8F]">Daily P&L</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#82E890]"></div>
+                                    <span className="text-[#8F8F8F]">Net P&L</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4 text-[11px]">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded bg-[#82E890]/80"></div>
-                                <span className="text-[#8F8F8F]">Daily P&L</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded bg-[#F7626E]/80"></div>
-                                <span className="text-[#8F8F8F]">Net P&L (Est.)</span>
-                            </div>
+                        <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={stats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
+                                        itemStyle={{ fontSize: '12px' }}
+                                        labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
+                                        formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
+                                    />
+                                    <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
+                                    <Line type="monotone" dataKey="pnl" stroke="#3b82f6" strokeWidth={2.5} dot={false} name="Daily P&L" animationDuration={1200} />
+                                    <Line type="monotone" dataKey="net" stroke="#82E890" strokeWidth={2.5} dot={false} name="Net P&L" animationDuration={1200} />
+                                </LineChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
-                    <div className="h-[280px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorPnL" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#82E890" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#82E890" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#F7626E" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#F7626E" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#8F8F8F', fontSize: 11 }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#8F8F8F', fontSize: 11 }}
-                                    hide
-                                />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
-                                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                                    labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
-                                    formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
-                                />
-                                <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="pnl"
-                                    stroke="#82E890"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorPnL)"
-                                    animationDuration={1500}
-                                    name="Daily P&L"
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="net"
-                                    stroke="#F7626E"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorNet)"
-                                    animationDuration={1500}
-                                    name="Net P&L"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+
+                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-white text-base font-semibold">Daily Breakdown</h3>
+                                <p className="text-[#8F8F8F] text-[11px] mt-1">P&L vs Expenses per day (TZS)</p>
+                            </div>
+                            <div className="flex items-center gap-4 text-[11px]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#3b82f6]"></div>
+                                    <span className="text-[#8F8F8F]">Daily P&L</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded bg-[#f59e0b]"></div>
+                                    <span className="text-[#8F8F8F]">Expenses</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2F33" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F8F8F', fontSize: 11 }} hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1A1F24', border: '1px solid #2A2F33', borderRadius: '8px' }}
+                                        itemStyle={{ fontSize: '12px' }}
+                                        labelStyle={{ color: '#8F8F8F', marginBottom: '4px' }}
+                                        formatter={(value) => [`TZS ${Number(value).toLocaleString()}`, '']}
+                                    />
+                                    <ReferenceLine y={0} stroke="#2A2F33" strokeWidth={2} />
+                                    <Bar dataKey="pnl" fill="#3b82f6" name="Daily P&L" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="expenses" fill="#f59e0b" name="Expenses" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
+
                 </div>
             )}
 
@@ -545,7 +533,7 @@ export default function PnLList() {
                     columns={columns}
                     data={filteredRecon}
                     title="Trading History"
-                    subtitle={`Performance for ${selectedMonth}`}
+                    subtitle={`Performance for ${{ today: "Today", weekly: "This Week", monthly: "This Month", custom: "Custom Range" }[periodType] || "Today"}`}
                     loading={loading || exporting}
                     showPagination={false}
                     showExport={true}
@@ -563,59 +551,20 @@ export default function PnLList() {
                         <h2 className="text-xl">Set Rate</h2>
                         <p className="text-gray-400 mt-1 text-sm">Specify rates used for P&L valuation</p>
 
-                        <div className="mt-6 space-y-4">
-                            <div>
-                                <label className="block text-sm text-[#ABABAB] mb-1">Currency</label>
-                                <Dropdown
-                                    label="Select Currency"
-                                    options={currencies.map(c => `${c.code} - ${c.name}`)}
-                                    selected={currencies.find(c => c.id === rateForm.currency_id)?.code ? `${currencies.find(c => c.id === rateForm.currency_id).code} - ${currencies.find(c => c.id === rateForm.currency_id).name}` : ""}
-                                    onChange={(val) => {
-                                        const code = val.split(" - ")[0];
-                                        const curr = currencies.find(c => c.code === code);
-                                        if (curr) setRateForm(prev => ({ ...prev, currency_id: curr.id }));
-                                    }}
-                                />
-                            </div>
-
-                            <div className="relative" ref={calendarRef}>
-                                <label className="block text-sm text-[#ABABAB] mb-1">Date</label>
-                                <div
-                                    onClick={() => setShowCalendar(!showCalendar)}
-                                    className="w-full bg-[#2A2F34] rounded-lg px-4 py-2 text-white flex items-center justify-between cursor-pointer border border-transparent hover:border-[#1D4CB588] transition-all"
-                                >
-                                    <span>{new Date(rateForm.date).toLocaleDateString("en-GB")}</span>
-                                    <img src={calendarIcon} alt="calendar" className="w-4 h-4 opacity-70" />
-                                </div>
-
-                                {showCalendar && (
-                                    <div className="absolute top-full left-0 mt-2 z-[110] bg-[#1A1F24] border border-[#2A2F33] rounded-xl shadow-2xl p-2 animate-in fade-in zoom-in duration-200 origin-top-left">
-                                        <CalendarMini
-                                            selectedDate={new Date(rateForm.date)}
-                                            onDateSelect={(date) => {
-                                                setRateForm(prev => ({
-                                                    ...prev,
-                                                    date: date.toISOString().split('T')[0]
-                                                }));
-                                                setShowCalendar(false);
-                                            }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-1">
-                                <div>
-                                    <label className="block text-sm text-[#ABABAB] mb-1">Set Rate</label>
-                                    <input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={rateForm.set_rate}
-                                        onChange={(e) => setRateForm(prev => ({ ...prev, set_rate: e.target.value }))}
-                                        className="w-full bg-[#2A2F34]  rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5]"
-                                    />
-                                </div>
-                            </div>
+                        <div className="mt-6">
+                            <label className="block text-sm text-[#ABABAB] mb-1">TZS Rate</label>
+                            <input
+                                type="number"
+                                placeholder={`e.g. ${Number(todayRates["TZS"]?.setRate || previousRate || 0).toLocaleString()}`}
+                                value={rateForm.set_rate}
+                                onChange={(e) => setRateForm(prev => ({ ...prev, set_rate: e.target.value }))}
+                                className="w-full bg-[#2A2F34] rounded-lg px-4 py-2 text-white outline-none border border-transparent focus:border-[#1D4CB5]"
+                            />
+                            {/* {(todayRates["TZS"]?.setRate || previousRate) ? (
+                                <p className="text-xs text-[#8F8F8F] mt-1.5">
+                                    {todayRates["TZS"]?.setRate ? "Currently saved" : "Previous rate"}: <span className="text-[#82E890]">TZS {Number(todayRates["TZS"]?.setRate || previousRate).toLocaleString()}</span>
+                                </p>
+                            ) : null} */}
                         </div>
 
                         <div className="mt-8 flex gap-3">

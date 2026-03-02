@@ -3,11 +3,11 @@ import calendar from "../../assets/Common/calendar.svg";
 import CalendarMini from "./CalendarMini";
 import Dropdown from "./Dropdown";
 
-export default function DateFilter({ onApply }) {
+export default function DateFilter({ onApply, initialOption = "Today" }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const [selectedOption, setSelectedOption] = useState("Today");
+  const [selectedOption, setSelectedOption] = useState(initialOption);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
@@ -21,6 +21,13 @@ export default function DateFilter({ onApply }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Initialize selected option and date range on mount
+  useEffect(() => {
+    if (initialOption) {
+      handleOptionClick(initialOption);
+    }
+  }, [initialOption]);
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);
@@ -42,12 +49,19 @@ export default function DateFilter({ onApply }) {
       start = new Date(today.getFullYear(), today.getMonth(), 1);
       end = today;
     } else if (option === "Custom") {
-      start = fromDate;
-      end = toDate;
+      const lastMonth = new Date();
+      lastMonth.setMonth(today.getMonth() - 1);
+      start = lastMonth;
+      end = today;
     }
 
     setFromDate(start);
     setToDate(end);
+
+    // If initializing or selecting a preset, apply immediately
+    if (option !== "Custom" || initialOption === "Custom") {
+      if (onApply) onApply({ from: start, to: end });
+    }
   };
 
   const handleApply = () => {

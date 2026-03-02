@@ -125,7 +125,7 @@ export default function ReconciliationDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex bg-[#131619] p-1 rounded-lg w-fit border border-[#2A2F33]/50">
                         {[
-                            { id: "daily", label: "Daily", icon: Calendar },
+                            { id: "daily", label: "Today", icon: Calendar },
                             { id: "weekly", label: "Weekly", icon: CalendarDays },
                             { id: "monthly", label: "Monthly", icon: CalendarRange },
                             { id: "custom", label: "Date Range", icon: CalendarDays }
@@ -167,6 +167,7 @@ export default function ReconciliationDashboard() {
                             </div>
                         ) : (
                             <DateFilter
+                                initialOption="Custom"
                                 onApply={(range) => setCustomRange(range)}
                             />
                         )}
