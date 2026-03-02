@@ -24,6 +24,14 @@ export default function CalendarMini({
     if (year !== undefined) setCurrentYear(year);
   }, [month, year]);
 
+  // Sync view when selectedDate changes (e.g. from parent presets)
+  useEffect(() => {
+    if (selectedDate) {
+      setCurrentMonth(selectedDate.getMonth());
+      setCurrentYear(selectedDate.getFullYear());
+    }
+  }, [selectedDate]);
+
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const blanks = firstDay === 0 ? 6 : firstDay - 1;
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
