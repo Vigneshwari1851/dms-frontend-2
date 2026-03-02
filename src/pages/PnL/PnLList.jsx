@@ -435,13 +435,13 @@ export default function PnLList() {
                 />
                 <StatCard
                     title="Daily P&L"
-                    value={(`TZS ${Number(stats.dailyPnL).toLocaleString()}`)}
+                    value={(`TZS ${Number(Math.abs(stats.dailyPnL)).toLocaleString()}`)}
                     icon={buyamountIcon}
                     color={stats.dailyPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
                 <StatCard
                     title="Net P&L (After Expenses)"
-                    value={`TZS ${Number(stats.netPnL).toLocaleString()}`}
+                    value={`TZS ${Number(Math.abs(stats.netPnL)).toLocaleString()}`}
                     icon={sellamountIcon}
                     color={stats.netPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
