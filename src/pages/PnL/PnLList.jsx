@@ -374,7 +374,10 @@ export default function PnLList() {
 
                     {/* DateFilter for custom range */}
                     {periodType === "custom" && (
-                        <DateFilter onApply={(range) => setCustomRange(range)} />
+                        <DateFilter
+                            initialOption="Custom"
+                            onApply={(range) => setCustomRange(range)}
+                        />
                     )}
                 </div>
             </div>

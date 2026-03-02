@@ -54,6 +54,14 @@ export default function CalendarMini({
 
   const handleNextMonth = () => {
     setCurrentMonth(m => {
+      const nextMonth = m === 11 ? 0 : m + 1;
+      const nextYear = m === 11 ? currentYear + 1 : currentYear;
+
+      // Prevent navigating to future months/years
+      if (nextYear > today.getFullYear() || (nextYear === today.getFullYear() && nextMonth > today.getMonth())) {
+        return m;
+      }
+
       if (m === 11) {
         setCurrentYear(y => y + 1);
         return 0;
@@ -78,7 +86,8 @@ export default function CalendarMini({
         </span>
         <button
           onClick={handleNextMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2A2F33] transition-colors"
+          disabled={currentYear > today.getFullYear() || (currentYear === today.getFullYear() && currentMonth >= today.getMonth())}
+          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2A2F33] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           &gt;
         </button>
@@ -96,13 +105,15 @@ export default function CalendarMini({
         {[...Array(daysInMonth)].map((_, i) => {
           const day = i + 1;
           const dateObj = new Date(currentYear, currentMonth, day);
+          const isFuture = dateObj > today;
 
           return (
             <div
               key={day}
-              onClick={() => handleDateClick(day)}
-              className={`py-1 rounded-md cursor-pointer hover:bg-[#2A2F33]
+              onClick={() => !isFuture && handleDateClick(day)}
+              className={`py-1 rounded-md transition-colors
                 ${isSameDate(dateObj, selectedDate) ? "bg-blue-600" : ""}
+                ${isFuture ? "opacity-30 cursor-not-allowed text-gray-500" : "cursor-pointer hover:bg-[#2A2F33]"}
               `}
             >
               {day}

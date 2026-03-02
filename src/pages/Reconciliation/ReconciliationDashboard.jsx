@@ -167,6 +167,7 @@ export default function ReconciliationDashboard() {
                             </div>
                         ) : (
                             <DateFilter
+                                initialOption="Custom"
                                 onApply={(range) => setCustomRange(range)}
                             />
                         )}
