@@ -359,107 +359,27 @@ export default function PnLList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard
                     title="Prev Day Avg Rate"
-                    subtitle="Previous Session"
                     value={Number(stats.prevRate).toFixed(2)}
                     icon={profitIcon}
                 />
                 <StatCard
-                    title="Current Avg Rate"
-                    subtitle="Latest Session"
+                    title="Current Avg Fx Rate"
                     value={Number(stats.currRate).toFixed(2)}
                     icon={dealstodayIcon}
                 />
                 <StatCard
                     title="Daily P&L"
-                    subtitle="Trading Profit"
                     value={`TZS ${Number(stats.dailyPnL).toLocaleString()}`}
                     icon={buyamountIcon}
+                    color={stats.dailyPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
                 <StatCard
-                    title="Net P&L"
-                    subtitle="After Expenses"
+                    title="Net P&L (After Expenses)"
                     value={`TZS ${Number(stats.netPnL).toLocaleString()}`}
                     icon={sellamountIcon}
+                    color={stats.netPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
             </div>
-
-            {selectedMonth !== "All Months" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-
-                    {/* CARD 2: BUY BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white">Buy Deals</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.buyByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.buyByCurrency).length > 0 ? (
-                                Object.entries(stats.buyByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No buy deals today</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 3: SELL BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white">Sell Deals</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.sellByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.sellByCurrency).length > 0 ? (
-                                Object.entries(stats.sellByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No sell deals today</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 4: EXPENSES BREAKDOWN */}
-                    <div className="bg-[#1A1F24] border border-[#2A2F33] rounded-xl flex flex-col shadow-lg overflow-hidden h-[130px]">
-                        <div className="p-4 border-b border-[#2A2F33] bg-[#1E2328] flex justify-between items-center">
-                            <span className="text-white text-sm">Total Expenses</span>
-                            <span className="text-[10px] text-[#8F8F8F]">{Object.keys(stats.expensesByCurrency).length} currencies</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto scrollbar-grey p-4 space-y-3">
-                            {Object.keys(stats.expensesByCurrency).length > 0 ? (
-                                Object.entries(stats.expensesByCurrency).map(([curr, amt]) => (
-                                    <div key={curr} className="flex justify-between items-center group">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium text-sm">{curr}</span>
-                                        </div>
-                                        <span className="text-[#8F8F8F] text-sm group-hover:text-white transition-colors">{Number(amt || 0).toLocaleString()}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <span className="text-gray-500 italic text-xs">No expenses found</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                </div>
-            )}
 
             {/* CHART SECTION */}
             {selectedMonth !== "Today" && (

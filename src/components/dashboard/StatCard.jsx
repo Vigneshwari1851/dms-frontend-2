@@ -42,7 +42,7 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
           </div>
         ) : (
           <div className="flex flex-col h-full justify-center">
-            <h2 className={`text-3xl tabular-nums ${color || 'text-white'}`}>
+            <h2 className={`text-lg tabular-nums font-semibold ${color || 'text-white'}`}>
               {value}
             </h2>
             {change && (

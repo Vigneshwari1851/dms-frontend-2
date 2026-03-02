@@ -106,7 +106,19 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   const columns = useMemo(() => [
     { key: "id", label: "Deal ID", align: "left", className: "pl-5 text-white" },
     { key: "date", label: "Date", align: "center" },
-    { key: "type", label: "Type", align: "center" },
+    { key: "type", label: "Type", align: "center", className: "pr-5", 
+      render: (val) => {
+        const colors = {
+          Buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
+          Sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
+        };
+        return (
+          <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${colors[val] || "text-gray-400"}`}>
+            {val}
+          </span>
+        );
+      }
+     },
     { key: "customer_name", label: "Customer Name", align: "left" },
     { key: "pair", label: "Currency Pair", align: "left" },
     { key: "buyAmt", label: "Buy Amount", align: "left" },

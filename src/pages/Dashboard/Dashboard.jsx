@@ -102,27 +102,26 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-4">
         <StatCard
           title="Today's Deals"
           value={stats.today?.count || 0}
           icon={dealstoday}
         />
-
         <StatCard
-          title="Current Avg Rate"
-          value={Number(stats.currentRate || 0).toFixed(2)}
-          subtitle="Latest Session"
+          title="Txn Snapshot"
           icon={buyamount}
+          subValues={[
+            {
+              label: "Buy Amt",
+              value: `TZS ${Number(stats.today?.currencies?.["TZS"]?.buy || 0).toLocaleString()}`,
+            },
+            {
+              label: "Sell Amt",
+              value: `TZS ${Number(stats.today?.currencies?.["TZS"]?.sell || 0).toLocaleString()}`,
+            },
+          ]}
         />
-
-        <StatCard
-          title="Current P&L"
-          value={`TZS ${Number(stats.currentPnL || 0).toLocaleString()}`}
-          subtitle="Trading Profit"
-          icon={profit}
-        />
-
         <StatCard
           title="Current Balance"
           icon={sellamount}
@@ -142,6 +141,17 @@ export default function Dashboard() {
               };
             }).filter(sv => sv.value !== "0")
           }
+        />
+        <StatCard
+          title="Day's Avg Fx Rate"
+          value={Number(stats.currentRate || 0).toFixed(2)}
+          icon={buyamount}
+        />
+
+        <StatCard
+          title="Day's P&L"
+          value={`TZS ${Number(stats.currentPnL || 0).toLocaleString()}`}
+          icon={profit}
         />
       </div>
 
