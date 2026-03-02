@@ -30,6 +30,8 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
       data: result.data || [],
       pagination: result.pagination || { totalPages: 1 },
       stats: result.stats || {},
+      todayRates: result.todayRates || {},
+      previousRate: result.previousRate || 0,
     };
 
   } catch (error) {
