@@ -137,11 +137,11 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                         <div className="flex items-center justify-center gap-1.5">
                             {summary.status === "Tallied" ? (
                                 <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px] font-bold">
-                                    <CheckCircle2 className="w-3 h-3" /> TALLIED
+                                    <CheckCircle2 className="w-3 h-3" /> Tallied
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px] font-bold">
-                                    <AlertCircle className="w-3 h-3" /> {summary.status.toUpperCase()}
+                                    <AlertCircle className="w-3 h-3" /> {summary.status}
                                 </div>
                             )}
                         </div>
@@ -149,7 +149,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                         <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
                     )}
                 </td>
-                <td className="px-6 py-5 text-right font-bold">
+                <td className="px-6 py-5 text-right">
                     {summary.hasRecord ? (
                         summary.currencyVariances.length > 0 ? (
                             <div className="flex flex-col items-end gap-0.5">

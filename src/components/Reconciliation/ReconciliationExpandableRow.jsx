@@ -179,7 +179,7 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                     </div>
                 </td>
                 <td className="py-3 px-6 text-center text-white">{deals.length}</td>
-                <td className="py-3 px-6 text-right font-semibold">
+                <td className="py-3 px-6 text-right">
                     {currencyVariances.length > 0 ? (
                         <div className="flex flex-col items-end gap-0.5">
                             {currencyVariances.map(({ code, variance }) => (
@@ -195,7 +195,7 @@ export default function ReconciliationExpandableRow({ reconciliation, formatDate
                     )}
                 </td>
                 <td className="py-3 px-6 text-center">
-                    <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${statusColors[reconciliation.status] || ""}`}>
+                    <span className={`px-3 py-1 text-[11px] rounded-full ${statusColors[reconciliation.status] || ""}`}>
                         {reconciliation.status}
                     </span>
                 </td>
