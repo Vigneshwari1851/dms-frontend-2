@@ -144,7 +144,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Day's Avg Fx Rate"
-          value={Number(stats.currentRate || 0).toFixed(2)}
+          value={`TZS ${Number(stats.currentRate || 0).toFixed(2)}`}
           icon={buyamount}
         />
 

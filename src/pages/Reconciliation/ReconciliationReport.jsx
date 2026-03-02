@@ -639,9 +639,6 @@ export default function ReconciliationReport({
                         <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                             <div className="flex items-center gap-3">
                                 <h3 className="text-white text-lg flex items-center gap-2">
-                                    <div className="w-5 h-5 bg-[#1D4CB5]/20 rounded border border-[#1D4CB5]/40 flex items-center justify-center">
-                                        <div className="w-1.5 h-1.5 bg-[#1D4CB5] rounded-sm transform rotate-45"></div>
-                                    </div>
                                     Vault Status - {
                                         periodType === "daily"
                                             ? (isSameDay(dateRange.start, new Date()) ? "Today" : format(dateRange.start, "MMM dd"))
@@ -816,7 +813,6 @@ export default function ReconciliationReport({
                     <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>
                             <h3 className="text-white flex items-center gap-2">
-                                <List className="w-5 h-5 text-[#1D4CB5]" />
                                 Vault History
                             </h3>
                             <p className="text-[#8F8F8F] text-xs mt-1">Click a row to view associated deals</p>
