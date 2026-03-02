@@ -101,6 +101,9 @@ export default function PnLList() {
                     acc[r.currency.code] = { setRate: Number(r.set_rate) };
                     return acc;
                 }, {});
+                if (!ratesMap["TZS"] && rateResponse.currentRate != null) {
+                    ratesMap["TZS"] = { setRate: rateResponse.currentRate };
+                }
                 setTodayRates(ratesMap);
                 setPreviousRate(rateResponse.previousRate || 0);
             }
@@ -114,8 +117,8 @@ export default function PnLList() {
 
             if (currencyResponse) {
                 setCurrencies(currencyResponse);
-                const usd = currencyResponse.find(c => c.code === "USD");
-                if (usd) setRateForm(prev => ({ ...prev, currency_id: usd.id }));
+                const tzs = currencyResponse.find(c => c.code === "TZS");
+                if (tzs) setRateForm(prev => ({ ...prev, currency_id: tzs.id }));
             }
         } catch (err) {
             console.error("Error loading P&L data:", err);
@@ -333,34 +336,66 @@ export default function PnLList() {
 
     return (
         <>
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-            <div>
-                <h1 className="text-white text-16px lg:text-[20px] font-semibold">
-                Profit & Loss Analysis
-                </h1>
-                <p className="text-gray-400 text-sm mt-1 hidden lg:block">
-                Detailed breakdown of trading performance
-                </p>
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-white text-16px lg:text-[20px] font-semibold">
+                        Profit & Loss Analysis
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-1 hidden lg:block">
+                        Detailed breakdown of trading performance
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-4 ml-auto">
+                    <Dropdown
+                        label="Filter by Month"
+                        options={months}
+                        selected={selectedMonth}
+                        onChange={setSelectedMonth}
+                        className="w-[150px]"
+                    />
+                </div>
             </div>
 
-            <div className="flex items-center gap-4 ml-auto">
-                <button
-                onClick={() => setShowRateModal(true)}
-                className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                <img src={addIcon} alt="add" className="w-5 h-5" />
-                Set Rates
-                </button>
-
-                <Dropdown
-                label="Filter by Month"
-                options={months}
-                selected={selectedMonth}
-                onChange={setSelectedMonth}
-                className="w-[150px]"
-                />
-            </div>
-            </div>
+            {/* Opening Rate Inline Card */}
+            {(() => {
+                const displayRate = todayRates["TZS"]?.setRate || previousRate || null;
+                const isManual = !!todayRates["TZS"]?.setRate;
+                return (
+                    <div className="flex items-center justify-between bg-[#1A1F24] border border-[#2A2F33] rounded-xl px-6 py-4 mb-6">
+                        <div>
+                            <p className="text-[#8F8F8F] text-xs font-medium uppercase tracking-wide mb-1">Opening Rate (TZS)</p>
+                            {displayRate ? (
+                                <p className="text-white text-2xl font-semibold">
+                                    {Number(displayRate).toLocaleString()}
+                                    <span className="text-xs font-normal text-[#8F8F8F] ml-2">
+                                        {isManual ? "manually set" : "based on yesterday's avg deal rate"}
+                                    </span>
+                                </p>
+                            ) : (
+                                <>
+                                    <p className="text-[#555] text-2xl font-semibold">Not Set</p>
+                                    <p className="text-[#8F8F8F] text-xs mt-0.5">Click "Edit" to enter your starting reference rate for P&L calculation</p>
+                                </>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => {
+                                const existingRate = todayRates["TZS"]?.setRate || previousRate || "";
+                                setRateForm(prev => ({ ...prev, set_rate: existingRate }));
+                                setShowRateModal(true);
+                            }}
+                            className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0 ml-6"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            {displayRate ? "Edit Rate" : "Set Rate"}
+                        </button>
+                    </div>
+                );
+            })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard
@@ -491,59 +526,20 @@ export default function PnLList() {
                         <h2 className="text-xl">Set Rate</h2>
                         <p className="text-gray-400 mt-1 text-sm">Specify rates used for P&L valuation</p>
 
-                        <div className="mt-6 space-y-4">
-                            <div>
-                                <label className="block text-sm text-[#ABABAB] mb-1">Currency</label>
-                                <Dropdown
-                                    label="Select Currency"
-                                    options={currencies.map(c => `${c.code} - ${c.name}`)}
-                                    selected={currencies.find(c => c.id === rateForm.currency_id)?.code ? `${currencies.find(c => c.id === rateForm.currency_id).code} - ${currencies.find(c => c.id === rateForm.currency_id).name}` : ""}
-                                    onChange={(val) => {
-                                        const code = val.split(" - ")[0];
-                                        const curr = currencies.find(c => c.code === code);
-                                        if (curr) setRateForm(prev => ({ ...prev, currency_id: curr.id }));
-                                    }}
-                                />
-                            </div>
-
-                            <div className="relative" ref={calendarRef}>
-                                <label className="block text-sm text-[#ABABAB] mb-1">Date</label>
-                                <div
-                                    onClick={() => setShowCalendar(!showCalendar)}
-                                    className="w-full bg-[#2A2F34] rounded-lg px-4 py-2 text-white flex items-center justify-between cursor-pointer border border-transparent hover:border-[#1D4CB588] transition-all"
-                                >
-                                    <span>{new Date(rateForm.date).toLocaleDateString("en-GB")}</span>
-                                    <img src={calendarIcon} alt="calendar" className="w-4 h-4 opacity-70" />
-                                </div>
-
-                                {showCalendar && (
-                                    <div className="absolute top-full left-0 mt-2 z-[110] bg-[#1A1F24] border border-[#2A2F33] rounded-xl shadow-2xl p-2 animate-in fade-in zoom-in duration-200 origin-top-left">
-                                        <CalendarMini
-                                            selectedDate={new Date(rateForm.date)}
-                                            onDateSelect={(date) => {
-                                                setRateForm(prev => ({
-                                                    ...prev,
-                                                    date: date.toISOString().split('T')[0]
-                                                }));
-                                                setShowCalendar(false);
-                                            }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-1">
-                                <div>
-                                    <label className="block text-sm text-[#ABABAB] mb-1">Set Rate</label>
-                                    <input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={rateForm.set_rate}
-                                        onChange={(e) => setRateForm(prev => ({ ...prev, set_rate: e.target.value }))}
-                                        className="w-full bg-[#2A2F34]  rounded-lg px-4 py-2 text-white outline-none focus:border-[#1D4CB5]"
-                                    />
-                                </div>
-                            </div>
+                        <div className="mt-6">
+                            <label className="block text-sm text-[#ABABAB] mb-1">TZS Rate</label>
+                            <input
+                                type="number"
+                                placeholder={`e.g. ${Number(todayRates["TZS"]?.setRate || previousRate || 0).toLocaleString()}`}
+                                value={rateForm.set_rate}
+                                onChange={(e) => setRateForm(prev => ({ ...prev, set_rate: e.target.value }))}
+                                className="w-full bg-[#2A2F34] rounded-lg px-4 py-2 text-white outline-none border border-transparent focus:border-[#1D4CB5]"
+                            />
+                            {/* {(todayRates["TZS"]?.setRate || previousRate) ? (
+                                <p className="text-xs text-[#8F8F8F] mt-1.5">
+                                    {todayRates["TZS"]?.setRate ? "Currently saved" : "Previous rate"}: <span className="text-[#82E890]">TZS {Number(todayRates["TZS"]?.setRate || previousRate).toLocaleString()}</span>
+                                </p>
+                            ) : null} */}
                         </div>
 
                         <div className="mt-8 flex gap-3">
