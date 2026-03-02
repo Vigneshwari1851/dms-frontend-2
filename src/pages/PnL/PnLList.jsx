@@ -368,21 +368,18 @@ export default function PnLList() {
                     subtitle="Latest Session"
                     value={Number(stats.currRate).toFixed(2)}
                     icon={dealstodayIcon}
-                    color="text-[#939AF0]"
                 />
                 <StatCard
                     title="Daily P&L"
                     subtitle="Trading Profit"
                     value={`TZS ${Number(stats.dailyPnL).toLocaleString()}`}
                     icon={buyamountIcon}
-                    color={stats.dailyPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
                 <StatCard
                     title="Net P&L"
                     subtitle="After Expenses"
                     value={`TZS ${Number(stats.netPnL).toLocaleString()}`}
                     icon={sellamountIcon}
-                    color={stats.netPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
                 />
             </div>
 

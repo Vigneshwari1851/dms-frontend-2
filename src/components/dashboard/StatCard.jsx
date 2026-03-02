@@ -7,8 +7,9 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
   return (
     <div
       className="
-        w-full min-h-[120px]
+        w-full h-[130px]
         bg-[#1E2328]
+        border border-[#2A2F33]
         rounded-xl
         p-4
         flex flex-col
@@ -16,40 +17,37 @@ export default function StatCard({ title, subtitle, value, subValues, change, ic
         overflow-hidden
         group
         transition-all duration-300
+        shadow-lg
       "
     >
-      {/* Background Accent */}
-
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3 mb-3 shrink-0">
         <div>
-          <p className="text-white">{title}</p>
+          <p className="text-white text-sm font-medium">{title}</p>
           {subtitle && <p className="text-[#8F8F8F] text-[10px] mt-0.5">{subtitle}</p>}
         </div>
-        <img src={icon} alt="" className="w-5 h-5" />
+        <img src={icon} alt="" className="w-4 h-4 opacity-70" />
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 overflow-y-auto scrollbar-grey pr-1">
         {hasSubValues ? (
-          <div className="grid grid-cols-1 gap-2.5">
+          <div className="grid grid-cols-1 gap-2">
             {subValues.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F33]/30 hover:bg-[#2A2F33]/50 transition-colors"
+                className="flex items-center justify-between py-1 group/item"
               >
-                <span className="text-white text-[11px]">{item.label}</span>
-                <span className="text-white text-[15px] tabular-nums">{item.value}</span>
+                <span className="text-white text-[12px] group-hover/item:text-blue-400 transition-colors">{item.label}</span>
+                <span className="text-[#8F8F8F] text-[13px] tabular-nums group-hover/item:text-white transition-colors">{item.value}</span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col">
-            <h2 className="text-white text-3xl tabular-nums">
+          <div className="flex flex-col h-full justify-center">
+            <h2 className={`text-3xl tabular-nums ${color || 'text-white'}`}>
               {value}
             </h2>
             {change && (
-              <p
-                className="text-[12px] mt-1.5 text-[#8F8F8F]"
-              >
+              <p className="text-[11px] mt-1 text-[#8F8F8F]">
                 {change}
               </p>
             )}
