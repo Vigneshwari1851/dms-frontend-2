@@ -400,7 +400,7 @@ export default function PnLList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard
                     title="Prev Day Avg Rate"
-                    value={`TZS ${Number(stats.prevRate).toFixed(2)}`}
+                    value={`TZS ${Number(todayRates["TZS"]?.setRate || previousRate || stats.prevRate).toLocaleString()}`}
                     icon={profitIcon}
                 />
                 <StatCard
