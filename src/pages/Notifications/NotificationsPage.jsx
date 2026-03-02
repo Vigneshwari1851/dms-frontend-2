@@ -64,6 +64,7 @@ const NotificationsPage = () => {
         setConfirmModal({
             open: true,
             ids: [id],
+            actionType: "remove",
             title: "Delete Notification",
             message: "Are you sure you want to delete this notification?",
             confirmText: "Delete",
@@ -114,8 +115,8 @@ const NotificationsPage = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                    ? "bg-[#D83D00] text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-[#1E2328]"
+                                ? "bg-[#D83D00] text-white shadow-lg"
+                                : "text-gray-400 hover:text-white hover:bg-[#1E2328]"
                                 }`}
                         >
                             {tab.label}
