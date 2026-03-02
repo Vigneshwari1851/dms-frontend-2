@@ -222,7 +222,7 @@ export default function DealDetails() {
                 <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[#ABABAB] text-xs font-bold">
-                      Remaining Balance
+                      {deal.deal_type === 'sell' ? 'Amount to be received' : 'Amount to be paid'}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#D8AD00] text-black">
                       Pending
