@@ -241,11 +241,22 @@ export default function ListReport() {
           const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
           const sAmt = isBuy ? (Number(deal.amount_to_be_paid) || 0) : (Number(deal.amount) || 0);
 
+          const buyCurr = deal.buyCurrency?.code || "";
+          const sellCurr = deal.sellCurrency?.code || "";
+
+          const pair = isBuy
+            ? `${buyCurr}/${sellCurr}`
+            : `${sellCurr}/${buyCurr}`;
+
+          const buyAmtCurr = isBuy ? buyCurr : sellCurr;
+          const sellAmtCurr = isBuy ? sellCurr : buyCurr;
+
           return {
             ...deal,
             customerName: deal.customer?.name || "",
-            buyAmount: bAmt.toLocaleString(),
-            sellAmount: sAmt.toLocaleString(),
+            pair,
+            buyAmount: bAmt > 0 ? `${bAmt.toLocaleString()} ${buyAmtCurr}` : "—",
+            sellAmount: sAmt > 0 ? `${sAmt.toLocaleString()} ${sellAmtCurr}` : "—",
             buyAmountNumeric: bAmt,
             sellAmountNumeric: sAmt,
           };
@@ -878,12 +889,7 @@ export default function ListReport() {
                             </div>
                           </td>
                           <td className="text-left">{item.customer?.name}</td>
-                          <td className="text-left">
-                            {item.deal_type?.toLowerCase() === "buy"
-                              ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
-                              : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
-                            }
-                          </td>
+                          <td className="text-left">{item.pair || "—"}</td>
                           <td className="text-left">{item.buyAmount}</td>
                           <td className="text-left">{item.exchange_rate}</td>
                           <td className="text-left">{item.sellAmount}</td>
