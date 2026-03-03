@@ -86,3 +86,25 @@ export const deleteExpense = async (id) => {
         throw error;
     }
 };
+
+export const exportExpenses = async ({ format, dateFilter, startDate, endDate } = {}) => {
+    try {
+        const params = new URLSearchParams({ format });
+        if (dateFilter) params.append("dateFilter", dateFilter);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        const response = await apiFetch(`/expense?${params.toString()}`, {
+            method: "GET",
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to export expenses");
+        }
+
+        return await response.blob();
+    } catch (error) {
+        console.error("Export error:", error);
+        return null;
+    }
+};

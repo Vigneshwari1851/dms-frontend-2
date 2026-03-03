@@ -44,10 +44,13 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
   }
 }
 
-export async function exportReconciliation(format, dateFilter) {
+export async function exportReconciliation({ format, dateFilter, startDate, endDate, status } = {}) {
   try {
     const params = new URLSearchParams({ format });
     if (dateFilter) params.append("dateFilter", dateFilter);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (status) params.append("status", status);
 
     const response = await apiFetch(`/reconciliation?${params.toString()}`, {
       method: "GET",
@@ -57,9 +60,7 @@ export async function exportReconciliation(format, dateFilter) {
       throw new Error("Failed to export reconciliation");
     }
 
-    const blob = await response.blob();
-    return blob;
-
+    return await response.blob();
   } catch (error) {
     console.error("Export error:", error);
     return null;

@@ -40,22 +40,26 @@ export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, s
   }
 }
 
-export async function exportDeals(format, dateFilter) {
+export async function exportDeals({ format, dateFilter, startDate, endDate, status, currency, customer_id, dealType } = {}) {
   try {
     const params = new URLSearchParams({ format });
     if (dateFilter) params.append("dateFilter", dateFilter);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (status) params.append("status", status);
+    if (currency) params.append("currency", currency);
+    if (customer_id) params.append("customer_id", customer_id);
+    if (dealType) params.append("dealType", dealType);
 
     const response = await apiFetch(`/deal?${params.toString()}`, {
       method: "GET",
     });
 
     if (!response.ok) {
-      throw new Error("Failed to export deal");
+      throw new Error("Failed to export deals");
     }
 
-    const blob = await response.blob();
-    return blob;
-
+    return await response.blob();
   } catch (error) {
     console.error("Export error:", error);
     return null;

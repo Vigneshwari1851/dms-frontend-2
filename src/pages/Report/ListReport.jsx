@@ -7,10 +7,10 @@ import Dropdown from "../../components/common/Dropdown";
 import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
-import CalendarMini from "../../components/common/CalendarMini";
+import { format } from "date-fns";
 import { fetchDeals, exportDeals } from "../../api/deals.jsx";
-import { fetchReconcoliation } from "../../api/reconcoliation";
-import { fetchExpenses } from "../../api/expense";
+import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
+import { fetchExpenses, exportExpenses } from "../../api/expense";
 import { searchCustomers } from "../../api/customers";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
@@ -319,19 +319,31 @@ export default function ListReport() {
     }, 300);
   };
 
-  const handleExport = async (format) => {
+  const handleExport = async (exportFormat) => {
     try {
       setExporting(true);
       setExportOpen(false);
 
       let blob;
-      if (reportType === "Deals") {
-        blob = await exportDeals(format);
+      const exportParams = {
+        format: exportFormat,
+        dateFilter: dateRange.toLowerCase().replace(" ", ""),
+        startDate: customFrom ? format(customFrom, "yyyy-MM-dd") : null,
+        endDate: customTo ? format(customTo, "yyyy-MM-dd") : null,
+        status: statusFilter === "All Status" ? "" : statusFilter,
+        currency: currencyFilter === "All Currencies" ? "" : currencyFilter,
+      };
+
+      if (reportType === "Deals" || reportType === "Customer") {
+        blob = await exportDeals({
+          ...exportParams,
+          customer_id: selectedCustomer?.id,
+          dealType: txnType,
+        });
       } else if (reportType === "Reconciliation" || reportType === "PnL") {
-        blob = await exportReconciliation(format);
-      } else {
-        // Expenses export or fallback
-        blob = await exportDeals(format); // Defaulting to deals if no specific export for others
+        blob = await exportReconciliation(exportParams);
+      } else if (reportType === "Expenses") {
+        blob = await exportExpenses(exportParams);
       }
 
       if (!blob) return;
@@ -339,7 +351,7 @@ export default function ListReport() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${reportType.toLowerCase()}_report_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+      link.setAttribute("download", `${reportType.toLowerCase()}_report_${Date.now()}.${exportFormat === "excel" ? "xlsx" : "pdf"}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -882,9 +894,9 @@ export default function ListReport() {
                           </td>
                           <td className="text-left">{item.total_transactions}</td>
                           <td className="text-left">
-                            <span className={`px-2 py-0.5 rounded text-[10px] border ${item.status === "Tallied" ? "bg-[#10B93524] text-[#10B935] border-[#10B93524]" :
-                              item.status === "Short" ? "bg-[#F7626E] text-white border-[#F7626E]" :
-                                "bg-[#D8AD0024] text-[#D8AD00] border-[#D8AD0024]"
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] border ${item.status === "Tallied" ? "bg-[#10B935]/10 text-[#10B935] border-[#10B935]/20" :
+                              item.status === "Short" ? "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20" :
+                                "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20"
                               }`}>
                               {item.status}
                             </span>

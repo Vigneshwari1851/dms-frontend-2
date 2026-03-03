@@ -136,11 +136,11 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                     {summary.hasRecord ? (
                         <div className="flex items-center justify-center gap-1.5">
                             {summary.status === "Tallied" ? (
-                                <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px] font-bold">
+                                <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px]">
                                     <CheckCircle2 className="w-3 h-3" /> Tallied
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px] font-bold">
+                                <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px]">
                                     <AlertCircle className="w-3 h-3" /> {summary.status}
                                 </div>
                             )}
@@ -744,7 +744,7 @@ export default function ReconciliationReport({
                                                                         <CheckCircle2 className="w-3.5 h-3.5" /> Tallied
                                                                     </div>
                                                                 ) : (
-                                                                    <span className={`px-2 py-0.5 rounded text-[10px] border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] border ${variance > 0 ? "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20" : "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20"}`}>
                                                                         {variance > 0 ? "Excess" : "Short"}
                                                                     </span>
                                                                 )
