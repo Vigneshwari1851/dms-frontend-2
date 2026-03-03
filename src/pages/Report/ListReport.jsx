@@ -796,7 +796,7 @@ export default function ListReport() {
           <div className="bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey text-center">
             <EmptyState
               imageSrc={dealEmptyBg}
-              message="Looks like no report data is available"
+              message={`No ${reportType} report data found for the selected filters`}
             />
           </div>
         ) : (

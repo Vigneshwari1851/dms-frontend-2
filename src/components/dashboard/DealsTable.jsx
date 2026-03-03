@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { fetchDeals, exportDeals } from "../../api/deals";
 import { useNavigate } from "react-router-dom";
 import { fetchCurrencies } from "../../api/currency/currency";
-import todayDealBg from "../../assets/Common/empty/todaydeal.svg";
+import todayDealBg from "../../assets/Common/empty/deal-bg.svg";
 import add from "../../assets/dashboard/add.svg";
 import Table from "../common/Table";
 
@@ -173,7 +173,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
         itemsPerPage={10}
         emptyStateProps={{
           imageSrc: todayDealBg,
-          message: "No deals found",
+          message: "Looks like deals are not yet created",
           action: (
             <button
               onClick={() => navigate("/deals/create-deal")}

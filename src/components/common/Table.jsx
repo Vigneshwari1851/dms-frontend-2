@@ -337,7 +337,11 @@ export default function Table({
                 <td colSpan={columns.length} className="py-10">
                   <EmptyState
                     {...emptyStateProps}
-                    message={search || statusFilter !== "All Status" ? "No results found matching your filters" : emptyStateProps.message}
+                    message={
+                      search || statusFilter !== "All Status"
+                        ? `No ${title} records match your filters`
+                        : emptyStateProps.message || `No ${title} data available`
+                    }
                   />
                 </td>
               </tr>
