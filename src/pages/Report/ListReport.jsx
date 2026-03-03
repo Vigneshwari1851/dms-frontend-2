@@ -9,16 +9,35 @@ import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
 import CalendarMini from "../../components/common/CalendarMini";
 import { fetchDeals, exportDeals } from "../../api/deals.jsx";
-import { useNavigate } from "react-router-dom";
+import { fetchReconcoliation } from "../../api/reconcoliation";
+import { fetchExpenses } from "../../api/expense";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
 import EmptyState from "../../components/common/EmptyState";
 
 export default function ListReport() {
   const navigate = useNavigate();
+  const { setSidebarHidden } = useOutletContext() || {};
   const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
-  const statuses = ["All Status", "Pending", "Completed"];
+  const [tempReportType, setTempReportType] = useState("Deals");
+  const [reportType, setReportType] = useState("Deals");
+
+  const reportTypes = ["Deals", "Reconciliation", "Expenses", "PnL"];
+
+  const getStatusesForReport = (type) => {
+    switch (type) {
+      case "Deals":
+        return ["All Status", "Pending", "Completed"];
+      case "Reconciliation":
+        return ["All Status", "Tallied", "Short", "Excess"];
+      default:
+        return [];
+    }
+  };
+
+  const statuses = getStatusesForReport(tempReportType);
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
@@ -42,6 +61,7 @@ export default function ListReport() {
   const [customTo, setCustomTo] = useState(null);
 
   const [reportRows, setReportRows] = useState([]);
+  const [loading, setLoading] = useState(false);
   const exportRef = useRef(null);
   const mobileExportRef = useRef(null);
 
@@ -62,6 +82,16 @@ export default function ListReport() {
     };
   }, []);
 
+  useEffect(() => {
+    if (setSidebarHidden) {
+      setSidebarHidden(showCustomModal);
+    }
+    // Cleanup to ensure sidebar is shown when leaving the page or unmounting
+    return () => {
+      if (setSidebarHidden) setSidebarHidden(false);
+    };
+  }, [showCustomModal, setSidebarHidden]);
+
   const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
   const formats = [
     { label: "PDF report", icon: pdf },
@@ -78,37 +108,116 @@ export default function ListReport() {
     return `${year}-${month}-${day}`;
   };
 
+  useEffect(() => {
+    fetchReportData();
+  }, [pagination.page, dateRange, statusFilter, currencyFilter, reportType]);
+
+  useEffect(() => {
+    // Reset page and sorting when report type changes
+    setPagination(prev => ({ ...prev, page: 1 }));
+    setSortBy("");
+  }, [reportType]);
+
   const fetchReportData = async (page = pagination.page, currentFilters = {}) => {
     try {
-      // Use overrides if provided (for immediate apply), otherwise fall back to state
+      setLoading(true);
       const activeDateRange = currentFilters.dateRange !== undefined ? currentFilters.dateRange : dateRange;
       const activeCurrency = currentFilters.currency !== undefined ? currentFilters.currency : currencyFilter;
       const activeStatus = currentFilters.status !== undefined ? currentFilters.status : statusFilter;
+      const activeReportType = currentFilters.reportType !== undefined ? currentFilters.reportType : reportType;
 
-      const apiDateFilter = activeDateRange.toLowerCase().replace(" ", "");
-      const { data, pagination: pag } = await fetchDeals({
+      const now = new Date();
+      let start = null;
+      let end = new Date(now.setHours(23, 59, 59, 999));
+
+      // Calculate dates for APIs that might need them or for custom mapping
+      if (activeDateRange === "Today") {
+        start = new Date(now.setHours(0, 0, 0, 0));
+      } else if (activeDateRange === "Last 7 days") {
+        start = new Date();
+        start.setDate(now.getDate() - 7);
+        start.setHours(0, 0, 0, 0);
+      } else if (activeDateRange === "Last 30 days") {
+        start = new Date();
+        start.setDate(now.getDate() - 30);
+        start.setHours(0, 0, 0, 0);
+      } else if (activeDateRange === "Last 90 days") {
+        start = new Date();
+        start.setDate(now.getDate() - 90);
+        start.setHours(0, 0, 0, 0);
+      } else if (activeDateRange === "Custom") {
+        start = customFrom;
+        end = customTo;
+      }
+
+      const params = {
         page,
         limit: pagination.limit,
-        dateFilter: apiDateFilter === "custom" ? "custom" : apiDateFilter,
-        ...(apiDateFilter === "custom" && { startDate: formatDate(customFrom), endDate: formatDate(customTo) }),
-        currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
-        status: activeStatus !== "All Status" ? activeStatus : undefined // Ensure status is also passed if needed
-      });
+      };
 
-      const transformedData = (data || []).map(deal => {
-        const isBuy = deal.deal_type?.toLowerCase() === "buy";
-        const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
-        const sAmt = isBuy ? (Number(deal.amount_to_be_paid) || 0) : (Number(deal.amount) || 0);
+      let response;
+      if (activeReportType === "Deals") {
+        // Deals supports: today, last7, last30, last90, custom
+        const dealDateFilter = activeDateRange === "Today" ? "today" :
+          activeDateRange === "Last 7 days" ? "last7" :
+            activeDateRange === "Last 30 days" ? "last30" :
+              activeDateRange === "Last 90 days" ? "last90" :
+                activeDateRange === "Custom" ? "custom" : "";
 
-        return {
-          ...deal,
-          customerName: deal.customer?.name || "",
-          buyAmount: bAmt.toLocaleString(),
-          sellAmount: sAmt.toLocaleString(),
-          buyAmountNumeric: bAmt,
-          sellAmountNumeric: sAmt,
-        };
-      });
+        response = await fetchDeals({
+          ...params,
+          dateFilter: dealDateFilter,
+          startDate: dealDateFilter === "custom" ? formatDate(start) : undefined,
+          endDate: dealDateFilter === "custom" ? formatDate(end) : undefined,
+          currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
+          status: activeStatus !== "All Status" ? activeStatus : undefined
+        });
+      } else if (activeReportType === "Reconciliation" || activeReportType === "PnL") {
+        // Reconciliation supports: today, yesterday, last7, thisMonth, custom
+        // We map others to 'custom' to avoid 500 error
+        let reconDateFilter = "custom";
+        if (activeDateRange === "Today") reconDateFilter = "today";
+        else if (activeDateRange === "Last 7 days") reconDateFilter = "last7";
+
+        response = await fetchReconcoliation({
+          ...params,
+          dateFilter: reconDateFilter,
+          startDate: start,
+          endDate: end,
+          currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
+        });
+      } else if (activeReportType === "Expenses") {
+        // Expenses service only uses startDate/endDate
+        response = await fetchExpenses({
+          ...params,
+          dateRange: { start, end }
+        });
+      }
+
+      const { data, pagination: pag } = response || { data: [], pagination: { totalPages: 1 } };
+
+      let transformedData = [];
+      if (activeReportType === "Deals") {
+        transformedData = (data || []).map(deal => {
+          const isBuy = deal.deal_type?.toLowerCase() === "buy";
+          const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
+          const sAmt = isBuy ? (Number(deal.amount_to_be_paid) || 0) : (Number(deal.amount) || 0);
+
+          return {
+            ...deal,
+            customerName: deal.customer?.name || "",
+            buyAmount: bAmt.toLocaleString(),
+            sellAmount: sAmt.toLocaleString(),
+            buyAmountNumeric: bAmt,
+            sellAmountNumeric: sAmt,
+          };
+        });
+      } else {
+        transformedData = (data || []).map(item => ({
+          ...item,
+          // Common normalization if needed
+        }));
+      }
 
       setReportRows(transformedData);
       setPagination((prev) => ({
@@ -118,6 +227,8 @@ export default function ListReport() {
       }));
     } catch (error) {
       console.error("Failed to fetch report data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,11 +242,13 @@ export default function ListReport() {
     setDateRange(effectiveDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
+    setReportType(tempReportType);
 
     await fetchReportData(1, {
       dateRange: effectiveDateRange,
       status: tempStatusFilter,
-      currency: tempCurrencyFilter
+      currency: tempCurrencyFilter,
+      reportType: tempReportType
     });
   };
 
@@ -144,13 +257,26 @@ export default function ListReport() {
       setExporting(true);
       setExportOpen(false);
 
-      // Pass "today" as a string
-      const blob = await exportDeals(format);
+      let blob;
+      if (reportType === "Deals") {
+        blob = await exportDeals(format);
+      } else if (reportType === "Reconciliation" || reportType === "PnL") {
+        blob = await exportReconciliation(format);
+      } else {
+        // Expenses export or fallback
+        blob = await exportDeals(format); // Defaulting to deals if no specific export for others
+      }
 
       if (!blob) return;
 
-
-
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${reportType.toLowerCase()}_report_${Date.now()}.${format === "excel" ? "xlsx" : "pdf"}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Export failed", e);
     } finally {
@@ -160,36 +286,44 @@ export default function ListReport() {
 
   const filteredData = reportRows.filter((item) => {
     if (statusFilter === "All Status") return true;
-    return item.status === statusFilter;
+    // For deals
+    if (reportType === "Deals") return item.status === statusFilter;
+    // For reconciliation
+    if (reportType === "Reconciliation") return item.status === statusFilter;
+    return true;
   });
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
 
-    if (sortBy === "pair") {
-      const isBuyA = a.deal_type.toLowerCase() === "buy";
-      const isBuyB = b.deal_type.toLowerCase() === "buy";
-      const pairA = isBuyA ? `${a.buyCurrency?.code}/${a.sellCurrency?.code}` : `${a.sellCurrency?.code}/${a.buyCurrency?.code}`;
-      const pairB = isBuyB ? `${b.buyCurrency?.code}/${b.sellCurrency?.code}` : `${b.sellCurrency?.code}/${b.buyCurrency?.code}`;
-      return sortAsc ? pairA.localeCompare(pairB) : pairB.localeCompare(pairA);
-    }
+    if (reportType === "Deals") {
+      if (sortBy === "pair") {
+        const isBuyA = a.deal_type.toLowerCase() === "buy";
+        const isBuyB = b.deal_type.toLowerCase() === "buy";
+        const pairA = isBuyA ? `${a.buyCurrency?.code}/${a.sellCurrency?.code}` : `${a.sellCurrency?.code}/${a.buyCurrency?.code}`;
+        const pairB = isBuyB ? `${b.buyCurrency?.code}/${b.sellCurrency?.code}` : `${b.sellCurrency?.code}/${b.buyCurrency?.code}`;
+        return sortAsc ? pairA.localeCompare(pairB) : pairB.localeCompare(pairA);
+      }
 
-    if (sortBy === "buyAmount") {
-      return sortAsc ? a.buyAmountNumeric - b.buyAmountNumeric : b.buyAmountNumeric - a.buyAmountNumeric;
-    }
+      if (sortBy === "buyAmount") {
+        return sortAsc ? a.buyAmountNumeric - b.buyAmountNumeric : b.buyAmountNumeric - a.buyAmountNumeric;
+      }
 
-    if (sortBy === "sellAmount") {
-      return sortAsc ? a.sellAmountNumeric - b.sellAmountNumeric : b.sellAmountNumeric - a.sellAmountNumeric;
-    }
+      if (sortBy === "sellAmount") {
+        return sortAsc ? a.sellAmountNumeric - b.sellAmountNumeric : b.sellAmountNumeric - a.sellAmountNumeric;
+      }
 
-    if (sortBy === "exchange_rate") {
-      const rateA = Number(a.exchange_rate) || 0;
-      const rateB = Number(b.exchange_rate) || 0;
-      return sortAsc ? rateA - rateB : rateB - rateA;
+      if (sortBy === "exchange_rate") {
+        const rateA = Number(a.exchange_rate) || 0;
+        const rateB = Number(b.exchange_rate) || 0;
+        return sortAsc ? rateA - rateB : rateB - rateA;
+      }
     }
 
     let valA = a[sortBy];
     let valB = b[sortBy];
+
+    if (valA === undefined || valB === undefined) return 0;
 
     if (typeof valA === "string") valA = valA.toLowerCase();
     if (typeof valB === "string") valB = valB.toLowerCase();
@@ -270,7 +404,18 @@ export default function ListReport() {
         {/* MOBILE LAYOUT */}
         <div className="flex flex-col gap-4 lg:hidden">
 
-          {/* Date + Status in same row */}
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm">Report Type</label>
+            <Dropdown
+              label={tempReportType}
+              options={reportTypes}
+              onChange={(value) => {
+                setTempReportType(value);
+                setTempStatusFilter("All Status"); // Reset status when type changes
+              }}
+            />
+          </div>
+
           <div className="flex gap-3">
             <div className="flex-1 flex flex-col gap-2">
               <label className="text-gray-300 text-sm">Date Range</label>
@@ -284,14 +429,16 @@ export default function ListReport() {
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-gray-300 text-sm">Status</label>
-              <Dropdown
-                label={tempStatusFilter}
-                options={statuses}
-                onChange={(value) => setTempStatusFilter(value)}
-              />
-            </div>
+            {statuses.length > 0 && (
+              <div className="flex-1 flex flex-col gap-2">
+                <label className="text-gray-300 text-sm">Status</label>
+                <Dropdown
+                  label={tempStatusFilter}
+                  options={statuses}
+                  onChange={(value) => setTempStatusFilter(value)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Apply */}
@@ -332,7 +479,19 @@ export default function ListReport() {
         </div>
 
         {/* DESKTOP LAYOUT – UNTOUCHED */}
-        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
+        <div className="hidden lg:grid lg:grid-cols-4 lg:gap-6">
+
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm">Report Type</label>
+            <Dropdown
+              label={tempReportType}
+              options={reportTypes}
+              onChange={(value) => {
+                setTempReportType(value);
+                setTempStatusFilter("All Status");
+              }}
+            />
+          </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm">Date Range</label>
@@ -346,23 +505,36 @@ export default function ListReport() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-300 text-sm">Status</label>
-            <Dropdown
-              label={tempStatusFilter}
-              options={statuses}
-              onChange={(value) => setTempStatusFilter(value)}
-            />
-          </div>
+          {statuses.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <label className="text-gray-300 text-sm">Status</label>
+              <Dropdown
+                label={tempStatusFilter}
+                options={statuses}
+                onChange={(value) => setTempStatusFilter(value)}
+              />
+            </div>
+          ) : (
+            <div className="flex items-end">
+              <button
+                className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-8 h-10 rounded-md text-sm font-medium w-full"
+                onClick={handleApplyFilters}
+              >
+                Apply
+              </button>
+            </div>
+          )}
 
-          <div className="flex items-end">
-            <button
-              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 h-10 rounded-md text-sm font-medium"
-              onClick={handleApplyFilters}
-            >
-              Apply
-            </button>
-          </div>
+          {statuses.length > 0 && (
+            <div className="flex items-end">
+              <button
+                className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-8 h-10 rounded-md text-sm font-medium"
+                onClick={handleApplyFilters}
+              >
+                Apply
+              </button>
+            </div>
+          )}
 
         </div>
       </div>
@@ -442,7 +614,7 @@ export default function ListReport() {
             <div className="bg-[#1A1F24] rounded-t-lg px-3 lg:px-5 py-4">
               <div className="flex justify-between items-center text-left">
                 <h2 className="text-white text-[16px] font-semibold">
-                  {dateRange === "Today" && "Today's Report"}
+                  {reportType} - {dateRange === "Today" && "Today's Report"}
                   {dateRange === "Last 7 days" && "This Week's Report"}
                   {dateRange === "Last 30 days" && "This Month's Report"}
                   {dateRange === "Last 90 days" && "Three Month's Report"}
@@ -456,38 +628,49 @@ export default function ListReport() {
               <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
                 <thead>
                   <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                    <th className="py-3 text-left pl-5">Deal ID</th>
-                    <th className="text-left">Date</th>
-
-                    {/* TYPE SORT */}
-                    <th
-                      className="py-3 cursor-pointer select-none"
-                      onClick={() => handleSort("deal_type")}
-                    >
-                      <div className="flex items-center gap-1 justify-center">
-                        Type
-                        <span className="flex flex-col">
-                          <img
-                            src={uparrowIcon}
-                            className={`w-3 h-3 -mt-[5px] ${sortBy === "deal_type" && !sortAsc ? "opacity-100" : "opacity-30"
-                              }`}
-                          />
-                          <img
-                            src={downarrowIcon}
-                            className={`w-3 h-3 -mt-3 ml-1.5 ${sortBy === "deal_type" && sortAsc ? "opacity-100" : "opacity-30"
-                              }`}
-                          />
-                        </span>
-                      </div>
-                    </th>
-
-                    <th className="text-left">Customer</th>
-                    {/* CURRENCY SORT */}
-                    <th className="text-left">Currency Pair</th>
-                    <th className="text-left">Buy Amount</th>
-                    <th className="text-left">Rate</th>
-                    <th className="text-left">Sell Amount</th>
-                    <th className="text-left">Status</th>
+                    {reportType === "Deals" && (
+                      <>
+                        <th className="py-3 text-left pl-5">Deal ID</th>
+                        <th className="text-left">Date</th>
+                        <th className="py-3 cursor-pointer select-none" onClick={() => handleSort("deal_type")}>
+                          <div className="flex items-center gap-1 justify-center">Type</div>
+                        </th>
+                        <th className="text-left">Customer</th>
+                        <th className="text-left">Currency Pair</th>
+                        <th className="text-left">Buy Amount</th>
+                        <th className="text-left">Rate</th>
+                        <th className="text-left">Sell Amount</th>
+                        <th className="text-left">Status</th>
+                      </>
+                    )}
+                    {reportType === "Reconciliation" && (
+                      <>
+                        <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Total Deals</th>
+                        <th className="text-left">Status</th>
+                        <th className="text-left">Profit/Loss (TZS)</th>
+                        <th className="text-left">Variances</th>
+                      </>
+                    )}
+                    {reportType === "Expenses" && (
+                      <>
+                        <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Category</th>
+                        <th className="text-left">Description</th>
+                        <th className="text-left">Amount</th>
+                        <th className="text-left">Rate</th>
+                      </>
+                    )}
+                    {reportType === "PnL" && (
+                      <>
+                        <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Deals</th>
+                        <th className="text-left">Valuation Rate</th>
+                        <th className="text-left">Opening Value</th>
+                        <th className="text-left">Closing Value</th>
+                        <th className="text-left">Profit/Loss</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
 
@@ -496,48 +679,91 @@ export default function ListReport() {
                     <tr
                       key={index}
                       className="h-11 rounded-2xl odd:bg-[#16191C] hover:bg-[#151517] transition-colors cursor-pointer"
-                      onClick={() => navigate(`/deals/edit-deal/${item.id}`)}
+                      onClick={() => {
+                        if (reportType === "Deals") navigate(`/deals/edit-deal/${item.id}`);
+                        if (reportType === "Reconciliation") navigate(`/reconciliation`);
+                        if (reportType === "Expenses") navigate(`/expenses`);
+                        if (reportType === "PnL") navigate(`/pnl`);
+                      }}
                     >
-                      <td className="py-1.5 text-left pl-5 text-white text-[14px]">
-                        {item.deal_number}
-                      </td>
-
-                      <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
-
-                      {/* TYPE PILL */}
-                      <td>
-                        <div className="flex justify-center items-center">
-                          <span
-                            className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type]
-                              }`}
-                          >
-                            {item.deal_type.toUpperCase()}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="text-left">{item.customer?.name}</td>
-                      <td className="text-left">
-                        {item.deal_type.toLowerCase() === "buy"
-                          ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
-                          : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
-                        }
-                      </td>
-                      <td className="text-left">{item.buyAmount}</td>
-                      <td className="text-left">{item.exchange_rate}</td>
-                      <td className="text-left">{item.sellAmount}</td>
-
-                      {/* STATUS */}
-                      <td className="text-left">
-                        <div className="flex justify-center items-center">
-                          <span
-                            className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status]
-                              }`}
-                          >
-                            {item.status}
-                          </span>
-                        </div>
-                      </td>
+                      {reportType === "Deals" && (
+                        <>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.deal_number}</td>
+                          <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
+                          <td>
+                            <div className="flex justify-center items-center">
+                              <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type] || ""}`}>
+                                {item.deal_type?.toUpperCase()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="text-left">{item.customer?.name}</td>
+                          <td className="text-left">
+                            {item.deal_type?.toLowerCase() === "buy"
+                              ? `${item.buyCurrency?.code}/${item.sellCurrency?.code}`
+                              : `${item.sellCurrency?.code}/${item.buyCurrency?.code}`
+                            }
+                          </td>
+                          <td className="text-left">{item.buyAmount}</td>
+                          <td className="text-left">{item.exchange_rate}</td>
+                          <td className="text-left">{item.sellAmount}</td>
+                          <td className="text-left">
+                            <div className="flex justify-center items-center">
+                              <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status] || ""}`}>
+                                {item.status}
+                              </span>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                      {reportType === "Reconciliation" && (
+                        <>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="text-left">{item.total_transactions}</td>
+                          <td className="text-left">
+                            <span className={`px-2 py-0.5 rounded text-[10px] border ${item.status === "Tallied" ? "bg-[#10B93524] text-[#10B935] border-[#10B93524]" :
+                              item.status === "Short" ? "bg-[#F7626E] text-white border-[#F7626E]" :
+                                "bg-[#D8AD0024] text-[#D8AD00] border-[#D8AD0024]"
+                              }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="text-left">{Number(item.profitLoss).toLocaleString()}</td>
+                          <td className="text-left text-[11px]">
+                            {/* Simplified variances view */}
+                            {item.openingEntries?.length > 0 ? "Variance tracked" : "No entries"}
+                          </td>
+                        </>
+                      )}
+                      {reportType === "Expenses" && (
+                        <>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">
+                            {new Date(item.date).toLocaleDateString()}
+                          </td>
+                          <td className="text-left">{item.category}</td>
+                          <td className="text-left">{item.description}</td>
+                          <td className="text-left">{item.currency?.code} {Number(item.amount).toLocaleString()}</td>
+                          <td className="text-left">{item.rate || "—"}</td>
+                        </>
+                      )}
+                      {reportType === "PnL" && (
+                        <>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="text-left">{item.total_transactions}</td>
+                          <td className="text-left">{Number(item.setRate).toFixed(2)}</td>
+                          <td className="text-left">{Number(item.totalOpeningValue).toLocaleString()}</td>
+                          <td className="text-left">{Number(item.totalClosingValue).toLocaleString()}</td>
+                          <td className="text-left">
+                            <span className={item.profitLoss >= 0 ? "text-[#10B935]" : "text-[#F7626E]"}>
+                              {item.profitLoss >= 0 ? "▲" : "▼"} {Math.abs(Number(item.profitLoss)).toLocaleString()}
+                            </span>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
