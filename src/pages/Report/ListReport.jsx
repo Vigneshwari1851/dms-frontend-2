@@ -14,7 +14,12 @@ import { fetchExpenses, exportExpenses } from "../../api/expense";
 import { searchCustomers } from "../../api/customers";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
+import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
+import expensesEmptyBg from "../../assets/Common/empty/expenses-bg.svg";
+import pnlEmptyBg from "../../assets/Common/empty/pnl-bg.svg";
+import reportEmptyBg from "../../assets/Common/empty/report-bg.svg";
 import EmptyState from "../../components/common/EmptyState";
+import CalendarMini from "../../components/common/CalendarMini.jsx";
 
 export default function ListReport() {
   const navigate = useNavigate();
@@ -795,7 +800,13 @@ export default function ListReport() {
         {paginatedData.length === 0 ? (
           <div className="bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey text-center">
             <EmptyState
-              imageSrc={dealEmptyBg}
+              imageSrc={
+                reportType === "Reconciliation" ? reconEmptyBg :
+                  reportType === "Expenses" ? expensesEmptyBg :
+                    reportType === "PnL" ? pnlEmptyBg :
+                      reportType === "Customer" ? reportEmptyBg :
+                        dealEmptyBg
+              }
               message={`No ${reportType} report data found for the selected filters`}
             />
           </div>

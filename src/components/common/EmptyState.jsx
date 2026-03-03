@@ -6,7 +6,7 @@ const EmptyState = ({ imageSrc, message = "No data available", description, acti
             <img
                 src={imageSrc}
                 alt="Empty state"
-                className="w-full max-w-[300px] lg:max-w-[400px] h-auto mb-4 opacity-80"
+                className="w-42 h-auto mb-4"
             />
             <p className="text-gray-400 text-base font-medium mb-1">{message}</p>
             {action && (

@@ -504,7 +504,7 @@ export default function PnLList() {
                                 <tr>
                                     <td colSpan={6} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-4">
-                                            <img src={emptyPnL} alt="empty" className="w-32 opacity-50" />
+                                            <img src={emptyPnL} alt="empty" className="w-42" />
                                             <p className="text-[#8F8F8F]">No trading history found for this period</p>
                                         </div>
                                     </td>

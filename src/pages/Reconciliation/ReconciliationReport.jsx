@@ -27,6 +27,10 @@ import {
 } from "../../api/reconcoliation";
 import { fetchCurrencies } from "../../api/currency/currency";
 import Toast from "../../components/common/Toast";
+import EmptyState from "../../components/common/EmptyState";
+import reconEmptyBg from "../../assets/Common/empty/recon-bg.svg";
+import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
+import vaultEmptyBg from "../../assets/Common/empty/vault.svg";
 
 
 
@@ -212,7 +216,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                                 showPagination={false}
                                 onRowClick={(row) => navigate(`/deals/edit-deal/${row.id}`)}
                                 itemsPerPage={100}
-                                emptyStateProps={{ message: "No deals mapped to this reconciliation." }}
+                                emptyStateProps={{ imageSrc: dealEmptyBg, message: "No deals mapped to this reconciliation." }}
                             />
                         </div>
                     </td>
@@ -653,7 +657,6 @@ export default function ReconciliationReport({
         <div className="space-y-2 animate-in fade-in duration-500">
 
             {/* ── Vault Status Section ── */}
-            {/* ── Vault Status Section ── */}
             <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-300">
                 <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                     <div className="flex items-center gap-3">
@@ -758,8 +761,11 @@ export default function ReconciliationReport({
                                 )
                             ) : (
                                 <tr>
-                                    <td colSpan={vaultRows.some(r => r.physical > 0) ? 6 : 4} className="px-6 py-10 text-center text-gray-500 italic text-sm">
-                                        No currency entries found for this reconciliation.
+                                    <td colSpan={vaultRows.some(r => r.physical > 0) ? 6 : 4} className="py-4">
+                                        <EmptyState
+                                            imageSrc={vaultEmptyBg}
+                                            message="No currency entries found for this reconciliation"
+                                        />
                                     </td>
                                 </tr>
                             )}
@@ -769,7 +775,7 @@ export default function ReconciliationReport({
             </div>
 
             {/* ── Daily view: show deals in separate card ── */}
-            {periodType === "daily" && (dailySummaries[0]?.totalTransactions > 0) && (
+            {periodType === "daily" && vaultRows.length > 0 && (dailySummaries[0]?.totalTransactions > 0) && (
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                     <div className="py-2 bg-[#16191C]/60 border-b border-[#2A2F33]/50">
                         <div className="flex justify-between items-center">
@@ -800,14 +806,14 @@ export default function ReconciliationReport({
                             showPagination={false}
                             onRowClick={(row) => navigate(`/deals/edit-deal/${row.id}`)}
                             itemsPerPage={100}
-                            emptyStateProps={{ message: "No deals mapped to this reconciliation." }}
+                            emptyStateProps={{ imageSrc: dealEmptyBg, message: "No deals mapped to this reconciliation." }}
                         />
                     </div>
                 </div>
             )}
 
             {/* ── Daily Breakdown Section (non-daily) with expandable rows ── */}
-            {periodType !== "daily" && (
+            {periodType !== "daily" && vaultRows.length > 0 && (
                 <div className="bg-[#1A1F24] rounded-xl border border-[#2A2F33]/50 overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 duration-500 mt-4">
                     <div className="p-2 border-b border-[#2A2F33]/50 flex justify-between items-center bg-[#1E2328]">
                         <div>

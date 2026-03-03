@@ -8,6 +8,9 @@ import {
 import { Trash2, Clock, CheckCircle2, AlertCircle, TrendingDown, Info, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NotificationCard from "../../components/common/Notification";
+import EmptyState from "../../components/common/EmptyState";
+import readNotifBg from "../../assets/Common/empty/readnotification.svg";
+import unreadNotifBg from "../../assets/Common/empty/unreadnotification.svg";
 
 const NotificationsPage = () => {
     const [notifications, setNotifications] = useState([]);
@@ -141,14 +144,14 @@ const NotificationsPage = () => {
                 <div>
                     <h1 className="text-2xl font-semibold text-white">Notifications</h1>
                 </div>
-                    {unreadCount > 0 && (
+                {unreadCount > 0 && (
                     <button
                         onClick={handleMarkAllRead}
                         className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-md text-sm font-medium transition-all"
                     >
                         Mark all as read
                     </button>
-                    )}
+                )}
             </div>
 
             {/* Tabs */}
@@ -175,8 +178,16 @@ const NotificationsPage = () => {
                 {loading ? (
                     <div className="text-center py-20 text-gray-500">Loading notifications...</div>
                 ) : notifications.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500 bg-[#16191C]/30 rounded-md border border-dashed border-[#2A2F33]">
-                        No notifications to show.
+                    <div className="py-8">
+                        <EmptyState
+                            imageSrc={activeTab === "read" ? readNotifBg : unreadNotifBg}
+                            message={
+                                activeTab === "all" ? "No notifications yet" :
+                                    activeTab === "new" ? "No new notifications" :
+                                        activeTab === "unread" ? "No unread notifications" :
+                                            "No read notifications"
+                            }
+                        />
                     </div>
                 ) : (
                     notifications.map((n) => (
