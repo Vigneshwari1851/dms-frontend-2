@@ -204,11 +204,12 @@ export default function ListReport() {
           status: activeStatus !== "All Status" ? activeStatus : undefined
         });
       } else if (activeReportType === "Reconciliation" || activeReportType === "PnL") {
-        // Reconciliation supports: today, yesterday, last7, thisMonth, custom
-        // We map others to 'custom' to avoid 500 error
+        // Reconciliation supports: today, yesterday, last7, last30, last90, thisMonth, custom
         let reconDateFilter = "custom";
         if (activeDateRange === "Today") reconDateFilter = "today";
         else if (activeDateRange === "Last 7 days") reconDateFilter = "last7";
+        else if (activeDateRange === "Last 30 days") reconDateFilter = "last30";
+        else if (activeDateRange === "Last 90 days") reconDateFilter = "last90";
 
         response = await fetchReconcoliation({
           ...params,
@@ -325,9 +326,17 @@ export default function ListReport() {
       setExportOpen(false);
 
       let blob;
+      const dateFilterMap = {
+        "Today": "today",
+        "Last 7 days": "last7",
+        "Last 30 days": "last30",
+        "Last 90 days": "last90",
+        "Custom": "custom"
+      };
+
       const exportParams = {
         format: exportFormat,
-        dateFilter: dateRange.toLowerCase().replace(" ", ""),
+        dateFilter: dateFilterMap[dateRange] || dateRange.toLowerCase().replace(/ /g, ""),
         startDate: customFrom ? format(customFrom, "yyyy-MM-dd") : null,
         endDate: customTo ? format(customTo, "yyyy-MM-dd") : null,
         status: statusFilter === "All Status" ? "" : statusFilter,
