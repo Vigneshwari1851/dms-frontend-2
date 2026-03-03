@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen, closeSidebar, hidden }) {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const filteredMenuItems = menuItems.filter(item => {
-    if (item.name === "User Management" && user.role?.toLowerCase() === "maker") return false;
+    if (["User Management", "Reports", "P & L"].includes(item.name) && user.role?.toLowerCase() === "maker") return false;
     return true;
   });
 
