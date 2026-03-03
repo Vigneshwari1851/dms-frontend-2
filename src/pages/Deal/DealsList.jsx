@@ -359,7 +359,7 @@ export default function DealsList() {
               className="w-full sm:w-[180px]"
             />
 
-            {showExportByRole && (
+            {/* {showExportByRole && (
               <div className="relative w-full lg:w-auto" ref={exportRef}>
                 <button
                   onClick={() => setExportOpen(!exportOpen)}
@@ -389,7 +389,7 @@ export default function DealsList() {
                   </div>
                 )}
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

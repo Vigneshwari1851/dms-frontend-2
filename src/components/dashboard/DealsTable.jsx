@@ -168,8 +168,8 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
         data={filteredDeals}
         loading={loading}
         onRowClick={(row) => navigate(`/deals/edit-deal/${row.deal_id}`)}
-        onExport={handleExport}
-        showExport={!hideExport && showExportByRole}
+        // onExport={handleExport}
+        // showExport={!hideExport && showExportByRole}
         itemsPerPage={10}
         emptyStateProps={{
           imageSrc: todayDealBg,
