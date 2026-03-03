@@ -12,6 +12,8 @@ export const fetchExpenses = async (params = {}) => {
             finalParams.startDate = format(dateRange.start, "yyyy-MM-dd");
             finalParams.endDate = format(dateRange.end, "yyyy-MM-dd");
             finalParams.dateFilter = "custom";
+        } else if (params.dateFilter) {
+            finalParams.dateFilter = params.dateFilter;
         }
 
         const queryString = new URLSearchParams(finalParams).toString();

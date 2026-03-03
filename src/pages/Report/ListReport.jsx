@@ -11,6 +11,7 @@ import CalendarMini from "../../components/common/CalendarMini";
 import { fetchDeals, exportDeals } from "../../api/deals.jsx";
 import { fetchReconcoliation } from "../../api/reconcoliation";
 import { fetchExpenses } from "../../api/expense";
+import { searchCustomers } from "../../api/customers";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
 import EmptyState from "../../components/common/EmptyState";
@@ -24,7 +25,18 @@ export default function ListReport() {
   const [tempReportType, setTempReportType] = useState("Deals");
   const [reportType, setReportType] = useState("Deals");
 
-  const reportTypes = ["Deals", "Reconciliation", "Expenses", "PnL"];
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerResults, setCustomerResults] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [tempSelectedCustomer, setTempSelectedCustomer] = useState(null);
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
+  const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
+  const searchTimeoutRef = useRef(null);
+
+  const [tempTxnType, setTempTxnType] = useState("All");
+  const [txnType, setTxnType] = useState("All");
+
+  const reportTypes = ["Deals", "Reconciliation", "Expenses", "PnL", "Customer"];
 
   const getStatusesForReport = (type) => {
     switch (type) {
@@ -125,6 +137,8 @@ export default function ListReport() {
       const activeCurrency = currentFilters.currency !== undefined ? currentFilters.currency : currencyFilter;
       const activeStatus = currentFilters.status !== undefined ? currentFilters.status : statusFilter;
       const activeReportType = currentFilters.reportType !== undefined ? currentFilters.reportType : reportType;
+      const activeSelectedCustomer = currentFilters.selectedCustomer !== undefined ? currentFilters.selectedCustomer : selectedCustomer;
+      const activeTxnType = currentFilters.txnType !== undefined ? currentFilters.txnType : txnType;
 
       const now = new Date();
       let start = null;
@@ -170,6 +184,23 @@ export default function ListReport() {
           startDate: dealDateFilter === "custom" ? formatDate(start) : undefined,
           endDate: dealDateFilter === "custom" ? formatDate(end) : undefined,
           currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
+          status: activeStatus !== "All Status" ? activeStatus : undefined,
+          dealType: activeTxnType !== "All" ? activeTxnType : undefined,
+        });
+      } else if (activeReportType === "Customer") {
+        const dealDateFilter = activeDateRange === "Today" ? "today" :
+          activeDateRange === "Last 7 days" ? "last7" :
+            activeDateRange === "Last 30 days" ? "last30" :
+              activeDateRange === "Last 90 days" ? "last90" :
+                activeDateRange === "Custom" ? "custom" : "";
+
+        response = await fetchDeals({
+          ...params,
+          dateFilter: dealDateFilter,
+          startDate: dealDateFilter === "custom" ? formatDate(start) : undefined,
+          endDate: dealDateFilter === "custom" ? formatDate(end) : undefined,
+          customer_id: activeSelectedCustomer?.id,
+          dealType: activeTxnType !== "All" ? activeTxnType : undefined,
           status: activeStatus !== "All Status" ? activeStatus : undefined
         });
       } else if (activeReportType === "Reconciliation" || activeReportType === "PnL") {
@@ -187,17 +218,23 @@ export default function ListReport() {
           currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
         });
       } else if (activeReportType === "Expenses") {
-        // Expenses service only uses startDate/endDate
+        const expenseDateFilter = activeDateRange === "Today" ? "today" :
+          activeDateRange === "Last 7 days" ? "last7" :
+            activeDateRange === "Last 30 days" ? "last30" :
+              activeDateRange === "Last 90 days" ? "last90" :
+                activeDateRange === "Custom" ? "custom" : "";
+
         response = await fetchExpenses({
           ...params,
-          dateRange: { start, end }
+          dateFilter: expenseDateFilter,
+          dateRange: expenseDateFilter === "custom" ? { start, end } : undefined
         });
       }
 
       const { data, pagination: pag } = response || { data: [], pagination: { totalPages: 1 } };
 
       let transformedData = [];
-      if (activeReportType === "Deals") {
+      if (activeReportType === "Deals" || activeReportType === "Customer") {
         transformedData = (data || []).map(deal => {
           const isBuy = deal.deal_type?.toLowerCase() === "buy";
           const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
@@ -232,24 +269,54 @@ export default function ListReport() {
     }
   };
 
-  const handleApplyFilters = async (overrideDateRange = null) => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
+  const handleApplyFilters = async (overrideDateRange) => {
+    setPagination({ ...pagination, page: 1 });
+    setCurrentPage(1);
+    setSortBy("");
 
-    // Use the override ONLY if it's a valid string (e.g. "Custom" from modal)
-    // Ignore if it's an Event object (from onClick) or null
-    const effectiveDateRange = (typeof overrideDateRange === 'string') ? overrideDateRange : tempDateRange;
-
-    setDateRange(effectiveDateRange);
+    // Commit temp filters to active filters
+    setDateRange(overrideDateRange === "Custom" ? "Custom" : tempDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
     setReportType(tempReportType);
+    setSelectedCustomer(tempSelectedCustomer);
+    setTxnType(tempTxnType);
 
     await fetchReportData(1, {
-      dateRange: effectiveDateRange,
+      dateRange: overrideDateRange === "Custom" ? "Custom" : tempDateRange,
       status: tempStatusFilter,
       currency: tempCurrencyFilter,
-      reportType: tempReportType
+      reportType: tempReportType,
+      selectedCustomer: tempSelectedCustomer,
+      txnType: tempTxnType
     });
+  };
+
+  const handleCustomerSearch = async (value) => {
+    setCustomerQuery(value);
+    if (!value || value.trim().length === 0) {
+      setTempSelectedCustomer(null);
+      setCustomerResults([]);
+      setCustomerDropdownOpen(false);
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setCustomerSearchLoading(true);
+        const isNumeric = /^\d+$/.test(value.trim());
+        const searchType = isNumeric ? "phone" : "name";
+        const response = await searchCustomers(value.trim(), searchType);
+        if (response.success) {
+          setCustomerResults(response.data || []);
+          setCustomerDropdownOpen(true);
+        }
+      } finally {
+        setCustomerSearchLoading(false);
+      }
+    }, 300);
   };
 
   const handleExport = async (format) => {
@@ -416,6 +483,50 @@ export default function ListReport() {
             />
           </div>
 
+          {(tempReportType === "Customer" || tempReportType === "Deals") && (
+            <>
+              {tempReportType === "Customer" && (
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-gray-300 text-sm">Select Customer</label>
+                  <input
+                    className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white outline-none text-sm"
+                    placeholder="Search by name or phone"
+                    value={customerQuery}
+                    onChange={(e) => handleCustomerSearch(e.target.value)}
+                    onFocus={() => { if (customerResults.length > 0) setCustomerDropdownOpen(true); }}
+                  />
+                  {customerDropdownOpen && (
+                    <ul className="absolute left-0 right-0 top-full mt-1 bg-[#2E3439] rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl border border-[#3E4449]">
+                      {customerSearchLoading && <li className="px-4 py-2 text-sm text-gray-300 italic">Searching...</li>}
+                      {!customerSearchLoading && customerResults.length === 0 && <li className="px-4 py-2 text-sm text-gray-400 italic">No customers found</li>}
+                      {customerResults.map((c) => (
+                        <li
+                          key={c.id}
+                          className="px-4 py-2 hover:bg-[#1D4CB5] cursor-pointer text-white text-sm border-b border-[#3E4449] last:border-0"
+                          onClick={() => {
+                            setTempSelectedCustomer(c);
+                            setCustomerQuery(c.name);
+                            setCustomerDropdownOpen(false);
+                          }}
+                        >
+                          {c.name} ({c.phone_number})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-300 text-sm">Type</label>
+                <Dropdown
+                  label={tempTxnType}
+                  options={["All", "Buy", "Sell"]}
+                  onChange={(val) => setTempTxnType(val)}
+                />
+              </div>
+            </>
+          )}
+
           <div className="flex gap-3">
             <div className="flex-1 flex flex-col gap-2">
               <label className="text-gray-300 text-sm">Date Range</label>
@@ -429,7 +540,7 @@ export default function ListReport() {
               />
             </div>
 
-            {statuses.length > 0 && (
+            {statuses.length > 0 && tempReportType !== "Customer" && (
               <div className="flex-1 flex flex-col gap-2">
                 <label className="text-gray-300 text-sm">Status</label>
                 <Dropdown
@@ -479,7 +590,7 @@ export default function ListReport() {
         </div>
 
         {/* DESKTOP LAYOUT – UNTOUCHED */}
-        <div className="hidden lg:grid lg:grid-cols-4 lg:gap-6">
+        <div className={`hidden lg:grid ${tempReportType === "Customer" ? "lg:grid-cols-5" : (tempReportType === "Deals" ? "lg:grid-cols-5" : "lg:grid-cols-4")} lg:gap-6`}>
 
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm">Report Type</label>
@@ -489,9 +600,57 @@ export default function ListReport() {
               onChange={(value) => {
                 setTempReportType(value);
                 setTempStatusFilter("All Status");
+                if (value !== "Customer") {
+                  setTempSelectedCustomer(null);
+                  setCustomerQuery("");
+                }
               }}
             />
           </div>
+
+          {(tempReportType === "Customer" || tempReportType === "Deals") && (
+            <>
+              {tempReportType === "Customer" && (
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-gray-300 text-sm">Select Customer</label>
+                  <input
+                    className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white outline-none text-sm"
+                    placeholder="Search by name or phone"
+                    value={customerQuery}
+                    onChange={(e) => handleCustomerSearch(e.target.value)}
+                    onFocus={() => { if (customerResults.length > 0) setCustomerDropdownOpen(true); }}
+                  />
+                  {customerDropdownOpen && (
+                    <ul className="absolute left-0 right-0 top-full mt-1 bg-[#2E3439] rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl border border-[#3E4449]">
+                      {customerSearchLoading && <li className="px-4 py-2 text-sm text-gray-300 italic">Searching...</li>}
+                      {!customerSearchLoading && customerResults.length === 0 && <li className="px-4 py-2 text-sm text-gray-400 italic">No customers found</li>}
+                      {customerResults.map((c) => (
+                        <li
+                          key={c.id}
+                          className="px-4 py-2 hover:bg-[#1D4CB5] cursor-pointer text-white text-sm border-b border-[#3E4449] last:border-0"
+                          onClick={() => {
+                            setTempSelectedCustomer(c);
+                            setCustomerQuery(c.name);
+                            setCustomerDropdownOpen(false);
+                          }}
+                        >
+                          {c.name} ({c.phone_number})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-300 text-sm">Type</label>
+                <Dropdown
+                  label={tempTxnType}
+                  options={["All", "Buy", "Sell"]}
+                  onChange={(val) => setTempTxnType(val)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm">Date Range</label>
@@ -505,7 +664,7 @@ export default function ListReport() {
             />
           </div>
 
-          {statuses.length > 0 ? (
+          {statuses.length > 0 && tempReportType !== "Customer" ? (
             <div className="flex flex-col gap-2">
               <label className="text-gray-300 text-sm">Status</label>
               <Dropdown
@@ -525,7 +684,7 @@ export default function ListReport() {
             </div>
           )}
 
-          {statuses.length > 0 && (
+          {statuses.length > 0 && tempReportType !== "Customer" && (
             <div className="flex items-end">
               <button
                 className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-8 h-10 rounded-md text-sm font-medium"
@@ -628,7 +787,7 @@ export default function ListReport() {
               <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
                 <thead>
                   <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                    {reportType === "Deals" && (
+                    {(reportType === "Deals" || reportType === "Customer") && (
                       <>
                         <th className="py-3 text-left pl-5">Deal ID</th>
                         <th className="text-left">Date</th>
@@ -686,7 +845,7 @@ export default function ListReport() {
                         if (reportType === "PnL") navigate(`/pnl`);
                       }}
                     >
-                      {reportType === "Deals" && (
+                      {(reportType === "Deals" || reportType === "Customer") && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.deal_number}</td>
                           <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
