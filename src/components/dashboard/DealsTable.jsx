@@ -105,7 +105,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
 
   const columns = useMemo(() => [
     { key: "id", label: "Deal ID", align: "left", className: "pl-5 text-white" },
-    { key: "date", label: "Date", align: "center" },
+    { key: "date", label: "Date", align: "left" },
     { key: "type", label: "Type", align: "center", className: "pr-5", 
       render: (val) => {
         const colors = {

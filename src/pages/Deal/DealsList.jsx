@@ -472,7 +472,7 @@ export default function DealsList() {
                     <td className="py-1.5 text-white text-[14px] text-left pl-5">
                       {item.id}
                     </td>
-                    <td>{item.date}</td>
+                    <td className="text-left">{item.date}</td>
 
                     <td>
                       <div className="flex justify-center items-center">

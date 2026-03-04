@@ -19,12 +19,11 @@ import expensesEmptyBg from "../../assets/Common/empty/expenses-bg.svg";
 import pnlEmptyBg from "../../assets/Common/empty/pnl-bg.svg";
 import reportEmptyBg from "../../assets/Common/empty/report-bg.svg";
 import EmptyState from "../../components/common/EmptyState";
-import CalendarMini from "../../components/common/CalendarMini.jsx";
+import DateFilter from "../../components/common/DateFilter";
 
 export default function ListReport() {
   const navigate = useNavigate();
   const { setSidebarHidden } = useOutletContext() || {};
-  const [tempDateRange, setTempDateRange] = useState("Today");
   const [tempStatusFilter, setTempStatusFilter] = useState("All Status");
   const [tempCurrencyFilter, setTempCurrencyFilter] = useState("All Currencies");
   const [tempReportType, setTempReportType] = useState("Deals");
@@ -61,21 +60,20 @@ export default function ListReport() {
     limit: 10,
   });
 
-  const [dateRange, setDateRange] = useState("Today");
+  const today = new Date();
+  const [dateFilterRange, setDateFilterRange] = useState({
+    from: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0),
+    to: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
+  });
+  const [tempDateFilterRange, setTempDateFilterRange] = useState(dateFilterRange);
+
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
   const [exporting, setExporting] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [format, setFormat] = useState("PDF report");
-  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [sortBy, setSortBy] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
-
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customFrom, setCustomFrom] = useState(null);
-  const [customTo, setCustomTo] = useState(null);
 
   const [reportRows, setReportRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -92,45 +90,22 @@ export default function ListReport() {
         setExportOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => { document.removeEventListener("mousedown", handleClickOutside); };
   }, []);
-
-  useEffect(() => {
-    if (setSidebarHidden) {
-      setSidebarHidden(showCustomModal);
-    }
-    // Cleanup to ensure sidebar is shown when leaving the page or unmounting
-    return () => {
-      if (setSidebarHidden) setSidebarHidden(false);
-    };
-  }, [showCustomModal, setSidebarHidden]);
-
-  const dateRanges = ["Today", "Last 7 days", "Last 30 days", "Last 90 days", "Custom"];
-  const formats = [
-    { label: "PDF report", icon: pdf },
-    { label: "Excel report", icon: excel },
-  ];
 
   const formatDate = (date) => {
     if (!date) return "";
     const d = new Date(date);
     if (isNaN(d.getTime())) return "";
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
   useEffect(() => {
     fetchReportData();
-  }, [pagination.page, dateRange, statusFilter, currencyFilter, reportType]);
+  }, [pagination.page, dateFilterRange, statusFilter, currencyFilter, reportType]);
 
   useEffect(() => {
-    // Reset page and sorting when report type changes
     setPagination(prev => ({ ...prev, page: 1 }));
     setSortBy("");
   }, [reportType]);
@@ -138,102 +113,53 @@ export default function ListReport() {
   const fetchReportData = async (page = pagination.page, currentFilters = {}) => {
     try {
       setLoading(true);
-      const activeDateRange = currentFilters.dateRange !== undefined ? currentFilters.dateRange : dateRange;
       const activeCurrency = currentFilters.currency !== undefined ? currentFilters.currency : currencyFilter;
       const activeStatus = currentFilters.status !== undefined ? currentFilters.status : statusFilter;
       const activeReportType = currentFilters.reportType !== undefined ? currentFilters.reportType : reportType;
       const activeSelectedCustomer = currentFilters.selectedCustomer !== undefined ? currentFilters.selectedCustomer : selectedCustomer;
       const activeTxnType = currentFilters.txnType !== undefined ? currentFilters.txnType : txnType;
+      const activeDateRange = currentFilters.dateRange !== undefined ? currentFilters.dateRange : dateFilterRange;
 
-      const now = new Date();
-      let start = null;
-      let end = new Date(now.setHours(23, 59, 59, 999));
+      const start = activeDateRange.from || new Date();
+      const end = activeDateRange.to || new Date();
 
-      // Calculate dates for APIs that might need them or for custom mapping
-      if (activeDateRange === "Today") {
-        start = new Date(now.setHours(0, 0, 0, 0));
-      } else if (activeDateRange === "Last 7 days") {
-        start = new Date();
-        start.setDate(now.getDate() - 7);
-        start.setHours(0, 0, 0, 0);
-      } else if (activeDateRange === "Last 30 days") {
-        start = new Date();
-        start.setDate(now.getDate() - 30);
-        start.setHours(0, 0, 0, 0);
-      } else if (activeDateRange === "Last 90 days") {
-        start = new Date();
-        start.setDate(now.getDate() - 90);
-        start.setHours(0, 0, 0, 0);
-      } else if (activeDateRange === "Custom") {
-        start = customFrom;
-        end = customTo;
-      }
-
-      const params = {
-        page,
-        limit: pagination.limit,
-      };
+      const params = { page, limit: pagination.limit };
 
       let response;
       if (activeReportType === "Deals") {
-        // Deals supports: today, last7, last30, last90, custom
-        const dealDateFilter = activeDateRange === "Today" ? "today" :
-          activeDateRange === "Last 7 days" ? "last7" :
-            activeDateRange === "Last 30 days" ? "last30" :
-              activeDateRange === "Last 90 days" ? "last90" :
-                activeDateRange === "Custom" ? "custom" : "";
-
         response = await fetchDeals({
           ...params,
-          dateFilter: dealDateFilter,
-          startDate: dealDateFilter === "custom" ? formatDate(start) : undefined,
-          endDate: dealDateFilter === "custom" ? formatDate(end) : undefined,
+          dateFilter: "custom",
+          startDate: formatDate(start),
+          endDate: formatDate(end),
           currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
           status: activeStatus !== "All Status" ? activeStatus : undefined,
           dealType: activeTxnType !== "All" ? activeTxnType : undefined,
         });
       } else if (activeReportType === "Customer") {
-        const dealDateFilter = activeDateRange === "Today" ? "today" :
-          activeDateRange === "Last 7 days" ? "last7" :
-            activeDateRange === "Last 30 days" ? "last30" :
-              activeDateRange === "Last 90 days" ? "last90" :
-                activeDateRange === "Custom" ? "custom" : "";
-
         response = await fetchDeals({
           ...params,
-          dateFilter: dealDateFilter,
-          startDate: dealDateFilter === "custom" ? formatDate(start) : undefined,
-          endDate: dealDateFilter === "custom" ? formatDate(end) : undefined,
+          dateFilter: "custom",
+          startDate: formatDate(start),
+          endDate: formatDate(end),
           customer_id: activeSelectedCustomer?.id,
           dealType: activeTxnType !== "All" ? activeTxnType : undefined,
-          status: activeStatus !== "All Status" ? activeStatus : undefined
+          status: activeStatus !== "All Status" ? activeStatus : undefined,
         });
       } else if (activeReportType === "Reconciliation" || activeReportType === "PnL") {
-        // Reconciliation supports: today, yesterday, last7, last30, last90, thisMonth, custom
-        let reconDateFilter = "custom";
-        if (activeDateRange === "Today") reconDateFilter = "today";
-        else if (activeDateRange === "Last 7 days") reconDateFilter = "last7";
-        else if (activeDateRange === "Last 30 days") reconDateFilter = "last30";
-        else if (activeDateRange === "Last 90 days") reconDateFilter = "last90";
-
         response = await fetchReconcoliation({
           ...params,
-          dateFilter: reconDateFilter,
+          dateFilter: "custom",
           startDate: start,
           endDate: end,
           currency: activeCurrency !== "All Currencies" ? activeCurrency : undefined,
         });
       } else if (activeReportType === "Expenses") {
-        const expenseDateFilter = activeDateRange === "Today" ? "today" :
-          activeDateRange === "Last 7 days" ? "last7" :
-            activeDateRange === "Last 30 days" ? "last30" :
-              activeDateRange === "Last 90 days" ? "last90" :
-                activeDateRange === "Custom" ? "custom" : "";
-
         response = await fetchExpenses({
           ...params,
-          dateFilter: expenseDateFilter,
-          dateRange: expenseDateFilter === "custom" ? { start, end } : undefined
+          dateFilter: "custom",
+          startDate: formatDate(start),
+          endDate: formatDate(end),
         });
       }
 
@@ -245,14 +171,9 @@ export default function ListReport() {
           const isBuy = deal.deal_type?.toLowerCase() === "buy";
           const bAmt = isBuy ? (Number(deal.amount) || 0) : (Number(deal.amount_to_be_paid) || 0);
           const sAmt = isBuy ? (Number(deal.amount_to_be_paid) || 0) : (Number(deal.amount) || 0);
-
           const buyCurr = deal.buyCurrency?.code || "";
           const sellCurr = deal.sellCurrency?.code || "";
-
-          const pair = isBuy
-            ? `${buyCurr}/${sellCurr}`
-            : `${sellCurr}/${buyCurr}`;
-
+          const pair = isBuy ? `${buyCurr}/${sellCurr}` : `${sellCurr}/${buyCurr}`;
           const buyAmtCurr = isBuy ? buyCurr : sellCurr;
           const sellAmtCurr = isBuy ? sellCurr : buyCurr;
 
@@ -269,7 +190,6 @@ export default function ListReport() {
       } else {
         transformedData = (data || []).map(item => ({
           ...item,
-          // Common normalization if needed
         }));
       }
 
@@ -286,27 +206,16 @@ export default function ListReport() {
     }
   };
 
-  const handleApplyFilters = async (overrideDateRange) => {
+  const handleApplyFilters = async () => {
     setPagination({ ...pagination, page: 1 });
     setCurrentPage(1);
     setSortBy("");
-
-    // Commit temp filters to active filters
-    setDateRange(overrideDateRange === "Custom" ? "Custom" : tempDateRange);
     setStatusFilter(tempStatusFilter);
     setCurrencyFilter(tempCurrencyFilter);
     setReportType(tempReportType);
     setSelectedCustomer(tempSelectedCustomer);
     setTxnType(tempTxnType);
-
-    await fetchReportData(1, {
-      dateRange: overrideDateRange === "Custom" ? "Custom" : tempDateRange,
-      status: tempStatusFilter,
-      currency: tempCurrencyFilter,
-      reportType: tempReportType,
-      selectedCustomer: tempSelectedCustomer,
-      txnType: tempTxnType
-    });
+    setDateFilterRange(tempDateFilterRange);
   };
 
   const handleCustomerSearch = async (value) => {
@@ -317,9 +226,7 @@ export default function ListReport() {
       setCustomerDropdownOpen(false);
       return;
     }
-
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         setCustomerSearchLoading(true);
@@ -340,21 +247,12 @@ export default function ListReport() {
     try {
       setExporting(true);
       setExportOpen(false);
-
       let blob;
-      const dateFilterMap = {
-        "Today": "today",
-        "Last 7 days": "last7",
-        "Last 30 days": "last30",
-        "Last 90 days": "last90",
-        "Custom": "custom"
-      };
-
       const exportParams = {
         format: exportFormat,
-        dateFilter: dateFilterMap[dateRange] || dateRange.toLowerCase().replace(/ /g, ""),
-        startDate: customFrom ? format(customFrom, "yyyy-MM-dd") : null,
-        endDate: customTo ? format(customTo, "yyyy-MM-dd") : null,
+        dateFilter: "custom",
+        startDate: formatDate(dateFilterRange.from),
+        endDate: formatDate(dateFilterRange.to),
         status: statusFilter === "All Status" ? "" : statusFilter,
         currency: currencyFilter === "All Currencies" ? "" : currencyFilter,
       };
@@ -372,7 +270,6 @@ export default function ListReport() {
       }
 
       if (!blob) return;
-
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -390,16 +287,13 @@ export default function ListReport() {
 
   const filteredData = reportRows.filter((item) => {
     if (statusFilter === "All Status") return true;
-    // For deals
     if (reportType === "Deals") return item.status === statusFilter;
-    // For reconciliation
     if (reportType === "Reconciliation") return item.status === statusFilter;
     return true;
   });
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortBy) return 0;
-
     if (reportType === "Deals") {
       if (sortBy === "pair") {
         const isBuyA = a.deal_type.toLowerCase() === "buy";
@@ -408,41 +302,27 @@ export default function ListReport() {
         const pairB = isBuyB ? `${b.buyCurrency?.code}/${b.sellCurrency?.code}` : `${b.sellCurrency?.code}/${b.buyCurrency?.code}`;
         return sortAsc ? pairA.localeCompare(pairB) : pairB.localeCompare(pairA);
       }
-
       if (sortBy === "buyAmount") {
         return sortAsc ? a.buyAmountNumeric - b.buyAmountNumeric : b.buyAmountNumeric - a.buyAmountNumeric;
       }
-
       if (sortBy === "sellAmount") {
         return sortAsc ? a.sellAmountNumeric - b.sellAmountNumeric : b.sellAmountNumeric - a.sellAmountNumeric;
       }
-
       if (sortBy === "exchange_rate") {
         const rateA = Number(a.exchange_rate) || 0;
         const rateB = Number(b.exchange_rate) || 0;
         return sortAsc ? rateA - rateB : rateB - rateA;
       }
     }
-
     let valA = a[sortBy];
     let valB = b[sortBy];
-
     if (valA === undefined || valB === undefined) return 0;
-
     if (typeof valA === "string") valA = valA.toLowerCase();
     if (typeof valB === "string") valB = valB.toLowerCase();
-
     if (valA < valB) return sortAsc ? -1 : 1;
     if (valA > valB) return sortAsc ? 1 : -1;
     return 0;
   });
-
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const statusColors = {
     Pending: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
@@ -452,6 +332,12 @@ export default function ListReport() {
     buy: "bg-[#10B93524] text-[#10B935] border border-[#10B935]",
     sell: "bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00]",
   };
+
+  const itemsPerPage = 10;
+  const paginatedData = sortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleSort = (columnKey) => {
     if (sortBy === columnKey) {
@@ -474,7 +360,6 @@ export default function ListReport() {
             <img src={download} alt="download" className="w-6 h-6" />
             <span className="hidden lg:inline">Export</span>
           </button>
-
           {exportOpen && (
             <div className="absolute right-0 mt-2 w-28 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 cursor-pointer">
               <button
@@ -482,153 +367,23 @@ export default function ListReport() {
                 onClick={() => handleExport("pdf")}
                 disabled={exporting}
               >
-                <img src={pdf} alt="pdf" className="w-4 h-4" />
-                PDF
+                <img src={pdf} alt="pdf" className="w-4 h-4" /> PDF
               </button>
               <button
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
                 onClick={() => handleExport("excel")}
                 disabled={exporting}
               >
-                <img src={excel} alt="excel" className="w-4 h-4" />
-                Excel
+                <img src={excel} alt="excel" className="w-4 h-4" /> Excel
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <p className="text-gray-400 mb-6">
-        Generate insights and export business data
-      </p>
-
-      {/* Filters */}
       <div className="bg-[#1A1D23] p-4 lg:p-5 rounded-xl mt-4">
-
         {/* MOBILE LAYOUT */}
         <div className="flex flex-col gap-4 lg:hidden">
-
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-300 text-sm">Report Type</label>
-            <Dropdown
-              label={tempReportType}
-              options={reportTypes}
-              onChange={(value) => {
-                setTempReportType(value);
-                setTempStatusFilter("All Status"); // Reset status when type changes
-              }}
-            />
-          </div>
-
-          {(tempReportType === "Customer" || tempReportType === "Deals") && (
-            <>
-              {tempReportType === "Customer" && (
-                <div className="flex flex-col gap-2 relative">
-                  <label className="text-gray-300 text-sm">Select Customer</label>
-                  <input
-                    className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white outline-none text-sm"
-                    placeholder="Search by name or phone"
-                    value={customerQuery}
-                    onChange={(e) => handleCustomerSearch(e.target.value)}
-                    onFocus={() => { if (customerResults.length > 0) setCustomerDropdownOpen(true); }}
-                  />
-                  {customerDropdownOpen && (
-                    <ul className="absolute left-0 right-0 top-full mt-1 bg-[#2E3439] rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl border border-[#3E4449]">
-                      {customerSearchLoading && <li className="px-4 py-2 text-sm text-gray-300 italic">Searching...</li>}
-                      {!customerSearchLoading && customerResults.length === 0 && <li className="px-4 py-2 text-sm text-gray-400 italic">No customers found</li>}
-                      {customerResults.map((c) => (
-                        <li
-                          key={c.id}
-                          className="px-4 py-2 hover:bg-[#1D4CB5] cursor-pointer text-white text-sm border-b border-[#3E4449] last:border-0"
-                          onClick={() => {
-                            setTempSelectedCustomer(c);
-                            setCustomerQuery(c.name);
-                            setCustomerDropdownOpen(false);
-                          }}
-                        >
-                          {c.name} ({c.phone_number})
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-              <div className="flex flex-col gap-2">
-                <label className="text-gray-300 text-sm">TxnType</label>
-                <Dropdown
-                  label={tempTxnType}
-                  options={["All", "Buy", "Sell"]}
-                  onChange={(val) => setTempTxnType(val)}
-                />
-              </div>
-            </>
-          )}
-
-          <div className="flex gap-3">
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-gray-300 text-sm">Date Range</label>
-              <Dropdown
-                label={tempDateRange}
-                options={dateRanges}
-                onChange={(value) => {
-                  setTempDateRange(value);
-                  if (value === "Custom") setShowCustomModal(true);
-                }}
-              />
-            </div>
-
-            {statuses.length > 0 && tempReportType !== "Customer" && (
-              <div className="flex-1 flex flex-col gap-2">
-                <label className="text-gray-300 text-sm">Status</label>
-                <Dropdown
-                  label={tempStatusFilter}
-                  options={statuses}
-                  onChange={(value) => setTempStatusFilter(value)}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Apply */}
-          <button
-            className="w-full bg-[#1D4CB5] hover:bg-[#173B8B] text-white h-10 rounded-md text-sm font-medium"
-            onClick={handleApplyFilters}
-          >
-            Apply
-          </button>
-
-          {/* Export */}
-          <div className="relative" ref={mobileExportRef}>
-            <button
-              onClick={() => setExportOpen(!exportOpen)}
-              className="w-full bg-[#1D4CB5] hover:bg-[#173B8B] text-white h-10 rounded-md flex items-center justify-center gap-2"
-            >
-              <img src={download} className="w-5 h-5" />
-              Export
-            </button>
-
-            {exportOpen && (
-              <div className="absolute mt-2 w-full bg-[#2E3439] border border-[#2A2D31] rounded-lg z-20">
-                <button
-                  className="w-full px-4 py-2 text-sm text-white hover:bg-[#2A2F34] flex gap-2"
-                  onClick={() => handleExport("pdf")}
-                >
-                  <img src={pdf} className="w-4 h-4" /> PDF
-                </button>
-                <button
-                  className="w-full px-4 py-2 text-sm text-white hover:bg-[#2A2F34] flex gap-2"
-                  onClick={() => handleExport("excel")}
-                >
-                  <img src={excel} className="w-4 h-4" /> Excel
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* DESKTOP LAYOUT – UNTOUCHED */}
-        <div className={`hidden lg:grid ${tempReportType === "Customer" ? "lg:grid-cols-5" : (tempReportType === "Deals" ? "lg:grid-cols-5" : "lg:grid-cols-4")} lg:gap-6`}>
-
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm">Report Type</label>
             <Dropdown
@@ -645,14 +400,14 @@ export default function ListReport() {
             />
           </div>
 
-          {(tempReportType === "Customer" || tempReportType === "Deals") && (
+          {(tempReportType === "Deals" || tempReportType === "Customer") && (
             <>
               {tempReportType === "Customer" && (
                 <div className="flex flex-col gap-2 relative">
                   <label className="text-gray-300 text-sm">Select Customer</label>
                   <input
                     className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white outline-none text-sm"
-                    placeholder="Search by name or phone"
+                    placeholder="Search"
                     value={customerQuery}
                     onChange={(e) => handleCustomerSearch(e.target.value)}
                     onFocus={() => { if (customerResults.length > 0) setCustomerDropdownOpen(true); }}
@@ -689,112 +444,143 @@ export default function ListReport() {
             </>
           )}
 
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-300 text-sm">Date Range</label>
-            <Dropdown
-              label={tempDateRange}
-              options={dateRanges}
-              onChange={(value) => {
-                setTempDateRange(value);
-                if (value === "Custom") setShowCustomModal(true);
-              }}
-            />
-          </div>
-
-          {statuses.length > 0 && tempReportType !== "Customer" ? (
+          {statuses.length > 0 && tempReportType !== "Customer" && (
             <div className="flex flex-col gap-2">
-              <label className="text-gray-300 text-sm">Status</label>
+              <label className="text-gray-300 text-sm font-medium">Status</label>
               <Dropdown
                 label={tempStatusFilter}
                 options={statuses}
                 onChange={(value) => setTempStatusFilter(value)}
               />
             </div>
-          ) : (
-            <div className="flex items-end">
-              <button
-                className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-8 h-10 rounded-md text-sm font-medium w-full"
-                onClick={handleApplyFilters}
-              >
-                Apply
-              </button>
-            </div>
           )}
 
-          {statuses.length > 0 && tempReportType !== "Customer" && (
-            <div className="flex items-end">
-              <button
-                className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-8 h-10 rounded-md text-sm font-medium"
-                onClick={handleApplyFilters}
-              >
-                Apply
-              </button>
-            </div>
-          )}
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm font-medium">Date Range</label>
+            <DateFilter
+              initialOption="Daily"
+              onApply={(range, isOuterClick) => {
+                setTempDateFilterRange(range);
+                if (isOuterClick) {
+                  setDateFilterRange(range);
+                  handleApplyFilters();
+                }
+              }}
+            />
+          </div>
 
+          <button
+            className="w-full bg-[#1D4CB5] hover:bg-[#173B8B] text-white h-10 rounded-md text-sm font-medium"
+            onClick={handleApplyFilters}
+          >
+            Apply
+          </button>
+        </div>
+
+        {/* DESKTOP LAYOUT */}
+        <div className="hidden lg:flex lg:items-center lg:justify-between gap-4">
+          <h2 className="text-white text-[16px] font-semibold">Report List</h2>
+          <div className="flex flex-wrap items-end justify-end gap-4 flex-1">
+            <div className="flex flex-col gap-2 w-full lg:w-[150px]">
+              <label className="text-gray-300 text-sm">Report Type</label>
+              <Dropdown
+                label={tempReportType}
+                options={reportTypes}
+                onChange={(value) => {
+                  setTempReportType(value);
+                  setTempStatusFilter("All Status");
+                  if (value !== "Customer") {
+                    setTempSelectedCustomer(null);
+                    setCustomerQuery("");
+                  }
+                }}
+                className="w-full"
+              />
+            </div>
+
+            {tempReportType === "Customer" && (
+              <div className="flex flex-col gap-2 relative w-full lg:w-[150px]">
+                <label className="text-gray-300 text-sm">Select Customer</label>
+                <input
+                  className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white outline-none text-sm"
+                  placeholder="Search"
+                  value={customerQuery}
+                  onChange={(e) => handleCustomerSearch(e.target.value)}
+                  onFocus={() => { if (customerResults.length > 0) setCustomerDropdownOpen(true); }}
+                />
+                {customerDropdownOpen && (
+                  <ul className="absolute left-0 right-0 top-full mt-1 bg-[#2E3439] rounded-lg z-50 max-h-48 overflow-y-auto shadow-xl border border-[#3E4449]">
+                    {customerSearchLoading && <li className="px-4 py-2 text-sm text-gray-300 italic">Searching...</li>}
+                    {!customerSearchLoading && customerResults.length === 0 && <li className="px-4 py-2 text-sm text-gray-400 italic">No customers found</li>}
+                    {customerResults.map((c) => (
+                      <li
+                        key={c.id}
+                        className="px-4 py-2 hover:bg-[#1D4CB5] cursor-pointer text-white text-sm border-b border-[#3E4449] last:border-0"
+                        onClick={() => {
+                          setTempSelectedCustomer(c);
+                          setCustomerQuery(c.name);
+                          setCustomerDropdownOpen(false);
+                        }}
+                      >
+                        {c.name} ({c.phone_number})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {(tempReportType === "Deals" || tempReportType === "Customer") && (
+              <div className="flex flex-col gap-2 w-full lg:w-[150px]">
+                <label className="text-gray-300 text-sm">Txn Type</label>
+                <Dropdown
+                  label={tempTxnType}
+                  options={["All", "Buy", "Sell"]}
+                  onChange={(val) => setTempTxnType(val)}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {statuses.length > 0 && tempReportType !== "Customer" && (
+              <div className="flex flex-col gap-2 w-full lg:w-[150px]">
+                <label className="text-gray-300 text-sm">Status</label>
+                <Dropdown
+                  label={tempStatusFilter}
+                  options={statuses}
+                  onChange={(value) => setTempStatusFilter(value)}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2 w-full lg:w-[150px]">
+              <label className="text-gray-300 text-sm">Date Range</label>
+              <DateFilter
+                initialOption="Daily"
+                onApply={(range, isOuterClick) => {
+                  setTempDateFilterRange(range);
+                  if (isOuterClick) {
+                    setDateFilterRange(range);
+                    handleApplyFilters();
+                  }
+                }}
+              />
+            </div>
+
+            <button
+              className="bg-[#1D4CB5] hover:bg-[#173B8B] text-white w-full lg:w-[150px] h-10 rounded-md text-sm font-medium shrink-0 self-end"
+              onClick={handleApplyFilters}
+            >
+              Apply
+            </button>
+          </div>
         </div>
       </div>
 
-
-      {/* CUSTOM DATE MODAL */}
-      {showCustomModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1A1D23] p-6 rounded-xl w-full max-w-[650px] mx-4 border border-[#2A2D33] shadow-lg">
-            <h2 className="text-white text-lg font-semibold mb-4">
-              Select Date Range
-            </h2>
-
-            <div className="flex flex-col lg:flex-row justify-between gap-6">
-              <div className="flex-1">
-                <label className="text-gray-300 mb-2 text-sm block">From:</label>
-                <CalendarMini
-                  selectedDate={customFrom}
-                  onDateSelect={(date) => setCustomFrom(date)}
-                />
-              </div>
-
-              <div className="flex-1">
-                <label className="text-gray-300 mb-2 text-sm block">To:</label>
-                <CalendarMini
-                  selectedDate={customTo}
-                  onDateSelect={(date) => setCustomTo(date)}
-                  disabled={!customFrom}
-                  month={customTo ? undefined : customFrom?.getMonth()}
-                  year={customTo ? undefined : customFrom?.getFullYear()}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                className="px-4 py-2 bg-gray-600 text-white rounded-md"
-                onClick={() => {
-                  setShowCustomModal(false);
-                  setTempDateRange("Today");
-                }}
-              >
-                Cancel
-              </button>
-
-              <button
-                className="px-4 py-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white rounded-md disabled:opacity-40"
-                onClick={async () => {
-                  setShowCustomModal(false);
-                  setTempDateRange("Custom");
-                  await handleApplyFilters("Custom");
-                }}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Table Section */}
       <div className="mt-2 w-full scrollbar-grey">
         {paginatedData.length === 0 ? (
-          <div className="bg-[#1A1F24] p-5 rounded-xl overflow-x-auto scrollbar-grey text-center">
+          <div className="bg-[#1A1F24] p-5 rounded-xl text-center">
             <EmptyState
               imageSrc={
                 reportType === "Reconciliation" ? reconEmptyBg :
@@ -808,20 +594,14 @@ export default function ListReport() {
           </div>
         ) : (
           <>
-            {/* Table Header */}
             <div className="bg-[#1A1F24] rounded-t-lg px-3 lg:px-5 py-4">
               <div className="flex justify-between items-center text-left">
                 <h2 className="text-white text-[16px] font-semibold">
-                  {reportType} - {dateRange === "Today" && "Today's Report"}
-                  {dateRange === "Last 7 days" && "This Week's Report"}
-                  {dateRange === "Last 30 days" && "This Month's Report"}
-                  {dateRange === "Last 90 days" && "Three Month's Report"}
-                  {dateRange === "Custom" && "Custom Report"}
+                  {reportType} - {formatDate(dateFilterRange.from)} to {formatDate(dateFilterRange.to)}
                 </h2>
               </div>
             </div>
 
-            {/* Table Body */}
             <div className="bg-[#1A1F24] mt-[1.5px] overflow-x-auto scrollbar-grey">
               <table className="w-full text-center text-[#8F8F8F] font-normal text-[13px] min-w-[1000px]">
                 <thead>
@@ -871,7 +651,6 @@ export default function ListReport() {
                     )}
                   </tr>
                 </thead>
-
                 <tbody>
                   {paginatedData.map((item, index) => (
                     <tr
@@ -886,56 +665,49 @@ export default function ListReport() {
                     >
                       {(reportType === "Deals" || reportType === "Customer") && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.deal_number}</td>
-                          <td className="text-left">{new Date(item.created_at).toLocaleDateString()}</td>
-                          <td>
-                            <div className="flex justify-center items-center">
-                              <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${typeColors[item.deal_type] || ""}`}>
-                                {item.deal_type?.toUpperCase()}
-                              </span>
-                            </div>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.id}</td>
+                          <td className="text-left">{format(new Date(item.created_at), "dd-MM-yyyy")}</td>
+                          <td className="text-center">
+                            <span className={`px-3 py-1 rounded-full text-[12px] capitalize ${typeColors[item.deal_type?.toLowerCase()] || ""}`}>
+                              {item.deal_type}
+                            </span>
                           </td>
-                          <td className="text-left">{item.customer?.name}</td>
-                          <td className="text-left">{item.pair || "—"}</td>
+                          <td className="text-left">{item.customerName}</td>
+                          <td className="text-left">{item.pair}</td>
                           <td className="text-left">{item.buyAmount}</td>
-                          <td className="text-left">{item.exchange_rate}</td>
+                          <td className="text-left">{Number(item.exchange_rate).toLocaleString()}</td>
                           <td className="text-left">{item.sellAmount}</td>
-                          <td className="text-left">
-                            <div className="flex justify-center items-center">
-                              <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[item.status] || ""}`}>
-                                {item.status}
-                              </span>
-                            </div>
+                          <td className="text-center">
+                            <span className={`px-3 py-1 rounded-full text-[12px] ${statusColors[item.status] || ""}`}>
+                              {item.status}
+                            </span>
                           </td>
                         </>
                       )}
                       {reportType === "Reconciliation" && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">
-                            {new Date(item.created_at).toLocaleDateString()}
+                            {item.created_at || item.createdAt || item.date ? new Date(item.created_at || item.createdAt || item.date).toLocaleDateString() : "—"}
                           </td>
-                          <td className="text-left">{item.total_transactions}</td>
+                          <td className="text-left">{item.total_transactions || item.totalDeals || 0}</td>
                           <td className="text-left">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] border ${item.status === "Tallied" ? "bg-[#10B935]/10 text-[#10B935] border-[#10B935]/20" :
-                              item.status === "Short" ? "bg-[#F7626E]/10 text-[#F7626E] border-[#F7626E]/20" :
-                                "bg-[#D8AD00]/10 text-[#D8AD00] border-[#D8AD00]/20"
-                              }`}>
+                            <span className={item.status === "Tallied" ? "text-green-500 font-medium" : "text-red-500 font-medium"}>
                               {item.status}
                             </span>
                           </td>
                           <td className="text-left">{Number(item.profitLoss).toLocaleString()}</td>
-                          <td className="text-left text-[11px]">
-                            {/* Simplified variances view */}
-                            {item.openingEntries?.length > 0 ? "Variance tracked" : "No entries"}
+                          <td className="text-left">
+                            <div className="flex flex-col text-xs text-gray-500">
+                              <span>Excess: {item.variances?.excess != null ? Number(item.variances.excess).toLocaleString() : "—"}</span>
+                              <span>Short: {item.variances?.short != null ? Number(item.variances.short).toLocaleString() : "—"}</span>
+                            </div>
                           </td>
                         </>
                       )}
                       {reportType === "Expenses" && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">
-                            {new Date(item.date).toLocaleDateString()}
-                          </td>
-                          <td className="text-left">{item.category}</td>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{new Date(item.created_at).toLocaleDateString()}</td>
+                          <td className="text-left">{item.category?.name}</td>
                           <td className="text-left">{item.description}</td>
                           <td className="text-left">{item.currency?.code} {Number(item.amount).toLocaleString()}</td>
                           <td className="text-left">{item.rate || "—"}</td>
@@ -943,9 +715,7 @@ export default function ListReport() {
                       )}
                       {reportType === "PnL" && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </td>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{new Date(item.created_at).toLocaleDateString()}</td>
                           <td className="text-left">{item.total_transactions}</td>
                           <td className="text-left">{Number(item.setRate).toFixed(2)}</td>
                           <td className="text-left">{Number(item.totalOpeningValue).toLocaleString()}</td>
@@ -963,23 +733,21 @@ export default function ListReport() {
               </table>
             </div>
 
-            {/* Pagination Section */}
             <div className="bg-[#1A1F24] rounded-b-lg mt-[1.5px] p-4">
               <Pagination
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
                 onPrev={() => {
-                  if (pagination.page > 1) fetchReportData(pagination.page - 1);
+                  if (pagination.page > 1) setPagination(prev => ({ ...prev, page: prev.page - 1 }));
                 }}
                 onNext={() => {
-                  if (pagination.page < pagination.totalPages) fetchReportData(pagination.page + 1);
+                  if (pagination.page < pagination.totalPages) setPagination(prev => ({ ...prev, page: prev.page + 1 }));
                 }}
               />
             </div>
           </>
         )}
       </div>
-
     </>
   );
 }
