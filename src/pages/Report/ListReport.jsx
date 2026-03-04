@@ -554,7 +554,7 @@ export default function ListReport() {
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                <label className="text-gray-300 text-sm">Type</label>
+                <label className="text-gray-300 text-sm">TxnType</label>
                 <Dropdown
                   label={tempTxnType}
                   options={["All", "Buy", "Sell"]}
@@ -679,7 +679,7 @@ export default function ListReport() {
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                <label className="text-gray-300 text-sm">Type</label>
+                <label className="text-gray-300 text-sm">Txn Type</label>
                 <Dropdown
                   label={tempTxnType}
                   options={["All", "Buy", "Sell"]}
