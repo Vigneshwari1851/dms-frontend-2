@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { isSameDay } from "date-fns";
+import { isSameDay, format } from "date-fns";
 import StatCard from "../../components/dashboard/StatCard";
 import Dropdown from "../../components/common/Dropdown";
 import DateFilter from "../../components/common/DateFilter";
@@ -93,7 +93,7 @@ export default function PnLList() {
                     return {
                         ...item,
                         profitLoss: Number(item.profitLoss || 0),
-                        date: new Date(date).toLocaleDateString("en-GB"),
+                        date: format(new Date(date), "dd/MM/yyyy"),
                         rawDate: date,
                         monthKey: new Date(date).toLocaleString('default', { month: 'long', year: 'numeric' })
                     };
@@ -318,7 +318,11 @@ export default function PnLList() {
             <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-white text-16px lg:text-[20px] font-semibold">
-                        Profit & Loss Analysis
+                        Profit & Loss Analysis - {
+                            isSameDay(dateRange.start, dateRange.end)
+                                ? format(dateRange.start, "dd/MM/yyyy")
+                                : `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`
+                        }
                     </h1>
                 </div>
 

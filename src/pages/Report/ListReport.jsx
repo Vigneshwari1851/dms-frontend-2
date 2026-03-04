@@ -7,7 +7,7 @@ import Dropdown from "../../components/common/Dropdown";
 import Pagination from "../../components/common/Pagination";
 import uparrowIcon from "../../assets/up_arrow.svg";
 import downarrowIcon from "../../assets/down_arrow.svg";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { fetchDeals, exportDeals } from "../../api/deals.jsx";
 import { fetchReconcoliation, exportReconciliation } from "../../api/reconcoliation";
 import { fetchExpenses, exportExpenses } from "../../api/expense";
@@ -597,7 +597,11 @@ export default function ListReport() {
             <div className="bg-[#1A1F24] rounded-t-lg px-3 lg:px-5 py-4">
               <div className="flex justify-between items-center text-left">
                 <h2 className="text-white text-[16px] font-semibold">
-                  {reportType} - {formatDate(dateFilterRange.from)} to {formatDate(dateFilterRange.to)}
+                  {reportType} - {
+                    isSameDay(dateFilterRange.from, dateFilterRange.to)
+                      ? format(new Date(dateFilterRange.from), "dd/MM/yyyy")
+                      : `${format(new Date(dateFilterRange.from), "dd/MM/yyyy")} - ${format(new Date(dateFilterRange.to), "dd/MM/yyyy")}`
+                  }
                 </h2>
               </div>
             </div>
@@ -666,7 +670,7 @@ export default function ListReport() {
                       {(reportType === "Deals" || reportType === "Customer") && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.id}</td>
-                          <td className="text-left">{format(new Date(item.created_at), "dd-MM-yyyy")}</td>
+                          <td className="text-left">{format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy")}</td>
                           <td className="text-center">
                             <span className={`px-3 py-1 rounded-full text-[12px] capitalize ${typeColors[item.deal_type?.toLowerCase()] || ""}`}>
                               {item.deal_type}
@@ -687,7 +691,7 @@ export default function ListReport() {
                       {reportType === "Reconciliation" && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">
-                            {item.created_at || item.createdAt || item.date ? new Date(item.created_at || item.createdAt || item.date).toLocaleDateString() : "—"}
+                            {item.created_at || item.createdAt || item.date ? format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy") : "—"}
                           </td>
                           <td className="text-left">{item.total_transactions || item.totalDeals || 0}</td>
                           <td className="text-left">
@@ -706,7 +710,7 @@ export default function ListReport() {
                       )}
                       {reportType === "Expenses" && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{new Date(item.created_at).toLocaleDateString()}</td>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{format(new Date(item.created_at), "dd/MM/yyyy")}</td>
                           <td className="text-left">{item.category?.name}</td>
                           <td className="text-left">{item.description}</td>
                           <td className="text-left">{item.currency?.code} {Number(item.amount).toLocaleString()}</td>
@@ -715,7 +719,7 @@ export default function ListReport() {
                       )}
                       {reportType === "PnL" && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{new Date(item.created_at).toLocaleDateString()}</td>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{format(new Date(item.created_at), "dd/MM/yyyy")}</td>
                           <td className="text-left">{item.total_transactions}</td>
                           <td className="text-left">{Number(item.setRate).toFixed(2)}</td>
                           <td className="text-left">{Number(item.totalOpeningValue).toLocaleString()}</td>

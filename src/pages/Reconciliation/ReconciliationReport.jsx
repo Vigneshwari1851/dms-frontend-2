@@ -40,7 +40,7 @@ const getDealsColumns = (typeColors, statusColors = {}) => [
         key: "created_at",
         label: "Date",
         align: "left",
-        render: (val) => <span>{new Date(val).toLocaleDateString("en-GB")}</span>
+        render: (val) => <span>{format(new Date(val), "dd/MM/yyyy")}</span>
     },
     {
         key: "deal_type",
@@ -662,9 +662,9 @@ export default function ReconciliationReport({
                     <div className="flex items-center gap-3">
                         <h3 className="text-white text-lg flex items-center gap-2">
                             Vault Status - {
-                                periodType === "daily"
-                                    ? (isSameDay(dateRange.start, new Date()) ? "Today" : format(dateRange.start, "MMM dd"))
-                                    : `${format(dateRange.start, "MMM dd")} to ${format(dateRange.end, "MMM dd")}`
+                                isSameDay(dateRange.start, dateRange.end)
+                                    ? format(dateRange.start, "dd/MM/yyyy")
+                                    : `${format(dateRange.start, "dd/MM/yyyy")} - ${format(dateRange.end, "dd/MM/yyyy")}`
                             }
                         </h3>
                     </div>
