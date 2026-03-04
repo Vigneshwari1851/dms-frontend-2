@@ -669,7 +669,7 @@ export default function ListReport() {
                     >
                       {(reportType === "Deals" || reportType === "Customer") && (
                         <>
-                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.id}</td>
+                          <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.deal_number}</td>
                           <td className="text-left">{format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy")}</td>
                           <td className="text-center">
                             <span className={`px-3 py-1 rounded-full text-[12px] capitalize ${typeColors[item.deal_type?.toLowerCase()] || ""}`}>
