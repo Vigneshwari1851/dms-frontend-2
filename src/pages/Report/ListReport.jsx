@@ -746,25 +746,21 @@ export default function ListReport() {
 
             <div className="flex flex-col lg:flex-row justify-between gap-6">
               <div className="flex-1">
-                <label className="text-gray-300 mb-2 text-sm">From:</label>
+                <label className="text-gray-300 mb-2 text-sm block">From:</label>
                 <CalendarMini
                   selectedDate={customFrom}
-                  onDateSelect={(date) => {
-                    console.log("fromdate:", date);
-                    setCustomFrom(date);
-                  }}
+                  onDateSelect={(date) => setCustomFrom(date)}
                 />
               </div>
 
               <div className="flex-1">
-                <label className="text-gray-300 mb-2 text-sm">To:</label>
+                <label className="text-gray-300 mb-2 text-sm block">To:</label>
                 <CalendarMini
                   selectedDate={customTo}
-                  onDateSelect={(date) => {
-                    console.log("todate:", date);
-                    setCustomTo(date);
-                  }}
+                  onDateSelect={(date) => setCustomTo(date)}
                   disabled={!customFrom}
+                  month={customTo ? undefined : customFrom?.getMonth()}
+                  year={customTo ? undefined : customFrom?.getFullYear()}
                 />
               </div>
             </div>

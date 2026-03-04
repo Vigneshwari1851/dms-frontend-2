@@ -5,7 +5,12 @@ export default function CalendarMini({
   month,
   year,
   selectedDate,
-  disabled = false
+  // Range-mode props
+  rangeMode = false,
+  rangeStart = null,
+  rangeEnd = null,
+  onRangeSelect = null,
+  disabled = false,
 }) {
   const today = new Date();
 
@@ -14,7 +19,7 @@ export default function CalendarMini({
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "July", "August", "September", "October", "November", "December",
   ];
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -24,13 +29,21 @@ export default function CalendarMini({
     if (year !== undefined) setCurrentYear(year);
   }, [month, year]);
 
-  // Sync view when selectedDate changes (e.g. from parent presets)
+  // Sync view when selectedDate changes
   useEffect(() => {
     if (selectedDate) {
       setCurrentMonth(selectedDate.getMonth());
       setCurrentYear(selectedDate.getFullYear());
     }
   }, [selectedDate]);
+
+  // Sync view when rangeStart changes (range mode)
+  useEffect(() => {
+    if (rangeMode && rangeStart) {
+      setCurrentMonth(rangeStart.getMonth());
+      setCurrentYear(rangeStart.getFullYear());
+    }
+  }, [rangeMode, rangeStart]);
 
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const blanks = firstDay === 0 ? 6 : firstDay - 1;
@@ -45,15 +58,24 @@ export default function CalendarMini({
     );
   };
 
+  const isInRange = (dateObj) => {
+    if (!rangeStart || !rangeEnd) return false;
+    return dateObj > rangeStart && dateObj < rangeEnd;
+  };
+
   const handleDateClick = (day) => {
     const dateObj = new Date(currentYear, currentMonth, day);
-    if (onDateSelect) onDateSelect(dateObj);
+    if (rangeMode && onRangeSelect) {
+      onRangeSelect(dateObj);
+    } else if (onDateSelect) {
+      onDateSelect(dateObj);
+    }
   };
 
   const handlePrevMonth = () => {
-    setCurrentMonth(m => {
+    setCurrentMonth((m) => {
       if (m === 0) {
-        setCurrentYear(y => y - 1);
+        setCurrentYear((y) => y - 1);
         return 11;
       }
       return m - 1;
@@ -61,17 +83,17 @@ export default function CalendarMini({
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(m => {
+    setCurrentMonth((m) => {
       const nextMonth = m === 11 ? 0 : m + 1;
       const nextYear = m === 11 ? currentYear + 1 : currentYear;
-
-      // Prevent navigating to future months/years
-      if (nextYear > today.getFullYear() || (nextYear === today.getFullYear() && nextMonth > today.getMonth())) {
+      if (
+        nextYear > today.getFullYear() ||
+        (nextYear === today.getFullYear() && nextMonth > today.getMonth())
+      ) {
         return m;
       }
-
       if (m === 11) {
-        setCurrentYear(y => y + 1);
+        setCurrentYear((y) => y + 1);
         return 0;
       }
       return m + 1;
@@ -79,8 +101,10 @@ export default function CalendarMini({
   };
 
   return (
-    <div className={`w-full max-w-[280px] h-auto min-h-[260px] rounded-lg border border-[#2A2F33] p-3 text-white ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
-
+    <div
+      className={`w-full max-w-[320px] h-auto min-h-[260px] rounded-lg border border-[#2A2F33] p-3 text-white ${disabled ? "opacity-50 pointer-events-none" : ""
+        }`}
+    >
       {/* HEADER */}
       <div className="flex justify-between items-center mb-2 px-1">
         <button
@@ -94,7 +118,11 @@ export default function CalendarMini({
         </span>
         <button
           onClick={handleNextMonth}
-          disabled={currentYear > today.getFullYear() || (currentYear === today.getFullYear() && currentMonth >= today.getMonth())}
+          disabled={
+            currentYear > today.getFullYear() ||
+            (currentYear === today.getFullYear() &&
+              currentMonth >= today.getMonth())
+          }
           className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#2A2F33] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           &gt;
@@ -103,25 +131,40 @@ export default function CalendarMini({
 
       {/* DAYS */}
       <div className="grid grid-cols-7 text-xs text-gray-400 mb-1 text-center">
-        {days.map(d => <div key={d}>{d}</div>)}
+        {days.map((d) => (
+          <div key={d}>{d}</div>
+        ))}
       </div>
 
       {/* DATES */}
       <div className="grid grid-cols-7 text-center text-sm">
-        {Array(blanks).fill("").map((_, i) => <div key={i}></div>)}
+        {Array(blanks)
+          .fill("")
+          .map((_, i) => (
+            <div key={i} />
+          ))}
 
         {[...Array(daysInMonth)].map((_, i) => {
           const day = i + 1;
           const dateObj = new Date(currentYear, currentMonth, day);
           const isFuture = dateObj > today;
+          const isStart = rangeMode && isSameDate(dateObj, rangeStart);
+          const isEnd = rangeMode && isSameDate(dateObj, rangeEnd);
+          const isSelected = !rangeMode && isSameDate(dateObj, selectedDate);
+          const inRange = rangeMode && isInRange(dateObj);
 
           return (
             <div
               key={day}
               onClick={() => !isFuture && handleDateClick(day)}
               className={`py-1 rounded-md transition-colors
-                ${isSameDate(dateObj, selectedDate) ? "bg-blue-600" : ""}
-                ${isFuture ? "opacity-30 cursor-not-allowed text-gray-500" : "cursor-pointer hover:bg-[#2A2F33]"}
+                ${isStart || isEnd ? "bg-blue-600 text-white" : ""}
+                ${isSelected ? "bg-blue-600 text-white" : ""}
+                ${inRange ? "bg-blue-600/30 text-white" : ""}
+                ${isFuture
+                  ? "opacity-30 cursor-not-allowed text-gray-500"
+                  : "cursor-pointer hover:bg-[#2A2F33]"
+                }
               `}
             >
               {day}
