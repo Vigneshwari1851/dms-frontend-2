@@ -458,7 +458,7 @@ export default function ListReport() {
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm font-medium">Date Range</label>
             <DateFilter
-              initialOption="Daily"
+              initialOption="Day"
               onApply={(range, isOuterClick) => {
                 setTempDateFilterRange(range);
                 if (isOuterClick) {
@@ -557,7 +557,7 @@ export default function ListReport() {
             <div className="flex flex-col gap-2 w-full lg:w-[150px]">
               <label className="text-gray-300 text-sm">Date Range</label>
               <DateFilter
-                initialOption="Daily"
+                initialOption="Day"
                 onApply={(range, isOuterClick) => {
                   setTempDateFilterRange(range);
                   if (isOuterClick) {

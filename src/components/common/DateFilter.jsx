@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import calendar from "../../assets/Common/calendar.svg";
 import CalendarMini from "./CalendarMini";
 
-const OPTIONS = ["Daily", "Weekly", "Monthly", "Date Range"];
+const OPTIONS = ["Day", "Weekly", "Monthly", "Date Range"];
 
 /** Returns Monday of the current week */
 function getMonday(d) {
@@ -23,12 +23,12 @@ function getFriday(d) {
   return fri;
 }
 
-export default function DateFilter({ onApply, initialOption = "Daily" }) {
+export default function DateFilter({ onApply, initialOption = "Day" }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const [selectedOption, setSelectedOption] = useState(
-    initialOption === "Today" ? "Daily" : initialOption
+    initialOption === "Today" ? "Day" : initialOption
   );
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -45,14 +45,14 @@ export default function DateFilter({ onApply, initialOption = "Daily" }) {
   }, [open, fromDate, toDate]);
 
   useEffect(() => {
-    const mapped = initialOption === "Today" ? "Daily" : initialOption;
+    const mapped = initialOption === "Today" ? "Day" : initialOption;
     applyPreset(mapped);
     setSelectedOption(mapped);
   }, [initialOption]);
 
   const applyPreset = (option) => {
     const today = new Date();
-    if (option === "Daily") {
+    if (option === "Day") {
       const d = new Date(today);
       d.setHours(0, 0, 0, 0);
       setFromDate(d);
@@ -134,8 +134,20 @@ export default function DateFilter({ onApply, initialOption = "Daily" }) {
                     />
                   </div>
                 </>
+              ) : selectedOption === "Day" ? (
+                /* SINGLE DAY: Editable calendar */
+                <div className="flex justify-center items-center">
+                  <CalendarMini
+                    wide
+                    selectedDate={fromDate}
+                    onDateSelect={(date) => {
+                      setFromDate(date);
+                      setToDate(date);
+                    }}
+                  />
+                </div>
               ) : (
-                /* PRESET: single read-only calendar showing selected range */
+                /* PRESET (Weekly/Monthly): single read-only calendar showing selected range */
                 <>
                   <p className="text-gray-400 text-xs mb-3">
                     {fromDate && toDate
