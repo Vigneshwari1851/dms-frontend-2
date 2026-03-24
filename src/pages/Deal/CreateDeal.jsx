@@ -27,6 +27,7 @@ export default function CreateDeal() {
   const [txnTypeOpen, setTxnTypeOpen] = useState(false);
   const [txnMode, setTxnMode] = useState("");
   const [txnModeOpen, setTxnModeOpen] = useState(false);
+  const [creditType, setCreditType] = useState("");
   const [buyCurrency, setBuyCurrency] = useState("");
   const [buyCurrencyOpen, setBuyCurrencyOpen] = useState(false);
   const [sellCurrency, setSellCurrency] = useState("");
@@ -244,6 +245,8 @@ export default function CreateDeal() {
 
     if (!txnMode) {
       newErrors.txnMode = "Transaction mode is required";
+    } else if (txnMode.toLowerCase() === "credit" && !creditType) {
+      newErrors.creditType = "Credit type is required";
     }
 
     if (!currencyPair) {
@@ -423,6 +426,7 @@ export default function CreateDeal() {
         customer_id: selectedCustomer.id,
         deal_type: txnType.toLowerCase(),
         transaction_mode: txnMode.toLowerCase(),
+        credit_type: txnMode.toLowerCase() === "credit" ? creditType : null,
 
         buy_currency: buyCurrency,
         buy_currency_id: currencyMap[buyCurrency],
@@ -763,12 +767,28 @@ export default function CreateDeal() {
               onChange={(val) => {
                 setTxnMode(val);
                 setErrors(prev => ({ ...prev, txnMode: "" }));
+                if (val.toLowerCase() !== "credit") setCreditType("");
               }}
               className="w-full"
             />
+            {txnMode?.toLowerCase() === "credit" && (
+              <div className="mt-4">
+                <label className="text-[#ABABAB] text-xs mb-1 block">Credit Type <span className="text-red-500">*</span></label>
+                <Dropdown
+                  label="Select Type"
+                  options={["PNBL", "BNPL"]}
+                  selected={creditType}
+                  onChange={(val) => {
+                    setCreditType(val);
+                    setErrors(prev => ({ ...prev, creditType: "" }));
+                  }}
+                  className="w-full"
+                />
+              </div>
+            )}
             <div className="min-h-3.5 mt-1">
-              {errors.txnMode && (
-                <p className="text-red-400 text-[11px]">{errors.txnMode}</p>
+              {(errors.txnMode || errors.creditType) && (
+                <p className="text-red-400 text-[11px]">{errors.txnMode || errors.creditType}</p>
               )}
             </div>
           </div>

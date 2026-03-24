@@ -601,11 +601,12 @@ export default function EditDeal() {
             const expectedReceived = txnType?.toLowerCase() === "sell" ? Number(amountToBePaid) : Number(amount);
             const expectedPaid = txnType?.toLowerCase() === "sell" ? Number(amount) : Number(amountToBePaid);
 
-            const sideReceivedMatches = Math.abs(currentReceivedTotal - expectedReceived) <= 0.01;
-            const sidePaidMatches = Math.abs(currentPaidTotal - expectedPaid) <= 0.01;
+            const remToReceive = expectedReceived - currentReceivedTotal;
+            const remToPay = expectedPaid - currentPaidTotal;
+            const dRemLocal = deal?.credit_type === "PNBL" ? remToReceive : deal?.credit_type === "BNPL" ? remToPay : (txnType?.toLowerCase() === "sell" ? remToReceive : remToPay);
 
             let finalStatus = status;
-            const matchesRelevantSide = txnType?.toLowerCase() === "buy" ? sidePaidMatches : sideReceivedMatches;
+            const matchesRelevantSide = Math.abs(dRemLocal) <= 0.01;
 
             if (matchesRelevantSide) {
                 finalStatus = "Completed";
@@ -678,6 +679,12 @@ export default function EditDeal() {
             updateDealTransaction("Pending");
         }
     };
+    const remToReceive = expectedReceived - totalReceived();
+    const remToPay = expectedPaid - totalPaid();
+
+    const dTitle = deal?.credit_type === "PNBL" ? "Amount to be Received" : deal?.credit_type === "BNPL" ? "Amount to be Paid" : txnType?.toLowerCase() === "sell" ? "Amount to be Received" : "Amount to be Paid";
+    const dRem = deal?.credit_type === "PNBL" ? remToReceive : deal?.credit_type === "BNPL" ? remToPay : (txnType?.toLowerCase() === "sell" ? remToReceive : remToPay);
+    const dCurr = deal?.credit_type === "PNBL" ? buyCurrency : deal?.credit_type === "BNPL" ? sellCurrency : (txnType?.toLowerCase() === "sell" ? buyCurrency : sellCurrency);
 
     return (
         <>
@@ -705,6 +712,11 @@ export default function EditDeal() {
                             {isPending && (
                                 <span className="rounded-2xl px-1 text-xs font-medium bg-[#D8AD0024] text-[#D8AD00] border border-[#D8AD00] ml-1">
                                     Pending
+                                </span>
+                            )}
+                            {deal?.credit_type && (
+                                <span className="rounded-2xl px-2 py-0.5 text-xs font-semibold bg-[#5761D71A] text-[#5761D7] border border-[#5761D744] ml-2">
+                                    {deal.credit_type}
                                 </span>
                             )}
                         </h2>
@@ -916,15 +928,15 @@ export default function EditDeal() {
                                 <div className="mt-6">
                                     <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[#ABABAB] text-xs ">
-                                                {txnType?.toLowerCase() === "sell" ? "Amount to be Received" : "Amount to be Paid"}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className={`text-xl font-black ${(Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived())) > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                                                {Number(Math.max(0, Number(amountToBePaid) - (txnType?.toLowerCase() === "buy" ? totalPaid() : totalReceived()))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                            <span className="text-[#ABABAB] text-sm font-bold uppercase">{txnType?.toLowerCase() === "buy" ? sellCurrency : buyCurrency}</span>
+                                             <span className="text-[#ABABAB] text-xs ">
+                                                 {dTitle}
+                                             </span>
+                                         </div>
+                                         <div className="flex items-baseline gap-2">
+                                             <span className={`text-xl font-black ${dRem > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
+                                                 {Number(Math.max(0, dRem)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                             </span>
+                                             <span className="text-[#ABABAB] text-sm font-bold uppercase">{dCurr}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -935,7 +947,7 @@ export default function EditDeal() {
                     {/* RIGHT SIDE: Payment Tracker */}
                     <div className="flex-1 bg-[#1A1F24] p-4 lg:p-6 rounded-xl w-full self-stretch flex flex-col">
                         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                            {txnType?.toLowerCase() === "buy" ? (
+                            {(deal?.credit_type === "PNBL" ? false : deal?.credit_type === "BNPL" ? true : txnType?.toLowerCase() === "buy") ? (
                                 <PaymentHistory
                                     title={`Payment History`}
                                     items={denominationPaid}
@@ -947,7 +959,7 @@ export default function EditDeal() {
                                     currencySymbols={currencySymbols}
                                     status={deal?.status}
                                     createdAt={deal?.created_at}
-                                    totalAmount={amountToBePaid}
+                                    totalAmount={expectedPaid}
                                 />
                             ) : (
                                 <PaymentHistory
@@ -961,7 +973,7 @@ export default function EditDeal() {
                                     currencySymbols={currencySymbols}
                                     status={deal?.status}
                                     createdAt={deal?.created_at}
-                                    totalAmount={amountToBePaid}
+                                    totalAmount={expectedReceived}
                                 />
                             )}
                         </div>
