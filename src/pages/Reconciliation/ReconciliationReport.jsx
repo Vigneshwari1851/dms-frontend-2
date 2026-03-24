@@ -551,8 +551,11 @@ export default function ReconciliationReport({
             if (recon) {
                 const totals = calculateCurrencyTotals(recon);
                 Object.values(totals).forEach(row => {
+                    if (row.code === "?") return;
                     currencyVariances.push({
                         code: row.code,
+                        book: row.book,
+                        physical: Math.max(0, row.book + row.deals), // Expected Closing unless physical is overridden
                         variance: row.physical - (row.book + row.deals)
                     });
                 });
@@ -586,7 +589,9 @@ export default function ReconciliationReport({
         if (periodType === "daily") {
             const activeRecon = dailySummaries[0]?.recon;
             const totals = calculateCurrencyTotals(activeRecon);
-            return Object.values(totals).map(row => ({
+            return Object.values(totals)
+                .filter(row => row.code !== "?")
+                .map(row => ({
                 ...row,
                 variance: row.physical - (row.book + row.deals),
                 status: activeRecon?.status || "None",
@@ -625,7 +630,9 @@ export default function ReconciliationReport({
             });
         });
 
-        return Object.values(totals).map(row => ({
+        return Object.values(totals)
+            .filter(row => row.code !== "?")
+            .map(row => ({
             ...row,
             variance: row.physical - (row.book + row.deals),
             status: "Period Summary",
