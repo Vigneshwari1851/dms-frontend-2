@@ -54,3 +54,15 @@ export const deleteNotifications = async (ids) => {
         throw error;
     }
 };
+export const createNotification = async (data) => {
+    try {
+        const token = localStorage.getItem("token");
+        const res = await axios.post(`${API_URL}/notifications`, data, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data;
+    } catch (error) {
+        console.error("Error creating notification", error);
+        throw error;
+    }
+};

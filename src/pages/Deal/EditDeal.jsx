@@ -8,6 +8,7 @@ import Denomination from "../../components/deal/Denomination";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchDealById, updateDeal, requestEditDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
+import { createNotification } from "../../api/notification.api";
 import NotificationCard from "../../components/common/Notification";
 import Dropdown from "../../components/common/Dropdown";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
@@ -164,6 +165,8 @@ export default function EditDeal() {
     const [requestedAmount, setRequestedAmount] = useState("");
     const [highlightRate, setHighlightRate] = useState("");
     const [highlightAmount, setHighlightAmount] = useState("");
+    const [isAdminApprovalOpen, setIsAdminApprovalOpen] = useState(false);
+    const [adminComment, setAdminComment] = useState("");
 
     useEffect(() => {
         const userStr = localStorage.getItem("user");
@@ -181,6 +184,10 @@ export default function EditDeal() {
 
             if (rateMatch) setHighlightRate(rateMatch[1]);
             if (amountMatch) setHighlightAmount(amountMatch[1]);
+
+            if (user.role?.toLowerCase() === "admin") {
+                setIsAdminApprovalOpen(true);
+            }
         }
     }, []);
 
@@ -877,11 +884,6 @@ export default function EditDeal() {
                                 <div>
                                     <label className="text-[#808080] text-sm mb-1 flex items-center gap-2">
                                         Rate <span className="text-red-500">*</span>
-                                        {highlightRate && (
-                                            <span className="text-yellow-500 text-xs font-semibold">
-                                                (Requested: {highlightRate})
-                                            </span>
-                                        )}
                                     </label>
                                     <input
                                         className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
@@ -899,11 +901,6 @@ export default function EditDeal() {
                                 <div>
                                     <label className="text-[#808080] text-sm mb-1 flex items-center gap-2">
                                         {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
-                                        {highlightAmount && (
-                                            <span className="text-yellow-500 text-xs font-semibold">
-                                                (Requested: {highlightAmount})
-                                            </span>
-                                        )}
                                     </label>
                                     <input
                                         className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
@@ -1093,6 +1090,142 @@ export default function EditDeal() {
                                 disabled={requestLoading || !requestMessage.trim() || !requestedRate.trim() || !requestedAmount.trim()}
                             >
                                 {requestLoading ? "Sending..." : "Submit"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            , document.body)}
+
+            {/* Admin Approval Modal */}
+            {isAdminApprovalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                        <h3 className="text-white text-lg mb-4">Review Deal Edit Request</h3>
+
+                        {/* Current vs Requested values */}
+                        <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-3 mb-4 flex flex-col gap-1.5 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Current Amount:</span>
+                                <span className="text-white text-xs">
+                                    {deal?.amount ? Number(deal.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"} {buyCurrency}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Requested Amount:</span>
+                                <span className="text-[#ABABAB] text-xs font-semibold">
+                                    {highlightAmount || "---"} {buyCurrency}
+                                </span>
+                            </div>
+                            <div className="h-0.5 bg-[#2A2F34] my-1" />
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Current Rate:</span>
+                                <span className="text-white text-xs">
+                                    {deal?.exchange_rate || deal?.rate || "---"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Requested Rate:</span>
+                                <span className="text-[#ABABAB] text-xs font-semibold">
+                                    {highlightRate || "---"}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p className="text-[#ABABAB] text-xs mb-2 block">
+                            Comment <span className="text-red-500">*</span>
+                        </p>
+                        <textarea
+                            className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1D4CB5] text-sm resize-none mb-4"
+                            rows="3"
+                            placeholder="Comment..."
+                            value={adminComment}
+                            onChange={(e) => setAdminComment(e.target.value)}
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsAdminApprovalOpen(false)}
+                                className="px-4 py-2 rounded-lg border border-white text-white text-sm hover:bg-white hover:text-black transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!adminComment.trim()) return;
+                                    setRequestLoading(true);
+                                    try {
+                                        const newAmount = highlightAmount ? Number(highlightAmount) : Number(amount);
+                                        const newRate = highlightRate ? Number(highlightRate) : Number(rate);
+                                        const calculatedAmountPaid = newAmount * newRate;
+
+                                        const originalRemarks = notes || "";
+                                        const newRemarks = `[Admin Approved]: ${adminComment}\n${originalRemarks}`;
+
+                                        const dealData = {
+                                            amount: newAmount,
+                                            exchange_rate: newRate,
+                                            amount_to_be_paid: calculatedAmountPaid,
+                                            remarks: newRemarks,
+                                            status: "Completed" // Auto complete approved
+                                        };
+
+                                        const res = await updateDeal(id, dealData);
+                                        if (res.success) {
+                                            try {
+                                                await createNotification({
+                                                    user_id: deal?.user_id || deal?.created_by,
+                                                    message: `Your edit request for Deal #${deal?.deal_number || id} was approved. New Rate: ${newRate}, Amount: ${newAmount}`,
+                                                    type: "success"
+                                                });
+                                            } catch (err) {
+                                                console.error("Notification failed:", err);
+                                            }
+                                            setIsAdminApprovalOpen(false);
+                                            window.location.href = `/deals?toast=success&msg=Edit request approved`;
+                                        }
+                                    } catch (err) {
+                                        console.error(err);
+                                    } finally {
+                                        setRequestLoading(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-[#10B935] text-white text-sm hover:bg-[#0E992B] transition-all disabled:opacity-50"
+                                disabled={requestLoading || !adminComment.trim()}
+                            >
+                                Approve
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!adminComment.trim()) return;
+                                    setRequestLoading(true);
+                                    try {
+                                        const originalRemarks = notes || "";
+                                        const newRemarks = `[Admin Rejected]: ${adminComment}\n${originalRemarks}`;
+
+                                        const res = await updateDeal(id, { remarks: newRemarks });
+                                        if (res.success) {
+                                            try {
+                                                await createNotification({
+                                                    user_id: deal?.user_id || deal?.created_by,
+                                                    message: `Your edit request for Deal #${deal?.deal_number || id} was rejected. Reason: ${adminComment}`,
+                                                    type: "error"
+                                                });
+                                            } catch (err) {
+                                                console.error("Notification failed:", err);
+                                            }
+                                            setIsAdminApprovalOpen(false);
+                                            window.location.href = `/deals?toast=success&msg=Edit request rejected`;
+                                        }
+                                    } catch (err) {
+                                        console.error(err);
+                                    } finally {
+                                        setRequestLoading(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-[#F7626E] text-white text-sm hover:bg-[#E04B57] transition-all disabled:opacity-50"
+                                disabled={requestLoading || !adminComment.trim()}
+                            >
+                                Reject
                             </button>
                         </div>
                     </div>
