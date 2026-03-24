@@ -10,6 +10,8 @@ import { fetchCurrencyPairs } from "../../api/currencyPair";
 import { capitalizeWords, onlyAlphabets } from "../../utils/stringUtils.jsx";
 import Dropdown from "../../components/common/Dropdown";
 import DiscardModal from "../../components/common/DiscardModal";
+import CalendarMini from "../../components/common/CalendarMini";
+import calendarIcon from "../../assets/Common/calendar.svg";
 
 export default function CreateDeal() {
   const navigate = useNavigate();
@@ -40,6 +42,9 @@ export default function CreateDeal() {
   const [currencyPairOptions, setCurrencyPairOptions] = useState([]);
   const [fullPairs, setFullPairs] = useState([]);
   const [errors, setErrors] = useState({});
+  const [dealDate, setDealDate] = useState(null);
+  const [dateOpen, setDateOpen] = useState(false);
+  const dateRef = useRef(null);
 
   // Currencies list
   const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -56,6 +61,16 @@ export default function CreateDeal() {
 
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dateRef.current && !dateRef.current.contains(e.target)) {
+        setDateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [confirmModal, setConfirmModal] = useState({
     open: false,
@@ -421,6 +436,7 @@ export default function CreateDeal() {
 
         remarks: remarks,
         status: finalStatus,
+        created_at: dealDate ? dealDate.toISOString() : undefined,
 
         receivedItems: receivedItemsWithTotals
           .filter(item => Number(item.price) > 0 && Number(item.quantity) > 0)
@@ -605,8 +621,8 @@ export default function CreateDeal() {
       {/* Form Container */}
       <div className="mt-4 bg-[#1A1F24] p-6 rounded-xl">
 
-        {/* Row 1 - Full Name & Phone */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+        {/* Row 1 - Full Name & Phone & Date */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
           <div>
             <label className="text-[#ABABAB] text-sm mb-1 block">
               Full Name <span className="text-red-500">*</span>
@@ -685,6 +701,34 @@ export default function CreateDeal() {
               value={phone}
               readOnly
             />
+          </div>
+
+          <div>
+            <label className="text-[#ABABAB] text-sm mb-1 block">
+              Deal Date
+            </label>
+            <div className="relative" ref={dateRef}>
+              <div
+                className="w-full bg-[#16191C] h-10 rounded-lg px-3 py-2 text-white flex items-center justify-between cursor-pointer focus:outline-none"
+                onClick={() => setDateOpen(!dateOpen)}
+              >
+                <span className="text-sm">
+                  {dealDate ? dealDate.toLocaleDateString() : "Select Date"}
+                </span>
+                <img src={calendarIcon} className="w-4 h-4 opacity-80" alt="calendar" />
+              </div>
+              {dateOpen && (
+                <div className="absolute top-11 left-0 z-50 bg-[#1B1F23] border border-[#2A2F33] rounded-xl shadow-2xl">
+                  <CalendarMini
+                    selectedDate={dealDate}
+                    onDateSelect={(date) => {
+                      setDealDate(date);
+                      setDateOpen(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

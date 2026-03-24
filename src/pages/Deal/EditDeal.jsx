@@ -752,8 +752,8 @@ export default function EditDeal() {
                         </h3>
 
                         <div className="space-y-6">
-                            {/* Row 1 - Customer Name & Phone */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                            {/* Row 1 - Customer Name, Phone & Date */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
                                 <div>
                                     <label className="text-[#ABABAB] text-sm mb-1 block">
                                         Full Name <span className="text-red-500">*</span>
@@ -772,6 +772,17 @@ export default function EditDeal() {
                                     <input
                                         className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
                                         value={phoneNumber}
+                                        disabled
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                        Deal Date
+                                    </label>
+                                    <input
+                                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
+                                        value={deal?.created_at ? new Date(deal.created_at).toLocaleDateString('en-IN') : "---"}
                                         disabled
                                     />
                                 </div>
