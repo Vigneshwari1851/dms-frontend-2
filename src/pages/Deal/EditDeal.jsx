@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import down from "../../assets/dashboard/down.svg";
 import tick from "../../assets/Common/tick.svg";
 import editIcon from "../../assets/Common/edit.svg";
 import save from "../../assets/Common/save.svg";
 import Denomination from "../../components/deal/Denomination";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchDealById, updateDeal } from "../../api/deals";
+import { fetchDealById, updateDeal, requestEditDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import NotificationCard from "../../components/common/Notification";
 import Dropdown from "../../components/common/Dropdown";
@@ -161,6 +162,34 @@ export default function EditDeal() {
     const [error, setError] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const dimOnEdit = editMode ? "opacity-50" : "";
+
+    const [userRole, setUserRole] = useState("");
+    const [requestModalOpen, setRequestModalOpen] = useState(false);
+    const [requestMessage, setRequestMessage] = useState("");
+    const [requestLoading, setRequestLoading] = useState(false);
+    const [requestedRate, setRequestedRate] = useState("");
+    const [requestedAmount, setRequestedAmount] = useState("");
+    const [highlightRate, setHighlightRate] = useState("");
+    const [highlightAmount, setHighlightAmount] = useState("");
+
+    useEffect(() => {
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : {};
+        setUserRole(user.role || "");
+
+        const params = new URLSearchParams(window.location.search);
+        const fromNotif = params.get("fromNotif");
+        const msg = params.get("msg");
+
+        if (fromNotif && msg) {
+            const decodedMsg = decodeURIComponent(msg);
+            const rateMatch = decodedMsg.match(/New Rate: ([\d.]+)/);
+            const amountMatch = decodedMsg.match(/New Amount: ([\d.]+)/);
+
+            if (rateMatch) setHighlightRate(rateMatch[1]);
+            if (amountMatch) setHighlightAmount(amountMatch[1]);
+        }
+    }, []);
 
     // Form States
     const [customerName, setCustomerName] = useState("");
@@ -712,6 +741,15 @@ export default function EditDeal() {
                             >
                                 Save
                             </button>
+                            
+                            {editMode && userRole !== "Admin" && (
+                                <button
+                                    onClick={() => setRequestModalOpen(true)}
+                                    className="h-10 flex items-center justify-center gap-2 rounded-lg bg-[#5761D7] text-white font-medium text-sm cursor-pointer hover:bg-[#4751C7] px-3 whitespace-nowrap"
+                                >
+                                    Request Change
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -821,8 +859,13 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#ABABAB] text-sm mb-1 flex items-center gap-2">
                                         Rate <span className="text-red-500">*</span>
+                                        {highlightRate && (
+                                            <span className="text-yellow-500 text-xs font-semibold">
+                                                (Requested: {highlightRate})
+                                            </span>
+                                        )}
                                     </label>
                                     <input
                                         className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
@@ -830,7 +873,7 @@ export default function EditDeal() {
                                         type="text"
                                         value={rate}
                                         onChange={(e) => setRate(e.target.value)}
-                                        readOnly
+                                        readOnly={userRole !== "Admin"}
                                     />
                                 </div>
                             </div>
@@ -838,8 +881,13 @@ export default function EditDeal() {
                             {/* Row 4 - Amounts */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#ABABAB] text-sm mb-1 flex items-center gap-2">
                                         {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
+                                        {highlightAmount && (
+                                            <span className="text-yellow-500 text-xs font-semibold">
+                                                (Requested: {highlightAmount})
+                                            </span>
+                                        )}
                                     </label>
                                     <input
                                         className={`w-full h-9 bg-[#16191C] rounded-lg p-2 text-white focus:outline-none ${!isEditable ? "cursor-not-allowed opacity-70" : ""}`}
@@ -847,7 +895,7 @@ export default function EditDeal() {
                                         type="text"
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
-                                        readOnly
+                                        readOnly={userRole !== "Admin"}
                                     />
                                 </div>
 
@@ -950,6 +998,92 @@ export default function EditDeal() {
                 onDiscard={handleDiscard}
                 onKeep={() => setShowDiscardModal(false)}
             />
+
+            {/* Request Edit Modal */}
+            {requestModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                        <h3 className="text-white text-lg mb-4">Request Deal Edit</h3>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="text-[#ABABAB] text-xs mb-1 block">Requested Rate</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#1D4CB5] text-sm"
+                                    placeholder={deal?.exchange_rate ? `Current: ${deal.exchange_rate}` : "0.00"}
+                                    value={requestedRate}
+                                    onChange={(e) => setRequestedRate(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[#ABABAB] text-xs mb-1 block">Requested Amount</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#1D4CB5] text-sm"
+                                    placeholder={deal?.amount ? `Current: ${deal.amount}` : "0.00"}
+                                    value={requestedAmount}
+                                    onChange={(e) => setRequestedAmount(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="text-[#ABABAB] text-xs mb-1 block">Calculated Total</label>
+                            <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white text-sm font-semibold">
+                                {requestedRate && requestedAmount ? (Number(requestedRate) * Number(requestedAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                            </div>
+                        </div>
+
+                        <p className="text-[#ABABAB] text-xs mb-2 block">
+                            Reason <span className="text-red-500">*</span>
+                        </p>
+                        <textarea
+                            className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1D4CB5] text-sm resize-none mb-4"
+                            rows="3"
+                            placeholder="Reason for change..."
+                            value={requestMessage}
+                            onChange={(e) => setRequestMessage(e.target.value)}
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setRequestModalOpen(false)}
+                                className="px-4 py-2 rounded-lg border border-white text-white text-sm hover:bg-white hover:text-black transition-all"
+                                disabled={requestLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!requestMessage.trim() || !requestedRate.trim() || !requestedAmount.trim()) return;
+                                    setRequestLoading(true);
+                                    try {
+                                        const formattedMessage = `New Rate: ${requestedRate}\nNew Amount: ${requestedAmount}\nReason: ${requestMessage}`;
+                                        const res = await requestEditDeal(id, formattedMessage);
+                                        if (res.success) {
+                                            setRequestModalOpen(false);
+                                            setRequestMessage("");
+                                            setRequestedRate("");
+                                            setRequestedAmount("");
+                                            // Optional: Show success toast
+                                        }
+                                    } catch (err) {
+                                        console.error(err);
+                                    } finally {
+                                        setRequestLoading(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-[#5761D7] text-white text-sm hover:bg-[#4751C7] transition-all disabled:opacity-50 flex items-center gap-2"
+                                disabled={requestLoading || !requestMessage.trim() || !requestedRate.trim() || !requestedAmount.trim()}
+                            >
+                                {requestLoading ? "Sending..." : "Submit"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            , document.body)}
         </>
     );
 }

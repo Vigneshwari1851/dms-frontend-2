@@ -150,3 +150,28 @@ export async function deleteDeal(id) {
   }
 }
 
+export async function requestEditDeal(id, message) {
+  try {
+    const response = await apiFetch(`/deal/${id}/request-edit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(`Failed to request edit for deal with ID ${id}:`, result);
+      return { success: false, error: result };
+    }
+
+    return { success: true, data: result };
+
+  } catch (error) {
+    console.error(`Error requesting edit for deal with ID ${id}:`, error);
+    return { success: false, error };
+  }
+}
+
