@@ -14,7 +14,7 @@ import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
 import installmentIcon from "../../assets/installment.svg";
 import DiscardModal from "../../components/common/DiscardModal";
 
-const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount }) => {
+const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount, remainingBalance }) => {
     const isCompleted = status?.toLowerCase() === 'completed';
     const buttonText = isCompleted ? 'Add Payment' : 'Add Payment';
 
@@ -42,41 +42,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                     <div className="absolute left-[11px] top-2 bottom-1 w-0.5 bg-[#343A40]"></div>
                 )}
 
-                {/* Deal Created Entry (for Completed Deals) */}
-                {isCompleted && createdAt && (
-                    <div className="relative">
-                        {/* Timeline Node */}
-                        <div className="absolute -left-[28px] top-6 w-4 h-4 rounded-full border-4 border-[#1A1F24] bg-[#5761D7] z-10"></div>
 
-                        <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
-                            <div className="flex flex-col">
-                                <span className="text-[#ABABAB] text-[10px] mb-2">Amount</span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-white text-normal">
-                                        {Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </span>
-                                    <span className="">{currency}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col sm:items-end">
-                                <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#5761D7]"></div>
-                                    <span className="text-[#E0E0E0] text-[11px]">
-                                        {new Date(createdAt).toLocaleDateString('en-IN', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            hour12: true
-                                        })}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {items.length === 0 && !isCompleted ? (
                     <div className="bg-[#1A1F24] border border-dashed border-[#2A2F34] rounded-2xl p-4 text-center ml-[-20px]">
@@ -147,6 +113,33 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             </div>
                         </div>
                     ))
+                )}
+
+                {/* Remaining Balance inside Tracker matching Timeline Row style */}
+                {remainingBalance !== undefined && remainingBalance > 0 && (
+                    <div className="relative mt-4">
+                        {/* Timeline Node */}
+                        <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full bg-[#FF4B4B] z-10"></div>
+                        
+                        <div className="bg-[#1A1F24] border border-dashed border-[#FF4B4B44] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                            <div className="flex flex-col">
+                                <span className="text-[#ABABAB] text-[10px] mb-2">Remaining Balance</span>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-[#FF4B4B] text-normal font-black">
+                                        {Number(Math.max(0, remainingBalance)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                    <span className="text-[#FF4B4B] opacity-70 text-xs font-bold">{currency}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:items-end">
+                                <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF4B4B]"></div>
+                                    <span className="text-[#FF4B4B] text-[11px] font-bold">Unsettled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
@@ -933,25 +926,6 @@ export default function EditDeal() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Remaining Balance Card (Moved from right side) */}
-                            {!isCompleted && (
-                                <div className="mt-6">
-                                    <div className="bg-[#16191C] border border-[#2A2F34] rounded-2xl p-5 shadow-inner">
-                                        <div className="flex justify-between items-center mb-1">
-                                             <span className="text-[#ABABAB] text-xs ">
-                                                 {dTitle}
-                                             </span>
-                                         </div>
-                                         <div className="flex items-baseline gap-2">
-                                             <span className={`text-xl font-black ${dRem > 0.01 ? "text-[#FF6B6B]" : "text-[#82E890]"}`}>
-                                                 {Number(Math.max(0, dRem)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                             </span>
-                                             <span className="text-[#ABABAB] text-sm font-bold uppercase">{dCurr}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
@@ -971,6 +945,7 @@ export default function EditDeal() {
                                     status={deal?.status}
                                     createdAt={deal?.created_at}
                                     totalAmount={expectedPaid}
+                                    remainingBalance={dRem}
                                 />
                             ) : (
                                 <PaymentHistory
@@ -985,6 +960,7 @@ export default function EditDeal() {
                                     status={deal?.status}
                                     createdAt={deal?.created_at}
                                     totalAmount={expectedReceived}
+                                    remainingBalance={dRem}
                                 />
                             )}
                         </div>
