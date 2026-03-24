@@ -771,24 +771,9 @@ export default function CreateDeal() {
               }}
               className="w-full"
             />
-            {txnMode?.toLowerCase() === "credit" && (
-              <div className="mt-4">
-                <label className="text-[#ABABAB] text-xs mb-1 block">Credit Type <span className="text-red-500">*</span></label>
-                <Dropdown
-                  label="Select Type"
-                  options={["PNBL", "BNPL"]}
-                  selected={creditType}
-                  onChange={(val) => {
-                    setCreditType(val);
-                    setErrors(prev => ({ ...prev, creditType: "" }));
-                  }}
-                  className="w-full"
-                />
-              </div>
-            )}
             <div className="min-h-3.5 mt-1">
-              {(errors.txnMode || errors.creditType) && (
-                <p className="text-red-400 text-[11px]">{errors.txnMode || errors.creditType}</p>
+              {errors.txnMode && (
+                <p className="text-red-400 text-[11px]">{errors.txnMode}</p>
               )}
             </div>
           </div>
@@ -874,6 +859,68 @@ export default function CreateDeal() {
             </div>
           </div>
         </div>
+
+        {/* Settlement Terms Section */}
+        {txnMode?.toLowerCase() === "credit" && (
+          <div className="mt-4 border-t border-[#2A2F34] pt-6">
+            <div className="flex items-center gap-2 mb-4 text-white font-medium">
+               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+               Settlement Terms
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {[
+                 {
+                   mode: "Credit",
+                   creditType: "PNBL",
+                   title: `Deferred ${buyCurrency || "---"} Receipt`,
+                   description: `We pay ${sellCurrency || "---"} immediately, receive ${buyCurrency || "---"} later`
+                 },
+                 {
+                   mode: "Credit",
+                   creditType: "BNPL",
+                   title: `Deferred ${sellCurrency || "---"} Payment`,
+                   description: `We receive ${buyCurrency || "---"} immediately, pay ${sellCurrency || "---"} later`
+                 }
+               ].map((opt) => {
+                  const isSelected = creditType === opt.creditType;
+                  return (
+                     <div 
+                       key={opt.title}
+                       onClick={() => {
+                          setCreditType(opt.creditType);
+                          setErrors(prev => ({ ...prev, creditType: "" }));
+                       }}
+                       className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-4 ${
+                          isSelected 
+                            ? "bg-[#1D4CB515] border-[#1D4CB5] shadow-[#1D4CB510]" 
+                            : "bg-[#16191C] border-[#2A2F34] hover:border-gray-500"
+                       }`}
+                     >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
+                           isSelected ? "border-[#1D4CB5]" : "border-gray-600"
+                      }`}>
+                           {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#1D4CB5]" />}
+                        </div>
+
+                        <div>
+                           <h3 className="text-white font-semibold text-[14px] mb-1">{opt.title}</h3>
+                           <p className="text-[#ABABAB] text-[12px] leading-5">{opt.description}</p>
+                        </div>
+                     </div>
+                  )
+               })}
+            </div>
+            
+            <div className="min-h-3.5 mt-2">
+              {errors.creditType && (
+                <p className="text-red-400 text-[11px]">{errors.creditType}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Row 3 - Amount to be Paid (full width) */}
         <div className="">
