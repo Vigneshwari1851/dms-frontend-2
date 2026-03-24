@@ -805,7 +805,7 @@ export default function EditDeal() {
                             {/* Row 1 - Customer Name, Phone & Date */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Full Name <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -816,7 +816,7 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Phone Number <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -827,7 +827,7 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Deal Date
                                     </label>
                                     <input
@@ -841,7 +841,7 @@ export default function EditDeal() {
                             {/* Row 2 - Transaction fields */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Transaction Type <span className="text-red-500">*</span>
                                     </label>
                                     <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
@@ -850,7 +850,7 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Transaction Mode <span className="text-red-500">*</span>
                                     </label>
                                     <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
@@ -862,7 +862,7 @@ export default function EditDeal() {
                             {/* Row 3 - Currency Pair & Rate */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         Currency Pair <span className="text-red-500">*</span>
                                     </label>
                                     <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
@@ -871,7 +871,7 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 flex items-center gap-2">
+                                    <label className="text-[#808080] text-sm mb-1 flex items-center gap-2">
                                         Rate <span className="text-red-500">*</span>
                                         {highlightRate && (
                                             <span className="text-yellow-500 text-xs font-semibold">
@@ -893,7 +893,7 @@ export default function EditDeal() {
                             {/* Row 4 - Amounts */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 flex items-center gap-2">
+                                    <label className="text-[#808080] text-sm mb-1 flex items-center gap-2">
                                         {txnType?.toLowerCase() === "sell" ? "Sell Amount" : txnType?.toLowerCase() === "buy" ? "Buy Amount" : "Amount"} <span className="text-red-500">*</span>
                                         {highlightAmount && (
                                             <span className="text-yellow-500 text-xs font-semibold">
@@ -912,7 +912,7 @@ export default function EditDeal() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[#ABABAB] text-sm mb-1 block">
+                                    <label className="text-[#808080] text-sm mb-1 block">
                                         {txnType?.toLowerCase() === "sell" ? "Buy Amount" : txnType?.toLowerCase() === "buy" ? "Sell Amount" : "Amount to be Paid"}
                                     </label>
                                     <div className="w-full h-9 bg-[#5761D738] rounded-lg px-3 py-2 flex items-center justify-between border border-[#5761D755]">
