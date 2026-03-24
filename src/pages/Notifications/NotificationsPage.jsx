@@ -100,6 +100,8 @@ const NotificationsPage = () => {
             window.location.href = `/deals/edit-deal/${n.reference_id}`;
         } else if (n.alert_type === "DEAL_EDIT_REQUEST") {
             window.location.href = `/deals/edit-deal/${n.reference_id}?fromNotif=true&msg=${encodeURIComponent(n.message)}`;
+        } else if (n.alert_type === "DEAL_EDIT") {
+            window.location.href = `/deals/edit-deal/${n.reference_id}`;
         }
     };
 

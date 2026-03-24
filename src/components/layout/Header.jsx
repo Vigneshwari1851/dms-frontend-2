@@ -216,6 +216,7 @@ export default function Header({ toggleSidebar }) {
                                 if (n.alert_type === "RECONCILIATION") window.location.href = `/reconciliation/details/${n.reference_id}`;
                                 else if (n.alert_type === "PENDING_DEAL") window.location.href = `/deals/edit-deal/${n.reference_id}`;
                                 else if (n.alert_type === "DEAL_EDIT_REQUEST") window.location.href = `/deals/edit-deal/${n.reference_id}?fromNotif=true&msg=${encodeURIComponent(n.message)}`;
+                                else if (n.alert_type === "DEAL_EDIT") window.location.href = `/deals/edit-deal/${n.reference_id}`;
                               }}
                               className="flex items-start gap-4 p-3 hover:bg-[#16191C] rounded-xl cursor-pointer transition-colors group"
                             >

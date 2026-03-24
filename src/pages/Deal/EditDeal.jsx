@@ -1170,7 +1170,7 @@ export default function EditDeal() {
                                             exchange_rate: newRate,
                                             amount_to_be_paid: calculatedAmountPaid,
                                             remarks: newRemarks,
-                                            status: "Completed" // Auto complete approved
+                                            status: deal?.status || "Pending"
                                         };
 
                                         const res = await updateDeal(id, dealData);
@@ -1179,7 +1179,8 @@ export default function EditDeal() {
                                                 await createNotification({
                                                     user_id: deal?.user_id || deal?.created_by,
                                                     message: `Your edit request for Deal #${deal?.deal_number || id} was approved. New Rate: ${newRate}, Amount: ${newAmount}`,
-                                                    type: "success"
+                                                    type: "success",
+                                                    reference_id: id
                                                 });
                                             } catch (err) {
                                                 console.error("Notification failed:", err);
@@ -1212,7 +1213,8 @@ export default function EditDeal() {
                                                 await createNotification({
                                                     user_id: deal?.user_id || deal?.created_by,
                                                     message: `Your edit request for Deal #${deal?.deal_number || id} was rejected. Reason: ${adminComment}`,
-                                                    type: "error"
+                                                    type: "error",
+                                                    reference_id: id
                                                 });
                                             } catch (err) {
                                                 console.error("Notification failed:", err);
