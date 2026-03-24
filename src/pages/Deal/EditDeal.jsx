@@ -714,11 +714,7 @@ export default function EditDeal() {
                                     Pending
                                 </span>
                             )}
-                            {deal?.credit_type && (
-                                <span className="rounded-2xl px-2 py-0.5 text-xs font-semibold bg-[#5761D71A] text-[#5761D7] border border-[#5761D744] ml-2">
-                                    {deal.credit_type}
-                                </span>
-                            )}
+                                {/* Credit Type displayed in form instead */}
                         </h2>
                     </div>
 
@@ -803,7 +799,7 @@ export default function EditDeal() {
 
                         <div className="space-y-6">
                             {/* Row 1 - Customer Name, Phone & Date */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                                 <div>
                                     <label className="text-[#808080] text-sm mb-1 block">
                                         Full Name <span className="text-red-500">*</span>
@@ -822,17 +818,6 @@ export default function EditDeal() {
                                     <input
                                         className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
                                         value={phoneNumber}
-                                        disabled
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-[#808080] text-sm mb-1 block">
-                                        Deal Date
-                                    </label>
-                                    <input
-                                        className={`w-full bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
-                                        value={deal?.created_at ? new Date(deal.created_at).toLocaleDateString('en-IN') : "---"}
                                         disabled
                                     />
                                 </div>
@@ -856,6 +841,32 @@ export default function EditDeal() {
                                     <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
                                         {txnMode}
                                     </div>
+                                </div>
+                            </div>
+                            {/* Settlement Term & Deal Date */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mt-4">
+                                {deal?.credit_type ? (
+                                    <div>
+                                        <label className="text-[#808080] text-sm mb-1 block">
+                                            Settlement Term <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}>
+                                            {deal.credit_type === "PNBL" ? `Deferred ${buyCurrency || "---"} Receipt` : `Deferred ${sellCurrency || "---"} Payment`}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div />
+                                )}
+
+                                <div>
+                                    <label className="text-[#808080] text-sm mb-1 block">
+                                        Deal Date
+                                    </label>
+                                    <input
+                                        className={`w-full h-9 bg-[#16191C] rounded-lg px-3 py-2 text-white focus:outline-none cursor-not-allowed ${dimOnEdit}`}
+                                        value={deal?.created_at ? new Date(deal.created_at).toLocaleDateString('en-IN') : "---"}
+                                        disabled
+                                    />
                                 </div>
                             </div>
 
