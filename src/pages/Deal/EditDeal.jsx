@@ -1003,27 +1003,42 @@ export default function EditDeal() {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
                     <div className="bg-[#1A1F24] border border-[#2A2F34] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
                         <h3 className="text-white text-lg mb-4">Request Deal Edit</h3>
-                        
+
+                        {/* Current Values Note */}
+                        <div className="bg-[#16191C] border border-[#2A2F34] rounded-xl p-3 mb-4 flex flex-col gap-1.5 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Current Amount:</span>
+                                <span className="text-white text-xs">
+                                    {deal?.amount ? Number(deal.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"} {buyCurrency}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#ABABAB] text-xs font-medium">Current Rate:</span>
+                                <span className="text-white text-xs">
+                                    {deal?.exchange_rate || deal?.rate || "---"}
+                                </span>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="text-[#ABABAB] text-xs mb-1 block">Requested Amount</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#1D4CB5] text-sm"
+                                    placeholder="0.00"
+                                    value={requestedAmount}
+                                    onChange={(e) => setRequestedAmount(e.target.value)}
+                                />
+                            </div>
                             <div>
                                 <label className="text-[#ABABAB] text-xs mb-1 block">Requested Rate</label>
                                 <input
                                     type="number"
                                     step="0.01"
                                     className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#1D4CB5] text-sm"
-                                    placeholder={deal?.exchange_rate ? `Current: ${deal.exchange_rate}` : "0.00"}
+                                    placeholder="0.00"
                                     value={requestedRate}
                                     onChange={(e) => setRequestedRate(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[#ABABAB] text-xs mb-1 block">Requested Amount</label>
-                                <input
-                                    type="number"
-                                    className="w-full bg-[#16191C] border border-[#2A2F34] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#1D4CB5] text-sm"
-                                    placeholder={deal?.amount ? `Current: ${deal.amount}` : "0.00"}
-                                    value={requestedAmount}
-                                    onChange={(e) => setRequestedAmount(e.target.value)}
                                 />
                             </div>
                         </div>
