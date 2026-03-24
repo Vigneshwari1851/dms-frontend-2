@@ -629,9 +629,9 @@ export default function ListReport() {
                       <>
                         <th className="py-3 text-left pl-5">Date</th>
                         <th className="text-left">Total Deals</th>
+                        <th className="text-left">Opening Vault</th>
+                        <th className="text-left">Closing Vault</th>
                         <th className="text-left">Status</th>
-                        <th className="text-left">Profit/Loss (TZS)</th>
-                        <th className="text-left">Variances</th>
                       </>
                     )}
                     {reportType === "Expenses" && (
@@ -694,17 +694,24 @@ export default function ListReport() {
                             {item.created_at || item.createdAt || item.date ? format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy") : "—"}
                           </td>
                           <td className="text-left">{item.total_transactions || item.totalDeals || 0}</td>
+                          <td className="text-left py-2">
+                            <div className="flex flex-col gap-1">
+                                {item.openingEntries?.length > 0 ? item.openingEntries.map((e, idx) => (
+                                    <span key={idx} className="text-[#88ACFC] text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
+                                )) : <span className="text-gray-500">—</span>}
+                            </div>
+                          </td>
+                          <td className="text-left py-2">
+                            <div className="flex flex-col gap-1">
+                                {item.closingEntries?.length > 0 ? item.closingEntries.map((e, idx) => (
+                                    <span key={idx} className="text-[#88ACFC] text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
+                                )) : <span className="text-gray-500">—</span>}
+                            </div>
+                          </td>
                           <td className="text-left">
                             <span className={item.status === "Tallied" ? "text-green-500 font-medium" : "text-red-500 font-medium"}>
                               {item.status}
                             </span>
-                          </td>
-                          <td className="text-left">{Number(item.profitLoss).toLocaleString()}</td>
-                          <td className="text-left">
-                            <div className="flex flex-col text-xs text-gray-500">
-                              <span>Excess: {item.variances?.excess != null ? Number(item.variances.excess).toLocaleString() : "—"}</span>
-                              <span>Short: {item.variances?.short != null ? Number(item.variances.short).toLocaleString() : "—"}</span>
-                            </div>
                           </td>
                         </>
                       )}
