@@ -117,17 +117,19 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                 )}
 
                 {/* Remaining Balance inside Tracker matching Timeline Row style */}
-                {remainingBalance !== undefined && remainingBalance > 0 && (
+                {remainingBalance !== undefined && remainingBalance !== 0 && (
                     <div className="relative mt-4">
                         {/* Timeline Node */}
-                        <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full bg-[#FF4B4B] z-10"></div>
+                        <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full z-10 bg-[#FF4B4B]"></div>
                         
-                        <div className="bg-[#1A1F24] border border-dashed border-[#FF4B4B44] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm">
+                        <div className="bg-[#1A1F24] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm border border-dashed border-[#FF4B4B44]">
                             <div className="flex flex-col">
-                                <span className="text-[#ABABAB] text-[10px] mb-2">Remaining Balance</span>
+                                <span className="text-[#ABABAB] text-[10px] mb-2">
+                                    {remainingBalance > 0 ? "Remaining Balance" : "Excess Paid"}
+                                </span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-[#FF4B4B] text-normal font-black">
-                                        {Number(Math.max(0, remainingBalance)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {Number(Math.abs(remainingBalance)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
                                     <span className="text-[#FF4B4B] opacity-70 text-xs font-bold">{currency}</span>
                                 </div>
@@ -136,7 +138,9 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                             <div className="flex flex-col sm:items-end">
                                 <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#FF4B4B]"></div>
-                                    <span className="text-[#FF4B4B] text-[11px] font-bold">Unsettled</span>
+                                    <span className="text-[#FF4B4B] text-[11px] font-bold">
+                                        {remainingBalance > 0 ? "Unsettled" : "Excess"}
+                                    </span>
                                 </div>
                             </div>
                         </div>
