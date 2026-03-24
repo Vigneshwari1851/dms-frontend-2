@@ -40,7 +40,7 @@ export default function ListReport() {
   const [tempTxnType, setTempTxnType] = useState("All");
   const [txnType, setTxnType] = useState("All");
 
-  const reportTypes = ["Deals", "Reconciliation", "Expenses", "PnL", "Customer"];
+  const reportTypes = ["Deals", "Reconciliation", "Expenses", "P&L", "Customer"];
 
   const getStatusesForReport = (type) => {
     switch (type) {
@@ -146,7 +146,7 @@ export default function ListReport() {
           dealType: activeTxnType !== "All" ? activeTxnType : undefined,
           status: activeStatus !== "All Status" ? activeStatus : undefined,
         });
-      } else if (activeReportType === "Reconciliation" || activeReportType === "PnL") {
+      } else if (activeReportType === "Reconciliation" || activeReportType === "P&L") {
         response = await fetchReconcoliation({
           ...params,
           dateFilter: "custom",
@@ -585,7 +585,7 @@ export default function ListReport() {
               imageSrc={
                 reportType === "Reconciliation" ? reconEmptyBg :
                   reportType === "Expenses" ? expensesEmptyBg :
-                    reportType === "PnL" ? pnlEmptyBg :
+                    reportType === "P&L" ? pnlEmptyBg :
                       reportType === "Customer" ? reportEmptyBg :
                         dealEmptyBg
               }
@@ -643,7 +643,7 @@ export default function ListReport() {
                         <th className="text-left">Rate</th>
                       </>
                     )}
-                    {reportType === "PnL" && (
+                    {reportType === "P&L" && (
                       <>
                         <th className="py-3 text-left pl-5">Date</th>
                         <th className="text-left">Deals</th>
@@ -664,7 +664,7 @@ export default function ListReport() {
                         if (reportType === "Deals") navigate(`/deals/edit-deal/${item.id}`);
                         if (reportType === "Reconciliation") navigate(`/reconciliation`);
                         if (reportType === "Expenses") navigate(`/expenses`);
-                        if (reportType === "PnL") navigate(`/pnl`);
+                        if (reportType === "P&L") navigate(`/pnl`);
                       }}
                     >
                       {(reportType === "Deals" || reportType === "Customer") && (
@@ -717,7 +717,7 @@ export default function ListReport() {
                           <td className="text-left">{item.rate || "—"}</td>
                         </>
                       )}
-                      {reportType === "PnL" && (
+                      {reportType === "P&L" && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{format(new Date(item.created_at), "dd/MM/yyyy")}</td>
                           <td className="text-left">{item.total_transactions}</td>
