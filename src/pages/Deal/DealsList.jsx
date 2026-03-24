@@ -10,12 +10,13 @@ import pdf from "../../assets/Common/pdf.svg";
 import excel from "../../assets/Common/excel.svg";
 import Pagination from "../../components/common/Pagination";
 import searchIcon from "../../assets/Common/search.svg";
-import { fetchDeals, exportDeals } from "../../api/deals";
+import { fetchDeals, exportDeals, deleteDeal } from "../../api/deals";
 import { fetchCurrencies } from "../../api/currency/currency";
 import Toast from "../../components/common/Toast";
 import editIcon from "../../assets/Common/edit.svg";
 import EmptyState from "../../components/common/EmptyState";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
+import NotificationCard from "../../components/common/Notification";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function DealsList() {
   const exportRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteModal, setDeleteModal] = useState({ open: false, actionType: "delete", title: "Delete Deal", message: "", dealId: null });
   const itemsPerPage = 10;
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -272,9 +274,33 @@ export default function DealsList() {
   };
 
 
-  const handleDelete = (dealId) => {
-    console.log("Delete deal", dealId);
+  const handleDelete = (deal) => {
+    setDeleteModal({
+      open: true,
+      actionType: "delete",
+      title: "Delete Deal",
+      message: `Are you sure you want to delete deal #${deal.id}? This action cannot be undone.`,
+      dealId: deal.dealId
+    });
     setOpenMenu(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await deleteDeal(deleteModal.dealId);
+      if (res.success) {
+        setToast({ show: true, message: "Deal deleted successfully", type: "success" });
+        // Refresh local items
+        setDeals(deals.filter((d) => d.dealId !== deleteModal.dealId));
+      } else {
+        setToast({ show: true, message: "Failed to delete deal", type: "error" });
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      setToast({ show: true, message: "Error deleting deal", type: "error" });
+    } finally {
+      setDeleteModal({ open: false, actionType: "delete", title: "Delete Deal", message: "", dealId: null });
+    }
   };
 
 
@@ -523,7 +549,7 @@ export default function DealsList() {
                             className="fixed inset-0 z-10"
                             onClick={() => setOpenMenu(null)}
                           ></div>
-                          <div className="absolute right-10 mt-1 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20">
+                          <div className="absolute right-10 mt-1 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 overflow-hidden">
                             <button
                               onClick={() => handleRowClick(item)}
                               className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
@@ -534,9 +560,18 @@ export default function DealsList() {
                             {item.status === "Pending" && (
                               <button
                                 onClick={() => handleEdit(item.dealId)}
-                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34] rounded-b-lg"
+                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
                               >
                                 Edit Deal
+                              </button>
+                            )}
+
+                            {userRole === "Admin" && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(item); }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[#FF4B4B15] font-medium transition-colors"
+                              >
+                                Delete Deal
                               </button>
                             )}
                           </div>
@@ -568,6 +603,12 @@ export default function DealsList() {
             type={toast.type}
           />
         )}
+
+        <NotificationCard
+          confirmModal={deleteModal}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteModal({ open: false, actionType: "delete", title: "Delete Deal", message: "", dealId: null })}
+        />
       </div>
     </>
   );
