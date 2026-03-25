@@ -138,36 +138,44 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                 </td>
                 <td className="px-6 py-5 text-center">
                     {summary.hasRecord ? (
-                        <div className="flex items-center justify-center gap-1.5">
-                            {summary.status === "Tallied" ? (
-                                <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px]">
-                                    <CheckCircle2 className="w-3 h-3" /> Tallied
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px]">
-                                    <AlertCircle className="w-3 h-3" /> {summary.status}
-                                </div>
-                            )}
-                        </div>
+                        summary.isClosingVisible ? (
+                            <div className="flex items-center justify-center gap-1.5">
+                                {summary.status === "Tallied" ? (
+                                    <div className="flex items-center gap-1.5 text-[#82E890] bg-[#82E890]/10 px-2 py-1 rounded-full border border-[#82E890]/20 text-[11px]">
+                                        <CheckCircle2 className="w-3 h-3" /> Tallied
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 text-[#F7626E] bg-[#F7626E]/10 px-2 py-1 rounded-full border border-[#F7626E]/20 text-[11px]">
+                                        <AlertCircle className="w-3 h-3" /> {summary.status}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center text-gray-500 rounded-full text-[11px]">
+                                In Progress
+                            </div>
+                        )
                     ) : (
                         <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
                     )}
                 </td>
                 <td className="px-6 py-5 text-right">
                     {summary.hasRecord ? (
-                        summary.currencyVariances.length > 0 ? (
-                            <div className="flex flex-col items-end gap-0.5">
-                                {summary.currencyVariances.map(({ code, variance }) => (
-                                    <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                        {variance >= 0 ? "" : ""} {formatCurrency(variance)} {code}
-                                    </span>
-                                ))}
-                            </div>
-                        ) : (
-                            <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                                {summary.profitLoss >= 0 ? "" : ""} TZS {formatCurrency(summary.profitLoss)}
-                            </span>
-                        )
+                        summary.isClosingVisible ? (
+                            summary.currencyVariances.length > 0 ? (
+                                <div className="flex flex-col items-end gap-0.5">
+                                    {summary.currencyVariances.map(({ code, variance }) => (
+                                        <span key={code} className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                            {variance >= 0 ? "" : ""} {formatCurrency(variance)} {code}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span className={summary.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                    {summary.profitLoss >= 0 ? "" : ""} TZS {formatCurrency(summary.profitLoss)}
+                                </span>
+                            )
+                        ) : "—"
                     ) : "—"}
                 </td>
                 <td className="px-6 py-5 text-right">
@@ -252,6 +260,8 @@ export default function ReconciliationReport({
         isViewOnly: false
     });
     const [lastTriggerId, setLastTriggerId] = useState(0);
+    const today = new Date();
+
     const isToday = periodType === "daily" && isSameDay(dateRange.start, new Date());
 
     // Hide sidebar when modal is open
@@ -637,17 +647,20 @@ export default function ReconciliationReport({
                 });
             }
 
+            const isClosingVisible = !isSameDay(date, today);
+
             return {
                 date,
                 recon: recon || null,
                 hasRecord: !!recon,
-                status: recon?.status || "None",
+                status: isClosingVisible ? (recon?.status || "None") : "In Progress",
                 profitLoss: Number(recon?.profitLoss || 0),
                 totalTransactions: recon?.total_transactions || 0,
                 currencyVariances,
+                isClosingVisible
             };
         });
-    }, [dateRange?.dates, reconciliations]);
+    }, [dateRange?.dates, reconciliations, today]);
 
     const periodStats = useMemo(() => {
         const tallied = reconciliations.filter(r => r.status === "Tallied").length;
@@ -663,15 +676,17 @@ export default function ReconciliationReport({
     // Per-currency vault rows for the active reconciliation
     const vaultRows = useMemo(() => {
         if (periodType === "daily") {
-            const activeRecon = dailySummaries[0]?.recon;
+            const summary = dailySummaries[0];
+            const activeRecon = summary?.recon;
             const totals = calculateCurrencyTotals(activeRecon);
             return Object.values(totals)
                 .filter(row => row.code !== "?")
                 .map(row => ({
                     ...row,
                     variance: row.physical - (row.book + row.deals),
-                    status: activeRecon?.status || "None",
-                    recon: activeRecon
+                    status: summary?.status || "None",
+                    recon: activeRecon,
+                    isClosingVisible: summary?.isClosingVisible
                 }));
         }
 
@@ -713,9 +728,10 @@ export default function ReconciliationReport({
                 ...row,
                 variance: row.physical - (row.book + row.deals),
                 status: "Period Summary",
-                recon: null
+                recon: null,
+                isClosingVisible: !isSameDay(dateRange.end, today) && (new Date(dateRange.end) < today)
             }));
-    }, [periodType, dailySummaries, reconciliations, allCurrencies, dateRange]);
+    }, [periodType, dailySummaries, reconciliations, allCurrencies, dateRange, today]);
 
     // Handle auto-capture trigger from dashboard (Physical Cash button)
     useEffect(() => {
@@ -816,18 +832,18 @@ export default function ReconciliationReport({
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + (row.theoreticalDeals || 0))}</td>
                                                 {/* <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td> */}
-                                                <td className="px-6 py-4 text-right text-gray-300">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
+                                                <td className="px-6 py-4 text-right text-gray-300">{(row.isClosingVisible && row.physical > 0) ? formatCurrency(row.physical) : "—"}</td>
                                                 {!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0) && (
                                                     <>
                                                         <td className="px-6 py-4 text-right">
-                                                            {row.physical > 0 ? (
+                                                            {row.isClosingVisible && row.physical > 0 ? (
                                                                 <span className={variance >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
                                                                     {isTallied ? "0.00" : `${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}
                                                                 </span>
                                                             ) : "—"}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            {row.physical > 0 ? (
+                                                            {row.isClosingVisible && row.physical > 0 ? (
                                                                 isTallied ? (
                                                                     <div className="flex items-center justify-center gap-1.5 text-[#82E890] text-[10px]">
                                                                         <CheckCircle2 className="w-3.5 h-3.5" /> Tallied
@@ -837,7 +853,9 @@ export default function ReconciliationReport({
                                                                         {variance > 0 ? "Excess" : "Short"}
                                                                     </span>
                                                                 )
-                                                            ) : "—"}
+                                                            ) : (
+                                                                <span className="text-gray-500 text-[10px]">In Progress</span>
+                                                            )}
                                                         </td>
                                                     </>
                                                 )}
