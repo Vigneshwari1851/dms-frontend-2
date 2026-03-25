@@ -515,40 +515,40 @@ export default function EditDeal() {
         }
     }, [deal]);
 
+    const loadDeal = async () => {
+        try {
+            setLoading(true);
+            const response = await fetchDealById(id);
+
+            if (!response.success) {
+                setError("Failed to load deal data");
+                setLoading(false);
+                return;
+            }
+
+            const dealData = response.data.data || response.data;
+            setDeal(dealData);
+
+            // Wait for currencies to load before populating form
+            if (currencyOptions.length > 0) {
+                populateFormFromDeal(dealData);
+            } else {
+                // If currencies not loaded yet, set a small delay
+                setTimeout(() => populateFormFromDeal(dealData), 100);
+            }
+
+            setEditMode(false);
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching deal:", err);
+            setError("Failed to load deal data");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Fetch deal data on mount
     useEffect(() => {
-        const loadDeal = async () => {
-            try {
-                setLoading(true);
-                const response = await fetchDealById(id);
-
-                if (!response.success) {
-                    setError("Failed to load deal data");
-                    setLoading(false);
-                    return;
-                }
-
-                const dealData = response.data.data || response.data;
-                setDeal(dealData);
-
-                // Wait for currencies to load before populating form
-                if (currencyOptions.length > 0) {
-                    populateFormFromDeal(dealData);
-                } else {
-                    // If currencies not loaded yet, set a small delay
-                    setTimeout(() => populateFormFromDeal(dealData), 100);
-                }
-
-                setEditMode(false);
-                setError(null);
-            } catch (err) {
-                console.error("Error fetching deal:", err);
-                setError("Failed to load deal data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         if (id) {
             loadDeal();
         }
@@ -669,9 +669,8 @@ export default function EditDeal() {
             };
 
             await updateDeal(id, dealData);
-            const msg = encodeURIComponent(finalStatus === "Completed" ? "Deal completed successfully" : "Deal updated successfully");
-            const type = finalStatus === "Completed" ? "success" : "pending";
-            window.location.href = `/deals?toast=${type}&msg=${msg}`;
+            await loadDeal();
+            setEditMode(false);
         } catch (err) {
             console.error("Error updating deal:", err);
             setError("Failed to update deal");
@@ -1199,8 +1198,8 @@ export default function EditDeal() {
                                             } catch (err) {
                                                 console.error("Notification failed:", err);
                                             }
+                                            await loadDeal();
                                             setIsAdminApprovalOpen(false);
-                                            window.location.href = `/deals?toast=success&msg=Edit request approved`;
                                         }
                                     } catch (err) {
                                         console.error(err);
@@ -1233,8 +1232,8 @@ export default function EditDeal() {
                                             } catch (err) {
                                                 console.error("Notification failed:", err);
                                             }
+                                            await loadDeal();
                                             setIsAdminApprovalOpen(false);
-                                            window.location.href = `/deals?toast=success&msg=Edit request rejected`;
                                         }
                                     } catch (err) {
                                         console.error(err);
