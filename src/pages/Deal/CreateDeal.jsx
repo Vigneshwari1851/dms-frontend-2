@@ -12,9 +12,18 @@ import Dropdown from "../../components/common/Dropdown";
 import DiscardModal from "../../components/common/DiscardModal";
 import CalendarMini from "../../components/common/CalendarMini";
 import calendarIcon from "../../assets/Common/calendar.svg";
+import { useReconciliation } from "../../contexts/ReconciliationContext";
 
 export default function CreateDeal() {
   const navigate = useNavigate();
+  const { todayRecon, loading: reconLoading, openGate } = useReconciliation();
+
+  // Block direct URL access if no reconciliation for today
+  useEffect(() => {
+    if (!reconLoading && !todayRecon) {
+      openGate();
+    }
+  }, [reconLoading, todayRecon]);
 
   // Form State
   const [customerQuery, setCustomerQuery] = useState("");

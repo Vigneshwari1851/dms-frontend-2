@@ -3,11 +3,14 @@ import Header from "./Header";
 import Sider from "./Sider";
 import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { ReconciliationProvider, useReconciliation } from "../../contexts/ReconciliationContext";
+import ReconciliationGateModal from "../common/ReconciliationGateModal";
 
-export default function AppLayout() {
+function AppLayoutInner() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { pathname } = useLocation();
   const mainRef = useRef(null);
+  const { gateOpen, closeGate } = useReconciliation();
 
   useEffect(() => {
     if (mainRef.current) {
@@ -34,18 +37,31 @@ export default function AppLayout() {
           />
         )}
 
-        {/* Left Sidebar */}
-        <Sider isOpen={isSidebarOpen && !sidebarHidden} closeSidebar={closeSidebar} hidden={sidebarHidden} />
+        {/* Left Sidebar — blurred when gate is open */}
+        <div className={`transition-all duration-200 ${gateOpen ? "blur-sm pointer-events-none select-none" : ""}`}>
+          <Sider isOpen={isSidebarOpen && !sidebarHidden} closeSidebar={closeSidebar} hidden={sidebarHidden} />
+        </div>
 
-        {/* Main content */}
+        {/* Main content — blurred when gate is open */}
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-scroll scrollbar-grey p-2 lg:p-4 bg-[#16191C] text-white"
+          className={`flex-1 overflow-y-scroll scrollbar-grey p-2 lg:p-4 bg-[#16191C] text-white transition-all duration-200 ${gateOpen ? "blur-sm pointer-events-none select-none" : ""}`}
           style={{ scrollbarGutter: "stable" }}
         >
           <Outlet context={{ setSidebarHidden }} />
         </main>
       </div>
+
+      {/* Gate modal rendered here — above everything including Sider */}
+      {gateOpen && <ReconciliationGateModal onClose={closeGate} />}
     </div>
+  );
+}
+
+export default function AppLayout() {
+  return (
+    <ReconciliationProvider>
+      <AppLayoutInner />
+    </ReconciliationProvider>
   );
 }

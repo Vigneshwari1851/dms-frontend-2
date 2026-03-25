@@ -17,9 +17,11 @@ import editIcon from "../../assets/Common/edit.svg";
 import EmptyState from "../../components/common/EmptyState";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
 import NotificationCard from "../../components/common/Notification";
+import { useReconciliation } from "../../contexts/ReconciliationContext";
 
 export default function DealsList() {
   const navigate = useNavigate();
+  const { todayRecon, openGate } = useReconciliation();
   const [openMenu, setOpenMenu] = useState(null);
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -273,6 +275,13 @@ export default function DealsList() {
     navigate("/customer-info/add-customer");
   };
 
+  const handleCreateDeal = () => {
+    if (todayRecon) {
+      navigate("/deals/create-deal");
+    } else {
+      openGate();
+    }
+  };
 
   const handleDelete = (deal) => {
     setDeleteModal({
@@ -330,7 +339,7 @@ export default function DealsList() {
           </button>
 
           <button
-            onClick={() => navigate("/deals/create-deal")}
+            onClick={handleCreateDeal}
             className="flex items-center justify-center h-10 bg-[#1D4CB5] hover:bg-[#173B8B] text-white font-medium text-sm px-4 py-2 gap-2 rounded-lg"
           >
             <img src={add} alt="add" className="w-5 h-5" />
@@ -429,7 +438,7 @@ export default function DealsList() {
               message="Looks like deals are not yet added"
               action={
                 <button
-                  onClick={() => navigate("/deals/create-deal")}
+                  onClick={handleCreateDeal}
                   className="flex items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mx-auto"
                 >
                   <img src={add} alt="add" className="w-5 h-5" />
