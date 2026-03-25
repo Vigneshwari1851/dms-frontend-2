@@ -82,6 +82,7 @@ export default function ListUser() {
     actions: (
       <div className="flex justify-center w-full">
         <ActionDropdown
+          vertical={true}
           options={[
             {
               label: "View User Details",
