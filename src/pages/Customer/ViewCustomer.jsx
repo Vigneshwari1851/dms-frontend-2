@@ -371,7 +371,7 @@ export default function ViewCustomer() {
                       });
                     }}
                     className={`relative flex items-center w-[110px] h-[32px] rounded-full transition-all duration-300 focus:outline-none
-                                    ${formData.is_active ? "bg-[#2bc5b4]" : "bg-[#C52B2B]"}
+                                    ${formData.is_active ? "bg-[#1D4CB5]" : "bg-[#C52B2B]"}
                                     ${!editMode ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
                                 `}
                   >
