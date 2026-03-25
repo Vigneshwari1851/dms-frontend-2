@@ -570,38 +570,46 @@ export default function ReconciliationReport({
                     totals[sellCode].deals -= vaultReduce;
                 }
             } else {
-                if (hasMatchingItems) {
+                // Completed deal: process each side independently.
+                // Use actual payment items when present; fall back to full deal amounts per side.
+                if (matchingReceivedItems.length > 0) {
                     matchingReceivedItems.forEach(item => {
                         const code = item.currency?.code || "?";
                         if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                         totals[code].deals += Number(item.total || 0);
                     });
+                } else if (isSameDayDeal) {
+                    // No received items — use full deal amount for the received side
+                    if (deal.deal_type === "buy") {
+                        if (buyCode) {
+                            if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                            totals[buyCode].deals += amount;
+                        }
+                    } else if (deal.deal_type === "sell") {
+                        if (buyCode) {
+                            if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                            totals[buyCode].deals += amountToBePaid;
+                        }
+                    }
+                }
+
+                if (matchingPaidItems.length > 0) {
                     matchingPaidItems.forEach(item => {
                         const code = item.currency?.code || "?";
                         if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                         totals[code].deals -= Number(item.total || 0);
                     });
-                } else {
-                    // Only fallback to full amounts if this reconciliation is for the exact day the deal was created
-                    if (isSameDayDeal) {
-                        if (deal.deal_type === "buy") {
-                            if (buyCode) {
-                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
-                                totals[buyCode].deals += amount;
-                            }
-                            if (sellCode) {
-                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
-                                totals[sellCode].deals -= amountToBePaid;
-                            }
-                        } else if (deal.deal_type === "sell") {
-                            if (buyCode) {
-                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
-                                totals[buyCode].deals += amountToBePaid;
-                            }
-                            if (sellCode) {
-                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
-                                totals[sellCode].deals -= amount;
-                            }
+                } else if (isSameDayDeal) {
+                    // No paid items — use full deal amount for the paid side
+                    if (deal.deal_type === "buy") {
+                        if (sellCode) {
+                            if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                            totals[sellCode].deals -= amountToBePaid;
+                        }
+                    } else if (deal.deal_type === "sell") {
+                        if (sellCode) {
+                            if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                            totals[sellCode].deals -= amount;
                         }
                     }
                 }
