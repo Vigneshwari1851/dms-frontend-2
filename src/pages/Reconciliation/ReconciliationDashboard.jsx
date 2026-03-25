@@ -106,6 +106,7 @@ export default function ReconciliationDashboard() {
                         handleDateChange({ from: date, to: date });
                     }}
                     setSidebarHidden={useOutletContext()?.setSidebarHidden}
+                    hideVarianceAndStatus={true}
                 />
             </div>
 
