@@ -776,7 +776,7 @@ export default function ReconciliationReport({
                                 <th className="px-6 py-2">Currency</th>
                                 <th className="px-6 py-2 text-right font-normal">Opening Vault</th>
                                 <th className="px-6 py-2 text-right font-normal">Book Balance</th>
-                                <th className="px-6 py-2 text-right font-normal">Expected Closing</th>
+                                {/* <th className="px-6 py-2 text-right font-normal">Expected Closing</th> */}
                                 <th className="px-6 py-2 text-right font-normal">Closing Vault</th>
                                 {!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0) && (
                                     <>
@@ -815,7 +815,7 @@ export default function ReconciliationReport({
                                                 </td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + (row.theoreticalDeals || 0))}</td>
-                                                <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td>
+                                                {/* <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td> */}
                                                 <td className="px-6 py-4 text-right text-gray-300">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
                                                 {!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0) && (
                                                     <>
