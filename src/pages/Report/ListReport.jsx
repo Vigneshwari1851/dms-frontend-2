@@ -697,14 +697,14 @@ export default function ListReport() {
                           <td className="text-left py-2">
                             <div className="flex flex-col gap-1">
                                 {item.openingEntries?.length > 0 ? item.openingEntries.map((e, idx) => (
-                                    <span key={idx} className="text-[#88ACFC] text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
+                                    <span key={idx} className="text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
                                 )) : <span className="text-gray-500">—</span>}
                             </div>
                           </td>
                           <td className="text-left py-2">
                             <div className="flex flex-col gap-1">
                                 {item.closingEntries?.length > 0 ? item.closingEntries.map((e, idx) => (
-                                    <span key={idx} className="text-[#88ACFC] text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
+                                    <span key={idx} className="text-[13px]">{Number(e.amount).toLocaleString()} {e.currency?.code || "?"}</span>
                                 )) : <span className="text-gray-500">—</span>}
                             </div>
                           </td>
