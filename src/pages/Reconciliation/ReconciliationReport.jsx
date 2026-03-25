@@ -487,13 +487,13 @@ export default function ReconciliationReport({
 
         (recon.openingEntries || []).forEach(entry => {
             const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
             totals[code].book += Number(entry.amount || 0);
         });
 
         (recon.closingEntries || []).forEach(entry => {
             const code = entry.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
             totals[code].physical += Number(entry.amount || 0);
         });
 
@@ -505,6 +505,25 @@ export default function ReconciliationReport({
 
             const dealDate = deal.created_at ? new Date(deal.created_at).toISOString().split('T')[0] : "";
             const isSameDayDeal = dealDate === reconDate;
+
+            const amount = Number(deal.amount || 0);
+            const amountToBePaid = Number(deal.amount_to_be_paid || 0);
+            const buyCode = deal.buyCurrency?.code;
+            const sellCode = deal.sellCurrency?.code;
+
+                        if (isSameDayDeal) {
+                const fRecv = deal.deal_type === "sell" ? amountToBePaid : amount;
+                const fPaid = deal.deal_type === "sell" ? amount : amountToBePaid;
+                
+                if (buyCode) {
+                    if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                    totals[buyCode].theoreticalDeals += fRecv;
+                }
+                if (sellCode) {
+                    if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
+                    totals[sellCode].theoreticalDeals -= fPaid;
+                }
+            }
 
             const matchingReceivedItems = (deal.receivedItems || []).filter(item => {
                 if (!item.created_at) return true;
@@ -520,11 +539,6 @@ export default function ReconciliationReport({
             if (deal.status === "Pending") {
                 const isPNBL = deal.credit_type === 'PNBL';
                 const isBNPL = deal.credit_type === 'BNPL';
-
-                const amount = Number(deal.amount || 0);
-                const amountToBePaid = Number(deal.amount_to_be_paid || 0);
-                const buyCode = deal.buyCurrency?.code;
-                const sellCode = deal.sellCurrency?.code;
 
                 // Only evaluate the immediate bulk expectation if the deal was actually created on this reconciliation's day
                 const fullReceived = (deal.deal_type === "sell" ? amountToBePaid : amount) * (isSameDayDeal ? 1 : 0);
@@ -548,49 +562,44 @@ export default function ReconciliationReport({
                 }
 
                 if (buyCode) {
-                    if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, physical: 0 };
+                    if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                     totals[buyCode].deals += vaultAdd;
                 }
                 if (sellCode) {
-                    if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, physical: 0 };
+                    if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                     totals[sellCode].deals -= vaultReduce;
                 }
             } else {
                 if (hasMatchingItems) {
                     matchingReceivedItems.forEach(item => {
                         const code = item.currency?.code || "?";
-                        if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+                        if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                         totals[code].deals += Number(item.total || 0);
                     });
                     matchingPaidItems.forEach(item => {
                         const code = item.currency?.code || "?";
-                        if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+                        if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                         totals[code].deals -= Number(item.total || 0);
                     });
                 } else {
                     // Only fallback to full amounts if this reconciliation is for the exact day the deal was created
                     if (isSameDayDeal) {
-                        const buyCode = deal.buyCurrency?.code;
-                        const sellCode = deal.sellCurrency?.code;
-                        const amount = Number(deal.amount || 0);
-                        const amountToBePaid = Number(deal.amount_to_be_paid || 0);
-
                         if (deal.deal_type === "buy") {
                             if (buyCode) {
-                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, physical: 0 };
+                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                                 totals[buyCode].deals += amount;
                             }
                             if (sellCode) {
-                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, physical: 0 };
+                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                                 totals[sellCode].deals -= amountToBePaid;
                             }
                         } else if (deal.deal_type === "sell") {
                             if (buyCode) {
-                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, physical: 0 };
+                                if (!totals[buyCode]) totals[buyCode] = { code: buyCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                                 totals[buyCode].deals += amountToBePaid;
                             }
                             if (sellCode) {
-                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, physical: 0 };
+                                if (!totals[sellCode]) totals[sellCode] = { code: sellCode, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                                 totals[sellCode].deals -= amount;
                             }
                         }
@@ -651,11 +660,11 @@ export default function ReconciliationReport({
             return Object.values(totals)
                 .filter(row => row.code !== "?")
                 .map(row => ({
-                ...row,
-                variance: row.physical - (row.book + row.deals),
-                status: activeRecon?.status || "None",
-                recon: activeRecon
-            }));
+                    ...row,
+                    variance: row.physical - (row.book + row.deals),
+                    status: activeRecon?.status || "None",
+                    recon: activeRecon
+                }));
         }
 
         // Weekly/Monthly Aggregation
@@ -668,7 +677,7 @@ export default function ReconciliationReport({
         const firstDay = sortedRecs[0];
         (firstDay.openingEntries || []).forEach(e => {
             const code = e.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
             totals[code].book += Number(e.amount || 0);
         });
 
@@ -676,7 +685,7 @@ export default function ReconciliationReport({
         const lastDayWithClosing = [...sortedRecs].reverse().find(r => r.closingEntries?.length > 0) || sortedRecs[sortedRecs.length - 1];
         (lastDayWithClosing.closingEntries || []).forEach(e => {
             const code = e.currency?.code || "?";
-            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, physical: 0 };
+            if (!totals[code]) totals[code] = { code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
             totals[code].physical += Number(e.amount || 0);
         });
 
@@ -684,19 +693,20 @@ export default function ReconciliationReport({
         sortedRecs.forEach(recon => {
             const dayTotals = calculateCurrencyTotals(recon);
             Object.values(dayTotals).forEach(row => {
-                if (!totals[row.code]) totals[row.code] = { code: row.code, book: 0, deals: 0, physical: 0 };
+                if (!totals[row.code]) totals[row.code] = { code: row.code, book: 0, deals: 0, theoreticalDeals: 0, physical: 0 };
                 totals[row.code].deals += row.deals;
+                totals[row.code].theoreticalDeals += (row.theoreticalDeals || 0);
             });
         });
 
         return Object.values(totals)
             .filter(row => row.code !== "?")
             .map(row => ({
-            ...row,
-            variance: row.physical - (row.book + row.deals),
-            status: "Period Summary",
-            recon: null
-        }));
+                ...row,
+                variance: row.physical - (row.book + row.deals),
+                status: "Period Summary",
+                recon: null
+            }));
     }, [periodType, dailySummaries, reconciliations, allCurrencies, dateRange]);
 
     // Handle auto-capture trigger from dashboard (Physical Cash button)
@@ -758,6 +768,7 @@ export default function ReconciliationReport({
                                 <th className="px-6 py-2">Currency</th>
                                 <th className="px-6 py-2 text-right font-normal">Opening Vault</th>
                                 <th className="px-6 py-2 text-right font-normal">Book Balance</th>
+                                <th className="px-6 py-2 text-right font-normal">Expected Closing</th>
                                 <th className="px-6 py-2 text-right font-normal">Closing Vault</th>
                                 {!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0) && (
                                     <>
@@ -772,7 +783,7 @@ export default function ReconciliationReport({
                             {vaultRows.length > 0 ? (
                                 (periodType === "daily" && isToday && !dailySummaries[0]?.hasRecord) ? (
                                     <tr>
-                                        <td colSpan={(!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0)) ? 6 : 4} className="px-6 py-12 text-center">
+                                        <td colSpan={(!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0)) ? 7 : 5} className="px-6 py-12 text-center">
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="bg-[#1D4CB5]/10 p-4 rounded-full">
                                                     <Vault className="w-8 h-8 text-[#1D4CB5]" />
@@ -795,6 +806,7 @@ export default function ReconciliationReport({
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book)}</td>
+                                                <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + (row.theoreticalDeals || 0))}</td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{formatCurrency(row.book + row.deals)}</td>
                                                 <td className="px-6 py-4 text-right text-gray-300">{row.physical > 0 ? formatCurrency(row.physical) : "—"}</td>
                                                 {!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0) && (
@@ -827,7 +839,7 @@ export default function ReconciliationReport({
                                 )
                             ) : (
                                 <tr>
-                                    <td colSpan={(!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0)) ? 6 : 4} className="py-4">
+                                    <td colSpan={(!hideVarianceAndStatus && vaultRows.some(r => r.physical > 0)) ? 7 : 5} className="py-4">
                                         <EmptyState
                                             imageSrc={vaultEmptyBg}
                                             message="No currency entries found for this reconciliation"
