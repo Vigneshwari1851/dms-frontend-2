@@ -15,9 +15,23 @@ import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
 import installmentIcon from "../../assets/installment.svg";
 import DiscardModal from "../../components/common/DiscardModal";
 
-const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount, remainingBalance }) => {
+const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, editable, currencySymbols, status, createdAt, totalAmount, remainingBalance, txnMode }) => {
     const isCompleted = status?.toLowerCase() === 'completed';
+    const isCash = txnMode?.toLowerCase() === 'cash';
     const buttonText = isCompleted ? 'Add Payment' : 'Add Payment';
+
+    // If it's a cash deal and completed, and we have no items,
+    // show the totalAmount as a completed row instead of the dashed balance box.
+    const displayItems = [...items];
+    if (isCash && isCompleted && items.length === 0 && totalAmount > 0) {
+        displayItems.push({
+            price: totalAmount,
+            quantity: 1,
+            amount: totalAmount,
+            created_at: createdAt,
+            id: 'auto-cash-settlement' 
+        });
+    }
 
     return (
         <div className="pb-4">
@@ -39,13 +53,13 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
 
             <div className="relative pl-8 space-y-6">
                 {/* Timeline Line */}
-                {(items.length > 0 || isCompleted) && (
+                {(displayItems.length > 0 || isCompleted) && (
                     <div className="absolute left-[11px] top-2 bottom-1 w-0.5 bg-[#343A40]"></div>
                 )}
 
 
 
-                {items.length === 0 && !isCompleted ? (
+                {displayItems.length === 0 && !isCompleted ? (
                     <div className="bg-[#1A1F24] border border-dashed border-[#2A2F34] rounded-2xl p-4 text-center ml-[-20px]">
                         <div className="bg-[#2A2F34] w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4">
                             <img src={installmentIcon} alt="installmentIcon" />
@@ -53,7 +67,7 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                         <p className="text-[#8F8F8F] font-medium">No payment history yet</p>
                     </div>
                 ) : (
-                    items.map((item, index) => (
+                    displayItems.map((item, index) => (
                         <div key={index} className="relative">
                             {/* Timeline Node */}
                             <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full bg-[#1D4CB5] z-10"></div>
@@ -116,30 +130,30 @@ const PaymentHistory = ({ title, items, currency, onAdd, onRemove, onChange, edi
                     ))
                 )}
 
-                {/* Remaining Balance inside Tracker matching Timeline Row style */}
-                {remainingBalance !== undefined && remainingBalance !== 0 && (
+                {/* Remaining Balance box - ONLY for Credit deals that aren't fully paid */}
+                {remainingBalance !== undefined && remainingBalance !== 0 && !isCash && (
                     <div className="relative mt-4">
                         {/* Timeline Node */}
-                        <div className="absolute -left-[24px] top-6 w-2 h-2 rounded-full z-10 bg-[#FF4B4B]"></div>
-                        
-                        <div className="bg-[#1A1F24] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm border border-dashed border-[#FF4B4B44]">
+                        <div className={`absolute -left-[24px] top-6 w-2 h-2 rounded-full z-10 ${isCompleted ? 'bg-[#88ACFC]' : 'bg-[#FF4B4B]'}`}></div>
+
+                        <div className={`bg-[#1A1F24] rounded-2xl p-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative shadow-sm border border-dashed ${isCompleted ? 'border-[#88ACFC44]' : 'border-[#FF4B4B44]'}`}>
                             <div className="flex flex-col">
                                 <span className="text-[#ABABAB] text-[10px] mb-2">
                                     {remainingBalance > 0 ? "Remaining Balance" : "Excess Paid"}
                                 </span>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-[#FF4B4B] text-normal font-black">
+                                    <span className={`text-normal font-black ${isCompleted ? 'text-[#88ACFC]' : 'text-[#FF4B4B]'}`}>
                                         {Number(Math.abs(remainingBalance)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
-                                    <span className="text-[#FF4B4B] opacity-70 text-xs font-bold">{currency}</span>
+                                    <span className={`opacity-70 text-xs font-bold ${isCompleted ? 'text-[#88ACFC]' : 'text-[#FF4B4B]'}`}>{currency}</span>
                                 </div>
                             </div>
 
                             <div className="flex flex-col sm:items-end">
                                 <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF4B4B]"></div>
-                                    <span className="text-[#FF4B4B] text-[11px] font-bold">
-                                        {remainingBalance > 0 ? "Unsettled" : "Excess"}
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-[#88ACFC]' : 'bg-[#FF4B4B]'}`}></div>
+                                    <span className={`text-[11px] font-bold ${isCompleted ? 'text-[#88ACFC]' : 'text-[#FF4B4B]'}`}>
+                                        {isCompleted ? "Completed" : (remainingBalance > 0 ? "Unsettled" : "Excess")}
                                     </span>
                                 </div>
                             </div>
@@ -718,7 +732,7 @@ export default function EditDeal() {
                                     Pending
                                 </span>
                             )}
-                                {/* Credit Type displayed in form instead */}
+                            {/* Credit Type displayed in form instead */}
                         </h2>
                     </div>
 
@@ -753,7 +767,7 @@ export default function EditDeal() {
                             >
                                 Save
                             </button>
-                            
+
                             {editMode && userRole !== "Admin" && (
                                 <button
                                     onClick={() => setRequestModalOpen(true)}
@@ -848,8 +862,8 @@ export default function EditDeal() {
                                 </div>
                             </div>
                             {/* Settlement Term & Deal Date */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mt-4">
-                                {deal?.credit_type ? (
+                            <div className={`grid grid-cols-1 ${deal?.credit_type ? "sm:grid-cols-2" : "grid-cols-1"} gap-4 lg:gap-6 mt-4`}>
+                                {deal?.credit_type && (
                                     <div>
                                         <label className="text-[#808080] text-sm mb-1 block">
                                             Settlement Term <span className="text-red-500">*</span>
@@ -858,8 +872,6 @@ export default function EditDeal() {
                                             {deal.credit_type === "PNBL" ? `Deferred ${buyCurrency || "---"} Receipt` : `Deferred ${sellCurrency || "---"} Payment`}
                                         </div>
                                     </div>
-                                ) : (
-                                    <div />
                                 )}
 
                                 <div>
@@ -947,6 +959,7 @@ export default function EditDeal() {
                                     createdAt={deal?.created_at}
                                     totalAmount={expectedPaid}
                                     remainingBalance={dRem}
+                                    txnMode={txnMode}
                                 />
                             ) : (
                                 <PaymentHistory
@@ -962,6 +975,7 @@ export default function EditDeal() {
                                     createdAt={deal?.created_at}
                                     totalAmount={expectedReceived}
                                     remainingBalance={dRem}
+                                    txnMode={txnMode}
                                 />
                             )}
                         </div>
@@ -1098,7 +1112,7 @@ export default function EditDeal() {
                         </div>
                     </div>
                 </div>
-            , document.body)}
+                , document.body)}
 
             {/* Admin Approval Modal */}
             {isAdminApprovalOpen && createPortal(
@@ -1236,7 +1250,7 @@ export default function EditDeal() {
                         </div>
                     </div>
                 </div>
-            , document.body)}
+                , document.body)}
         </>
     );
 }
