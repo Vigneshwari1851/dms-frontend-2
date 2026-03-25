@@ -18,6 +18,7 @@ import EmptyState from "../../components/common/EmptyState";
 import dealEmptyBg from "../../assets/Common/empty/deal-bg.svg";
 import NotificationCard from "../../components/common/Notification";
 import { useReconciliation } from "../../contexts/ReconciliationContext";
+import ActionDropdown from "../../components/common/ActionDropdown";
 
 export default function DealsList() {
   const navigate = useNavigate();
@@ -534,58 +535,15 @@ export default function DealsList() {
                       </div>
                     </td>
 
-                    <td className="relative pr-5">
-                      <button
-                        onClick={(e) => handleActionClick(item.id, e)}
-                        className="p-2 hover:bg-[#2A2F34] rounded-lg transition-colors"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <circle cx="8" cy="4" r="1.5" fill="#8F8F8F" />
-                          <circle cx="8" cy="8" r="1.5" fill="#8F8F8F" />
-                          <circle cx="8" cy="12" r="1.5" fill="#8F8F8F" />
-                        </svg>
-                      </button>
-
-                      {openMenu === item.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setOpenMenu(null)}
-                          ></div>
-                          <div className="absolute right-10 mt-1 w-32 bg-[#2E3439] border border-[#2A2D31] rounded-lg shadow-lg z-20 overflow-hidden">
-                            <button
-                              onClick={() => handleRowClick(item)}
-                              className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                            >
-                              View Deal
-                            </button>
-
-                            {item.status === "Pending" && (
-                              <button
-                                onClick={() => handleEdit(item.dealId)}
-                                className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#2A2F34]"
-                              >
-                                Edit Deal
-                              </button>
-                            )}
-
-                            {userRole === "Admin" && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(item); }}
-                                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[#FF4B4B15] font-medium transition-colors"
-                              >
-                                Delete Deal
-                              </button>
-                            )}
-                          </div>
-                        </>
-                      )}
+                    <td className="relative pr-5 flex justify-center items-center h-full">
+                      <ActionDropdown
+                        vertical={true}
+                        options={[
+                          { label: "View Deal", onClick: () => handleRowClick(item) },
+                          ...(item.status === "Pending" ? [{ label: "Edit Deal", onClick: () => handleEdit(item.dealId) }] : []),
+                          ...(userRole === "Admin" ? [{ label: "Delete Deal", onClick: () => handleDelete(item) }] : [])
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

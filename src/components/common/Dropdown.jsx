@@ -18,22 +18,26 @@ export default function Dropdown({
 
     const [dropUp, setDropUp] = useState(false);
 
-    useEffect(() => {
-        if (open && dropdownRef.current) {
+    const toggleOpen = (e) => {
+        if (disabled) return;
+        e.stopPropagation();
+        
+        if (!open && dropdownRef.current) {
             const rect = dropdownRef.current.getBoundingClientRect();
             const spaceBelow = window.innerHeight - rect.bottom;
             const spaceAbove = rect.top;
-
+            
             // max-h-48 is 192px. Add buffer for padding/borders.
-            const menuHeight = 210;
-
+            const menuHeight = 220; 
+            
             if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
                 setDropUp(true);
             } else {
                 setDropUp(false);
             }
         }
-    }, [open]);
+        setOpen((prev) => !prev);
+    };
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -61,11 +65,7 @@ export default function Dropdown({
                     ${disabled ? "cursor-not-allowed" : "cursor-pointer"}
                     ${hasValue ? "text-white" : "text-[#ABABAB]"}
                 `}
-                onClick={(e) => {
-                    if (disabled) return;
-                    e.stopPropagation();
-                    setOpen((prev) => !prev);
-                }}
+                onClick={toggleOpen}
             >
                 <span className="truncate">{selected ? (typeof selected === 'string' ? selected : selected.label) : label}</span>
                 <img
