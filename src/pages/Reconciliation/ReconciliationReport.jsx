@@ -296,7 +296,8 @@ export default function ReconciliationReport({
             const response = await fetchReconcoliation({
                 dateFilter: "custom",
                 dateRange,
-                limit: 100
+                limit: 100,
+                userOnly: true
             });
             setReconciliations(response.data || []);
         } catch (err) {
@@ -346,7 +347,7 @@ export default function ReconciliationReport({
         if (!recon && type === "opening") {
             try {
                 // Fetch the last 2 reconciliations (today + yesterday/previous)
-                const response = await fetchReconcoliation({ limit: 5 });
+                const response = await fetchReconcoliation({ limit: 5, userOnly: true });
                 const recs = response?.data || [];
 
                 // Find the most recent record that isn't today's empty one (if any)
