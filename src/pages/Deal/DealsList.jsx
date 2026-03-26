@@ -95,6 +95,7 @@ export default function DealsList() {
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
             status: deal.status,
             dealId: deal.id,
+            createdBy: deal.createdBy?.full_name || "N/A",
           };
         });
 
@@ -451,8 +452,9 @@ export default function DealsList() {
             <table className="min-w-[1100px] lg:min-w-full w-full text-center text-[#8F8F8F] font-normal text-[13px] border-collapse">
               <thead>
                 <tr className="text-[#FFFFFF] text-[12px] font-normal">
-                  <th className="py-3 text-left pl-5">Deal ID</th>
+                  <th className="text-left pl-5">Deal ID</th>
                   <th className="text-left">Date</th>
+                  <th className="text-left">Created By</th>
 
                   {/* TYPE SORT */}
                   <th
@@ -509,6 +511,7 @@ export default function DealsList() {
                       {item.id}
                     </td>
                     <td className="text-left">{item.date}</td>
+                    <td className="text-left whitespace-nowrap">{item.createdBy}</td>
 
                     <td>
                       <div className="flex justify-center items-center">

@@ -49,6 +49,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
             date: new Date(deal.created_at).toLocaleDateString("en-IN"),
             type: deal.deal_type === "buy" ? "Buy" : "Sell",
             customer_name: deal.customer?.name || "N/A",
+            created_by_name: deal.createdBy?.full_name || "N/A",
             pair: pair || "---",
             buyAmt: buyAmtValue > 0 ? buyAmtValue.toLocaleString() : "--------",
             sellAmt: sellAmtValue > 0 ? sellAmtValue.toLocaleString() : "--------",
@@ -106,6 +107,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   const columns = useMemo(() => [
     { key: "id", label: "Deal ID", align: "left", className: "pl-5 text-white" },
     { key: "date", label: "Date", align: "left" },
+    { key: "created_by_name", label: "Created By", align: "left" },
     { key: "type", label: "Type", align: "center", className: "pr-5", 
       render: (val) => {
         const colors = {

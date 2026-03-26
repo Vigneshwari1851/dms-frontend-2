@@ -612,8 +612,9 @@ export default function ListReport() {
                   <tr className="text-[#FFFFFF] text-[12px] font-normal">
                     {(reportType === "Deals" || reportType === "Customer") && (
                       <>
-                        <th className="py-3 text-left pl-5">Deal ID</th>
+                        <th className="py-3 text-left pl-5">Deal Number</th>
                         <th className="text-left">Date</th>
+                        <th className="text-left">Created By</th>
                         <th className="py-3 cursor-pointer select-none" onClick={() => handleSort("deal_type")}>
                           <div className="flex items-center gap-1 justify-center">Type</div>
                         </th>
@@ -628,6 +629,7 @@ export default function ListReport() {
                     {reportType === "Reconciliation" && (
                       <>
                         <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Created By</th>
                         <th className="text-left">Total Deals</th>
                         <th className="text-left">Opening Vault</th>
                         <th className="text-left">Closing Vault</th>
@@ -637,6 +639,7 @@ export default function ListReport() {
                     {reportType === "Expenses" && (
                       <>
                         <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Created By</th>
                         <th className="text-left">Category</th>
                         <th className="text-left">Description</th>
                         <th className="text-left">Amount</th>
@@ -646,6 +649,7 @@ export default function ListReport() {
                     {reportType === "P&L" && (
                       <>
                         <th className="py-3 text-left pl-5">Date</th>
+                        <th className="text-left">Created By</th>
                         <th className="text-left">Deals</th>
                         <th className="text-left">Valuation Rate</th>
                         <th className="text-left">Opening Value</th>
@@ -671,6 +675,7 @@ export default function ListReport() {
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{item.deal_number}</td>
                           <td className="text-left">{format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy")}</td>
+                          <td className="text-left whitespace-nowrap">{item.createdBy?.full_name || "N/A"}</td>
                           <td className="text-center">
                             <span className={`px-3 py-1 rounded-full text-[12px] capitalize ${typeColors[item.deal_type?.toLowerCase()] || ""}`}>
                               {item.deal_type}
@@ -693,6 +698,7 @@ export default function ListReport() {
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">
                             {item.created_at || item.createdAt || item.date ? format(new Date(item.created_at || item.createdAt || item.date), "dd/MM/yyyy") : "—"}
                           </td>
+                          <td className="text-left whitespace-nowrap">{item.createdBy?.full_name || "N/A"}</td>
                           <td className="text-left">{item.total_transactions || item.totalDeals || 0}</td>
                           <td className="text-left py-2">
                             <div className="flex flex-col gap-1">
@@ -718,6 +724,7 @@ export default function ListReport() {
                       {reportType === "Expenses" && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{format(new Date(item.created_at), "dd/MM/yyyy")}</td>
+                          <td className="text-left whitespace-nowrap">{item.createdBy?.full_name || "N/A"}</td>
                           <td className="text-left">{item.category?.name}</td>
                           <td className="text-left">{item.description}</td>
                           <td className="text-left">{item.currency?.code} {Number(item.amount).toLocaleString()}</td>
@@ -727,6 +734,7 @@ export default function ListReport() {
                       {reportType === "P&L" && (
                         <>
                           <td className="py-1.5 text-left pl-5 text-white text-[14px]">{format(new Date(item.created_at), "dd/MM/yyyy")}</td>
+                          <td className="text-left whitespace-nowrap">{item.createdBy?.full_name || "N/A"}</td>
                           <td className="text-left">{item.total_transactions}</td>
                           <td className="text-left">{Number(item.setRate).toFixed(2)}</td>
                           <td className="text-left">{Number(item.totalOpeningValue).toLocaleString()}</td>
