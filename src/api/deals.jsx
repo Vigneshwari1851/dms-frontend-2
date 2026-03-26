@@ -2,13 +2,14 @@ import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
 
-export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate, customer_id, dealType } = {}) {
+export async function fetchDeals({ page = 1, limit = 10, currency, dateFilter, startDate, endDate, customer_id, dealType, userOnly } = {}) {
   try {
     const params = { page, limit };
     if (currency) params.currency = currency;
     if (dateFilter) params.dateFilter = dateFilter;
     if (customer_id) params.customer_id = customer_id;
     if (dealType) params.dealType = dealType;
+    if (userOnly) params.userOnly = userOnly;
 
     if (dateFilter === "custom" && startDate && endDate) {
       params.startDate = startDate;

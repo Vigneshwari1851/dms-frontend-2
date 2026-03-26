@@ -10,6 +10,7 @@ import add from "../../assets/dashboard/add.svg"
 import { useNavigate } from "react-router-dom";
 import { fetchDeals } from "../../api/deals";
 import { fetchReconcoliation } from "../../api/reconcoliation";
+import { isSameDay } from "date-fns";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -27,26 +28,52 @@ export default function Dashboard() {
       try {
         setLoading(true);
         const [dealsResponse, reconResponse] = await Promise.all([
-          fetchDeals({ dateFilter: "today" }),
-          fetchReconcoliation({ dateFilter: "today", limit: 1 })
+          fetchDeals({ dateFilter: "today", limit: 100, userOnly: true }),
+          fetchReconcoliation({ limit: 20, userOnly: true }) 
         ]);
 
+        const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+        const currentUserId = storedUser.user_id;
+
+        const today = new Date();
+
+        // Today's Recon for user (to determine closing display)
+        const userReconToday = (reconResponse.data || []).find(r => 
+          (r.user_id === currentUserId || r.created_by === currentUserId) && 
+          isSameDay(new Date(r.created_at), today)
+        );
+
+        // Next Day Recon for user
+        const hasNextDayRecon = (reconResponse.data || []).some(r => 
+          (r.user_id === currentUserId || r.created_by === currentUserId) && 
+          new Date(r.created_at).setHours(0,0,0,0) > today.setHours(0,0,0,0)
+        );
+
+        // Use backend stats directly as they are now filtered with userOnly: true
         if (dealsResponse.stats) {
           setStats(dealsResponse.stats);
         }
 
-        if (reconResponse.data && reconResponse.data.length > 0) {
-          const latest = reconResponse.data[0];
+        // Show closing balances only if next day recon has come up
+        if (userReconToday && hasNextDayRecon) {
           setStats(prev => ({
             ...prev,
-            currentRate: latest.setRate || 0,
-            currentPnL: latest.profitLoss || 0,
-            reconBalances: latest.closingEntries?.reduce((acc, curr) => {
+            currentRate: userReconToday.setRate || 0,
+            currentPnL: userReconToday.profitLoss || 0,
+            reconBalances: userReconToday.closingEntries?.reduce((acc, curr) => {
               const code = curr.currency?.code || "TZS";
               acc[code] = (acc[code] || 0) + Number(curr.amount);
               return acc;
             }, {})
           }));
+        } else if (userReconToday) {
+           // Until next day recon, keep reconBalances empty so StatCard calculates dynamic balance
+           setStats(prev => ({
+             ...prev,
+             currentRate: userReconToday.setRate || 0,
+             currentPnL: userReconToday.profitLoss || 0,
+             reconBalances: {} 
+           }));
         }
       } catch (err) {
         console.error("Error loading dashboard stats:", err);
@@ -102,7 +129,7 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${stats.today?.count > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-3'} gap-4 lg:gap-6 mb-4`}>
         <StatCard
           title="Today's Deals"
           value={stats.today?.count || 0}
@@ -142,18 +169,22 @@ export default function Dashboard() {
             }).filter(sv => sv.value !== "0")
           }
         />
-        <StatCard
-          title="Day's Avg Fx Rate"
-          value={`TZS ${Number(stats.currentRate || 0).toFixed(2)}`}
-          icon={buyamount}
-        />
+        {stats.today?.count > 0 && (
+          <>
+            <StatCard
+              title="Day's Avg Fx Rate"
+              value={`TZS ${Number(stats.currentRate || 0).toFixed(2)}`}
+              icon={buyamount}
+            />
 
-        <StatCard
-          title="Day's P&L"
-          value={`TZS ${Number(Math.abs(stats.currentPnL || 0)).toLocaleString()}`}
-          icon={profit}
-          color={stats.currentPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
-        />
+            <StatCard
+              title="Day's P&L"
+              value={`TZS ${Number(Math.abs(stats.currentPnL || 0)).toLocaleString()}`}
+              icon={profit}
+              color={stats.currentPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
+            />
+          </>
+        )}
       </div>
 
       <div className="mt-2">

@@ -3,7 +3,7 @@ import API_BASE_URL, { apiFetch } from "./config";
 
 const API_URL = API_BASE_URL;
 
-export async function fetchReconcoliation({ page = 1, limit = 10, currency, dateFilter, dateRange, startDate, endDate } = {}) {
+export async function fetchReconcoliation({ page = 1, limit = 10, currency, dateFilter, dateRange, startDate, endDate, userOnly } = {}) {
   try {
     const params = { page, limit };
     if (currency) params.currency = currency;
@@ -17,6 +17,7 @@ export async function fetchReconcoliation({ page = 1, limit = 10, currency, date
       params.endDate = format(end, "yyyy-MM-dd");
     }
 
+    if (userOnly) params.userOnly = userOnly;
     const queryString = new URLSearchParams(params).toString();
 
     const response = await apiFetch(`/reconciliation?${queryString}`, {
