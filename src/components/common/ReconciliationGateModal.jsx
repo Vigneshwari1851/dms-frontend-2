@@ -6,7 +6,7 @@ export default function ReconciliationGateModal({ onClose }) {
 
   const handleGoToReconciliation = () => {
     onClose();
-    navigate("/reconciliation");
+    navigate("/reconciliation", { state: { autoOpenVault: true } });
   };
 
   return (
@@ -22,14 +22,12 @@ export default function ReconciliationGateModal({ onClose }) {
 
         {/* Title */}
         <h2 className="text-white text-xl font-semibold text-center mb-3">
-          Opening Vault Required
+          Opening Stock Required
         </h2>
 
         {/* Message */}
         <p className="text-[#8F8F8F] text-sm text-center leading-relaxed mb-8">
-          No opening vault found for today. Please set up today's opening vault
-          balance in the Reconciliation module to get started.
-          From tomorrow onwards, this will be done automatically.
+          Please set up opening stock to get started.
         </p>
 
         {/* Actions */}

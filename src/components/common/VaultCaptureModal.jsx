@@ -1,47 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { formatPositiveNumeric } from "../../utils/stringUtils";
-import { X, Plus, Trash2, Edit2, Vault } from "lucide-react";
+import { X, Plus, Trash2, Edit2, Vault, AlertTriangle } from "lucide-react";
 import Dropdown from "./Dropdown";
+
+const EMPTY_OBJ = {};
+const INITIAL_ROWS = [];
 
 export default function VaultCaptureModal({
     isOpen,
     onClose,
     onSave,
-    currencies = [], // list of all currency objects
+    currencies = INITIAL_ROWS, // list of all currency objects
     type, // "opening", "closing" or "both"
-    initialAmounts = {}, // { currencyId: amount } or { opening: {}, closing: {} } if type is "both"
+    initialAmounts = EMPTY_OBJ, // { currencyId: amount } or { opening: {}, closing: {} } if type is "both"
     isLocked = false,
     isViewOnly = false,
-    isDealsMapped = false
+    isDealsMapped = false,
+    showGateInfo = false
 }) {
     const [rows, setRows] = useState([]);
     const [closingRows, setClosingRows] = useState([]);
     const [editingType, setEditingType] = useState(null); // "opening" or "closing" or null
+    const initialized = React.useRef(false);
 
     const getDefaultRows = () => {
         const defaultRows = [];
         const usd = currencies.find(c => c.code === "USD");
         const tzs = currencies.find(c => c.code === "TZS");
-        if (usd) defaultRows.push({ id: Math.random(), currencyId: usd.id, currencyCode: usd.code, amount: "" });
-        if (tzs) defaultRows.push({ id: Math.random() + 1, currencyId: tzs.id, currencyCode: tzs.code, amount: "" });
-        if (defaultRows.length === 0) defaultRows.push({ id: Math.random(), currencyId: null, currencyCode: "", amount: "" });
+        if (usd) defaultRows.push({ id: `usd-${usd.id}`, currencyId: usd.id, currencyCode: usd.code, amount: "" });
+        if (tzs) defaultRows.push({ id: `tzs-${tzs.id}`, currencyId: tzs.id, currencyCode: tzs.code, amount: "" });
+        if (defaultRows.length === 0) defaultRows.push({ id: `row-0`, currencyId: null, currencyCode: "", amount: "" });
         return defaultRows;
     };
 
-    // Initialize rows from initialAmounts when modal opens or initialAmounts change
+    // Reset initialized ref when modal closes
     useEffect(() => {
-        if (isOpen) {
+        if (!isOpen) {
+            initialized.current = false;
+        }
+    }, [isOpen]);
+
+    // Initialize rows from initialAmounts when modal opens
+    useEffect(() => {
+        if (isOpen && currencies.length > 0 && !initialized.current) {
+            initialized.current = true;
             if (type === "both") {
                 const openData = initialAmounts.opening || {};
                 const closeData = initialAmounts.closing || {};
 
                 const oRows = currencies
                     .filter(c => openData[c.id] !== undefined)
-                    .map(c => ({ id: Math.random(), currencyId: c.id, currencyCode: c.code, amount: openData[c.id]?.toString() || "" }));
+                    .map(c => ({ id: c.id, currencyId: c.id, currencyCode: c.code, amount: openData[c.id]?.toString() || "" }));
 
                 const cRows = currencies
                     .filter(c => closeData[c.id] !== undefined)
-                    .map(c => ({ id: Math.random(), currencyId: c.id, currencyCode: c.code, amount: closeData[c.id]?.toString() || "" }));
+                    .map(c => ({ id: c.id, currencyId: c.id, currencyCode: c.code, amount: closeData[c.id]?.toString() || "" }));
 
                 setRows(oRows.length > 0 ? oRows : getDefaultRows());
                 setClosingRows(cRows.length > 0 ? cRows : getDefaultRows());
@@ -49,7 +62,7 @@ export default function VaultCaptureModal({
                 const initialRows = Object.entries(initialAmounts || {}).map(([cid, amt]) => {
                     const currency = currencies.find(c => c.id === Number(cid));
                     return {
-                        id: Math.random(),
+                        id: Number(cid),
                         currencyId: Number(cid),
                         currencyCode: currency?.code || "",
                         amount: amt?.toString() || ""
@@ -91,7 +104,7 @@ export default function VaultCaptureModal({
         const setter = targetType === "closing" ? setClosingRows : setRows;
         setter(prev => [
             ...prev,
-            { id: Math.random(), currencyId: null, currencyCode: "", amount: "" }
+            { id: `new-row-${Date.now()}`, currencyId: null, currencyCode: "", amount: "" }
         ]);
     };
 
@@ -228,23 +241,41 @@ export default function VaultCaptureModal({
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
             <div className={`bg-[#1A1F24] border border-[#2A2D31] w-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh] transition-all duration-300 ${type === "both" ? "max-w-5xl" : "max-w-2xl"}`}>
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-[#2A2D31] flex items-center justify-between bg-[#1E2328]">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-1 h-5 rounded-full ${type === "opening" ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
-                        <div>
-                            <h2 className="text-white text-base">
-                                {type === "both" ? "Vault Summary" : `${isViewOnly ? "View" : editingType ? "Edit" : ""} ${type === "opening" ? "Opening Balance" : "Closing Balance"}`}
-                            </h2>
-                            <p className="text-[#8F8F8F] text-[11px]">Review and update vault cash positions</p>
+                {!showGateInfo && (
+                    <div className="px-6 py-4 border-b border-[#2A2D31] flex items-center justify-between bg-[#1E2328]">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-1 h-5 rounded-full ${type === "opening" ? "bg-[#1D4CB5]" : "bg-[#82E890]"}`}></div>
+                            <div>
+                                <h2 className="text-white text-base">
+                                    {type === "both" ? "Vault Summary" : `${isViewOnly ? "View" : editingType ? "Edit" : ""} ${type === "opening" ? "Opening Stock" : "Closing Stock"}`}
+                                </h2>
+                                <p className="text-[#8F8F8F] text-[11px]">Review and update vault cash positions</p>
+                            </div>
                         </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-[#8F8F8F] hover:text-white hover:bg-[#2A2D31] rounded-full transition-all"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-[#8F8F8F] hover:text-white hover:bg-[#2A2D31] rounded-full transition-all"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                )}
+                
+                {showGateInfo && (
+                    <div className="pt-8 pb-2 px-6 bg-[#1A1F24] flex flex-col items-center border-b border-[#2A2D31]/30">
+                         <div className="flex justify-center mb-4">
+                            <div className="bg-[#D8AD00]/10 border border-[#D8AD00]/20 rounded-full p-3">
+                                <AlertTriangle className="w-6 h-6 text-[#D8AD00]" />
+                            </div>
+                        </div>
+                        <h2 className="text-white text-lg font-semibold text-center mb-1">
+                            Opening Stock Required
+                        </h2>
+                        <p className="text-[#8F8F8F] text-xs text-center leading-relaxed mb-4">
+                            Please set up opening stock to get started.
+                        </p>
+                    </div>
+                )}
 
                 {/* Table Content */}
                 <div className="flex-1 overflow-y-auto p-6 scrollbar-grey bg-[#16191C]">
@@ -271,7 +302,7 @@ export default function VaultCaptureModal({
                             onClick={() => handleInternalSave(type)}
                             className="bg-[#1D4CB5] hover:bg-[#2A5BD7] text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-[#1D4CB5]/20 active:scale-95"
                         >
-                            Save {type === "opening" ? "Opening" : "Closing"} Balance
+                            Save {type === "opening" ? "Opening" : "Closing"} Stock
                         </button>
                     </div>
                 )}

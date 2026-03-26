@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useLocation } from "react-router-dom";
 import {
     fetchCurrentReconciliation,
     startReconcoliation
@@ -31,6 +31,7 @@ import DateFilter from "../../components/common/DateFilter";
 
 export default function ReconciliationDashboard() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [dateRange, setDateRange] = useState(() => {
         const today = new Date();
         return { start: today, end: today, dates: [today] };
@@ -49,6 +50,15 @@ export default function ReconciliationDashboard() {
     useEffect(() => {
         checkTodayReconciliation();
     }, []);
+
+    // Handle auto-open trigger from navigation state
+    useEffect(() => {
+        if (location.state?.autoOpenVault) {
+            handleReconcileAction();
+            // Clear the state so it doesn't open again on refresh/back
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const checkTodayReconciliation = async () => {
         try {
@@ -78,7 +88,7 @@ export default function ReconciliationDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <button
+                    {/* <button
                         onClick={handleReconcileAction}
                         className={`${(isSameDay(dateRange.start, new Date()) && !todayReconciliation) ? "flex" : "hidden"} items-center gap-2 bg-[#1D4CB5] hover:bg-[#173B8B] h-10 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-[#1D4CB5]/30 transform active:scale-95`}
                     >
@@ -86,7 +96,7 @@ export default function ReconciliationDashboard() {
                         <span>
                             Physical Cash
                         </span>
-                    </button>
+                    </button> */}
 
                     <DateFilter
                         initialOption="Today"

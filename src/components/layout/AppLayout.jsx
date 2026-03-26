@@ -4,13 +4,25 @@ import Sider from "./Sider";
 import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { ReconciliationProvider, useReconciliation } from "../../contexts/ReconciliationContext";
-import ReconciliationGateModal from "../common/ReconciliationGateModal";
+import VaultCaptureModal from "../common/VaultCaptureModal";
+import Toast from "../common/Toast";
 
 function AppLayoutInner() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { pathname } = useLocation();
   const mainRef = useRef(null);
-  const { gateOpen, closeGate } = useReconciliation();
+  const { gateOpen, closeGate, currencies, saveOpeningVault } = useReconciliation();
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const handleSaveOpening = async (entries) => {
+    setToast({ show: true, message: "Saving opening balance...", type: "pending" });
+    const result = await saveOpeningVault(entries);
+    if (result.success) {
+      setToast({ show: true, message: "Opening stock saved successfully", type: "success" });
+    } else {
+      setToast({ show: true, message: result.error?.message || "Failed to save balance", type: "error" });
+    }
+  };
 
   useEffect(() => {
     if (mainRef.current) {
@@ -52,8 +64,24 @@ function AppLayoutInner() {
         </main>
       </div>
 
-      {/* Gate modal rendered here — above everything including Sider */}
-      {gateOpen && <ReconciliationGateModal onClose={closeGate} />}
+      {/* Direct Vault Capture modal rendered here when opening stock is missing */}
+      {gateOpen && (
+        <VaultCaptureModal 
+          isOpen={gateOpen} 
+          onClose={closeGate} 
+          currencies={currencies}
+          type="opening"
+          onSave={handleSaveOpening}
+          showGateInfo={true}
+        />
+      )}
+
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        type={toast.type} 
+        onHide={() => setToast({ ...toast, show: false })} 
+      />
     </div>
   );
 }
