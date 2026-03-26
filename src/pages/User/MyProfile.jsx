@@ -139,7 +139,7 @@ export default function MyProfile() {
               name="full_name"
               value={formData.full_name}
               readOnly
-              className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white"
+              className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent outline-none"
             />
           </div>
 
@@ -148,7 +148,7 @@ export default function MyProfile() {
             <input
               value={formData.role}
               readOnly
-              className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white"
+              className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent outline-none"
             />
           </div>
 
@@ -159,7 +159,9 @@ export default function MyProfile() {
               value={formData.email}
               onChange={handleChange}
               readOnly={!editMode}
-              className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white`}
+              className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent outline-none transition-all ${
+                editMode ? "focus:border-[#1D4CB5]" : ""
+              }`}
             />
           </div>
 
@@ -170,7 +172,9 @@ export default function MyProfile() {
               value={formData.phone}
               onChange={handleChange}
               readOnly={!editMode}
-              className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white`}
+              className={`w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent outline-none transition-all ${
+                editMode ? "focus:border-[#1D4CB5]" : ""
+              }`}
               onKeyDown={(e) => {
                 if (!editMode) return;
                 const allowedControlKeys = [
@@ -205,7 +209,7 @@ export default function MyProfile() {
                     placeholder="Leave blank to keep current"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none pr-10"
+                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none transition-all pr-10"
                   />
                   <button
                     type="button"
@@ -232,7 +236,7 @@ export default function MyProfile() {
                     placeholder="Confirm new password"
                     value={formData.confirm_password}
                     onChange={handleChange}
-                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none pr-10"
+                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none transition-all pr-10"
                   />
                   <button
                     type="button"
