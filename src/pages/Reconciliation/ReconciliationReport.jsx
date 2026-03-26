@@ -102,7 +102,7 @@ const getDealsColumns = (typeColors, statusColors = {}) => [
     {
         key: "status",
         label: "Status",
-        align: "right",
+        align: "center",
         render: (val) => (
             <div className="flex justify-center items-center">
                 <span className={`px-3 py-1 rounded-2xl text-xs font-medium ${statusColors[val] || ""}`}>
@@ -954,7 +954,7 @@ export default function ReconciliationReport({
                                     <th className="px-6 py-2 text-center">Created By</th>
                                     <th className="px-6 py-2 text-center">Deals</th>
                                     <th className="px-6 py-2 text-center">Status</th>
-                                    <th className="px-6 py-2 text-right">Variance</th>
+                                    <th className="px-6 py-2 text-right">Day's P&L</th>
                                     <th className="px-6 py-2 text-right"></th>
                                 </tr>
                             </thead>
