@@ -330,13 +330,13 @@ function Login() {
                   </label>
 
                   {/* Forgot Password */}
-                  <button
+                  {/* <button
                     type="button"
                     className="font-semibold text-[#B5B5B5] lg:text-[#155DFC] cursor-pointer"
                     onClick={() => navigate("/forgot-password")}
                   >
                     Forgot password?
-                  </button>
+                  </button> */}
                 </div>
 
                 {/* Submit */}

@@ -87,7 +87,7 @@ export async function fetchUserById(id) {
   }
 }
 
-export async function updateUser(id, { full_name, email, phone_number, role, is_active }) {
+export async function updateUser(id, { full_name, email, phone_number, role, is_active, password }) {
   try {
     const response = await fetch(`${API_URL}/user/${id}`, {
       method: "PUT",
@@ -97,7 +97,8 @@ export async function updateUser(id, { full_name, email, phone_number, role, is_
         email,
         phone_number,
         role,
-        is_active
+        is_active,
+        password
       }),
     });
 

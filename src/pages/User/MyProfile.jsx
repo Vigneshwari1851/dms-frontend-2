@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchUserById, updateUser } from "../../api/user/user";
 import profileIcon from "../../assets/user/profile.svg";
 import editIcon from "../../assets/Common/edit.svg";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function MyProfile() {
   const navigate = useNavigate();
@@ -15,7 +16,11 @@ export default function MyProfile() {
     email: "",
     phone: "",
     role: "",
+    password: "",
+    confirm_password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [initialData, setInitialData] = useState(null);
 
@@ -44,13 +49,41 @@ export default function MyProfile() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const [error, setError] = useState("");
+
   const handleSave = async () => {
+    if (formData.password || formData.confirm_password) {
+      if (formData.password !== formData.confirm_password) {
+        setError("Passwords do not match");
+        return;
+      }
+      if (formData.password.length < 4) {
+        setError("Password must be at least 4 characters");
+        return;
+      }
+    }
+
     const payload = {
+      full_name: formData.full_name,
       phone_number: formData.phone,
       email: formData.email,
+      role: formData.role,
     };
+
+    if (formData.password) {
+      payload.password = formData.password;
+    }
+
     const res = await updateUser(userId, payload);
-    if (res.success) setEditMode(false);
+    if (res.success) {
+      setEditMode(false);
+      setError("");
+      setFormData((prev) => ({ ...prev, password: "", confirm_password: "" }));
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+    } else {
+      setError(res.message || "Failed to update profile");
+    }
   };
 
   const handleCancel = () => {
@@ -58,7 +91,12 @@ export default function MyProfile() {
       ...prev,
       email: initialData.email,
       phone: initialData.phone,
+      password: "",
+      confirm_password: "",
     }));
+    setError("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setEditMode(false);
   };
 
@@ -153,7 +191,67 @@ export default function MyProfile() {
               }}
             />
           </div>
+
+          {editMode && (
+            <>
+              <div>
+                <label className="block text-[#ABABAB] text-sm mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Leave blank to keep current"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#ABABAB] text-sm mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirm_password"
+                    placeholder="Confirm new password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    className="w-full bg-[#16191C] rounded-lg px-4 py-2 text-white border border-transparent focus:border-[#1D4CB5] outline-none pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
+
+        {error && <p className="text-red-500 text-xs mt-4">{error}</p>}
 
         {editMode && (
           <>
