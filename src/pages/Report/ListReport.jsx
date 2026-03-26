@@ -623,7 +623,7 @@ export default function ListReport() {
                         <th className="text-left">Buy Amount</th>
                         <th className="text-left">Rate</th>
                         <th className="text-left">Sell Amount</th>
-                        <th className="text-left">Status</th>
+                        <th className="text-center">Status</th>
                       </>
                     )}
                     {reportType === "Reconciliation" && (
@@ -633,7 +633,7 @@ export default function ListReport() {
                         <th className="text-left">Total Deals</th>
                         <th className="text-left">Opening Vault</th>
                         <th className="text-left">Closing Vault</th>
-                        <th className="text-left">Status</th>
+                        <th className="text-center">Status</th>
                       </>
                     )}
                     {reportType === "Expenses" && (
