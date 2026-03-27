@@ -231,11 +231,16 @@ export default function PnLList() {
             };
         });
 
+        // Show 0 if no deals exist yet (first time system is used)
+        const hasDeals = data.some(d => (d.total_transactions || 0) > 0);
+        const dailyPnL = isToday && hasDeals ? (latest?.profitLoss || 0) : 0;
+        const netPnL = hasDeals ? (grossPnL_Period - totalExpensesInTZS) : 0;
+
         return {
             prevRate: previous?.setRate || previousRate || 0,
             currRate: isToday ? (latest?.setRate || manualRateToday || 0) : (manualRateToday || latest?.setRate || 0),
-            dailyPnL: isToday ? (latest?.profitLoss || 0) : 0,
-            netPnL: grossPnL_Period - totalExpensesInTZS,
+            dailyPnL,
+            netPnL,
             todayDeals,
             todayTotalAmount,
             todayBuyAmount,
@@ -278,7 +283,7 @@ export default function PnLList() {
         { label: "Date", key: "date", align: "left" },
         { label: "Deals", key: "total_transactions", align: "left" },
         {
-            label: "Valuation Rate",
+            label: "Average Rate",
             key: "setRate",
             align: "left",
             render: (v, row) => (
@@ -303,13 +308,17 @@ export default function PnLList() {
             label: "Profit / Loss",
             key: "profitLoss",
             align: "left",
-            render: (v) => (
-                <div className="flex items-center gap-2">
-                    <span className={v >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                        {v >= 0 ? "▲" : "▼"} TZS {Math.abs(Number(v)).toLocaleString()}
-                    </span>
-                </div>
-            )
+            render: (v, row) => {
+                const hasRowDeals = (row?.total_transactions || 0) > 0;
+                const pnl = hasRowDeals ? Number(v) : 0;
+                return (
+                    <div className="flex items-center gap-2">
+                        <span className={pnl >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                            {pnl >= 0 ? "▲" : "▼"} TZS {Math.abs(pnl).toLocaleString()}
+                        </span>
+                    </div>
+                );
+            }
         },
     ];
 

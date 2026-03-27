@@ -18,9 +18,11 @@ export default function CreateDeal() {
   const navigate = useNavigate();
   const { todayRecon, loading: reconLoading, openGate } = useReconciliation();
 
-  // Block direct URL access if no reconciliation for today
+  // If there is no reconciliation for today, redirect back and open the gate
+  // so that Cancel on the gate returns the user to the deals list (not this page)
   useEffect(() => {
     if (!reconLoading && !todayRecon) {
+      navigate("/deals", { replace: true });
       openGate();
     }
   }, [reconLoading, todayRecon]);

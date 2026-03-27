@@ -22,7 +22,7 @@ import ActionDropdown from "../../components/common/ActionDropdown";
 
 export default function DealsList() {
   const navigate = useNavigate();
-  const { todayRecon, openGate } = useReconciliation();
+  const { todayRecon, openGate, openGateWithNavigation } = useReconciliation();
   const [openMenu, setOpenMenu] = useState(null);
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -281,7 +281,7 @@ export default function DealsList() {
     if (todayRecon) {
       navigate("/deals/create-deal");
     } else {
-      openGate();
+      openGateWithNavigation("/deals/create-deal");
     }
   };
 

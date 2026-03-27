@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "./Header";
 import Sider from "./Sider";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { ReconciliationProvider, useReconciliation } from "../../contexts/ReconciliationContext";
 import VaultCaptureModal from "../common/VaultCaptureModal";
@@ -10,6 +10,7 @@ import Toast from "../common/Toast";
 function AppLayoutInner() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const mainRef = useRef(null);
   const { gateOpen, closeGate, currencies, saveOpeningVault } = useReconciliation();
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
@@ -19,6 +20,7 @@ function AppLayoutInner() {
     const result = await saveOpeningVault(entries);
     if (result.success) {
       setToast({ show: true, message: "Opening stock saved successfully", type: "success" });
+      navigate("/");
     } else {
       setToast({ show: true, message: result.error?.message || "Failed to save balance", type: "error" });
     }

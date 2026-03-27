@@ -9,6 +9,7 @@ export function ReconciliationProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [gateOpen, setGateOpen] = useState(false);
   const [currencies, setCurrencies] = useState([]);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : {};
@@ -66,8 +67,11 @@ export function ReconciliationProvider({ children }) {
       isAdmin, 
       gateOpen, 
       currencies,
-      openGate: () => setGateOpen(true), 
-      closeGate: () => setGateOpen(false),
+      pendingNavigation,
+      openGate: () => setGateOpen(true),
+      openGateWithNavigation: (path) => { setPendingNavigation(path); setGateOpen(true); },
+      clearPendingNavigation: () => setPendingNavigation(null),
+      closeGate: () => { setGateOpen(false); setPendingNavigation(null); },
       saveOpeningVault
     }}>
       {children}

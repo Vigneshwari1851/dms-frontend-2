@@ -139,9 +139,13 @@ export default function PnLExpandableRow({ rowData }) {
                 <td className="py-2 px-4 text-left text-[#8F8F8F]">TZS {Number(rowData.totalClosingValue).toLocaleString()}</td>
                 <td className="py-2 px-4 text-left">
                     <div className="flex items-center gap-2">
-                        <span className={rowData.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
-                            {rowData.profitLoss >= 0 ? "▲" : "▼"} TZS {Math.abs(Number(rowData.profitLoss)).toLocaleString()}
-                        </span>
+                        {rowData.total_transactions > 0 ? (
+                            <span className={rowData.profitLoss >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}>
+                                {rowData.profitLoss >= 0 ? "▲" : "▼"} TZS {Math.abs(Number(rowData.profitLoss)).toLocaleString()}
+                            </span>
+                        ) : (
+                            <span className="text-gray-400">TZS 0</span>
+                        )}
                     </div>
                 </td>
             </tr>

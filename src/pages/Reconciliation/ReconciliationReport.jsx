@@ -137,11 +137,6 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                         </div>
                     </div>
                 </td>
-                <td className="px-6 py-5 text-center whitespace-nowrap">
-                    <span className="text-gray-400 text-xs">
-                        {summary.recon?.createdBy?.full_name || "—"}
-                    </span>
-                </td>
                 <td className="px-6 py-5 text-center">
                     <span className="px-2.5 py-1 rounded-md bg-[#131619] border border-[#2A2F33]/50 text-gray-300 text-xs">
                         {summary.totalTransactions} deals
@@ -951,7 +946,6 @@ export default function ReconciliationReport({
                             <thead>
                                 <tr className="bg-[#131619] text-[#8F8F8F] font-normal">
                                     <th className="px-6 py-2">Date</th>
-                                    <th className="px-6 py-2 text-center">Created By</th>
                                     <th className="px-6 py-2 text-center">Deals</th>
                                     <th className="px-6 py-2 text-center">Status</th>
                                     <th className="px-6 py-2 text-right">Day's P&L</th>
