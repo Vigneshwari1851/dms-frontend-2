@@ -28,8 +28,8 @@ export default function Dashboard() {
       try {
         setLoading(true);
         const [dealsResponse, reconResponse] = await Promise.all([
-          fetchDeals({ dateFilter: "today", limit: 100, userOnly: true }),
-          fetchReconcoliation({ limit: 20, userOnly: true }) 
+          fetchDeals({ dateFilter: "today", limit: 100, userOnly: false }),
+          fetchReconcoliation({ limit: 20, userOnly: false }) 
         ]);
 
         const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -37,15 +37,13 @@ export default function Dashboard() {
 
         const today = new Date();
 
-        // Today's Recon for user (to determine closing display)
+        // Today's Recon (to determine closing display)
         const userReconToday = (reconResponse.data || []).find(r => 
-          (r.user_id === currentUserId || r.created_by === currentUserId) && 
           isSameDay(new Date(r.created_at), today)
         );
 
-        // Next Day Recon for user
+        // Next Day Recon
         const hasNextDayRecon = (reconResponse.data || []).some(r => 
-          (r.user_id === currentUserId || r.created_by === currentUserId) && 
           new Date(r.created_at).setHours(0,0,0,0) > today.setHours(0,0,0,0)
         );
 
