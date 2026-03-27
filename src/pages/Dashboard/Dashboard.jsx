@@ -177,7 +177,7 @@ export default function Dashboard() {
 
             <StatCard
               title="Day's P&L"
-              value={`TZS ${Number(Math.abs(stats.currentPnL || 0)).toLocaleString()}`}
+              value={`TZS ${Number(stats.currentPnL || 0).toLocaleString()}`}
               icon={profit}
               color={stats.currentPnL >= 0 ? "text-[#82E890]" : "text-[#F7626E]"}
             />

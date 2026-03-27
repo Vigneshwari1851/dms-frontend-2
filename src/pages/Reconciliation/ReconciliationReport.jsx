@@ -678,7 +678,7 @@ export default function ReconciliationReport({
     }, [reconciliations, dateRange?.dates]);
 
     const formatCurrency = (val) =>
-        new Intl.NumberFormat("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.abs(val));
+        new Intl.NumberFormat("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
 
     // Per-currency vault rows for the active reconciliation
     const vaultRows = useMemo(() => {
