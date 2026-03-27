@@ -32,7 +32,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
           dataToTransform = externalDeals;
           setTotalPages(1);
         } else {
-          const response = await fetchDeals({ dateFilter: "today", page, limit: 10 });
+          const response = await fetchDeals({ dateFilter: "today", page, limit: 1 });
           dataToTransform = response.data;
           setTotalPages(response.pagination?.totalPages || 1);
         }
