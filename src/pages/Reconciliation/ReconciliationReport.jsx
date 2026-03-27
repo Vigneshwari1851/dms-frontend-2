@@ -165,7 +165,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                         <span className="text-gray-600 text-[11px] italic">Not Reconciled</span>
                     )}
                 </td>
-                <td className="px-6 py-5 text-right">
+                {/* <td className="px-6 py-5 text-right">
                     {summary.hasRecord ? (
                         summary.isClosingVisible ? (
                             summary.currencyVariances.length > 0 ? (
@@ -183,7 +183,7 @@ function BreakdownRow({ summary, formatCurrency, onDateSelect }) {
                             )
                         ) : "—"
                     ) : "—"}
-                </td>
+                </td> */}
                 <td className="px-6 py-5 text-right">
                     {!summary.hasRecord && (
                         <button
@@ -948,7 +948,6 @@ export default function ReconciliationReport({
                                     <th className="px-6 py-2">Date</th>
                                     <th className="px-6 py-2 text-center">Deals</th>
                                     <th className="px-6 py-2 text-center">Status</th>
-                                    <th className="px-6 py-2 text-right">Day's P&L</th>
                                     <th className="px-6 py-2 text-right"></th>
                                 </tr>
                             </thead>
