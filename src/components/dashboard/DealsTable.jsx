@@ -14,6 +14,8 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
   const [currencyList, setCurrencyList] = useState(["All Currencies"]);
   const [currencyFilter, setCurrencyFilter] = useState("All Currencies");
   const [exporting, setExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : {};
@@ -28,9 +30,11 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
 
         if (externalDeals) {
           dataToTransform = externalDeals;
+          setTotalPages(1);
         } else {
-          const response = await fetchDeals({ dateFilter: "today" });
+          const response = await fetchDeals({ dateFilter: "today", page, limit: 10 });
           dataToTransform = response.data;
+          setTotalPages(response.pagination?.totalPages || 1);
         }
 
         const transformedData = dataToTransform.map((deal) => {
@@ -81,7 +85,7 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
 
     loadCurrencies();
     loadDeals();
-  }, [externalDeals]);
+  }, [externalDeals, page]);
 
   const handleExport = async (format) => {
     try {
@@ -173,6 +177,9 @@ export default function DealsTable({ externalDeals, hideTitle, hideExport }) {
         // onExport={handleExport}
         // showExport={!hideExport && showExportByRole}
         itemsPerPage={10}
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={(newPage) => setPage(newPage)}
         emptyStateProps={{
           imageSrc: todayDealBg,
           message: "Looks like deals are not yet created",
