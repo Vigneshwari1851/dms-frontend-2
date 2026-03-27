@@ -131,8 +131,8 @@ export default function PnLExpandableRow({ rowData }) {
                 </td>
                 <td className="py-2 px-4 text-left text-[#8F8F8F]">{rowData.total_transactions}</td>
                 <td className="py-2 px-4 text-left">
-                    <span className={rowData.hasCustomRates ? "text-[#82E890]" : "text-gray-400"}>
-                        {Number(rowData.setRate).toFixed(2)}
+                    <span className={Number(rowData.valuationRate) > 0 ? "text-[#82E890]" : "text-gray-400"}>
+                        {Number(rowData.valuationRate).toFixed(2)}
                     </span>
                 </td>
                 <td className="py-2 px-4 text-left text-[#8F8F8F]">TZS {Number(rowData.totalOpeningValue).toLocaleString()}</td>

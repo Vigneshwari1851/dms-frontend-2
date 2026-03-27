@@ -238,7 +238,7 @@ export default function PnLList() {
 
         return {
             prevRate: previous?.setRate || previousRate || 0,
-            currRate: isToday ? (latest?.setRate || manualRateToday || 0) : (manualRateToday || latest?.setRate || 0),
+            currRate: isToday ? (latest?.valuationRate || manualRateToday || 0) : (manualRateToday || latest?.valuationRate || 0),
             dailyPnL,
             netPnL,
             todayDeals,
@@ -284,10 +284,10 @@ export default function PnLList() {
         { label: "Deals", key: "total_transactions", align: "left" },
         {
             label: "Average Rate",
-            key: "setRate",
+            key: "valuationRate",
             align: "left",
             render: (v, row) => (
-                <span className={row.hasCustomRates ? "text-[#82E890]" : "text-gray-400"}>
+                <span className={Number(v) > 0 ? "text-[#82E890]" : "text-gray-400"}>
                     {Number(v).toFixed(2)}
                 </span>
             )
